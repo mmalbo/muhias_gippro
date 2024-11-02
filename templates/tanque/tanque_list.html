@@ -1,0 +1,58 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de tanques</h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th >Código</th>
+                            <th >Nombre</th>
+                            <th >Color</th>
+                            <th >Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for tanque in tanques %}
+                            <tr>
+                                <td >{{ tanque.codigo }}</td>
+                                <td >{{ tanque.nombre }}</td>
+                                <td>{{ tanque.color }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'tanque:actualizar' tanque.pk %}"
+                                           title="Editar tanque" class="btn far fa-edit"></a>
+                                        <a href="{% url 'tanque:eliminar' tanque.pk %}"
+                                           title="Eliminar tanque"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Color</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'tanque:crear' %}" class="btn btn-success">Crear tanque</a>
+
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

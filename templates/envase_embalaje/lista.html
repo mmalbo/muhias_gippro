@@ -1,0 +1,133 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de envases o embalajes</h4>
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Cantidad</th>
+                            <th>Capacidad</th>
+                            <th>Tipo de envase o embalaje</th>
+                            <th>Almacén</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for envase_embalaje in envases_embalajes %}
+                            <tr>
+                                <td>{{ envase_embalaje.codigo_envase }}</td>
+                                <td>{{ envase_embalaje.cantidad }}</td>
+                                <td>{{ envase_embalaje.capacidad }}</td>
+                                <td>{{ envase_embalaje.tipo_envase_embalaje }}</td>
+                                <td>
+                                    {{ envase_embalaje.almacen }}
+                                </td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+
+                                        <a href="{% url 'envase_embalaje_editar' envase_embalaje.pk %}"
+                                           title="Editar envase o embalaje"
+                                           class="btn far fa-edit"></a>
+{#                                        <a href="{% url 'envase_embalaje_eliminar' envase_embalaje.pk %}"#}
+{#                                           title="Eliminar envase o embalaje"#}
+{#                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>#}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Cantidad</th>
+                            <th>Capacidad</th>
+                            <th>Tipo de envase o embalaje</th>
+                            <th>Almacén</th>
+
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <a href="{% url 'envase_embalaje_crear' %}" class="btn btn-success">Crear nuevo envase o
+                        embalaje</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- Agrega este código en la sección donde quieras mostrar el modal -->
+    <div id="almacenes-modal" class="modal" style="text-align: left" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <div class="modal-header">
+                    <h2>Envase o embalaje: <strong><span id="modalCodigoEnvase"></span></strong></h2>
+                </div>
+                <div style="margin-left: 1rem;">
+                    <strong><p>Listado de almacenes asociados:</p></strong>
+                </div>
+                <ul id="almacenes-list"></ul>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const showAlmacenesLinks = document.querySelectorAll('.show-almacenes');
+            const modal = document.getElementById('almacenes-modal');
+            {#const closeButton = document.getElementsByClassName('close-button')[0];#}
+
+            showAlmacenesLinks.forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const pk = this.dataset.pk;
+                    fetch(`/almacen/almacenes/${pk}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const almacenesList = document.getElementById('almacenes-list');
+                            const modalCodigoEnvase = document.getElementById('modalCodigoEnvase');
+                            almacenesList.innerHTML = '';
+                            modalCodigoEnvase.innerHTML = '';
+                            const codigo = document.createElement('codigo');
+                            data.forEach(almacen => {
+                                const li = document.createElement('li');
+                                li.textContent = almacen.nombre;
+                                codigo.textContent = almacen.codigo;
+                                almacenesList.appendChild(li);
+                            });
+
+                            modalCodigoEnvase.appendChild(codigo);
+                            modal.style.display = 'block';
+                        });
+                });
+            });
+
+
+            window.addEventListener('click', function (event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        function closeModal() {
+            var modal = document.getElementById("almacenes-modal");
+            modal.style.display = "none";
+        }
+    </script>
+{% endblock %}

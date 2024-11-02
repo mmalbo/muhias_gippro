@@ -1,0 +1,53 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">{% if object %}Editar Almacén{% else %}Crear Almacén{% endif %}</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-row">
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.nombre.label_tag }}
+                                        {{ form.nombre }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.ubicacion.label_tag }}
+                                        {{ form.ubicacion }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        {{ form.materias_primas.label_tag }}
+                                        {{ form.materias_primas }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        {{ form.productos_base.label_tag }}
+                                        {{ form.productos_base }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        {{ form.productos_final.label_tag }}
+                                        {{ form.productos_final }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.propio.label_tag }}
+                                        {{ form.propio }}
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}Añadir{% endif %}</button>
+                                    <a href="{% url 'almacen_lista' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

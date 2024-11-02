@@ -1,0 +1,76 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">{% if object %}Editar Producción{% else %}Crear Producción{% endif %}</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="form-row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.lote.label_tag }}
+                                        {{ form.lote }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.nombre_producto.label_tag }}
+                                        {{ form.nombre_producto }}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.cantidad_estimada.label_tag }}
+                                        {{ form.cantidad_estimada }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.costo.label_tag }}
+                                        {{ form.costo }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.estado.label_tag }}
+                                        {{ form.estado }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.planta.label_tag }}
+                                        {{ form.planta }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.envase_embalaje.label_tag }}
+                                        {{ form.envase_embalaje }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.tipo_prod_result.label_tag }}
+                                        {{ form.tipo_prod_result }}
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.materias_primas.label_tag }}
+                                        {{ form.materias_primas }}
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.producto_base.label_tag }}
+                                        {{ form.producto_base }}
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.pruebas_quimicas.label_tag }}
+                                        {{ form.pruebas_quimicas }}
+                                    </div>
+
+                                </div>
+
+                                {#                                {{ form.as_p }}#}
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">Guardar</button>
+                                    <a href="{% url 'produccion_list' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

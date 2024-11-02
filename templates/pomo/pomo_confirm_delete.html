@@ -1,0 +1,25 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Eliminar pomo</h4>
+                    <div class="card">
+                        <p>¿Estás seguro de que deseas eliminar el pomo "<strong>{{ object.nombre }}</strong>"?
+                        </p>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group" style="text-align: center;">
+                                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                                <a href="{% url 'pomo:listar' %}" class="btn btn-secondary">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

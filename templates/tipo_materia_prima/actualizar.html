@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Editar Tipo de Materia Prima</h4>
+<form class="needs-validation" novalidate method="post">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label for="fecha">Tipo<span style="color: red;">*</span>:</label>
+                                        {{ form.tipo }}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="fecha">Ingrediente activo:</label>
+                                        {{ form.ingrediente_activo }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="fecha">Tipo fragancia:</label>
+                                        {{ form.tipo_fragancia }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="fecha">Tipo sustancia:</label>
+                                        {{ form.tipo_sustancia }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="fecha">Tipo color:</label>
+                                        {{ form.tipo_color }}
+                                    </div>
+                                </div>
+
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">Guardar</button>
+                                    <a href="{% url 'tipo_materia_prima:lista' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                </div>
+{#                <div class="col-sm-12 col-lg-12">#}
+{#                    <form method="post">#}
+{#                        {% csrf_token %}#}
+{#                        {{ form.as_p }}#}
+{#                        <button type="submit" class="btn btn-primary">Actualizar</button>#}
+{#                        <a href="{% url 'tipo_materia_prima:lista' %}" class="btn btn-danger">Cancelar</a>#}
+{#                    </form>#}
+{##}
+{#                </div>#}
+
+
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

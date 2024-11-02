@@ -1,0 +1,63 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de plantas</h4>
+
+                </div>
+                {#                <h1></h1>#}
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th >Nombre</th>
+                            <th >Propio</th>
+                            <th >Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for planta in plantas %}
+                            <tr>
+                                <td>{{ planta.nombre }}</td>
+                                {% if planta.propio %}
+                                    <td>Si</td>
+                                {% else %}
+                                    <td>No</td>
+                                {% endif %}
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+
+                                        <a href="{% url 'planta_editar' planta.pk %}" title="Editar almacén"
+                                           class="btn far fa-edit"></a>
+                                        <a href="{% url 'planta_eliminar' planta.pk %}" title="Eliminar almacén"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+
+                            <th >Nombre</th>
+                            <th >Propio</th>
+                            <th >Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'planta_crear' %}" class="btn btn-success">Crear nueva planta</a>
+
+
+                </div>
+
+            </div>
+
+        </div>
+        <!-- Agrega este código en la sección donde quieras mostrar el modal -->
+    </div>
+    
+{% endblock %}

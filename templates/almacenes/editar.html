@@ -1,0 +1,59 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12 col-lg-12">
+                        <h4 class="card-title">Editar Almacén</h4>
+                        <br>
+                    <div class="card">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="fecha">Nombre<span style="color: red;">*</span>:</label>
+
+                                        {{ form.nombre }}
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="fecha">Ubicación:</label>
+
+                                        {{ form.ubicacion }}
+
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="fecha">Propio:</label>
+
+                                        {{ form.propio }}
+
+                                    </div>
+
+                                </div>
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                                    <a href="{% url 'almacen_lista' %}" class="btn btn-danger">Cancelar</a>
+
+                                </div>
+
+                            </form>
+
+{#                        </div>#}
+
+                    </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    </div>
+{% endblock %}

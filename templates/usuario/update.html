@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block extrastyle %}
+    <style type="text/css">
+        .form span {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user mr-1"></i>Actualizar
+                Usuario {{ usuario.username }}</h6>
+        </div>
+        <div class="card-body">
+            <div class="col-lg-12 align-items-center">
+                <div class="p-5">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        <div class="form-group row">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                {{ form.username.label_tag }}
+
+                                {{ form.username }}
+                                {{ form.username.errors }}
+                            </div>
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                {{ form.password.label_tag }}
+                                {{ form.password }}
+                                {{ form.password.errors }}
+                            </div>
+
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                {{ form.first_name.label_tag }}
+                                {{ form.first_name }}
+                                {{ form.first_name.errors }}
+                            </div>
+                            <div class="col-sm-6">
+                                {{ form.last_name.label_tag }}
+
+                                {{ form.last_name }}
+                                {{ form.last_name.errors }}
+                            </div>
+                        </div>
+                        <div class="form-group row">
+
+                            <div class="col-sm-6">
+                                {{ form.email.label_tag }}
+
+                                {{ form.email }}
+                                {{ form.email.errors }}
+                            </div>
+                            <div class="col-sm-6">
+                                {{ form.telefono.label_tag }}
+                                {{ form.telefono }}
+                                {{ form.telefono.errors }}
+                            </div>
+                        </div>
+                        <div class="form-group row">
+
+                            <div class="col-sm-6">
+                                {{ form.clasificacion.label_tag }}
+                                {{ form.clasificacion }}
+                                {{ form.clasificacion.errors }}
+                            </div>
+                            <div class="col-sm-6">
+                                {{ form.disponibilidad.label_tag }}
+
+                                {{ form.disponibilidad }}
+                                {{ form.disponibilidad.errors }}
+                            </div>
+                        </div>
+                        <div class="form-group -align-center">
+                            <button type="submit" class="btn btn-primary btn-user ">Actualizar</button>
+                            <a type="button" href="{% url 'usuario-list' %}" class="btn btn-dark">Cancelar</a>
+
+                            {#                            <button type="submit" class="btn btn-primary btn-user btn-block">Registrar</button>#}
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

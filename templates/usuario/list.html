@@ -1,0 +1,89 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+    <!-- Wrapper Start -->
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <div class="header-title">
+                                    <h4 class="card-title">Listado de usuarios</h4>
+                                </div>
+
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="datatable" class="table data-table table-striped">
+                                        <thead>
+                                        <tr class="ligth">
+                                            <th>Nombre</th>
+                                            <th>Apellidos</th>
+                                            <th>Usuario</th>
+                                            <th>Activo</th>
+                                            <th>Correo</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for usuario in usuarios %}
+                                            {% if usuario.is_superuser ==  False %}
+
+                                                <tr>
+
+                                                    <td>{{ usuario.first_name }}</td>
+                                                    <td>{{ usuario.last_name }}</td>
+                                                    <td>{{ usuario.username }}</td>
+                                                    {% if usuario.is_active %}
+                                                        <td class="text-left">Si</td>
+                                                    {% else %}
+                                                        <td class="text-left">No</td>
+                                                    {% endif %}
+                                                    <td>{{ usuario.email }}</td>
+
+                                                    <td>
+                                                        <div class="button-container" style="display: flex; gap: 10px;">
+                                                            <a href="{% url 'customuser_update' usuario.pk %}"
+                                                               title="Editar usuario" class="btn far fa-edit"></a>
+                                                            {% if usuario.username != request.user.username %}
+                                                                <a href="{% url 'customuser_delete' usuario.pk %}"
+                                                                   title="Desactivar usuario"
+                                                                   class="btn far fa-trash-alt"
+                                                                   style="color: #ed1010;"></a>
+                                                            {% endif %}
+
+                                                        </div>
+
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+
+                                        {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Apellidos</th>
+                                            <th>Usuario</th>
+                                            <th>Activo</th>
+                                            <th>Correo</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                    <a href="{% url 'customuser_create' %}" class="btn btn-success">Crear nuevo
+                                        usuario</a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Wrapper End-->
+{% endblock %}

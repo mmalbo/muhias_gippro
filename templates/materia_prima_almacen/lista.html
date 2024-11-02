@@ -1,0 +1,55 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Lista de materias primas en almacén</h4>
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Materia Prima</th>
+                            <th>Almacén</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for objeto in object_list %}
+                            <tr>
+                                <td>
+                                    {% for mp in objeto.materia_prima.all %}
+                                        {{ mp.nombre }}<br>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ objeto.almacen.nombre }}</td>
+                                <td>
+                                    <a href="{% url 'materia_prima_almacen:update' objeto.pk %}" title="Editar materia primas en almacén" class="btn far fa-edit"></a>
+                                    <a href="{% url 'materia_prima_almacen:delete' objeto.pk %}" title="Eliminar materia primas en almacén" class="btn far fa-trash-alt" style="color: #ed1010;"></a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+
+                            <th>Materia Prima</th>
+                            <th>Almacén</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

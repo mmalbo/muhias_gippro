@@ -1,0 +1,22 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Eliminar Tipo de Materia Prima</h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <p>¿Estás seguro de que deseas eliminar el tipo de materia prima "{{ object.nombre }}"?</p>
+                    <form method="post">
+                        {% csrf_token %}
+                       <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                        <a href="{% url 'tipo_materia_prima:lista' %}" class="btn btn-secondary">Cancelar</a>
+                   </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

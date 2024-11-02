@@ -1,0 +1,44 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">{% if object %}Actualizar tanque{% else %}Crear tanque{% endif %}</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-row">
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.codigo.label_tag }}
+                                        {{ form.codigo }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.nombre.label_tag }}
+                                        {{ form.nombre }}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.color.label_tag }}
+                                        {{ form.color }}
+                                    </div>
+
+                                </div>
+                                {#                                {{ form.as_p }}#}
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}
+                                        Añadir{% endif %}</button>
+                                    <a href="{% url 'tanque:listar' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

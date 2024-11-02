@@ -1,0 +1,194 @@
+{% extends "base1.html" %}
+{#{% load static app_extras %}#}
+{% block extrastyle %}
+<style>
+  button{
+    width:155px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<html class="loaded" lang="en" data-textdirection="ltr"><!-- BEGIN: Head--><head>
+
+    <!-- BEGIN: Vendor CSS-->
+    <!-- <link rel="stylesheet" type="text/css" href="/static/app-assets/vendors.min.css"> -->
+    <!-- END: Vendor CSS-->
+
+  <style type="text/css">/* Chart.js */
+@keyframes chartjs-render-animation{from{opacity:.99}to{opacity:1}}.chartjs-render-monitor{animation:chartjs-render-animation 1ms}.chartjs-size-monitor,.chartjs-size-monitor-expand,.chartjs-size-monitor-shrink{position:absolute;direction:ltr;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1}.chartjs-size-monitor-expand>div{position:absolute;width:1000000px;height:1000000px;left:0;top:0}.chartjs-size-monitor-shrink>div{position:absolute;width:200%;height:200%;left:0;top:0}</style></head>
+    <!-- BEGIN: Content-->
+    <!-- <div class="app-content content">
+      <div class="content-overlay"></div>
+      <div class="content-wrapper">
+
+        <div class="content-body"> --><!-- Revenue, Hit Rate & Deals -->
+
+<!-- Total earning & Recent Sales  -->
+        <!-- <div class="row"> -->
+            <!-- <div id="recent-sales" class="col-12 col-auto"> -->
+                    <!-- <div class="card"> -->
+                        <div class="card-header">
+                            <h4 class="card-title text-succes">Trazas del Sistema</h4>
+                            <!-- <br>
+                            <hr>
+                            <br> -->
+                        
+
+                        </div>
+                        <div class="card-content mt-1">
+                                <div >
+
+                                    <form method="post" action="{% url 'supervision' %}">
+                                       {% csrf_token %}
+                                       <div class="row">
+                                          <div  class="form-group col-sm-4 col-md-3">
+                                              <label><strong>Módulo:</strong></label>
+                                              <select name='modulo' id="modelo" type="text" class="form-control">
+                                                <option value="">Seleccione</option>
+                                                {% for f in modulo %}
+                                                    <option >{{ f}} </option>
+                                                {% endfor %}
+                                            </select>
+                                          </div>
+                                          <div class="form-group col-sm-4 col-md-3">
+                                        <label><strong>Usuario:</strong></label>
+                                            <select name='usuario' id="usuario" type="text" class="form-control">
+                                                 <option value="">Seleccione</option>
+                                                {% for f in usuario %}
+                                                    <option value="{{ f.id }}">{{ f.get_full_information}} </option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                            <div class="form-group col-sm-4 col-md-3">
+                                                <label><strong>Fecha de Inicio:</strong></label>
+                                                <input name='f_inicio' id="f_inicio" type="date" class="form-control">
+                                            </div>
+                                            <div class="form-group col-sm-4 col-md-3">
+                                                <label><strong>Fecha de Fin:</strong></label>
+                                                <input name='f_fin' id="f_fin" type="date" class="form-control">
+                                            </div> 
+                                        </div>
+                                        <div class="row"> 
+                                            <div id="field_contrato" class="form-group col-sm-4 col-md-3">
+                                                <label><strong>No. de contrato:</strong></label>
+                                                <input name="no_contrato" id="no_contrato" type="text" class="form-control">
+                                            </div>
+                                           
+                                        </div>
+                                        <div class="row">
+                                          <div class="form-group col-md-1" style="margin-right:70px;">
+                                            <button id="filtrar" type="submit" class="btn btn-success">
+                                              <span class="fas fa-filter"></span> Filtrar
+                                            </button>
+                                          </div>
+                                            <div class="form-group col-md-1" style="margin-right:-70px;">  
+                                              <button id="eliminar_filtro" type="submit" class="btn btn-danger" >
+                                                  <svg fill="white" class="text-white" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="mdi-filter-remove" width="29" height="21" viewBox="0 0 30 24">
+                                                      <path d="M14.76,20.83L17.6,18L14.76,15.17L16.17,13.76L19,16.57L21.83,13.76L23.24,15.17L20.43,18L23.24,20.83L21.83,22.24L19,19.4L16.17,22.24L14.76,20.83M12,12V19.88C12.04,20.18 11.94,20.5 11.71,20.71C11.32,21.1 10.69,21.1 10.3,20.71L8.29,18.7C8.06,18.47 7.96,18.16 8,17.87V12H7.97L2.21,4.62C1.87,4.19 1.95,3.56 2.38,3.22C2.57,3.08 2.78,3 3,3V3H17V3C17.22,3 17.43,3.08 17.62,3.22C18.05,3.56 18.13,4.19 17.79,4.62L12.03,12H12Z"/>
+                                                  </svg>
+                                                   Eliminar Filtro
+                                              </button>
+                                           </div>
+                                        </div>
+                                    </form>
+                                    <br>
+                                    <hr>
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="recent-orders" class="table table-hover table-xl la-border mb-0">
+                                        <thead class="thead-light">
+                              <tr>
+                                <th class="border-top-0 ">No. Registro</th>
+                                <th class="border-top-0">Usuario</th>
+                                <th class="border-top-0">Acción</th>
+                                <th class="border-top-0">Fecha</th>
+                                <th class="border-top-0">Datos Anteriores</th>
+                                <th class="border-top-0">Datos Nuevos</th>
+                              </tr>
+                            </thead>
+                        <tbody>
+                         {% for contrato in trazas %}
+                                    <tr>
+                                        <td id="id_c">{{ contrato.id_object }}</td>
+                                        <td id="id_c">{{ contrato.usuario }}</td>
+                                        <td id="id_c">{{ contrato.accion }}</td>
+                                        <td id="id_c">{{ contrato.f_modif }}</td>
+                                        <td id="id_c">{{ valor_a }}</td>
+                                        <td id="id_c">{{ valor_n }}</td>
+                                    </tr>
+                                {% endfor %}
+
+                        </tbody>
+                      </table>
+                        </div>
+              <!-- </div> -->
+            <!-- </div> -->
+        <!-- </div> -->
+
+       <!--    </div>
+      </div>
+    </div>
+    </div> -->
+    <!-- END: Content-->
+
+
+{% endblock %}
+
+{% block extrascript %}
+    <script type="text/javascript" src="/static/js/jspdf.debug.js"></script>
+    <script type="text/javascript" src="/static/js/jspdf.plugin.autotable.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function ($) {
+            $('#recent-orders').DataTable({
+                "language": {
+            "lengthMenu": "Mostrar _MENU_ por página",
+            "zeroRecords": "No hay registros disponibles",
+            "info": "Mostrando página _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros disponibles",
+            "infoFiltered": "(filtered from _MAX_ total records)",
+            "search": "Buscar",
+            "paginate": {
+                    "first": "Primero",
+                    "last": "Último",
+                    "next": "Siguiente",
+                    "previous": "Anterior"
+                    },
+            }
+        });
+
+        $("#field_contrato").hide();
+        
+        $('#modelo').on('change', function () {
+            if ($(this).val() == 'Comercial') {
+                $("#field_contrato").show();
+            } else {
+                $("#field_contrato").hide();
+            }
+        });
+
+
+        $('#filtrar').prop('disabled', true);
+        // $('#eliminar_filtro').prop('disabled', true);
+
+        });
+
+
+        $('input[type=text]').change(function(){
+            if($('input[type=text]').val()!=''){
+                $('#filtrar').prop('disabled',false);
+                $('#eliminar_filtro').prop('disabled', false);
+            } 
+        });
+
+        $('input[type=date]').change(function(){
+            if($('input[type=date]').val()!=''){
+                $('#filtrar').prop('disabled',false);
+                $('#eliminar_filtro').prop('disabled', false);
+            } 
+        });
+
+    </script>
+
+{% endblock %}

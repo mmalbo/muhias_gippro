@@ -1,0 +1,411 @@
+{% load static %}
+<style>
+    .iq-sidebar {
+        height: 100vh; /* Establece la altura de la barra lateral al 100% de la altura de la ventana */
+        overflow-y: auto; /* Habilita el scroll vertical */
+        overflow-x: auto; /* Habilita el scroll horizontal */
+    }
+
+    .navigation-option {
+        display: flex;
+        align-items: center;
+    }
+
+    .navigation-option a {
+        flex-grow: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .svg-icon {
+        width: 20px; /* Ajusta el ancho del icono según tus necesidades */
+    }
+</style>
+
+<div class="iq-sidebar sidebar-default">
+    <div class="iq-sidebar-logo d-flex align-items-center">
+        <a href="{% url 'cargar_datos_principal' %}" class="header-logo">
+            <img src="{% static 'gestion/images/logo.png' %}" alt="logo">
+            <h3 class="logo-title light-logo">GIPPro</h3>
+        </a>
+        <div class="iq-menu-bt-sidebar ml-0">
+            <i class="las la-bars wrapper-menu"></i>
+        </div>
+    </div>
+    <div class="scroll-content">
+
+        {#    <div class="data-scrollbar" data-scroll="1">#}
+        <nav class="iq-sidebar-menu">
+            <ul id="iq-sidebar-toggle" class="iq-menu">
+                <li class="active navigation-option">
+                    <a href="{% url 'cargar_datos_principal' %}" class="svg-icon">
+                        <svg class="svg-icon" width="25" height="25" xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span class="ml-2">Inicio</span>
+                    </a>
+                </li>
+                <!--   <li class=" ">
+                    <a href="#Administracion" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                        <svg class="svg-icon" id="p-dash19" width="20" height="20"
+                             xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                        <span class="ml-2">Administración</span>
+                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                    </a>
+                    <ul id="Administracion" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+
+                        <li class=" ">
+                            <a href="#user" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                <svg class="svg-icon" width="25" height="25" xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span class="ml-4">Usuarios</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="user" class="iq-submenu collapse" data-parent="#Administracion">
+
+                                <li class="">
+                                    <a href="{% url 'customuser_create' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'customuser_list' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>-->
+
+                <li class=" ">
+                    <a href="#nomencladores" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                        <svg class="svg-icon" id="p-dash12" width="20" height="20"
+                             xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span class="ml-2">Clasificadores</span>
+                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                    </a>
+                    <ul id="nomencladores" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+
+                        <li class=" ">
+                            <a href="#almacen" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                <span class="ml-3">Almacén</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="almacen" class="iq-submenu collapse" data-parent="#almacen">
+
+                                <li class="">
+                                    <a href="{% url 'almacen_crear' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'almacen_lista' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class=" ">
+                            <a href="#planta" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                <span class="ml-3">Planta de producción</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="planta" class="iq-submenu collapse" data-parent="#planta">
+                                <li class="">
+                                    <a href="{% url 'planta_crear' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'planta_lista' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class=" ">
+                            <a href="#capacidad" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                <span class="ml-3">Formato de envases</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="capacidad" class="iq-submenu collapse" data-parent="#capacidad">
+
+                                <li class="">
+                                    <a href="{% url 'formato:crear' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'formato:listar' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class=" ">
+                            <a href="#tipo_envase" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                <span class="ml-3">Tipos de embalajes</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="tipo_envase" class="iq-submenu collapse" data-parent="#tipo_envase">
+                                <li class=" ">
+                                    <a href="#caja" class="collapsed" data-toggle="collapse"
+                                       aria-expanded="false">
+                                        <span class="ml-4">Caja</span>
+                                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                                    </a>
+                                    <ul id="caja" class="iq-submenu collapse" data-parent="#caja">
+
+                                        <li class="">
+                                            <a href="{% url 'caja:crear' %}">
+                                                <i class="las la-minus"></i><span>Adicionar</span>
+                                            </a>
+                                        </li>
+                                        <li class="">
+                                            <a href="{% url 'caja:listar' %}">
+                                                <i class="las la-minus"></i><span>Listar</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class=" ">
+                                    <a href="#pomo" class="collapsed" data-toggle="collapse"
+                                       aria-expanded="false">
+                                        <span class="ml-4">Pomo</span>
+                                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                                    </a>
+                                    <ul id="pomo" class="iq-submenu collapse" data-parent="#pomo">
+
+                                        <li class="">
+                                            <a href="{% url 'pomo:crear' %}">
+                                                <i class="las la-minus"></i><span>Adicionar</span>
+                                            </a>
+                                        </li>
+                                        <li class="">
+                                            <a href="{% url 'pomo:listar' %}">
+                                                <i class="las la-minus"></i><span>Listar</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class=" ">
+                                    <a href="#tanque" class="collapsed" data-toggle="collapse"
+                                       aria-expanded="false">
+                                        <span class="ml-4">Tanque</span>
+                                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                                    </a>
+                                    <ul id="tanque" class="iq-submenu collapse" data-parent="#tanque">
+
+                                        <li class="">
+                                            <a href="{% url 'tanque:crear' %}">
+                                                <i class="las la-minus"></i><span>Adicionar</span>
+                                            </a>
+                                        </li>
+                                        <li class="">
+                                            <a href="{% url 'tanque:listar' %}">
+                                                <i class="las la-minus"></i><span>Listar</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class=" ">
+                                    <a href="#tapa" class="collapsed" data-toggle="collapse"
+                                       aria-expanded="false">
+                                        <span class="ml-4">Tapa</span>
+                                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                                    </a>
+                                    <ul id="tapa" class="iq-submenu collapse" data-parent="#tapa">
+
+                                        <li class="">
+                                            <a href="{% url 'tapa:crear' %}">
+                                                <i class="las la-minus"></i><span>Adicionar</span>
+                                            </a>
+                                        </li>
+                                        <li class="">
+                                            <a href="{% url 'tapa:listar' %}">
+                                                <i class="las la-minus"></i><span>Listar</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li class=" "style="width: 300px">
+                            <a href="#tipos_materia_prima" class="collapsed" data-toggle="collapse"
+                               aria-expanded="false">
+                                <span class="ml-3">Tipos de materias primas</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="tipos_materia_prima" class="iq-submenu collapse" data-parent="#tipos_materia_prima">
+
+                                <li class="">
+                                    <a href="{% url 'tipo_materia_prima:crear' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'tipo_materia_prima:lista' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class=" ">
+                    <a href="#registrar" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                        <svg class="svg-icon" id="p-dash14" width="20" height="20"
+                             xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="ml-2">Inventarios</span>
+                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                    </a>
+                    <ul id="registrar" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                        <li class=" ">
+                            <a href="#envase_embalaje" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                <span class="ml-2">Envase o embalaje</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="envase_embalaje" class="iq-submenu collapse" data-parent="#registrar">
+                                <li class="">
+                                    <a href="{% url 'envase_embalaje_crear' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'envase_embalaje_lista' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class=" ">
+                            <a href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false">
+
+                                <span class="ml-2">Materia prima</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="materia_prima" class="iq-submenu collapse" data-parent="#registrar">
+                                <li class="">
+                                    <a href="{% url 'materia_prima:materia_prima_crear' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'materia_prima:materia_prima_list' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class=" ">
+                            <a href="#producto_base" class="collapsed" data-toggle="collapse" aria-expanded="false">
+
+                                <span class="ml-2">Producto base</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="producto_base" class="iq-submenu collapse" data-parent="#registrar">
+                                <li class="">
+                                    <a href="{% url 'crear_producto' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'producto_list' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+{#                        <li class=" ">#}
+{#                            <a href="#producto_final" class="collapsed" data-toggle="collapse" aria-expanded="false">#}
+{##}
+{#                                <span class="ml-2">Producto final</span>#}
+{#                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>#}
+{#                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>#}
+{#                            </a>#}
+{#                            <ul id="producto_final" class="iq-submenu collapse" data-parent="#registrar">#}
+{#                                <li class="">#}
+{#                                    <a href="{% url 'crear_producto_final' %}">#}
+{#                                        <i class="las la-minus"></i><span>Adicionar</span>#}
+{#                                    </a>#}
+{#                                </li>#}
+{#                                <li class="">#}
+{#                                    <a href="{% url 'producto_final_list' %}">#}
+{#                                        <i class="las la-minus"></i><span>Listar</span>#}
+{#                                    </a>#}
+{#                                </li>#}
+{#                            </ul>#}
+{#                        </li>#}
+                        <li class=" ">
+                            <a href="#produccion" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                <span class="ml-2">Fórmula producto</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="produccion" class="iq-submenu collapse" data-parent="#registrar">
+                                <li class="">
+                                    <a href="{% url 'produccion_create' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'produccion_list' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        {#        <div class="pt-5 pb-2"></div>#}
+    </div>
+</div>

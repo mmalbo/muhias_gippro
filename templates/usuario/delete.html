@@ -1,0 +1,23 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+            <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Confirmar desactivación del usuario: <strong>{{ object.username }}</strong>
+                    </h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <p>¿Estás seguro de que deseas desactivar al usuario "{{ object.username }}"?</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Sí, desactivar</button>
+                        <a href="{% url 'customuser_list' %}" class="btn btn-secondary">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

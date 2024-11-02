@@ -1,0 +1,72 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de producciones</h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr>
+{#                            <th>Lote</th>#}
+                            <th>Nombre del Producto</th>
+{#                            <th>Tipo de Producto</th>#}
+                            <th>Cantidad Estimada</th>
+{#                            <th>Costo</th>#}
+                            <th>Planta</th>
+                            <th>Envase/Embalaje</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for produccion in producciones %}
+                            <tr>
+{#                                <td>{{ produccion.lote }}</td>#}
+                                <td>{{ produccion.nombre_producto }}</td>
+{#                                <td>#}
+{#                                    {% if produccion.tipo_prod_result %}#}
+{#                                        Producto Terminado#}
+{#                                    {% else %}#}
+{#                                        Producto en Proceso#}
+{#                                    {% endif %}#}
+{#                                </td>#}
+                                <td>{{ produccion.cantidad_estimada }}</td>
+{#                                <td>{{ produccion.costo }}</td>#}
+                                <td>{{ produccion.planta }}</td>
+                                <td>{{ produccion.envase_embalaje.nombre }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+
+                                        <a href="{% url 'produccion_update' produccion.pk %}"
+                                           title="Editar producción" class="btn far fa-edit"></a>
+{#                                        <a href="{% url 'produccion_delete' produccion.pk %}"#}
+{#                                           title="Eliminar producción"#}
+{#                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>#}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+{#                            <th>Lote</th>#}
+                            <th>Nombre del Producto</th>
+{#                            <th>Tipo de Producto</th>#}
+                            <th>Cantidad Estimada</th>
+{#                            <th>Costo</th>#}
+                            <th>Planta</th>
+                            <th>Envase/Embalaje</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <a href="{% url 'produccion_create' %}" class="btn btn-success">Crear producción</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

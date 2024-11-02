@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="card  shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-secret mr-1"></i>Listar Tipo de Usuarios</h6>
+            <div style="">
+            <a href="{% url 'tipo_usuario-create' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm -pull-right"><i
+                    class="fas fa-plus-circle fa-sm text-white-50"></i> Nuevo</a>
+        </div>
+        </div>
+
+        <div class="card-body">
+            <table class="table">
+                <tr>
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">Tipo de Usuario</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tipo in tipo_usuarios %}
+                        <tr>
+                            <td>{{ tipo.tipo }}</td>
+                            <td>
+                                <a href="{% url 'tipo_usuario-update' tipo.id %}"><i class="fa fa-edit"></i></a>
+                                <a href="{% url 'tipo_usuario-delete' tipo.id %}"><i class="fa fa-trash"></i></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+
+{% endblock %}

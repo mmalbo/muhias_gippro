@@ -1,0 +1,111 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">{% if object %}Editar tipo de materia prima{% else %}Crear tipo de materia
+                        prima{% endif %}</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-row">
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.nombre.label_tag }}
+                                        {{ form.nombre }}
+                                        
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.tipo.label_tag }}
+                                        {{ form.tipo }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.descripcion.label_tag }}
+                                        {{ form.descripcion }}
+                                    </div>
+                                    {% if object %}
+                                        <div class="col-md-12 mb-3" id="id_ingrediente_activo"
+                                        >
+                                            {{ form.ingrediente_activo.label_tag }}
+                                            {{ form.ingrediente_activo }}
+                                        </div>
+                                        <div class="col-md-12 mb-3" id="id_tipo_fragancia"
+                                        >
+                                            {{ form.tipo_fragancia.label_tag }}
+                                            {{ form.tipo_fragancia }}
+                                        </div>
+                                        <div class="col-md-12 mb-3" id="id_tipo_sustancia"
+                                        >
+                                            {{ form.tipo_sustancia.label_tag }}
+                                            {{ form.tipo_sustancia }}
+                                        </div>
+                                        <div class="col-md-12 mb-3" id="id_tipo_color"
+                                        >
+                                            {{ form.tipo_color.label_tag }}
+                                            {{ form.tipo_color }}
+
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-12 mb-3" id="id_ingrediente_activo"
+                                             style=" display: none;">
+                                            {{ form.ingrediente_activo.label_tag }}
+                                            {{ form.ingrediente_activo }}
+                                        </div>
+                                        <div class="col-md-12 mb-3" id="id_tipo_fragancia"
+                                             style=" display: none;">
+                                            {{ form.tipo_fragancia.label_tag }}
+                                            {{ form.tipo_fragancia }}
+
+                                        </div>
+                                        <div class="col-md-12 mb-3" id="id_tipo_sustancia"
+                                             style=" display: none;">
+                                            {{ form.tipo_sustancia.label_tag }}
+                                            {{ form.tipo_sustancia }}
+
+                                        </div>
+                                        <div class="col-md-12 mb-3" id="id_tipo_color"
+                                             style=" display: none;">
+                                            {{ form.tipo_color.label_tag }}
+                                            {{ form.tipo_color }}
+                                            
+
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            <br>
+                                <div style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}
+                                        Añadir{% endif %}</button>
+                                    <a href="{% url 'tipo_materia_prima:lista' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleFields() {
+            console.log("paso")
+            const tipoField = document.getElementById('id_tipo');
+            const ingredienteActivoField = document.getElementById('id_ingrediente_activo');
+            const tipoFraganciaField = document.getElementById('id_tipo_fragancia');
+            const tipoSustanciaField = document.getElementById('id_tipo_sustancia');
+            const tipoColorField = document.getElementById('id_tipo_color');
+
+            const selectedTipo = tipoField.value;
+            console.log("selectedTipo: " + selectedTipo)
+            ingredienteActivoField.style.display = (selectedTipo === '8' || selectedTipo === '3' || selectedTipo === '6' || selectedTipo === '4' || selectedTipo === '1') ? 'block' : 'none';
+            console.log("ingredienteActivoField: " + ingredienteActivoField.style.display)
+
+            tipoFraganciaField.style.display = (selectedTipo === '5') ? 'block' : 'none';
+            tipoSustanciaField.style.display = (selectedTipo === '7') ? 'block' : 'none';
+            tipoColorField.style.display = (selectedTipo === '2') ? 'block' : 'none';
+        }
+    </script>
+{% endblock %}

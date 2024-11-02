@@ -1,0 +1,60 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Eliminar producción</h4>
+                    <div class="card">
+                        <p>¿Estás seguro de que quieres eliminar la siguiente producción?</p>
+                        <table class="table table-striped">
+                            <tr>
+                                <th>Lote</th>
+                                <td>{{ object.lote }}</td>
+                            </tr>
+                            <tr>
+                                <th>Nombre del Producto</th>
+                                <td>{{ object.nombre_producto }}</td>
+                            </tr>
+                            <tr>
+                                <th>Tipo de Producto</th>
+                                <td>
+                                    {% if object.tipo_prod_result %}
+                                        Producto Terminado
+                                    {% else %}
+                                        Producto en Proceso
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Cantidad Estimada</th>
+                                <td>{{ object.cantidad_estimada }}</td>
+                            </tr>
+                            <tr>
+                                <th>Costo</th>
+                                <td>{{ object.costo }}</td>
+                            </tr>
+                            <tr>
+                                <th>Planta</th>
+                                <td>{{ object.planta }}</td>
+                            </tr>
+                            <tr>
+                                <th>Envase/Embalaje</th>
+                                <td>{{ object.envase_embalaje.nombre }}</td>
+                            </tr>
+                        </table>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group" style="text-align: center;">
+                                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                                <a href="{% url 'produccion_list' %}" class="btn btn-secondary">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

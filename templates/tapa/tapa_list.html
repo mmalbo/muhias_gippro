@@ -1,0 +1,64 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Tapas</h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Color</th>
+                            <th>Descripción</th>
+{#                            <th>Tipo de envase o embalaje</th>#}
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for tapa in tapas %}
+                            <tr>
+                                <td>{{ tapa.codigo }}</td>
+                                <td>{{ tapa.nombre }}</td>
+                                <td>{{ tapa.color }}</td>
+                                <td>{{ tapa.descripcion }}</td>
+{#                                <td>{{ tapa.tipo_envase_embalaje }}</td>#}
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'tapa:actualizar' tapa.pk %}"
+                                           title="Editar tapa" class="btn far fa-edit"></a>
+                                        <a href="{% url 'tapa:eliminar' tapa.pk %}"
+                                           title="Eliminar tapa"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Color</th>
+                            <th>Descripción</th>
+{#                            <th>Tipo de envase o embalaje</th>#}
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'tapa:crear' %}" class="btn btn-success">Crear tapa</a>
+
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

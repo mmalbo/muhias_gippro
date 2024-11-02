@@ -1,0 +1,66 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Lista de tipos de materia prima</h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Ingrediente Activo</th>
+                            <th>Tipo de Fragancia</th>
+                            <th>Tipo de Sustancia</th>
+                            <th>Tipo de Color</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for tipo_materia_prima in tipos_materias_primas %}
+                            <tr>
+                                <td>{{ tipo_materia_prima.nombre }}</td>
+                                <td>{{ tipo_materia_prima.get_tipo_display  }}</td>
+                                <td>{{ tipo_materia_prima.ingrediente_activo }}</td>
+                                <td>{{ tipo_materia_prima.tipo_fragancia }}</td>
+                                <td>{{ tipo_materia_prima.tipo_sustancia }}</td>
+                                <td>{{ tipo_materia_prima.tipo_color }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'tipo_materia_prima:actualizar' tipo_materia_prima.id %}"
+                                           class="btn far fa-edit" title="Editar tipo de materia prima"></a>
+                                        <a href="{% url 'tipo_materia_prima:eliminar' tipo_materia_prima.id %}"
+                                           class="btn far fa-trash-alt" title="Eliminar tipo de materia prima" style="color: #ed1010;"></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tbody>
+
+                        <tfoot>
+                        <tr>
+
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Ingrediente Activo</th>
+                            <th>Tipo de Fragancia</th>
+                            <th>Tipo de Sustancia</th>
+                            <th>Tipo de Color</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <a href="{% url 'tipo_materia_prima:crear' %}" class="btn btn-success">Crear tipo de materia
+                        prima</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

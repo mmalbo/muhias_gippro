@@ -1,0 +1,84 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Almacenes</h4>
+
+                </div>
+                {#                <h1></h1>#}
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Cantidad Almacenada</th>
+                            <th>Ficha Técnica Folio</th>
+                            <th>Producción</th>
+                            <th>Ficha de Costo</th>
+{#                            <th>Almacenes</th>#}
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for producto_final in productos_finales %}
+                            <tr>
+                                <td>{{ producto_final.codigo_producto }}</td>
+                                <td>{{ producto_final.nombre_comercial }}</td>
+                                <td>{{ producto_final.cantidad_alm }}</td>
+                                <td>{{ producto_final.ficha_tecnica_folio }}</td>
+                                <td>{{ producto_final.produccion }}</td>
+                                <td>{{ producto_final.ficha_costo }}</td>
+{#                                <td>#}
+{#                                    <ul>#}
+{#                                        {% for almacen in producto_final.almacen.all %}#}
+{#                                            <li>{{ almacen.nombre }}</li>#}
+{#                                        {% endfor %}#}
+{#                                    </ul>#}
+{#                                </td>#}
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+
+                                        <a href="{% url 'detalle_producto_final' producto_final.pk %}"
+                                           title="Ver detalles"
+                                           class="btn far fc-agenda-view"></a>
+                                        <a href="{% url 'actualizar_producto' producto_final.pk %}"
+                                           title="Editar producto final"
+                                           class="btn far fa-edit"></a>
+                                        <a href="{% url 'eliminar_producto' producto_final.pk %}"
+                                           title="Eliminar producto final"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Cantidad Almacenada</th>
+                            <th>Ficha Técnica Folio</th>
+                            <th>Producción</th>
+                            <th>Ficha de Costo</th>
+{#                            <th>Almacenes</th>#}
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">{% if object %}Editar envase o embalaje{% else %}Crear envase o
+                        embalaje{% endif %}</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-row">
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.codigo_envase.label_tag }}
+                                        {{ form.codigo_envase }}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.cantidad.label_tag }}
+                                        {{ form.cantidad }}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.tipo_envase_embalaje.label_tag }}
+                                        {{ form.tipo_envase_embalaje }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.formato.label_tag }}
+                                        {{ form.formato }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.almacen.label_tag }}
+                                        {{ form.almacen }}
+                                    </div>
+
+                                </div>
+{#                                {{ form.as_p }}#}
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">Guardar</button>
+                                    <a href="{% url 'envase_embalaje_lista' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

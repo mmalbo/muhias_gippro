@@ -1,0 +1,188 @@
+{% load static %}
+<div class="content-page">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body">
+                        <div class="top-block d-flex align-items-center justify-content-between">
+                            <h5>Tipos materia prima</h5>
+                        </div>
+                        {#                        <h3><span class="counter">{{ etapa_revision_tecnica.cantidad|default:"0" }}</span></h3>#}
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <p class="mb-0">Total:</p>
+                            <span class="text-primary">{{ cant_tipo_materia_prima|default:"0" }}</span>
+                        </div>
+                        {#                        <div class="iq-progress-bar bg-primary-light mt-2">#}
+                        {#                            <span class="bg-primary iq-progress progress-1"#}
+                        {#                                  data-percent="{{ porcentaje_etapa_revision_tecnica|default:"0" }}"></span>#}
+                        {#                        </div>#}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body">
+                        <div class="top-block d-flex align-items-center justify-content-between">
+                            <h5>Materia prima</h5>
+                        </div>
+                        {#                        <h3><span class="counter">{{ etapa_revision_tecnica.cantidad|default:"0" }}</span></h3>#}
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <p class="mb-0">Total:</p>
+                            <span class="text-primary">{{ cant_materia_prima|default:"0" }}</span>
+                        </div>
+                        {#                        <div class="iq-progress-bar bg-primary-light mt-2">#}
+                        {#                            <span class="bg-primary iq-progress progress-1"#}
+                        {#                                  data-percent="{{ porcentaje_etapa_revision_tecnica|default:"0" }}"></span>#}
+                        {#                        </div>#}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body">
+                        <div class="top-block d-flex align-items-center justify-content-between">
+                            <h5>Producto Base</h5>
+                        </div>
+                        {#                        <h3><span class="counter">{{ etapa_provincial.cantidad|default:"0" }}</span></h3>#}
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <p class="mb-0">Total:</p>
+                            <span class="text-primary">{{ cant_producto_base|default:"0" }}</span>
+                        </div>
+                        {#                        <div class="iq-progress-bar bg-primary-light mt-2">#}
+                        {#                            <span class="bg-primary iq-progress progress-1"#}
+                        {#                                  data-percent="{{ porcentaje_etapa_provincial|default:"0" }}"></span>#}
+                        {#                        </div>#}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body">
+                        <div class="top-block d-flex align-items-center justify-content-between">
+                            <h5>Producción</h5>
+                        </div>
+                        {#                        <h3><span class="counter">{{ etapa_nacional.cantidad|default:"0" }}</span></h3>#}
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <p class="mb-0">Total:</p>
+                            <span class="text-primary">{{ cant_produccion|default:"0" }}</span>
+                        </div>
+                        {#                        <div class="iq-progress-bar bg-primary-light mt-2">#}
+                        {#                            <span class="bg-primary iq-progress progress-1"#}
+                        {#                                  data-percent="{{ porcentaje_etapa_nacional|default:"0" }}"></span>#}
+                        {#                        </div>#}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body">
+                        <div class="top-block d-flex align-items-center justify-content-between">
+                            <h5>Producto final</h5>
+                        </div>
+                        {#                        <h3><span class="counter">{{ etapa_nacional.cantidad|default:"0" }}</span></h3>#}
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <p class="mb-0">Total:</p>
+                            <span class="text-primary">{{ cant_producto_final|default:"0" }}</span>
+                        </div>
+                        {#                        <div class="iq-progress-bar bg-primary-light mt-2">#}
+                        {#                            <span class="bg-primary iq-progress progress-1"#}
+                        {#                                  data-percent="{{ porcentaje_etapa_nacional|default:"0" }}"></span>#}
+                        {#                        </div>#}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+{#        <div class="container-fluid">#}
+{#            <div class="row">#}
+{#                <div class="col-lg-12 col-xl-10">#}
+{#                    <div class="card shadow mb-4" style="align-content: center;">#}
+{#                        <div class="card-header d-flex justify-content-between align-items-center">#}
+{#                            <h6 class="text-primary fw-bold m-0">Estadísticas del censo</h6>#}
+{#                        </div>#}
+{#                        <div class="card-body">#}
+{#                            <div class="chart-area">#}
+{#                                <canvas id="pieChart"></canvas>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="row">#}
+{#                <div class="col-lg-6 col-xl-12 mb-4">#}
+{#                    <div class="card shadow mb-4">#}
+{#                        <div class="card-header py-3">#}
+{#                            <h6 class="text-primary fw-bold m-0">Tipos de vehículos</h6>#}
+{#                        </div>#}
+{#                        <div class="card-body">#}
+{#                            <label for="tomo">Motos</label>#}
+{#                            <div class="progress mb-4">#}
+{#                                <div class="progress-bar bg-warning"#}
+{#                                     aria-valuenow="{{ total_tipo_vehiculos.Motos.porcentaje }}" aria-valuemin="0"#}
+{#                                     aria-valuemax="100" style="width: 40%;"><span#}
+{#                                        class="visually-hidden">{{ total_tipo_vehiculos.Motos.porcentaje }}%</span>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <label for="tomo">Remolques y semiremolques</label>#}
+{#                            <div class="progress mb-4">#}
+{#                                <div class="progress-bar bg-primary"#}
+{#                                     aria-valuenow="{{ total_tipo_vehiculos.Remolques.porcentaje }}" aria-valuemin="0"#}
+{#                                     aria-valuemax="100" style="width: 60%;"><span#}
+{#                                        class="visually-hidden">{{ total_tipo_vehiculos.Remolques.porcentaje }}%</span>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <label for="tomo">Vehículos</label>#}
+{#                            <div class="progress mb-4">#}
+{#                                <div class="progress-bar bg-info"#}
+{#                                     aria-valuenow="{{ total_tipo_vehiculos.Vehiculos.porcentaje }}" aria-valuemin="0"#}
+{#                                     aria-valuemax="100"#}
+{#                                     style="width: 80%;"><span#}
+{#                                        class="visually-hidden">{{ total_tipo_vehiculos.Vehiculos.porcentaje }}%</span>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                    <div class="card shadow mb-4"></div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+        <!-- Page end  -->
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const totalAprobados = {{ total_aprobados }}; // Verifica que este valor sea un número entero
+        const totalDesaprobados = {{ total_desaprobados }}; // Verifica que este valor sea un número entero
+        const total_pendiente = {{ total_pendiente }}; // Verifica que este valor sea un número entero
+
+        const pieChart = new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Aceptados', 'Pendientes', 'Rechazados'],
+                datasets: [{
+                    label: '',
+                    data: [totalAprobados, total_pendiente, totalDesaprobados],
+                    backgroundColor: ['#1cc88a', '#FFD700', '#FF0000'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                legend: {
+                    display: true,
+                    labels: {
+                        fontStyle: 'normal'
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Gráfico de Pastel',
+                    fontStyle: 'normal'
+                }
+            }
+        });
+    });
+</script>

@@ -1,0 +1,251 @@
+{% extends "base1.html" %}
+{% load static %}
+
+
+{% block title %}Sistema de Servicios Comerciales{% endblock %}
+
+
+{% block extrastyle %}
+    <style type="text/css">
+        #collapseOne .fa {
+            color: #4e73df;
+        }
+
+        #collapseTwo .fa {
+            color: #1cc88a;
+        }
+        .sidebar .nav-item .nav-link span {
+         font-size: 1.2rem;
+        }
+        div.tamano_card{
+            height: 130px;
+        }
+        .supervision{
+            margin-left: 44% !important;
+            text-transform: capitalize;!important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="grey-bg container-fluid">
+        <section id="minimal-statistics">
+            <div class="row">
+                <div class="col-12 mt-3 mb-1">
+                    <h4 class="text-uppercase">Administración Suite</h4>
+                    <h5>Gestión de nomencladores.</h5 >
+                </div>
+            </div>
+            <div id="accordion">
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <h5 class="mb-0 supervision">
+                            <a href="{% url 'supervision' %}" class="btn btn-link" >
+                                <strong>Supervisión</strong>
+                            </a>
+                        </h5>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header" id="headingO">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseO"
+                                    aria-expanded="true" aria-controls="collapseOne">
+                                <strong style="color:#858796;">Grupos y Usuarios</strong>
+                            </button>
+                        </h5>
+                    </div>
+
+                    <div id="collapseO" class="collapse" aria-labelledby="headingO" data-parent="#accordion">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+                                                    <div class="align-self-center">
+                                                        <i class="fa fa-box primary fa-2x float-left"></i>
+                                                    </div>
+                                                    <div class="media-body text-right">
+                                                        <h3>Grupos</h3>
+                                                        <a href="{% url 'admin:auth_group_changelist' %}">Listar</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+                                                    <div class="align-self-center">
+                                                        <i class="fa fa-user-alt fa-2x font-large-2 float-left"></i>
+                                                    </div>
+                                                    <div class="media-body text-right">
+                                                        <h3>Usuarios</h3>
+                                                        <a href="{% url 'admin:app_usuario_changelist' %}">Listar</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+                                                    <div class="align-self-center">
+                                                        <i class="fa fa-hand-holding fa-2x float-left"></i>
+                                                    </div>
+                                                    <div class="media-body text-right">
+                                                        <h3>Permisos </h3>
+                                                        <a href="{% url 'admin:auth_group_changelist' %}">Listar</a>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+                                                    <div class="align-self-center">
+                                                        <i class="fa fa-home fa-2x float-left"></i>
+                                                    </div>
+                                                    <div class="media-body text-right">
+                                                        <h3>Áreas</h3>
+                                                        <a href="{% url 'admin:app_area_changelist' %}">Listar</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne"
+                                    aria-expanded="true" aria-controls="collapseOne">
+                                <strong>Sertec</strong>
+                            </button>
+                        </h5>
+                    </div>
+
+                    <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+{#                                                    <div class="align-self-center">#}
+{#                                                        <i class="fa fa-home primary fa-2x float-left"></i>#}
+{#                                                    </div>#}
+                                                    <div class="media-body text-right">
+                                                        <h3>Áreas</h3>
+                                                        <a href="{% url 'admin:app_area_changelist' %}">Listar</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+{#                                                    <div class="align-self-center">#}
+{#                                                        <i class="icon-speech warning font-large-2 float-left"></i>#}
+{#                                                    </div>#}
+                                                    <div class="media-body text-right">
+                                                        <h3>Clasificaciones</h3>
+                                                        <a href="{% url 'admin:app_clasificacion_changelist' %}">Listar</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+{#                                                    <div class="align-self-center">#}
+{#                                                        <i class="fa fa-plane fa-2x float-left"></i>#}
+{#                                                    </div>#}
+                                                    <div class="media-body text-right">
+                                                        <h3>Destinos </h3>
+                                                        <a href="{% url 'admin:app_destino_changelist' %}">Listar</a>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 col-12">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <div class="card-body">
+                                                <div class="media d-flex">
+{#                                                    <div class="align-self-center">#}
+{#                                                        <i class="fa fa-chart-line fa-2x float-left"></i>#}
+{#                                                    </div>#}
+                                                    <div class="media-body text-right">
+                                                        <h3>Estados</h3>
+                                                        <a href="{% url 'admin:app_estado_changelist' %}">Listar</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header" id="headingThree">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree"
+                                    aria-expanded="false" aria-controls="collapseThree">
+                                <strong  style="color:#ffc107;"> Intranet</strong>
+                            </button>
+                        </h5>
+                    </div>
+                    
+                </div>
+            </div>
+
+
+    </section>
+
+
+    </div>
+
+
+{% endblock %}
+{% block extrascript %}
+    <script type="text/javascript">
+
+    </script>
+
+{% endblock %}
+

@@ -1,0 +1,26 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Eliminar planta</h4>
+                    <div class="card">
+                        <p>¿Estás seguro de que deseas eliminar el planta "<strong>{{ object.nombre }}</strong>"?</p>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group" style="text-align: center;">
+                                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                                <a href="{% url 'planta_lista' %}" class="btn btn-secondary">Cancelar</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

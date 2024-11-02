@@ -1,0 +1,36 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Detalles del producto final</h4>
+                    <div class="card">
+                        <p><strong>Código del Producto:</strong> {{ object.codigo_producto }}</p>
+                        <p><strong>Nombre Comercial:</strong> {{ object.nombre_comercial }}</p>
+                        <p><strong>Cantidad Almacenada:</strong> {{ object.cantidad_alm }}</p>
+                        <p><strong>Ficha Técnica Folio:</strong> {{ object.ficha_tecnica_folio }}</p>
+                        <p><strong>Producción:</strong> {{ object.produccion }}</p>
+                        <p><strong>Ficha de Costo:</strong> {{ object.ficha_costo }}</p>
+                        <p><strong>Almacenes:</strong>
+                        <ul>
+                            {% for almacen in object.almacen.all %}
+                                <li>{{ almacen.nombre }}</li>
+                            {% endfor %}
+                        </ul>
+                        </p>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group" style="text-align: center;">
+                                <a href="{% url 'actualizar_producto_final' %}" class="btn btn-primary">Actualizar</a>
+                                <a href="{% url 'eliminar_producto_final' %}" class="btn btn-danger">Eliminar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de cajas</h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Tamaño</th>
+                            <th>Material</th>
+{#                            <th>Tipo de envase o embalaje</th>#}
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for caja in cajas %}
+                            <tr>
+                                <td>{{ caja.codigo }}</td>
+                                <td>{{ caja.nombre }}</td>
+                                <td>{{ caja.tamanno }}</td>
+                                {#                                                                <td>{{ caja.unidad_medida }}</td>#}
+                                <td>{{ caja.material }}</td>
+{#                                <td>{{ caja.tipo_envase_embalaje }}</td>#}
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'caja:actualizar' caja.pk %}"
+                                           title="Editar caja" class="btn far fa-edit"></a>
+                                        <a href="{% url 'caja:eliminar' caja.pk %}"
+                                           title="Eliminar caja"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Tamaño</th>
+                            <th>Material</th>
+{#                            <th>Tipo de envase o embalaje</th>#}
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'caja:crear' %}" class="btn btn-success">Crear tapa</a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}
