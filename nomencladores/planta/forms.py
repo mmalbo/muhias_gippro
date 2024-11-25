@@ -11,9 +11,9 @@ class PlantaForm(forms.ModelForm):
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'propio': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'right:80%'}),
+            'propio': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'right:90%'}),
         }
         labels = {
             'nombre': 'Nombre:',
-            'propio': 'Propio:',
+            'propio': 'Propia:',
         }

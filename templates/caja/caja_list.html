@@ -4,9 +4,20 @@
     <div class="wrapper">
         <div class="content-page">
             <div class="container-fluid">
+
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de cajas</h4>
-
+                    {% if messages %}
+                        <script>
+                                {% for message in messages %}
+                                    Swal.fire({
+                                        icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                        title: '{{ message }}',
+                                        showConfirmButton: true
+                                    });
+                                {% endfor %}
+                        </script>
+                    {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
                     <table id="datatable" class="table data-table table-striped">
@@ -16,7 +27,7 @@
                             <th>Nombre</th>
                             <th>Tamaño</th>
                             <th>Material</th>
-{#                            <th>Tipo de envase o embalaje</th>#}
+                            {#                            <th>Tipo de envase o embalaje</th>#}
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -28,7 +39,7 @@
                                 <td>{{ caja.tamanno }}</td>
                                 {#                                                                <td>{{ caja.unidad_medida }}</td>#}
                                 <td>{{ caja.material }}</td>
-{#                                <td>{{ caja.tipo_envase_embalaje }}</td>#}
+                                {#                                <td>{{ caja.tipo_envase_embalaje }}</td>#}
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'caja:actualizar' caja.pk %}"
@@ -47,13 +58,16 @@
                             <th>Nombre</th>
                             <th>Tamaño</th>
                             <th>Material</th>
-{#                            <th>Tipo de envase o embalaje</th>#}
+                            {#                            <th>Tipo de envase o embalaje</th>#}
                             <th>Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
 
-                    <a href="{% url 'caja:crear' %}" class="btn btn-success">Crear tapa</a>
+                    <a href="{% url 'caja:crear' %}" class="btn btn-success">Crear caja</a>
+                <a href="{% url 'caja:crearImportarCaja' %}" class="btn btn-success">
+                                        Importar excel
+                                    </a>
                 </div>
             </div>
 

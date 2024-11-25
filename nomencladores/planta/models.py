@@ -13,7 +13,7 @@ class Planta(ModeloBase):
 
     propio = models.BooleanField(
         default=False,
-        verbose_name="Propio",
+        verbose_name="Propia",
     )
 
     class Meta:

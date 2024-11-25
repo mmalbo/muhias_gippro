@@ -25,6 +25,11 @@
                                 <div class="form-group" style="text-align: center;">
                                     <button type="submit" class="btn btn-success">Guardar</button>
                                     <a href="{% url 'planta_lista' %}" class="btn btn-danger">Cancelar</a>
+                                    {% if not object %}
+                                    <a href="{% url 'importarPlantas' %}" class="btn btn-success">
+                                        Importar excel
+                                    </a>
+                                {% endif %}
                                 </div>
                             </form>
                         </div>

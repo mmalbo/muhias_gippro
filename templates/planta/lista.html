@@ -6,16 +6,26 @@
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de plantas</h4>
-
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
                 </div>
                 {#                <h1></h1>#}
                 <div class="col-sm-12 col-lg-12">
                     <table id="datatable" class="table data-table table-striped">
                         <thead>
                         <tr class="ligth">
-                            <th >Nombre</th>
-                            <th >Propio</th>
-                            <th >Acciones</th>
+                            <th>Nombre</th>
+                            <th>Propia</th>
+                            <th>Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -42,15 +52,17 @@
                         <tfoot>
                         <tr>
 
-                            <th >Nombre</th>
-                            <th >Propio</th>
-                            <th >Acciones</th>
+                            <th>Nombre</th>
+                            <th>Propia</th>
+                            <th>Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
 
                     <a href="{% url 'planta_crear' %}" class="btn btn-success">Crear nueva planta</a>
-
+                    <a href="{% url 'importarPlantas' %}" class="btn btn-success">
+                        Importar excel
+                    </a>
 
                 </div>
 
@@ -59,5 +71,5 @@
         </div>
         <!-- Agrega este código en la sección donde quieras mostrar el modal -->
     </div>
-    
+
 {% endblock %}

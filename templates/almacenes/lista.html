@@ -6,6 +6,17 @@
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de Almacenes</h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
                     <table id="datatable" class="table data-table table-striped">
@@ -14,7 +25,7 @@
                             <th style="width: 25%">Nombre</th>
                             <th style="width: 25%">Ubicación</th>
                             <th style="width: 25%">Propio</th>
-{#                            <th style="width: 25%">Materias primas</th>#}
+                            {#                            <th style="width: 25%">Materias primas</th>#}
                             <th style="width: 25%">Acciones</th>
                         </tr>
                         </thead>
@@ -28,17 +39,17 @@
                                 {% else %}
                                     <td>No</td>
                                 {% endif %}
-{#                                 <td>#}
-{#                                    <a href="#" class="show_materias_primas" data-pk="{{ almacen.pk }}">Ver#}
-{#                                        materias primas</a>#}
-{#                                </td> #}
+                                {#                                 <td>#}
+                                {#                                    <a href="#" class="show_materias_primas" data-pk="{{ almacen.pk }}">Ver#}
+                                {#                                        materias primas</a>#}
+                                {#                                </td> #}
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'almacen_editar' almacen.pk %}" title="Editar almacén"
                                            class="btn far fa-edit"></a>
-                                         <a href="{% url 'almacen_eliminar' almacen.pk %}" title="Eliminar almacén"
+                                        <a href="{% url 'almacen_eliminar' almacen.pk %}" title="Eliminar almacén"
                                            class="btn far fa-trash-alt" style="color: #ed1010;"></a>
-                                     </div>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -54,6 +65,9 @@
                         </tfoot>
                     </table>
                     <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+                    <a href="{% url 'importarAlmacenes' %}" class="btn btn-success">
+                        Importar excel
+                    </a>
                 </div>
             </div>
         </div>
