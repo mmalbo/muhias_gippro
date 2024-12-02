@@ -101,3 +101,10 @@ class FichaTecnica(ModeloBase):
         null=True,
         blank=True,
     )
+
+    class Meta:
+        verbose_name = "Ficha técnica"
+        verbose_name_plural = "Fichas técnicas"
+
+    def __str__(self):
+        return self.nombre_quimico

@@ -8,5 +8,8 @@ urlpatterns = [
          name='actualizar_producto'),
     path('producto/<uuid:pk>/eliminar/', views.EliminarProductoView.as_view(),
          name='eliminar_producto'),
-    path('producto/<uuid:pk>/detalle/', views.DetalleProductoView.as_view(), name='detalle_producto'),
+    # path('producto/<uuid:pk>/detalle/', views.DetalleProductoView.as_view(), name='detalle_producto'),
+    path('importar/', views.CreateImportView.as_view(), name='importarProducto'),
+    path('importar/importar/', views.importar, name='importarProd'),
+
 ]

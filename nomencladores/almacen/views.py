@@ -24,6 +24,7 @@ class AlmacenListView(ListView):
     model = Almacen
     template_name = 'almacenes/lista.html'
     context_object_name = 'almacenes'
+
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
         context = super().get_context_data(**kwargs)
@@ -48,6 +49,13 @@ class AlmacenCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['materias_primas'] = Almacen.objects.all()
+        # Agrega mensajes al contexto si existen
+        if 'mensaje_error' in self.request.session:
+            messages.error(self.request, self.request.session.pop('mensaje_error'))
+        if 'mensaje_warning' in self.request.session:
+            messages.warning(self.request, self.request.session.pop('mensaje_warning'))
+        if 'mensaje_succes' in self.request.session:
+            messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
 
 
@@ -94,7 +102,7 @@ def importar(request):
     if request.method == 'POST':
         file = request.FILES.get('excel')
         No_fila = 0
-        cajas_existentes = []
+        almacen_existentes = []
 
         if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
             messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
@@ -112,20 +120,22 @@ def importar(request):
                     nombre = str(data[0]).strip() if data[0] is not None else None
                     ubicacion = str(data[1]).strip() if data[1] is not None else None
                     propio_input = str(data[2]).strip().lower()  # Convertir a minúsculas
-
-                    # Validaciones
-                    if not nombre or not ubicacion or nombre =='None'or ubicacion =='None':
-                        messages.error(request, f'En la fila {No_fila+2} los campos "Nombre" y "Ubicación" son obligatorios.')
-                        return redirect('importarAlmacenes')
-
-                    # Validar el campo 'propio'
                     if propio_input not in ['si', 'no']:
                         messages.error(request,
-                                       f'En la fila {No_fila+2} el valor para "Propio" debe ser "si" o "no". Valor '
+                                       f'En la fila {No_fila + 2} el valor para "Propio" debe ser "si" o "no". Valor '
                                        f'recibido: {data[2] if data[2] is not None else "Ninguno"}')
                         return redirect('importarAlmacenes')
 
                     propio = True if propio_input == 'sí' else False
+                    # Validaciones
+                    existe = Almacen.objects.filter(nombre__iexact=nombre, ubicacion__iexact=ubicacion, propio=propio)
+                    if existe:
+                        almacen_existentes.append(nombre)
+                        continue
+                    if not nombre or not ubicacion:
+                        messages.error(request,
+                                       f'En la fila {No_fila + 2} los campos "Nombre" y "Ubicación" son obligatorios.')
+                        return redirect('importarAlmacenes')
                     try:
                         almacen = Almacen(
                             nombre=nombre,
@@ -143,12 +153,19 @@ def importar(request):
 
                 # Mensajes finales
                 if No_fila > 0:
-                    Total_filas = No_fila - len(cajas_existentes)
+                    Total_filas = No_fila - len(almacen_existentes)
                     messages.success(request, f'Se han importado {Total_filas} almcenes satisfactoriamente.')
-                    if cajas_existentes:
-                        messages.warning(request, 'Las siguientes unidades de medidas ya se encontraban registradas: ' + ', '.join(cajas_existentes))
+                    if almacen_existentes:
+                        messages.warning(request,
+                                         'Las siguientes unidades de medidas ya se encontraban registradas: ' + ', '.join(
+                                             almacen_existentes))
                 else:
-                    messages.warning(request, "No se importó ningún almacén.")
+                    if almacen_existentes:
+                        messages.warning(request,
+                                         'No se importó ningún almacén y las siguientes unidades de medidas ya se encontraban registradas: ' + ', '.join(
+                                             almacen_existentes))
+                    else:
+                        messages.warning(request, "No se importó ningún almacén.")
 
                 return redirect('almacen_lista')
 

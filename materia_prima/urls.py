@@ -9,4 +9,7 @@ urlpatterns = [
     path('actualizar/<uuid:pk>/', views.UpdateMateriaPrimaView.as_view(), name='materia_prima_actualizar'),
     path('eliminar/<uuid:pk>/', views.DeleteMateriaPrimaView.as_view(), name='materia_prima_eliminar'),
     path('materias_primas/<uuid:pk>/', views.get_materias_primas, name='get_materias_primas'),
+    path('importar/', views.CreateImportView.as_view(), name='importarMateriasPrimas'),
+    path('importar/importar/', views.importar, name='importarMP'),
+
 ]

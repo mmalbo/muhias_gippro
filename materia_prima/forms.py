@@ -23,7 +23,7 @@ class MateriaPrimaForm(forms.ModelForm):
                   'costo', 'ficha_tecnica', 'hoja_seguridad', 'tipo_materia_prima',
                   'almacen', 'cantidad_almacen']
         widgets = {
-            'codigo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'unidad_medida': forms.TextInput(attrs={'class': 'form-control'}),
             'concentracion': forms.NumberInput(attrs={'class': 'form-control'}),

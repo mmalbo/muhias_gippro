@@ -7,23 +7,33 @@
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de tanques</h4>
-
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
                     <table id="datatable" class="table data-table table-striped">
                         <thead>
                         <tr class="ligth">
-                            <th >Código</th>
-                            <th >Nombre</th>
-                            <th >Color</th>
-                            <th >Acciones</th>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Color</th>
+                            <th>Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for tanque in tanques %}
                             <tr>
-                                <td >{{ tanque.codigo }}</td>
-                                <td >{{ tanque.nombre }}</td>
+                                <td>{{ tanque.codigo }}</td>
+                                <td>{{ tanque.nombre }}</td>
                                 <td>{{ tanque.color }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -48,7 +58,9 @@
 
                     <a href="{% url 'tanque:crear' %}" class="btn btn-success">Crear tanque</a>
 
-
+                    <a href="{% url 'tanque:importarTanque' %}" class="btn btn-success">
+                        Importar excel
+                    </a>
                 </div>
             </div>
 

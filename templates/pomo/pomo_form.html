@@ -34,12 +34,18 @@
                                     </div>
 
                                 </div>
-{#                                {{ form.as_p }}#}
+                                {#                                {{ form.as_p }}#}
                                 <br>
                                 <div class="form-group" style="text-align: center;">
                                     <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}
                                         Añadir{% endif %}</button>
                                     <a href="{% url 'pomo:listar' %}" class="btn btn-danger">Cancelar</a>
+                                    {% if not object %}
+                                        <a href="{% url 'pomo:importarPomo' %}" class="btn btn-success">
+                                            Importar excel
+                                        </a>
+                                    {% endif %}
+
                                 </div>
                             </form>
                         </div>
