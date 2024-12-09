@@ -77,7 +77,7 @@ def importarCaja(request):
 
                 for data in imported_data:
                     codigo = str(data[Col_Codigo])
-                    existe = Caja.objects.filter(codigo=codigo).first()
+                    existe = Caja.objects.filter(codigo__iexact=codigo).first()
 
                     if existe:
                         cajas_existentes.append(codigo)
@@ -87,9 +87,10 @@ def importarCaja(request):
                     material = str(data[Col_Material]).strip()if data[Col_Material] is not None else None
 
                     # Validaciones de los datos
-                    if not nombre or not tamanno or not material:
+                    if not nombre or not codigo or not tamanno or not material:
                         messages.error(request,
-                                       f"Fila {No_fila +2 }: Los campos 'Nombre', 'Tamaño' y 'Material' son obligatorios.")
+                                       f"Fila {No_fila + 2}: Los campos 'Código','Nombre', 'Descripción' y 'Color' son "
+                                       f"obligatorios.")
                         return redirect('caja:crearImportarCaja')
 
                     if len(nombre) > 255:
@@ -126,7 +127,13 @@ def importarCaja(request):
                         messages.warning(request, 'Los siguientes códigos ya se encontraban registrados: ' + ', '.join(
                             cajas_existentes))
                 else:
-                    messages.warning(request, "No se importó ninguna caja.")
+                    if cajas_existentes:
+                        messages.warning(request,
+                                         'No se importó ninguna caja y los siguientes códigos ya se encontraban '
+                                         'registrados: ' + ', '.join(
+                                             cajas_existentes))
+                    else:
+                        messages.warning(request, "No se importó ninguna caja.")
 
                 return redirect('caja:listar')
 

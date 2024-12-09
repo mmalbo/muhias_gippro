@@ -61,7 +61,7 @@ def importar(request):
     if request.method == 'POST':
         file = request.FILES.get('excel')
         No_fila = 0
-        cajas_existentes = []
+        plantas_existentes = []
 
         if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
             messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
@@ -77,17 +77,20 @@ def importar(request):
                 for data in imported_data:
                     nombre = str(data[0]).strip() if data[0] is not None else None
                     propio_input = str(data[1]).strip().lower()  # Convertir a minúsculas
-
-                    # Validaciones
-                    if not nombre:
-                        messages.error(request, f'En la fila {No_fila + 2} el campo "Nombre" es obligatorio.')
-                        return redirect('importarPlantas')
-
                     # Validar el campo 'propio'
                     if propio_input not in ['si', 'no']:
                         messages.error(request,
                                        f'En la fila {No_fila + 2} el valor para "Propia" debe ser "si" o "no". Valor '
                                        f'recibido: {data[2] if data[2] is not None else "Ninguno"}')
+                        return redirect('importarPlantas')
+                    # Validaciones
+                    propio = True if propio_input == 'sí' else False
+                    existe = Planta.objects.filter(nombre__iexact=nombre, propio=propio)
+                    if existe:
+                        plantas_existentes.append(nombre)
+                        continue
+                    if not nombre:
+                        messages.error(request, f'En la fila {No_fila + 2} el campo "Nombre" es obligatorio.')
                         return redirect('importarPlantas')
 
                     propio = True if propio_input == 'sí' else False
@@ -107,12 +110,12 @@ def importar(request):
 
                 # Mensajes finales
                 if No_fila > 0:
-                    Total_filas = No_fila - len(cajas_existentes)
+                    Total_filas = No_fila - len(plantas_existentes)
                     messages.success(request, f'Se han importado {Total_filas} formatos satisfactoriamente.')
-                    if cajas_existentes:
+                    if plantas_existentes:
                         messages.warning(request,
                                          'Las siguientes unidades de medidas ya se encontraban registradas: ' + ', '.join(
-                                             cajas_existentes))
+                                             plantas_existentes))
                 else:
                     messages.warning(request, "No se importó ningún formato.")
 

@@ -33,6 +33,12 @@
                                     <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}
                                         Añadir{% endif %}</button>
                                     <a href="{% url 'tanque:listar' %}" class="btn btn-danger">Cancelar</a>
+                                    {% if not object %}
+                                        <a href="{% url 'tanque:importarTanque' %}" class="btn btn-success">
+                                            Importar excel
+                                        </a>
+                                    {% endif %}
+
                                 </div>
                             </form>
                         </div>

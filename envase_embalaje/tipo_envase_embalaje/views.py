@@ -1,8 +1,8 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
-from tipo_envase_embalaje.forms import TipoEnvaseEmbalajeForm
-from tipo_envase_embalaje.models import TipoEnvaseEmbalaje
+from envase_embalaje.tipo_envase_embalaje.forms import TipoEnvaseEmbalajeForm
+from envase_embalaje.tipo_envase_embalaje.models import TipoEnvaseEmbalaje
 
 
 class TipoEnvaseEmbalajeListView(ListView):

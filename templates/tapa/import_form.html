@@ -1,0 +1,52 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">Importar tapas</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            {% if messages %}
+                                <script>
+                                    {% for message in messages %}
+                                        Swal.fire({
+                                            icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                            title: '{{ message }}',
+                                            showConfirmButton: true
+                                        });
+                                    {% endfor %}
+                                </script>
+                            {% endif %}
+                            <form method="post" class="needs-validation" novalidate id="miFormulario"
+                                  enctype="multipart/form-data" action="{% url 'tapa:importarTapa' %}">
+                                {% csrf_token %}
+                                <div class="form-row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="foto">Importar excel <span
+                                                style="color: red;">*</span>
+                                            :</label>
+                                        <input class="form-control" type="file" accept=".xls,.xlsx" id="excel"
+                                               name="excel" required>
+
+                                        <div id="validationServer03Feedback" class="invalid-feedback">
+                                            Por favor,cargue el documento excel.
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">
+                                        Aceptar
+                                    </button>
+                                    <a href="{% url 'tapa:listar' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

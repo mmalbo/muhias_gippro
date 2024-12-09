@@ -1,0 +1,51 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+
+            <div class="col-sm-12 col-lg-12">
+                <h4 class="card-title">Detalles de la Adquisición de Envases</h4>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Información General</h5>
+{#                        <p><strong>ID:</strong> {{ adquisicion.id }}</p>#}
+                        <p><strong>Envase:</strong> {{ adquisicion.envase }}</p>
+                        <p><strong>Fecha de Compra:</strong> {{ adquisicion.fecha_compra }}</p>
+                        <p><strong>Importada:</strong> 
+                            {% if adquisicion.importada %}
+                                Sí
+                            {% else %}
+                                No
+                            {% endif %}
+                        </p>
+                        <p><strong>Cantidad:</strong> {{ adquisicion.cantidad }}</p>
+
+                        <!-- Sección para mostrar la factura -->
+                        {% if adquisicion.factura %}
+                            <h5>Factura:</h5>
+                            <p><strong>Nombre del Archivo:</strong> {{ nombre_factura }}</p>
+                            {% if adquisicion.factura.url|slice:":4" == ".pdf" %}
+                                <iframe src="{{ adquisicion.factura.url }}" style="width:100%; height:500px;" frameborder="0"></iframe>
+                                <p><a href="{{ adquisicion.factura.url }}" class="btn btn-primary" download>Descargar PDF</a></p>
+                            {% else %}
+                                <img src="{{ adquisicion.factura.url }}" alt="" style="max-width: 100%; height: auto;">
+                            {% endif %}
+                        {% else %}
+                            <p><strong>Factura:</strong>No hay factura cargada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                   
+                <div class="button-container" style="margin-top: 20px;text-align: center;">
+                    <a href="{% url 'envase_adquisicion_update' adquisicion.pk %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'envase_adquisicion_list' %}" class="btn btn-secondary">Volver a la Lista</a>
+                </div>
+<br>
+            </div> <!-- Cierre de col-sm-12 col-lg-12 -->
+        </div> <!-- Cierre de container-fluid -->
+    </div> <!-- Cierre de content-page -->
+</div> <!-- Cierre de wrapper -->
+{% endblock %}

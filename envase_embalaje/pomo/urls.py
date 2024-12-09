@@ -8,4 +8,7 @@ urlpatterns = [
     path('', views.ListPomoView.as_view(), name='listar'),
     path('actualizar/<uuid:pk>/', views.UpdatePomoView.as_view(), name='actualizar'),
     path('eliminar/<uuid:pk>/', views.DeletePomoView.as_view(), name='eliminar'),
+    path('importar/', views.CreateImportView.as_view(), name='crearImportarPomo'),
+    path('importar/importar/', views.importarPomo, name='importarPomo'),
+
 ]

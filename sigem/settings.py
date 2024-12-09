@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'adquisiciones.apps.AdquisicionConfig',
     'envase_embalaje.apps.EnvaseEmbalajeConfig',
     'envase_embalaje.caja.apps.EnvaseCajaConfig',
     'envase_embalaje.formato.apps.FormatoConfig',
@@ -63,6 +62,7 @@ INSTALLED_APPS = [
     'producto.apps.ProductoConfig',
     'registro_perdida_almacen.apps.RegistroPerdidaAlmacenConfig',
     'usuario.apps.UsuarioConfig',
+    'adquisiciones.apps.AdquisicionesConfig',
 ]
 
 MIDDLEWARE = [
@@ -99,14 +99,14 @@ WSGI_APPLICATION = 'sigem.wsgi.app'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-     'default': {
-         'ENGINE': 'django.db.backends.sqlite3',
-         'NAME': BASE_DIR / 'db.sqlite3',
-     }
-}
+# DATABASES = {
+#      'default': {
+#          'ENGINE': 'django.db.backends.sqlite3',
+#          'NAME': BASE_DIR / 'db.sqlite3',
+#      }
+# }
 
-""" DATABASES = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'sigem',
@@ -115,7 +115,7 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '5433'
     }
-} """
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

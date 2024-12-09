@@ -55,15 +55,15 @@ class CreateImportView(CreateView):
     model = Formato
     form_class = FormatoForm
     template_name = 'capacidad/import_form.html'
-    success_url = '/caja/'
-    success_message = "Se ha importado correctamente la caja."
+    success_url = '/formato/lista/'
+    success_message = "Se ha importado correctamente el formato."
 
 
 def importar(request):
     if request.method == 'POST':
         file = request.FILES.get('excel')
         No_fila = 0
-        cajas_existentes = []
+        formatos_existentes = []
 
         if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
             messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
@@ -77,27 +77,32 @@ def importar(request):
                 Col_Capacidad = 1
 
                 for data in imported_data:
-                    unidad = str(data[Col_Unidad]).strip()if data[Col_Unidad] is not None else None
-                    existe = Formato.objects.filter(unidad_medida=unidad).first()if data[Col_Capacidad] is not None else None
+                    unidad = str(data[Col_Unidad]).strip() if data[Col_Unidad] is not None else None
+                    capacidad = str(data[Col_Capacidad]).strip()  # Asegúrate de que sea un string
+                    existe = Formato.objects.filter(unidad_medida__iexact=unidad, capacidad=capacidad).first() if data[
+                                                                                                              Col_Capacidad] is not None else None
 
                     if existe:
-                        cajas_existentes.append(unidad)
+                        formatos_existentes.append(unidad)
                         continue  # Si ya existe, saltamos a la siguiente fila
 
-                    capacidad = str(data[Col_Capacidad]).strip()  # Asegúrate de que sea un string
+
 
                     # Validaciones de los datos
                     if not unidad or not capacidad:
-                        messages.error(request, f"Fila {No_fila +2}: Los campos 'Unidad de medida' y 'Capacidad' son obligatorios.")
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: Los campos 'Unidad de medida' y 'Capacidad' son obligatorios.")
                         return redirect('formato:importarFormato')
 
                     if len(unidad) > 255:
-                        messages.error(request, f"Fila {No_fila +2}: La unidad de medida no puede exceder 255 caracteres.")
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: La unidad de medida no puede exceder 255 caracteres.")
                         return redirect('formato:importarFormato')
 
                     # Validación de capacidad
                     if not capacidad.isdigit() or int(capacidad) <= 0:
-                        messages.error(request, f"Fila {No_fila +2}: 'Capacidad' debe ser un número entero mayor que cero.")
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: 'Capacidad' debe ser un número entero mayor que cero.")
                         return redirect('formato:importarFormato')
 
                     capacidad = int(capacidad)  # Convertimos a entero después de la validación
@@ -112,17 +117,25 @@ def importar(request):
                         No_fila += 1  # Incrementa solo si se guarda correctamente
 
                     except Exception as e:
-                        messages.error(request, f"Error al procesar la fila {No_fila +2}: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila {No_fila + 2}: {str(e)}")
                         return redirect('formato:importarFormato')
 
                 # Mensajes finales
                 if No_fila > 0:
-                    Total_filas = No_fila - len(cajas_existentes)
+                    Total_filas = No_fila - len(formatos_existentes)
                     messages.success(request, f'Se han importado {Total_filas} formatos satisfactoriamente.')
-                    if cajas_existentes:
-                        messages.warning(request, 'Las siguientes unidades de medidas ya se encontraban registradas: ' + ', '.join(cajas_existentes))
+                    if formatos_existentes:
+                        messages.warning(request,
+                                         'Los siguientes formatos ya se encontraban registrados: ' + ', '.join(
+                                             formatos_existentes))
                 else:
-                    messages.warning(request, "No se importó ningún formato.")
+                    if formatos_existentes:
+                        messages.warning(request,
+                                         'No se importó ningún formato y los siguientes formatos ya se encontraban '
+                                         'registrados: ' + ', '.join(
+                                             formatos_existentes))
+                    else:
+                        messages.warning(request, "No se importó ningún formato.")
 
                 return redirect('formato:listar')
 
