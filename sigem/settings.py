@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'adquisiciones.apps.AdquisicionConfig',
     'envase_embalaje.apps.EnvaseEmbalajeConfig',
     'envase_embalaje.caja.apps.EnvaseCajaConfig',
     'envase_embalaje.formato.apps.FormatoConfig',
@@ -63,6 +62,7 @@ INSTALLED_APPS = [
     'producto.apps.ProductoConfig',
     'registro_perdida_almacen.apps.RegistroPerdidaAlmacenConfig',
     'usuario.apps.UsuarioConfig',
+    'adquisiciones.apps.AdquisicionesConfig',
 ]
 
 MIDDLEWARE = [

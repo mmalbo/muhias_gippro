@@ -1,76 +1,64 @@
 from django.db import models
 from bases.bases.models import ModeloBase
+from materia_prima.models import MateriaPrima
+from envase_embalaje.models import EnvaseEmbalaje
+from InsumosOtros.models import InsumosOtros
+import os
 
+def factura_upload_to(instance, filename):
+    # Obtenemos el tipo de adquisicion
+    if isinstance(instance, MateriaPrimaAdquisicion):
+        folder_name = 'materia_prima'
+    elif isinstance(instance, EnvaseAdquisicion):
+        folder_name = 'envase'
+    elif isinstance(instance, InsumosAdquisicion):
+        folder_name = 'insumos'
+    else:
+        folder_name = 'otros'
+
+    # Retornamos la ruta completa donde se guardará el archivo
+    return os.path.join('facturas', folder_name, filename)
 
 class Adquisicion(ModeloBase):
     fecha_compra = models.DateTimeField(
         verbose_name="Fecha de la compra",
-        null=False, blank=False
+        null=True,
+        editable=True
     )
     factura = models.FileField(
         verbose_name="Factura",
-        null=False, blank=False
+        null=True, blank=True,
+        upload_to=factura_upload_to  # Usamos la función definida
     )
     importada = models.BooleanField(
         verbose_name="Importada",
         null=False, default=False
     )
-
-
-from materia_prima.models import MateriaPrima  # Importación local
-
-
-class MateriaPrimaAdquisicion(ModeloBase):
-    adquisicion_id = models.ForeignKey(
-        Adquisicion, on_delete=models.DO_NOTHING,
-
-        verbose_name="Adquisición de la materia prima"
-    )
-    materia_prima_id = models.ForeignKey(
-        MateriaPrima, on_delete=models.DO_NOTHING,
-        verbose_name="Materia prima adquirida")
-
     cantidad = models.IntegerField(
         verbose_name="Cantidad",
         null=False, default=1
     )
 
+    class Meta:
+        abstract = True  # Define esta clase como abstracta
 
-from envase_embalaje.models import EnvaseEmbalaje  # Importación local
 
-
-class EnvaseAdquisicion(ModeloBase):
-    adquisicion_id = models.ForeignKey(
-        Adquisicion, on_delete=models.DO_NOTHING,
-
-        verbose_name="Adquisición de envase"
+class MateriaPrimaAdquisicion(Adquisicion):
+    materia_prima = models.ForeignKey(
+        MateriaPrima, on_delete=models.DO_NOTHING,
+        verbose_name="Materia prima adquirida"
     )
-    envase_id = models.ForeignKey(
+
+
+class EnvaseAdquisicion(Adquisicion):
+    envase = models.ForeignKey(
         EnvaseEmbalaje, on_delete=models.DO_NOTHING,
         verbose_name="Envase o embalaje"
     )
 
-    cantidad = models.IntegerField(
-        verbose_name="Cantidad",
-        null=False, default=1
-    )
 
-
-from InsumosOtros.models import InsumosOtros
-
-
-class InsumosAdquisicion(ModeloBase):
-    adquisicion_id = models.ForeignKey(
-        Adquisicion, on_delete=models.DO_NOTHING,
-
-        verbose_name="Adquisición de insumos"
-    )
-    envase_id = models.ForeignKey(
+class InsumosAdquisicion(Adquisicion):
+    insumo = models.ForeignKey(
         InsumosOtros, on_delete=models.DO_NOTHING,
         verbose_name="Insumo adquirido"
-    )
-
-    cantidad = models.IntegerField(
-        verbose_name="Cantidad",
-        null=False, default=1
     )

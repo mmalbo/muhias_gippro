@@ -78,6 +78,7 @@ def importar(request):
 
                 for data in imported_data:
                     unidad = str(data[Col_Unidad]).strip() if data[Col_Unidad] is not None else None
+                    capacidad = str(data[Col_Capacidad]).strip()  # Asegúrate de que sea un string
                     existe = Formato.objects.filter(unidad_medida__iexact=unidad, capacidad=capacidad).first() if data[
                                                                                                               Col_Capacidad] is not None else None
 
@@ -85,7 +86,7 @@ def importar(request):
                         formatos_existentes.append(unidad)
                         continue  # Si ya existe, saltamos a la siguiente fila
 
-                    capacidad = str(data[Col_Capacidad]).strip()  # Asegúrate de que sea un string
+
 
                     # Validaciones de los datos
                     if not unidad or not capacidad:

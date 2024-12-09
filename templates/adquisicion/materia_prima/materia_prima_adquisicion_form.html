@@ -1,0 +1,78 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">{% if object %}Actualizar {% else %}Crear {% endif %} Adquisición de Materia Prima</h4>
+
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="form-row">
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.fecha_compra.label_tag }}
+                                        {{ form.fecha_compra }}
+                                    </div>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            var fechaInput = document.getElementById('id_fecha_compra');
+                                            var fechaActual = new Date().toISOString().split('T')[0];
+                                            fechaInput.setAttribute('max', fechaActual);
+                                        });
+                                    </script>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.cantidad.label_tag }}
+                                        {{ form.cantidad }}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.materia_prima.label_tag }}
+                                        {{ form.materia_prima }}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.factura.label_tag }}
+                                        {{ form.factura }}
+                                        {% if nombre_factura %}
+                                            <p><strong>Archivo Actual:</strong> {{ nombre_factura }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.importada.label_tag }}
+                                        {{ form.importada }}
+                                    </div>
+
+                                </div>
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">
+                                        {% if object %}Actualizar{% else %}Añadir{% endif %}
+                                    </button>
+                                    <a href="{% url 'materia_prima_adquisicion_list' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
