@@ -8,7 +8,7 @@ from nomencladores.almacen.models import Almacen
 
 class InsumosOtros(ModeloBase):
     codigo = models.CharField(
-        verbose_name="Código de la materia prima",
+        verbose_name="Código de insumo",
         unique=True,
         null=False, max_length=20
     )
@@ -54,3 +54,5 @@ class InsumosOtros(ModeloBase):
         null=True,
         verbose_name='Almacen ubicación'
     )
+    def __str__(self):
+        return self.nombre

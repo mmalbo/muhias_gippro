@@ -1,0 +1,35 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+
+            <div class="col-sm-12 col-lg-12">
+                <h4 class="card-title">Detalles del insumo: {{ insumo.codigo }}</h4>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Información General</h5>
+                        <p><strong>Código:</strong> {{ insumo.codigo }}</p>
+                        <p><strong>Estado:</strong> {{ insumo.estado }}</p>
+                        <p><strong>Nombre:</strong>{{ insumo.nombre }}</p>
+                        <p><strong>Almacén:</strong>{{ insumo.almacen }}</p>
+                        <p><strong>Cantidad alamacenada:</strong> {{ insumo.cantidad_almacen }}</p>
+                        <p><strong>Costo:</strong> {{ insumo.costo }}</p>
+                        <p><strong>Descripción:</strong> {{ insumo.descripcion }}</p>
+
+                        
+                    </div>
+                </div>
+                   
+                <div class="button-container" style="margin-top: 20px;text-align: center;">
+                    <a href="{% url 'insumos_update' insumo.pk %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'insumos_list' %}" class="btn btn-secondary">Volver a la Lista</a>
+                </div>
+<br>
+            </div> <!-- Cierre de col-sm-12 col-lg-12 -->
+        </div> <!-- Cierre de container-fluid -->
+    </div> <!-- Cierre de content-page -->
+</div> <!-- Cierre de wrapper -->
+{% endblock %}

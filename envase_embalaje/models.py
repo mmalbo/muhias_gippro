@@ -54,7 +54,7 @@ class EnvaseEmbalaje(ModeloBase):
         verbose_name_plural = "Envases o embalajes"
 
     def __str__(self):
-        return self.tipo_envase_embalaje.codigo
+        return self.codigo_envase
 
     @property
     def all_almacenes(self):

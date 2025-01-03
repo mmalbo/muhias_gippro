@@ -6,8 +6,7 @@
             <div class="container-fluid">
                 <div class="col-sm-11 col-lg-11">
                     <h4 class="card-title">{% if object %}Actualizar {% else %}Crear {% endif %} Adquisición de
-                        Envases</h4>
-
+                        Materias Primas</h4>
                     {% if messages %}
                         <script>
                             {% for message in messages %}
@@ -19,11 +18,10 @@
                             {% endfor %}
                         </script>
                     {% endif %}
-
                     <div class="card-body">
                         <form class="needs-validation" novalidate id="miFormulario" method="post"
                               enctype="multipart/form-data"
-                              action={% url 'envase_adquisicion_add' %}>
+                              action={% url 'materia_adquisicion_add' %}>
                             {% csrf_token %}
                             <div class="card">
                                 <div class="card-body" id="lista_adquisicion">
@@ -73,7 +71,7 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-12">
-                                            <h4>Relación de adquisiciones envases</h4>
+                                            <h4>Relación de adquisiciones de materias primas</h4>
                                             <a class="btn btn-success text-white" onclick="appendAdquisicion()">Agregar
                                                 nuevo</a>
                                         </div>
@@ -82,19 +80,19 @@
                                     <div class="card card-default" id="adquisicion">
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-6 mb-3" id="divEnvase">
-                                                    <label for="envase">Envases<span
+                                                <div class="col-md-6 mb-3" id="divMateria">
+                                                    <label for="materia">Materia prima<span
                                                             style="color: red;">*</span>:</label>
-                                                    <input class="form-control" list="envasesList" name="envaseClon"
-                                                           id="envase" placeholder="Escriba el envase"
-                                                           onchange="validateEnvase()">
-                                                    <datalist id="envasesList">
-                                                        {% for envase in envaseList %}
-                                                            <option value="{{ envase }}">{{ envase }}</option>
+                                                    <input class="form-control" list="materiasPrimasList" name="materiaClon"
+                                                           id="materia" placeholder="Escriba la materia prima"
+                                                           onchange="validateMateria()">
+                                                    <datalist id="materiasPrimasList">
+                                                        {% for materia in materiaPrimaList %}
+                                                            <option value="{{ materia }}">{{ materia }}</option>
                                                         {% endfor %}
                                                     </datalist>
                                                     <div id="validationServer03Feedback" class="invalid-feedback">
-                                                        Por favor, seleccione el envase o embalaje.
+                                                        Por favor, seleccione la materia prima.
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
@@ -129,19 +127,19 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-6 mb-3" id="divEnvaseClon">
-                                                    <label for="envaseClon">Envases<span
+                                                <div class="col-md-6 mb-3" id="divMateriaClon">
+                                                    <label for="materiaClon">Materia prima<span
                                                             style="color: red;">*</span>:</label>
-                                                    <input class="form-control" list="envasesList" name="envaseClon"
-                                                           id="envaseClon" onchange="validateEnvase()"
-                                                           placeholder="Escriba el envase">
-                                                    <datalist id="envasesList">
-                                                        {% for envase in envaseList %}
-                                                            <option value="{{ envase }}">{{ envase }}</option>
+                                                    <input class="form-control" list="materiasPrimasList" name="materiaClon"
+                                                           id="materiaClon" onchange="validateMateria()"
+                                                           placeholder="Escriba la materia prima">
+                                                    <datalist id="materiasPrimasList">
+                                                        {% for materia in materiaPrimaList %}
+                                                            <option value="{{ materia }}">{{ materia }}</option>
                                                         {% endfor %}
                                                     </datalist>
                                                     <div id="validationServer03Feedback" class="invalid-feedback">
-                                                        Por favor, seleccione el envase o embalaje.
+                                                        Por favor, seleccione la materia prima.
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
@@ -173,7 +171,7 @@
                                 <button type="button" id="submit_button" style="width: 20%;"
                                         class="btn btn-primary confirmar" onclick="submitForm()">Aceptar
                                 </button>
-                                <a href="{% url 'envase_adquisicion_list' %}" class="btn btn-danger">Cancelar</a>
+                                <a href="{% url 'materia_prima_adquisicion_list' %}" class="btn btn-danger">Cancelar</a>
                             </div>
                         </form>
                     </div>
@@ -243,7 +241,7 @@
             adquisicionClone.find('#title_adquisicion').text('Nueva adquisición # ' + pos);
             adquisicionClone.find('#id_remove_button_0').attr('id', 'id_remove_button_' + pos);
             adquisicionClone.find('#cantidadClon').attr('id', 'cantidadClon' + pos);
-            adquisicionClone.find('#envaseClon').attr('id', 'envaseClon' + pos);
+            adquisicionClone.find('#materiaClon').attr('id', 'materiaClon' + pos);
             adquisicionClone.find('#tipoAdquisicionClon').attr('id', 'tipoAdquisicionClon' + pos);
             // Repite para otros campos según sea necesario...
         }
@@ -258,7 +256,7 @@
                 for (let i = 0; i <= numero_adquisicions_agregados; i++) {
                     {#console.log(numero_adquisicions_agregados)#}
                     const cantidad = document.getElementById(`cantidadClon${i}`) || document.getElementById('cantidad');
-                    const envase = document.getElementById(`envaseClon${i}`) || document.getElementById('envase');
+                    const materia = document.getElementById(`materiaClon${i}`) || document.getElementById('materia');
                     // Validar cantidad
                     if (cantidad && (!cantidad.value || cantidad.value <= 0)) {
                         cantidad.classList.add('is-invalid');
@@ -274,19 +272,19 @@
                         cantidad.classList.remove('is-invalid');
                         cantidad.classList.add('is-valid')
                     }
-                    // Validar envase
-                    if (envase && (!envase.value || !Array.from(document.getElementById('envasesList').options).some(option => option.value === envase.value))) {
-                        envase.classList.add('is-invalid');
+                    // Validar materia
+                    if (materia && (!materia.value || !Array.from(document.getElementById('materiasPrimasList').options).some(option => option.value === materia.value))) {
+                        materia.classList.add('is-invalid');
                         if (`${i}` == 0) {
-                            errorMessage.push(`Debe seleccionar un envase para la primera adquisición .`);
+                            errorMessage.push(`Debe seleccionar una materia prima para la primera adquisición .`);
 
                         } else {
-                            errorMessage.push(`Debe seleccionar un envase para la adquisición ${i}.`);
+                            errorMessage.push(`Debe seleccionar una materia prima para la adquisición ${i}.`);
                         }
                         isValid = false;
                     } else {
-                        envase.classList.remove('is-invalid');
-                        envase.classList.add('is-valid')
+                        materia.classList.remove('is-invalid');
+                        materia.classList.add('is-valid')
                     }
                 }
                 // Mostrar errores si existen
@@ -304,24 +302,24 @@
             return isValid;
         }
 
-        function validateEnvase() {
+        function validateMateria() {
             const errorMessage = [];
             let isValid = true;
             for (let i = 0; i <= numero_adquisicions_agregados; i++) {
-                const envase = document.getElementById(`envaseClon${i}`) || document.getElementById('envase');
-                // Validar envase
-                if (envase && (!envase.value || !Array.from(document.getElementById('envasesList').options).some(option => option.value === envase.value))) {
-                    envase.classList.add('is-invalid');
+                const materia = document.getElementById(`materiaClon${i}`) || document.getElementById('materia');
+                // Validar materia
+                if (materia && (!materia.value || !Array.from(document.getElementById('materiasPrimasList').options).some(option => option.value === materia.value))) {
+                    materia.classList.add('is-invalid');
                     if (`${i}` == 0) {
-                        errorMessage.push(`Debe seleccionar un envase para la primera adquisición .`);
+                        errorMessage.push(`Debe seleccionar una materia prima para la primera adquisición .`);
 
                     } else {
-                        errorMessage.push(`Debe seleccionar un envase para la adquisición ${i}.`);
+                        errorMessage.push(`Debe seleccionar una materia prima para la adquisición ${i}.`);
                     }
                     isValid = false;
                 } else {
-                    envase.classList.remove('is-invalid');
-                    envase.classList.add('is-valid')
+                    materia.classList.remove('is-invalid');
+                    materia.classList.add('is-valid')
                 }
             }
             if (!isValid) {
@@ -510,7 +508,7 @@
 
         function mostrarElemento() {
             // Ocultar todos los elementos
-            document.getElementById('divEnvase').style.display = 'none';
+            document.getElementById('divMateria').style.display = 'none';
             document.getElementById('divMateria').style.display = 'none';
             document.getElementById('divInsumos').style.display = 'none';
 
@@ -519,7 +517,7 @@
 
             // Mostrar el elemento correspondiente
             if (tipoAdquisicion === "1") {
-                document.getElementById('divEnvase').style.display = 'block';
+                document.getElementById('divMateria').style.display = 'block';
             } else if (tipoAdquisicion === "2") {
                 document.getElementById('divMateria').style.display = 'block';
             } else if (tipoAdquisicion === "3") {
@@ -532,12 +530,12 @@
             var tipoAdquisicionClon = document.getElementById(`${id}`).value;
             var numero = extraerNumero(id);
             // Ocultar todos los elementos
-            document.getElementById(`divEnvaseClon${numero}`).style.display = 'none';
+            document.getElementById(`divMateriaClon${numero}`).style.display = 'none';
             document.getElementById(`divMateriaClon${numero}`).style.display = 'none';
             document.getElementById(`divInsumosClon${numero}`).style.display = 'none';
             // Mostrar el elemento correspondiente
             if (tipoAdquisicionClon === "1") {
-                document.getElementById(`divEnvaseClon${numero}`).style.display = 'block';
+                document.getElementById(`divMateriaClon${numero}`).style.display = 'block';
             } else if (tipoAdquisicionClon === "2") {
                 document.getElementById(`divMateriaClon${numero}`).style.display = 'block';
             } else if (tipoAdquisicionClon === "3") {
