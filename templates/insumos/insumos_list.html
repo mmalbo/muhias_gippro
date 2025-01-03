@@ -1,0 +1,79 @@
+{% extends 'base/base.html' %}
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Insumos y otros</h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Estado</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for insumo in insumos %}
+                            <tr>
+                                <td>{{ insumo.codigo }}</td>
+                                <td>{{ insumo.estado }}</td>
+                                <td>{{ insumo.nombre }}</td>
+                                <td>{{ insumo.descripcion }}</td>
+                                <td>{{ insumo.cantidad_almacen }}</td>
+                                <td>{{ insumo.costo }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'insumos_detail' insumo.pk %}"
+                                           title="Ver detalles">
+                                            <i class="fas fa-eye"></i> <!-- Ícono de ojo -->
+                                        </a>
+                                        <a href="{% url 'insumos_update' insumo.pk %}"
+                                           class="btn far fa-edit" title="Editar insumo"></a>
+                                        <a href="{% url 'insumos_delete' insumo.pk %}"
+                                           title="Eliminar insumo"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Estado</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'insumos_create' %}" class="btn btn-success">Crear insumos</a>
+                    
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

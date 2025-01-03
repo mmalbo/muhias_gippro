@@ -25,6 +25,7 @@ urlpatterns = [
     path('planta/', include('nomencladores.planta.urls'), name='planta'),
     path('usuario/', include('usuario.urls'), name='usuario'),
     path('adquisiciones/', include('adquisiciones.urls'), name='adquisiciones'),
+    path('insumos/', include('InsumosOtros.urls'), name='insumos'),
 
     # Otras rutas pueden ser añadidas aquí
 ]

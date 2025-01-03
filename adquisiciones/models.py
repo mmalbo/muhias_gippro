@@ -5,6 +5,7 @@ from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
 import os
 
+
 def factura_upload_to(instance, filename):
     # Obtenemos el tipo de adquisicion
     if isinstance(instance, MateriaPrimaAdquisicion):
@@ -18,6 +19,7 @@ def factura_upload_to(instance, filename):
 
     # Retornamos la ruta completa donde se guardará el archivo
     return os.path.join('facturas', folder_name, filename)
+
 
 class Adquisicion(ModeloBase):
     fecha_compra = models.DateTimeField(
@@ -49,6 +51,9 @@ class MateriaPrimaAdquisicion(Adquisicion):
         verbose_name="Materia prima adquirida"
     )
 
+    class Meta:
+        unique_together = (('materia_prima', 'fecha_compra', 'factura'),)
+
 
 class EnvaseAdquisicion(Adquisicion):
     envase = models.ForeignKey(
@@ -56,9 +61,15 @@ class EnvaseAdquisicion(Adquisicion):
         verbose_name="Envase o embalaje"
     )
 
+    class Meta:
+        unique_together = (('envase', 'fecha_compra', 'factura'),)
+
 
 class InsumosAdquisicion(Adquisicion):
     insumo = models.ForeignKey(
         InsumosOtros, on_delete=models.DO_NOTHING,
         verbose_name="Insumo adquirido"
     )
+
+    class Meta:
+        unique_together = (('insumo', 'fecha_compra', 'factura'),)

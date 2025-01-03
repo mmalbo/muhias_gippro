@@ -324,6 +324,26 @@
                             </ul>
                         </li>
                         <li class=" ">
+                            <a href="#insumosYOtros" class="collapsed" data-toggle="collapse" aria-expanded="false">
+
+                                <span class="ml-2">Insumos y otros</span>
+                                <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                            </a>
+                            <ul id="insumosYOtros" class="iq-submenu collapse" data-parent="#registrar">
+                                <li class="">
+                                    <a href="{% url 'insumos_create' %}">
+                                        <i class="las la-minus"></i><span>Adicionar</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="{% url 'insumos_list' %}">
+                                        <i class="las la-minus"></i><span>Listar</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class=" ">
                             <a href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false">
 
                                 <span class="ml-2">Materia prima</span>
@@ -405,7 +425,7 @@
                     </ul>
                 </li>
                 <li class=" ">
-                    <a href="#adquisicion" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                    <a href="#adquisicionE" class="collapsed" data-toggle="collapse" aria-expanded="false">
                         <svg class="svg-icon" id="p-dash14" width="20" height="20"
                              xmlns="http://www.w3.org/2000/svg"
                              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -419,7 +439,7 @@
                         <i class="las la-angle-right iq-arrow-right arrow-active"></i>
                         <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
                     </a>
-                    <ul id="adquisicion" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                    <ul id="adquisicionE" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                         <li class=" ">
                             <a href="#envase_embalaje" class="collapsed" data-toggle="collapse" aria-expanded="false">
                                 <span class="ml-2">Envase o embalajes</span>
@@ -468,7 +488,7 @@
                             </a>
                             <ul id="materia_prima" class="iq-submenu collapse" data-parent="#registrar">
                                 <li class="">
-                                    <a href="{% url 'materia_prima:materia_prima_crear' %}">
+                                    <a href="{% url 'materia_prima_adquisicion_create' %}">
                                         <i class="las la-minus"></i><span>Adicionar</span>
                                     </a>
                                 </li>
