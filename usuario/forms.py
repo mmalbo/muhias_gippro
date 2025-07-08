@@ -6,13 +6,15 @@ from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 
+from usuario.models import CustomUser
+
 
 class CustomUserCreationForm(UserCreationForm):
-    groups = forms.ModelMultipleChoiceField(
+    groups = forms.ModelChoiceField(
         queryset=Group.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-select', 'style': 'width:100%'}),
+        widget=forms.Select(attrs={'class': 'form-control', 'style': 'width:50%'}),
         required=True,
-        label='Responsabilidad:'
+        label='Rol:',
     )
     password1 = forms.CharField(
         label="Contraseña",
@@ -38,7 +40,7 @@ class CustomUserCreationForm(UserCreationForm):
         return password2
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('first_name', 'last_name', 'username', 'email', 'groups', 'password1', 'password2', 'is_active')
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -46,7 +48,6 @@ class CustomUserCreationForm(UserCreationForm):
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.TextInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'right:92%'}),
-
         }
         labels = {
             'first_name': 'Nombre:',
@@ -58,9 +59,9 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomUserChangeForm(UserChangeForm):
-    groups = forms.ModelMultipleChoiceField(
+    groups = forms.ModelChoiceField(
         queryset=Group.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-select', 'style': 'width:100%'}),
+        widget=forms.Select(attrs={'class': 'form-select', 'style': 'width:100%'}),
         required=True,
         label='Responsabilidad:'
     )
@@ -88,7 +89,7 @@ class CustomUserChangeForm(UserChangeForm):
         return password2
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('first_name', 'last_name', 'username', 'email', 'groups', 'password1', 'password2', 'is_active')
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'readonly': True}),

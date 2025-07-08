@@ -24,7 +24,7 @@
                             <tr>
                                 <td>{{ envase_embalaje.codigo_envase }}</td>
                                 <td>{{ envase_embalaje.cantidad }}</td>
-                                <td>{{ envase_embalaje.capacidad }}</td>
+                                <td>{{ envase_embalaje.formato }}</td>
                                 <td>{{ envase_embalaje.tipo_envase_embalaje }}</td>
                                 <td>
                                     {{ envase_embalaje.almacen }}
@@ -35,9 +35,9 @@
                                         <a href="{% url 'envase_embalaje_editar' envase_embalaje.pk %}"
                                            title="Editar envase o embalaje"
                                            class="btn far fa-edit"></a>
-{#                                        <a href="{% url 'envase_embalaje_eliminar' envase_embalaje.pk %}"#}
-{#                                           title="Eliminar envase o embalaje"#}
-{#                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>#}
+                                        <a href="{% url 'envase_embalaje_eliminar' envase_embalaje.pk %}"
+                                           title="Eliminar envase o embalaje"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>
                                     </div>
                                 </td>
                             </tr>
@@ -90,7 +90,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const showAlmacenesLinks = document.querySelectorAll('.show-almacenes');
             const modal = document.getElementById('almacenes-modal');
-            {#const closeButton = document.getElementsByClassName('close-button')[0];#}
+            const closeButton = document.getElementsByClassName('close-button')[0];
 
             showAlmacenesLinks.forEach(function (link) {
                 link.addEventListener('click', function (event) {

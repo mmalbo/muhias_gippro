@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    <title>Muhia - Equipo</title>
+    {% endblock %}
+
+{% block content %}
+
+    <section id="sobre_nosotros" class="page-section">
+        <div class="container py-3 py-xl-3">
+            <div class="row mb-0">
+                <div class="col-12 col-md-8 col-xl-6 text-center mx-auto" data-aos="zoom-in" data-aos-delay="50">
+                    <h2 class="font-weight-bold" style="font-family: Roboto, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">El equipo lo es todo</h2>
+                    <p class="w-lg-50" style="font-family: Roboto, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; font-size: 20px;">Nuestro equipo es como una gran familia</p>
+                </div>
+            </div>
+            <div class="row my-2 py-5">
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <img class="img-fluid d-flex" style="width: min-content;" src="{% static 'img/Equipo/presidenta_ines.png' %}">
+                </div>
+                <div class="col-md-4 col-xl-6 mx-auto">                    
+                    <div class="align-items-start" data-aos="fade-right" data-aos-duration="700" data-aos-delay="30">
+                        <h4 class="font-weight-bold">Presidenta</h4>
+                        <br>
+                        <h6>Inés Vega </h6>
+                    </div>
+                </div>
+            </div>
+            <div class="row my-2">
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <img class="img-fluid d-flex" src="{% static 'img/Equipo/vicepresidente_alberto.png' %}">
+                </div>
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <div class="align-items-start" data-aos="fade-right" data-aos-duration="700" data-aos-delay="30">
+                        <h4 class="font-weight-bold">Vicepresidente</h4>
+                        <br>
+                        <p>Alberto</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row my-2">
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <img class="img-fluid d-flex" src="{% static 'img/Equipo/gerente_comercial_juan.png' %}">
+                </div>
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <div class="align-items-start" data-aos="fade-right" data-aos-duration="700" data-aos-delay="30">
+                        <h4 class="font-weight-bold">Director comercial</h4>
+                        <br>
+                        <p>Juan</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row my-2">
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <img class="img-fluid d-flex" src="{% static 'img/Equipo/gestora_ventas_maricela.png' %}">
+                </div>
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <div class="align-items-start" data-aos="fade-right" data-aos-duration="700" data-aos-delay="30">
+                        <h4 class="font-weight-bold">Gerente de ventas</h4>
+                        <br>
+                        <p>Maricela</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row my-2">
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <img class="img-fluid d-flex" src="{% static 'img/Equipo/tecnologa_idania.png' %}">
+                </div>
+                <div class="col-md-4 col-xl-6 mx-auto">
+                    <div class="align-items-start" data-aos="fade-right" data-aos-duration="700" data-aos-delay="30">
+                        <h4 class="font-weight-bold" style="color: brown;">Especialistas en la tecnologías</h4>
+                        <br>
+                        <p>Idania</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

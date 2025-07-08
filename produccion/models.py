@@ -99,7 +99,7 @@ class Sol_Mat_Primas(ModeloBase):
 
 
 class Sol_Prod_Base(ModeloBase):
-    lote_prod = models.ForeignKey(
+    lote_prod_base = models.ForeignKey(
         Produccion,  # Referencia al modelo completo
         on_delete=models.DO_NOTHING,
 

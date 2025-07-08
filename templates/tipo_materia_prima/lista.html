@@ -15,9 +15,9 @@
                             <th>Nombre</th>
                             <th>Tipo</th>
                             <th>Ingrediente Activo</th>
-                            <th>Tipo de Fragancia</th>
-                            <th>Tipo de Sustancia</th>
-                            <th>Tipo de Color</th>
+                            {#<th>Tipo de Fragancia</th>#}
+                            {#<th>Tipo de Sustancia</th>#}
+                            {#<th>Tipo de Color</th>#}
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -27,9 +27,9 @@
                                 <td>{{ tipo_materia_prima.nombre }}</td>
                                 <td>{{ tipo_materia_prima.get_tipo_display  }}</td>
                                 <td>{{ tipo_materia_prima.ingrediente_activo }}</td>
-                                <td>{{ tipo_materia_prima.tipo_fragancia }}</td>
-                                <td>{{ tipo_materia_prima.tipo_sustancia }}</td>
-                                <td>{{ tipo_materia_prima.tipo_color }}</td>
+                                {#<td>{{ tipo_materia_prima.tipo_fragancia }}</td>#}
+                                {#<td>{{ tipo_materia_prima.tipo_sustancia }}</td>#}
+                                {#<td>{{ tipo_materia_prima.tipo_color }}</td>#}
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'tipo_materia_prima:actualizar' tipo_materia_prima.id %}"
@@ -49,9 +49,9 @@
                             <th>Nombre</th>
                             <th>Tipo</th>
                             <th>Ingrediente Activo</th>
-                            <th>Tipo de Fragancia</th>
-                            <th>Tipo de Sustancia</th>
-                            <th>Tipo de Color</th>
+                            {#<th>Tipo de Fragancia</th>#}
+                            {#<th>Tipo de Sustancia</th>#}
+                            {#<th>Tipo de Color</th>#}
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

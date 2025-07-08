@@ -30,7 +30,7 @@
                         <tbody>
                         {% for capacidad in capacidades %}
                             <tr>
-                                <td>{{ capacidad.capacidad }}</td>
+                                <td>{% if capacidad.capacidad == 0 %} A granel {% else %} {{ capacidad.capacidad }} {% endif %}</td> 
                                 <td>{{ capacidad.unidad_medida }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">

@@ -9,7 +9,7 @@ class TipoMateriaPrima(Nomenclador):
                             choices=CHOICE_TIPO,
                             blank=False,
                             # default='',
-                            null=False)
+                            null=True)
     ingrediente_activo = models.IntegerField(
         default=0,
         # unique=True,

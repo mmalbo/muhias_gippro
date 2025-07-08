@@ -1,15 +1,19 @@
+from django.core.files.storage.filesystem import FileSystemStorage
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls.base import reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-
+from formtools.wizard.views import SessionWizardView
 from InsumosOtros.models import InsumosOtros
 from envase_embalaje.models import EnvaseEmbalaje
 from materia_prima.models import MateriaPrima
-from .models import MateriaPrimaAdquisicion, EnvaseAdquisicion, InsumosAdquisicion
-from .forms import MateriaPrimaAdquisicionForm, EnvaseAdquisicionForm, InsumosAdquisicionForm
+from .models import MateriaPrimaAdquisicion
+#, EnvaseAdquisicion, InsumosAdquisicion
+from .forms import MateriaPrimaAdquisicionForm, PasoAdquisicionForm, PasoMateriaPrimaForm
+#, EnvaseAdquisicionForm, InsumosAdquisicionForm, 
 
 
 # Vistas para MateriaPrimaAdquisicion
@@ -17,7 +21,6 @@ class MateriaPrimaAdquisicionListView(ListView):
     model = MateriaPrimaAdquisicion
     template_name = 'adquisicion/materia_prima/materia_prima_adquisicion_list.html'
     context_object_name = 'adquisiciones'
-
 
 class MateriaPrimaAdquisicionDetailView(DetailView):
     model = MateriaPrimaAdquisicion
@@ -32,23 +35,6 @@ class MateriaPrimaAdquisicionDetailView(DetailView):
             context['nombre_factura'] = None
         return context
 
-
-# class MateriaPrimaAdquisicionCreateView(CreateView):
-#     model = MateriaPrimaAdquisicion
-#     form_class = MateriaPrimaAdquisicionForm
-#     template_name = 'adquisicion/materia_prima/materia_prima_adquisicion_form_add.html'
-#     success_url = reverse_lazy('materia_prima_adquisicion_list')
-#
-#     def form_valid(self, form):
-#         messages.success(self.request, "Adquisición de materia prima creada con éxito.")
-#         return super().form_valid(form)
-#
-#     def form_invalid(self, form):
-#         for field, errors in form.errors.items():
-#             for error in errors:
-#                 messages.error(self.request, f"{field.capitalize()}: {error}")
-#         return super().form_invalid(form)
-
 def materiaAdquisicionCreateView(request):
     envaseList = EnvaseEmbalaje.objects.all()
     materiaPrimaList = MateriaPrima.objects.all
@@ -59,7 +45,6 @@ def materiaAdquisicionCreateView(request):
         'insumosList': insumosList
     }
     return render(request, 'adquisicion/materia_prima/materia_prima_adquisicion_form_add.html', context)
-
 
 def materia_add(request):
     if request.method == 'POST':
@@ -107,7 +92,6 @@ def materia_add(request):
 
     return JsonResponse({'success': False, 'message': 'Método no permitido.'})
 
-
 class MateriaPrimaAdquisicionUpdateView(UpdateView):
     model = MateriaPrimaAdquisicion
     form_class = MateriaPrimaAdquisicionForm
@@ -132,13 +116,12 @@ class MateriaPrimaAdquisicionUpdateView(UpdateView):
                 messages.error(self.request, f"{field.capitalize()}: {error}")
         return super().form_invalid(form)
 
-
 # Vistas para EnvaseAdquisicion
+"""
 class EnvaseAdquisicionListView(ListView):
     model = EnvaseAdquisicion
     template_name = 'adquisicion/envase/envase_adquisicion_list.html'
     context_object_name = 'adquisiciones'
-
 
 class EnvaseAdquisicionDetailView(DetailView):
     model = EnvaseAdquisicion
@@ -152,7 +135,6 @@ class EnvaseAdquisicionDetailView(DetailView):
         else:
             context['nombre_factura'] = None
         return context
-
 
 def envases_add(request):
     if request.method == 'POST':
@@ -212,23 +194,6 @@ def envaseAdquisicionCreateView(request):
     }
     return render(request, 'adquisicion/envase/envase_adquisicion_form.html', context)
 
-
-# model = EnvaseAdquisicion
-# form_class = EnvaseAdquisicionForm
-# template_name = 'adquisicion/envase/envase_adquisicion_form.html'
-# success_url = reverse_lazy('envase_adquisicion_list')
-#
-# def form_valid(self, form):
-#
-#     return super().form_valid(form)
-#
-# def form_invalid(self, form):
-#     for field, errors in form.errors.items():
-#         for error in errors:
-#             messages.error(self.request, f"{field.capitalize()}: {error}")
-#     return super().form_invalid(form)
-
-
 class EnvaseAdquisicionUpdateView(UpdateView):
     model = EnvaseAdquisicion
     form_class = EnvaseAdquisicionForm
@@ -253,13 +218,11 @@ class EnvaseAdquisicionUpdateView(UpdateView):
                 messages.error(self.request, f"{field.capitalize()}: {error}")
         return super().form_invalid(form)
 
-
 # Vistas para InsumosAdquisicion
 class InsumosAdquisicionListView(ListView):
     model = InsumosAdquisicion
     template_name = 'adquisicion/insumos/insumos_adquisicion_list.html'
     context_object_name = 'adquisiciones'
-
 
 class InsumosAdquisicionDetailView(DetailView):
     model = InsumosAdquisicion
@@ -274,22 +237,6 @@ class InsumosAdquisicionDetailView(DetailView):
             context['nombre_factura'] = None
         return context
 
-
-# class InsumosAdquisicionCreateView(CreateView):
-#     model = InsumosAdquisicion
-#     form_class = InsumosAdquisicionForm
-#     template_name = 'adquisicion/insumos/insumos_adquisicion_form_edit.html'
-#     success_url = reverse_lazy('insumos_adquisicion_list')
-#
-#     def form_valid(self, form):
-#         messages.success(self.request, "Adquisición de insumos creada con éxito.")
-#         return super().form_valid(form)
-#
-#     def form_invalid(self, form):
-#         for field, errors in form.errors.items():
-#             for error in errors:
-#                 messages.error(self.request, f"{field.capitalize()}: {error}")
-#         return super().form_invalid(form)
 def insumosAdquisicionCreateView(request):
     envaseList = EnvaseEmbalaje.objects.all()
     materiaPrimaList = MateriaPrima.objects.all
@@ -348,7 +295,6 @@ def insumos_add(request):
 
     return JsonResponse({'success': False, 'message': 'Método no permitido.'})
 
-
 class InsumosAdquisicionUpdateView(UpdateView):
     model = InsumosAdquisicion
     form_class = InsumosAdquisicionForm
@@ -372,3 +318,73 @@ class InsumosAdquisicionUpdateView(UpdateView):
             for error in errors:
                 messages.error(self.request, f"{field.capitalize()}: {error}")
         return super().form_invalid(form)
+"""
+#------------!!!!!----------------#
+class MateriaPrimaAdquisicionWizard(SessionWizardView):
+    form_list = [PasoAdquisicionForm, PasoMateriaPrimaForm]
+    template_name = 'adquisicion/materia_prima/wizard/wizard_form.html'
+    file_storage = FileSystemStorage()
+
+    def get_form_initial(self, step):
+        initial = super().get_form_initial(step) or {}
+        if step == '1':
+            # Obtiene datos del paso 0 solo si el formulario es válido
+            form = self.get_form(step='0', data=self.storage.get_step_data('0'))
+            if form.is_valid():
+                initial.update(form.cleaned_data)
+                print("---INITIAL---")
+                print(self.storage.get_step_data('0'))
+        return initial
+
+    def post(self, request, *args, **kwargs):
+        print("#---WIZARD---#---STEP---")
+        print(request.POST)
+        if 'wizard_prev_step' in request.POST:
+            # Guarda los datos del paso actual aunque no sean válidos
+            form = self.get_form(data=request.POST, files=request.FILES)
+            self.storage.set_step_data(self.steps.current, self.process_step(form))
+            self.storage.current_step = self.steps.prev
+            return self.render(self.get_form())
+        return super().post(request, *args, **kwargs)
+
+    def done(self, form_list, **kwargs):
+        #try:
+            # Validación explícita de todos los formularios
+            if not all(form.is_valid() for form in form_list):
+                raise ValueError("Por favor corrige los errores en los formularios")
+
+            # Acceso seguro a cleaned_data
+            paso1_data = form_list[0].cleaned_data
+            paso2_data = form_list[1].cleaned_data
+
+            """ if not paso2_data.get('materia_prima'):
+                raise ValueError("Debes seleccionar una materia prima") """
+
+            adquisicion = MateriaPrimaAdquisicion.objects.create(
+                fecha_compra=paso1_data['fecha_compra'],
+                factura=paso1_data.get('factura'),
+                importada=paso1_data.get('importada', False),
+                cantidad=paso1_data.get('cantidad', 1),
+                #materia_prima=paso2_data['materia_prima']
+            )
+            print(adquisicion)
+            print("------------")
+            materia_p = MateriaPrima.objects.create(
+                nombre = paso2_data.get['nombre'],
+                tipo = paso2_data.get('tipo_materia_prima'),
+                conf = paso2_data.get('conformacion'),
+                unid = paso2_data.get('unidad_medida')
+                
+            )
+            print("Entre")
+            print(materia_p)
+
+            return redirect('materia_prima_adquisicion_list')
+
+    """ except Exception as e:
+            messages.error(self.request, f"Error: {str(e)}")
+            print("Estoy saliendo aqui")
+            return self.render(self.get_form()) """
+def adquisicion_detalle(request, pk):
+    adquisicion = get_object_or_404(MateriaPrimaAdquisicion, pk=pk)
+    return render(request, 'adquisicion/materia_prima/wizard/adquisicion_detalle.html', {'adquisicion': adquisicion})

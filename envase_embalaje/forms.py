@@ -13,9 +13,50 @@ class EnvaseEmbalajeForm(forms.ModelForm):
                                                   widget=forms.Select(attrs={'class': 'form-control'})
                                                   )
     formato = forms.ModelChoiceField(queryset=Formato.objects.all(),
-                                       label='Capacidad',
-                                       widget=forms.Select(attrs={'class': 'form-control'})
-                                       )
+                                     label='Formato',
+                                     widget=forms.Select(attrs={'class': 'form-control'})
+                                     )
+
+    almacen = forms.ModelChoiceField(
+        queryset=None,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=False,
+        label='Almacenes'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        Almacen = apps.get_model('almacen', 'Almacen')
+        self.fields['almacen'].queryset = Almacen.objects.all()
+
+    class Meta:
+        model = EnvaseEmbalaje
+        fields = [
+            # 'codigo_envase',
+            'cantidad',
+            'tipo_envase_embalaje',
+            'formato',
+            'almacen',
+        ]
+        widgets = {
+            # 'codigo_envase': forms.TextInput(attrs={'class': 'form-control'}),
+            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            # 'codigo_envase': 'Código de envace:',
+            'cantidad': 'Cantidad:',
+        }
+
+
+class EnvaseEmbalajeUpdateForm(forms.ModelForm):
+    tipo_envase_embalaje = forms.ModelChoiceField(queryset=TipoEnvaseEmbalaje.objects.all(),
+                                                  label='Tipo de envase o embalaje',
+                                                  widget=forms.Select(attrs={'class': 'form-control'})
+                                                  )
+    formato = forms.ModelChoiceField(queryset=Formato.objects.all(),
+                                     label='Formato',
+                                     widget=forms.Select(attrs={'class': 'form-control'})
+                                     )
 
     almacen = forms.ModelChoiceField(
         queryset=None,
@@ -39,10 +80,10 @@ class EnvaseEmbalajeForm(forms.ModelForm):
             'almacen',
         ]
         widgets = {
-            'codigo_envase': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_envase': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
         }
         labels = {
-            'codigo_envase': 'Código de envace:',
+            'codigo_envase': 'Código:',
             'cantidad': 'Cantidad:',
         }

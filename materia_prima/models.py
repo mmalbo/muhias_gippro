@@ -102,8 +102,8 @@ class MateriaPrima(ModeloBase):
     def get_hoja_seguridad_name(self):
         return self.hoja_seguridad.name if self.hoja_seguridad else ''
 
-    # def clean(self):
-    #     if self.cantidad_almacen < 0:
-    #         raise ValidationError('Cantidad en almacén no puede ser negativa.')
-    #     if self.costo < 0:
-    #         raise ValidationError('Costo no puede ser negativo.')
+    def clean(self):
+        if self.cantidad_almacen < 0:
+            raise ValidationError('La cantidad en almacén no puede ser negativa.')
+        if self.costo < 0:
+            raise ValidationError('El costo no puede ser negativo.')

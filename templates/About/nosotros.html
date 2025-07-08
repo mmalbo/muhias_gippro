@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    <title>Muhia - Inicio</title>
+    {% endblock %}
+
+{% block content %}
+
+    <section id="sobre_nosotros" class="page-section">
+        <div class="container py-3 py-xl-3">
+            <div class="row mb-0">
+                <div class="col-md-4 col-lg-3" data-aos="zoom-out">
+                    <img class="img-fluid d-flex" src="{% static 'img/chica_muhia.png' %}">
+                </div>
+                <div class="col-md-8 col-xl-6 text-center mx-auto" data-aos="zoom-in" data-aos-delay="30">
+                    <h2 class="font-weight-bold" style="font-family: 'Abril Fatface', serif;">SOBRE NOSOTROS</h2>
+                    <p class="w-lg-50" style="font-family: Lora, serif;font-size: 20px;">Empresa privada dedicada a la producción y venta de productos de higiene y belleza personal, de su hogar y de su automóvil.</p>
+                    <h4 class="font-weight-bold" style="color: blueviolet;"><strong>Contenido en construcción</strong>.</h4>
+                        <p>... ...</p>
+                </div>
+                
+            </div>
+            <div class="row">
+                <h2 class="font-weight-bold py-3" data-aos="zoom-out" style="font-family: 'Abril Fatface', serif;">¿Por qué elegirnos?</h2>
+                    <div class="d-flex align-items-center align-items-md-start align-items-xl-center" data-aos="fade-right" data-aos-duration="700" data-aos-delay="50">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary d-flex flex-shrink-0 justify-content-center align-items-center mr-4 d-inline-block bs-icon bs-icon-xl" style="background: var(--blue);"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-stars">
+                                <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"></path>
+                            </svg></div>
+                        <div>
+                            <h4 class="font-weight-bold">Experiencia</h4>
+                            <p>Somos profesionales vinculados por más de <span style="color: rgb(221, 10, 10); background-color: rgb(255, 255, 255);">X</span> años a la búsqueda de la mejor fórmula para obtener productos de higiene de la mejor calidad.</p>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex align-items-center align-items-md-start align-items-xl-center" data-aos="fade-right" data-aos-duration="600">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary d-flex flex-shrink-0 justify-content-center align-items-center order-last ml-4 d-inline-block bs-icon bs-icon-xl" style="background: var(--blue);"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-check2-circle">
+                                <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"></path>
+                                <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"></path>
+                            </svg></div>
+                        <div>
+                            <h4 class="font-weight-bold">Calidad</h4>
+                            <p>Nuestros productos se elaboran con las mejores materias primas del mercado. <br>Las formulaciones están certificadas por <span style="color: rgb(247, 15, 15);">XX</span>.</p>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex align-items-center align-items-md-start align-items-xl-center" data-aos="fade-left" data-aos-duration="650" data-aos-delay="100">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary d-flex flex-shrink-0 justify-content-center align-items-center mr-4 d-inline-block bs-icon bs-icon-xl" style="background: var(--blue);"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-shield-lock-fill">
+                                <path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0m0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5"></path>
+                            </svg></div>
+                        <div>
+                            <h4 class="font-weight-bold">Seguridad</h4>
+                            <p>Tomamos muy en serio los cuidados que se deben tener con los productos químicos que manipulamos y transportamos.<br>Garantizamos la transportación segura de todas nuestras ventas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

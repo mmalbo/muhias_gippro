@@ -8,7 +8,7 @@ class MateriaPrimaForm(forms.ModelForm):
     tipo_materia_prima = forms.ModelChoiceField(
         queryset=TipoMateriaPrima.objects.all(),
         label='Tipo de materia prima',
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control select2'})
     )
 
     almacen = forms.ModelChoiceField(

@@ -61,3 +61,5 @@ class Producto(ModeloBase):
         # Validaciones adicionales
         if self.cantidad_alm < 0:
             raise ValidationError("La cantidad almacenada no puede ser negativa.")
+
+

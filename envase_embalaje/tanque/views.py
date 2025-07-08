@@ -1,10 +1,13 @@
+import re
+
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from tablib import Dataset
 
-from envase_embalaje.tanque.forms import TanqueForm
+from envase_embalaje.tanque.forms import TanqueForm, UpdateTanqueForm
 from envase_embalaje.tanque.models import Tanque
 from nomencladores.color.models import Color
 
@@ -22,6 +25,7 @@ class ListTanqueView(ListView):
     model = Tanque
     template_name = 'tanque/tanque_list.html'
     context_object_name = 'tanques'
+
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
         context = super().get_context_data(**kwargs)
@@ -35,12 +39,11 @@ class ListTanqueView(ListView):
         return context
 
 
-
 class UpdateTanqueView(UpdateView):
     model = Tanque
-    form_class = TanqueForm
+    form_class = UpdateTanqueForm
     template_name = 'tanque/tanque_form.html'
-    success_url = '/tanque/'
+    success_url = reverse_lazy('tanque:listar')  # Usar reverse_lazy para la URL de éxito
 
 
 class DeleteTanqueView(DeleteView):
@@ -55,6 +58,40 @@ class CreateImportView(CreateView):
     template_name = 'tanque/import_form.html'
     success_url = '/tanque/'
 
+
+def generar_formato_codigo(material, color):
+    """
+    Valida que el código tenga el formato: P + 3 letras del material + 3 letras del color + 3 dígitos consecutivos.
+    """
+    # Obtener las 3 primeras letras del material y las 2 primeras del tamaño
+    material_abrev = material[:3].capitalize()
+    color_abrev = color[:3].capitalize()
+
+    # Construir la expresión regular para validar el formato
+    formato_esperado = re.compile(rf'T{material_abrev}{color_abrev}')
+
+    return formato_esperado.pattern
+
+def generar_codigo(codigo_base, ultimo):
+    # Verifica si hay un objeto con código base anterior
+    if ultimo:
+        try:
+            cod_num = int(ultimo.codigo[7:10])
+        except (ValueError, IndexError):
+            print(f"Error: El código '{ultimo.codigo}' no tiene el formato esperado. Usando 0 como base.")
+
+    else:
+        cod_num = 1
+    # se conforma un código base
+    cod_num_str = str(cod_num).zfill(3)    
+    codigo = f"{codigo_base}{cod_num_str}"
+    # se verifica que no exista el objeto con el código conformado
+    while Tanque.objects.filter(codigo=codigo):
+        cod_num += 1
+        cod_num_str = str(cod_num).zfill(3)
+        codigo = f"{codigo_base}{cod_num_str}"
+
+    return codigo
 
 def importarTanque(request):
     if request.method == 'POST':
@@ -72,39 +109,50 @@ def importarTanque(request):
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
 
-                for index, data in enumerate(imported_data):
-                    codigo = str(data[0]).strip()  # Col_Codigo
-                    existe = Tanque.objects.filter(codigo__iexact=codigo).first()
-
-                    if existe:
-                        tanques_existentes.append(codigo)
-                        continue
+                for data in imported_data:
 
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Col_Nombre
                     material = str(data[3]).strip() if data[3] is not None else None  # Col_Material
                     Col_Color = str(data[2]).strip() if data[2] is not None else None  # Col_Color
+                    print(Col_Color)
+                    color = Color.objects.filter(nombre=Col_Color).first()
+                    print("---Var color---")
+                    print(color.id)
+                    print(color.nombre)
+                    codigo_base = generar_formato_codigo(material,color.nombre)  # Col_Codigo
+                    ultimo = Tanque.objects.filter(codigo__icontains=codigo_base).first()
+                    existe = Tanque.objects.filter(nombre=nombre, material=material,color=color.id).first()
+
+                    if existe:
+                        tanques_existentes.append(existe.nombre)
+                        continue
+                    else:
+                        codigo = generar_codigo(codigo_base, ultimo)                    
+
                     # Validaciones de los datos
 
-                    if not nombre or not codigo or not material or not Col_Color:
+                    if not nombre or not material or not Col_Color:
                         messages.error(request,
-                                       f"Fila {index + 2}: Los campos 'Código','Nombre', 'Color' y 'Material' son "
+                                       f"Fila {No_fila + 2}: Los campos 'Nombre', 'Color' y 'Material' son "
                                        f"obligatorios.")
                         return redirect('tanque:importarTanque')
 
-                    color = Color.objects.filter(nombre__iexact=Col_Color).first()
                     if color is None:
                         messages.error(request,
-                                       f"Fila {index + 2}: No existe el color {Col_Color} en el nomenclador de colores")
+                                       f"Fila {No_fila + 2}: No existe el color {Col_Color} en el nomenclador de colores")
                         return redirect('tanque:importarTanque')
+
                     if len(nombre) > 255:
-                        messages.error(request, f"Fila {index + 2}: El nombre no puede exceder 255 caracteres.")
+                        messages.error(request, f"Fila {No_fila + 2}: El nombre no puede exceder 255 caracteres.")
                         return redirect('tanque:importarTanque')
 
                     if len(material) > 255:
-                        messages.error(request, f"Fila {index + 2}: El material no puede exceder 255 caracteres.")
+                        messages.error(request, f"Fila {No_fila + 2}: El material no puede exceder 255 caracteres.")
                         return redirect('tanque:importarTanque')
 
                     try:
+                        print("---color en try---")
+                        print(color)
                         tanque = Tanque(
                             codigo=codigo,
                             nombre=nombre,
@@ -115,7 +163,7 @@ def importarTanque(request):
                         tanque.save()
                         No_fila += 1
                     except Exception as e:
-                        messages.error(request, f"Error al procesar la fila {index + 2}: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila {No_fila + 2}: {str(e)}")
                         return redirect('tanque:importarTanque')
 
                 # Mensajes de resultado

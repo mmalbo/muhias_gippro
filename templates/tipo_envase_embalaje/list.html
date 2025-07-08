@@ -5,7 +5,7 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
-                    <h4 class="card-title">Listado de Materias Primas</h4>
+                    <h4 class="card-title">Listado de Tipos de Envase/Embalaje</h4>
 
                 </div>
                 <div class="col-sm-12 col-lg-12">
@@ -13,19 +13,23 @@
                         <thead>
                         <tr class="ligth">
                             <th>Tipo de Envase y Embalaje</th>
-                            <th>Acciones</th>
+                            <th>Nombre</th>
+                            <th>Código</th>
+                            {#<th>Acciones</th>#}
                         </tr>
                         </thead>
                         <tbody>
                         {% for tipo in tipos_envase_embalaje %}
                             <tr>
-                                <td>{{ tipo.tipo_envase_embalaje }}</td>
-                                <td>
-                                    <a href="{% url 'materia_prima:actualizar' almacen.pk %}" title="Editar almacén"
-                                       class="btn far fa-edit"></a>
-                                    <a href="{% url 'materia_prima:eliminar' almacen.pk %}" title="Eliminar almacén"
-                                       class="btn far fa-trash-alt" style="color: #ed1010;"></a>
-                                </td>
+                                <td>{{ tipo.tipo  }}</td>
+                                <td>{{ tipo.nombre }}</td>       <!-- Muestra el nombre -->
+                                <td>{{ tipo.codigo }}</td>      <!-- Muestra el código -->
+                                {#                                <td>#}
+                                {#                                    <a href="{% url 'materia_prima:actualizar' almacen.pk %}" title="Editar almacén"#}
+                                {#                                       class="btn far fa-edit"></a>#}
+                                {#                                    <a href="{% url 'materia_prima:eliminar' almacen.pk %}" title="Eliminar almacén"#}
+                                {#                                       class="btn far fa-trash-alt" style="color: #ed1010;"></a>#}
+                                {#                                </td>#}
                             </tr>
 
                         {% endfor %}
@@ -34,14 +38,13 @@
                         <tr>
 
                             <th>Tipo de Envase y Embalaje</th>
-                            <th>Acciones</th>
+                            <th>Nombre</th>
+                            <th>Código</th>
+                            {#                            <th>Acciones</th>#}
                         </tr>
                         </tfoot>
                     </table>
-
-                    <a href="{% url 'materia_prima:crear' %}" class="btn btn-success">Crear Materia Prima</a>
-
-
+                    {#                    <a href="{% url 'materia_prima:crear' %}" class="btn btn-success">Crear Materia Prima</a>#}
                 </div>
             </div>
 

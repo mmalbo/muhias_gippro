@@ -1,34 +1,27 @@
-from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-
-from envase_embalaje.tipo_envase_embalaje.forms import TipoEnvaseEmbalajeForm
-from envase_embalaje.tipo_envase_embalaje.models import TipoEnvaseEmbalaje
+from django.views.generic import ListView
+from envase_embalaje.caja.models import Caja
+from envase_embalaje.pomo.models import Pomo
+from envase_embalaje.tanque.models import Tanque
 
 
 class TipoEnvaseEmbalajeListView(ListView):
-    model = TipoEnvaseEmbalaje
     template_name = 'tipo_envase_embalaje/list.html'
     context_object_name = 'tipos_envase_embalaje'
 
+    def get_queryset(self):
+        # Obtener todos los objetos de las clases hijas
+        cajas = Caja.objects.all()
+        pomos = Pomo.objects.all()
+        tanques = Tanque.objects.all()
 
-class TipoEnvaseEmbalajeCreateView(CreateView):
-    model = TipoEnvaseEmbalaje
-    form_class = TipoEnvaseEmbalajeForm
-    success_url = reverse_lazy('tipo_envase_embalaje_list')
-    template_name = 'tipo_envase_embalaje/create.html'
+        # Combinar todos los objetos en una sola lista
+        tipos_envase_embalaje = list(cajas) + list(pomos) + list(tanques)
 
+        return tipos_envase_embalaje
 
-class TipoEnvaseEmbalajeUpdateView(UpdateView):
-    model = TipoEnvaseEmbalaje
-    form_class = TipoEnvaseEmbalajeForm
-    success_url = reverse_lazy('tipo_envase_embalaje_list')
-    template_name = 'tipo_envase_embalaje/update.html'
-
-
-class TipoEnvaseEmbalajeDeleteView(DeleteView):
-    model = TipoEnvaseEmbalaje
-    success_url = reverse_lazy('tipo_envase_embalaje_list')
-    template_name = 'tipo_envase_embalaje/delete.html'
-
-
-context_object_name = 'lista_tipo_envase_embalaje'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Agregar el tipo a cada objeto en el contexto
+        for item in context[self.context_object_name]:
+            item.tipo = item.__class__.__name__  # Agregar el tipo dinámicamente
+        return context

@@ -22,5 +22,9 @@ class CustomUser(AbstractUser):
     class Meta:
         permissions = (
             ("can_administracion", "Administración"),
-
+            ("can_clasificadores", "Clasificadores"),
+            ("can_inventario", "Inventario"),
+            ("can_adquisiciones", "Adquisiciones"),
+            ("can_envasado", "Envasado"),
+            ("can_produccion", "Producción"),
         )

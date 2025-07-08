@@ -5,17 +5,19 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-11 col-lg-11">
-                    <h4 class="card-title">{% if object %}Actualizar caja{% else %}Crear caja{% endif %}</h4>
+                    <h4 class="card-title">{% if object %}Actualizar caja: {{ object.codigo }} {% else %}Crear caja{% endif %}</h4>
                     <div class="card">
                         <div class="card-body">
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="form-row">
+                                    {% if object %}
+                                        <div class="col-md-6 mb-3">
+                                            {{ form.codigo.label_tag }}
+                                            {{ form.codigo }}
+                                        </div>
+                                    {% endif %}
 
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.codigo.label_tag }}
-                                        {{ form.codigo }}
-                                    </div>
                                     <div class="col-md-6 mb-3">
                                         {{ form.nombre.label_tag }}
                                         {{ form.nombre }}
@@ -37,11 +39,11 @@
                                         Añadir{% endif %}</button>
                                     <a href="{% url 'caja:listar' %}" class="btn btn-danger">Cancelar</a>
                                     {% if not object %}
-                                    <a href="{% url 'caja:crearImportarCaja' %}" class="btn btn-success">
-                                        Importar excel
-                                    </a>
-                                {% endif %}
-                                    
+                                        <a href="{% url 'caja:crearImportarCaja' %}" class="btn btn-success">
+                                            Importar excel
+                                        </a>
+                                    {% endif %}
+
                                 </div>
                             </form>
                         </div>

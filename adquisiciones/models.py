@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from bases.bases.models import ModeloBase
 from materia_prima.models import MateriaPrima
 from envase_embalaje.models import EnvaseEmbalaje
@@ -7,7 +8,7 @@ import os
 
 
 def factura_upload_to(instance, filename):
-    # Obtenemos el tipo de adquisicion
+    # Obtenemos el tipo de adquisición
     if isinstance(instance, MateriaPrimaAdquisicion):
         folder_name = 'materia_prima'
     elif isinstance(instance, EnvaseAdquisicion):
@@ -15,7 +16,7 @@ def factura_upload_to(instance, filename):
     elif isinstance(instance, InsumosAdquisicion):
         folder_name = 'insumos'
     else:
-        folder_name = 'otros'
+        raise ValidationError("Tipo de adquisición no válido")
 
     # Retornamos la ruta completa donde se guardará el archivo
     return os.path.join('facturas', folder_name, filename)
@@ -37,39 +38,56 @@ class Adquisicion(ModeloBase):
         null=False, default=False
     )
     cantidad = models.IntegerField(
-        verbose_name="Cantidad",
+        verbose_name="Cantidad de elementos",
         null=False, default=1
     )
 
-    class Meta:
-        abstract = True  # Define esta clase como abstracta
+    #class Meta:
+   #     abstract = True  # Define esta clase como abstracta
 
 
-class MateriaPrimaAdquisicion(Adquisicion):
+class MateriaPrimaAdquisicion(ModeloBase):
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.PROTECT)
     materia_prima = models.ForeignKey(
-        MateriaPrima, on_delete=models.DO_NOTHING,
+        MateriaPrima, on_delete=models.PROTECT,  # Cambiado a PROTECT
         verbose_name="Materia prima adquirida"
     )
+    cant_mat_prim = models.IntegerField(verbose_name="Cantidad", null=False, default=1)
 
-    class Meta:
-        unique_together = (('materia_prima', 'fecha_compra', 'factura'),)
+    """ class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['materia_prima', 'fecha_compra', 'factura'],
+                name='unique_materia_prima_adquisicion'
+            )
+        ] 
 
 
 class EnvaseAdquisicion(Adquisicion):
     envase = models.ForeignKey(
-        EnvaseEmbalaje, on_delete=models.DO_NOTHING,
+        EnvaseEmbalaje, on_delete=models.PROTECT,  # Cambiado a PROTECT
         verbose_name="Envase o embalaje"
     )
 
     class Meta:
-        unique_together = (('envase', 'fecha_compra', 'factura'),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['envase', 'fecha_compra', 'factura'],
+                name='unique_envase_adquisicion'
+            )
+        ]
 
 
 class InsumosAdquisicion(Adquisicion):
     insumo = models.ForeignKey(
-        InsumosOtros, on_delete=models.DO_NOTHING,
+        InsumosOtros, on_delete=models.PROTECT,  # Cambiado a PROTECT
         verbose_name="Insumo adquirido"
     )
 
     class Meta:
-        unique_together = (('insumo', 'fecha_compra', 'factura'),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['insumo', 'fecha_compra', 'factura'],
+                name='unique_insumos_adquisicion'
+            )
+        ]"""

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    <title>Muhia - Equipo</title>
+    {% endblock %}
+
+{% block content %}
+
+    <section id="sobre_nosotros" class="page-section">
+        <div class="container py-3 py-xl-3">
+            <div class="row mb-0">
+                <div class="col-12 col-md-8 col-xl-6 text-center mx-auto" data-aos="zoom-in" data-aos-delay="50">
+                    <h2 class="font-weight-bold" style="font-family: Roboto, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Tiendas físicas de MUHIA</h2>
+                    <p class="w-lg-50" style="font-family: Roboto, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; font-size: 20px;">Puedes encontrar nuestros productos al alcance de tu mano:</p>
+                </div>
+            </div>
+
+            <div class="container mt-3">
+                <div class="row">
+                  <div class="col-md-12">
+                    <!-- Paginación -->
+                    <table class="table" style="border: none; background-color: #fcfcfc;">
+                      <tbody class="h5" >
+                        {% for e in equi %}
+                        <tr>
+                            <td style="width: 30%;"><img class="img-fluid" style="display: inline-flex;" src="{{ e.get_image_url }}" alt="{{e.nombre}}"></td>
+                            <td align="left">
+                                <h5 style="color: #153d50; text-align: justify;">{{e.nombre}}</h5>
+                                <p style="color: #153d50; text-align: justify;">{{e.descripcion | safe }}</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+{% endblock %}

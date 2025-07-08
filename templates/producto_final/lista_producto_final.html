@@ -43,20 +43,11 @@
                                 {% else %}
                                     <td>No</td>
                                 {% endif %} 
-                               
-                                {#                                <td>#}
-                                {#                                    <ul>#}
-                                {#                                        {% for almacen in producto_final.almacen.all %}#}
-                                {#                                            <li>{{ almacen.nombre }}</li>#}
-                                {#                                        {% endfor %}#}
-                                {#                                    </ul>#}
-                                {#                                </td>#}
+
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
 
-{#                                        <a href="{% url 'detalle_producto_final' producto_final.pk %}"#}
-{#                                           title="Ver detalles"#}
-{#                                           class="btn far fc-agenda-view"></a>#}
+
                                         <a href="{% url 'actualizar_producto' producto_final.pk %}"
                                            title="Editar producto final"
                                            class="btn far fa-edit"></a>
@@ -82,7 +73,7 @@
                         </tfoot>
                     </table>
 
-                    <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+                    <a href="{% url 'crear_producto' %}" class="btn btn-success">Crear Nuevo Almacén</a>
                     <a href="{% url 'importarProducto' %}" class="btn btn-success">
                         Importar excel
                     </a>

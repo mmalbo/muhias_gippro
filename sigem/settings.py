@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'rest_framework',
+    'formtools',
+    'django_bootstrap5',
     'envase_embalaje.apps.EnvaseEmbalajeConfig',
     'envase_embalaje.caja.apps.EnvaseCajaConfig',
     'envase_embalaje.formato.apps.FormatoConfig',
@@ -74,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+AUTH_USER_MODEL = 'usuario.CustomUser'
 
 ROOT_URLCONF = 'sigem.urls'
 
@@ -99,23 +102,23 @@ WSGI_APPLICATION = 'sigem.wsgi.app'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#      'default': {
-#          'ENGINE': 'django.db.backends.sqlite3',
-#          'NAME': BASE_DIR / 'db.sqlite3',
-#      }
-# }
-
 DATABASES = {
+     'default': {
+         'ENGINE': 'django.db.backends.sqlite3',
+         'NAME': BASE_DIR / 'gippro_db_test.sqlite3',
+     }
+}
+
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'sigem',
         'USER': 'postgres',  # Local: postgres, Produccion: ardelacruz
-        'PASSWORD': 'postgres',  # Local: root, Produccion: Ale*2021
+        'PASSWORD': 'Zxcvbnm*696',  # Local: root, Produccion: Ale*2021
         'HOST': '127.0.0.1',
-        'PORT': '5433'
+        'PORT': '5432'
     }
-}
+} """
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -159,3 +162,36 @@ MEDIA_URL = 'media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ACCOUNT_LOGOUT_REDIRECT = "login"
+
+SESSION_COOKIE_HTTPONLY = True  # Esto hará que las cookies de sesión no sean accesibles por scripts de JavaScript.
+CSRF_COOKIE_HTTPONLY = True  # Esto significa que la cookie no será accesible por scripts de JavaScript en el navegador y solo se enviará automáticamente en solicitudes HTTP.
+SESSION_COOKIE_SECURE = True  # Esto garantizará que las cookies de sesión solo se envíen a través de conexiones HTTPS seguras
+# SESSION_COOKIE_AGE = 1800  # Duración de la sesión en segundos (30 minutos)
+# SESSION_SAVE_EVERY_REQUEST = True  # Actualizxar la sesión en cada solicitud
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Caducar la sesión al cerrar el navegador
+# SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_SAMESITE = 'Strict'  # Permite el envío de cookies de sesión solo a solicitudes provenientes del mismo sitio
+CSRF_COOKIE_SAMESITE = 'Strict'
+# SESSION SECURITY SETTINGS
+# SESSION_SECURITY_INSECURE = True
+# SESSION_SECURITY_WARN_AFTER = 1800  # 30 minutos
+# SESSION_SECURITY_EXPIRE_AFTER = 1800
+# SESSION_SECURITY_PASSIVE_URL = ['/admin/']  # URLs donde no se aplica la seguridad de sesión
+# SESSION_SECURITY_WARNING_TEMPLATE = 'gestion/session_security_warning.html'
+# SESSION_SECURITY_EXPIRE_TEMPLATE = 'gestion/session_security_expire.html'
+
+# SESSION HTTPS SETTINGS
+# SECURE_HSTS_SECONDS = 31536000  # 1 año en segundos
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+
+# # Server SETTINGS
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# #Axes config
+# AXES_FAILURE_LIMIT = 5  # Número de intentos fallidos antes de bloquear
+# AXES_LOCK_OUT_AT_FAILURE = True  # Bloquear una dirección IP después de superar el límite
+# AXES_USE_USER_AGENT = True  # Registrar también el User-Agent en los intentos de inicio de sesión

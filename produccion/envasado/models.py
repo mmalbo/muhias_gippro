@@ -33,13 +33,17 @@ class Envasado(ModeloBase):
         verbose_name="Envase a utilizar"
     )
 
-    cant_env = models.IntegerField(
+    cant_envases = models.IntegerField(
+        null=False, blank=False,
+        verbose_name="Cantidad de envases necesarios"
+    )
+    cant_envasados = models.IntegerField(
         null=False, blank=False,
         verbose_name="Cantidad de envases necesarios"
     )
 
     almacen_det = models.ForeignKey(
-        Almacen, on_delete=models.DO_NOTHING,
+         Almacen, on_delete=models.DO_NOTHING,
         null=False, blank=False,
         verbose_name="Almacen destino"
     )

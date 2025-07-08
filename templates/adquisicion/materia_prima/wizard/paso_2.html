@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="progress-steps">
+    <span class="step active">1. Datos de Adquisición</span>
+    <span class="step active">2. Materias Primas</span>
+</div>
+<h2>Paso 2: Materias Primas Adquiridas</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+    <div class="detalle-form">
+        <h4>Materia Prima #{{ forloop.counter }}</h4>
+        {{ form.as_p }}
+    </div>
+    {% endfor %}
+    <button type="button" id="add-more">Añadir Otra Materia</button>
+    <button type="submit" name="volver">Volver</button>
+    <button type="submit">Guardar Adquisición</button>
+</form>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('add-more');
+    const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+    const formsetContainer = document.querySelector('form');
+    addButton.addEventListener('click', function() {
+        const formCount = parseInt(totalForms.value);
+        const newForm = document.querySelector('.detalle-form').cloneNode(true);
+        // Actualizar los atributos de los campos
+        const newFormHtml = newForm.innerHTML.replace(
+            /form-(\d+)-/g, 
+            `form-${formCount}-`
+        );
+        newForm.innerHTML = newFormHtml;
+        // Limpiar los valores
+        newForm.querySelectorAll('input, select').forEach(input => {
+            if (input.type !== 'hidden') input.value = '';
+        });
+        // Insertar antes del botón "Añadir Otra Materia"
+        formsetContainer.insertBefore(newForm, addButton.parentNode);
+        totalForms.value = formCount + 1;
+    });
+});
+</script>
+{% endblock %}

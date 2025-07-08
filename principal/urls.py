@@ -2,13 +2,13 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
+    # Ruta principal después del login
+    path('', views.cargar_datos_principal, name='principal'),
+    
     # Rutas de autenticación
-    path('', views.LoginTemplateView.as_view(), name='login'),
+    path('login/principal', views.LoginTemplateView.as_view(), name='login'),
     path('login/', views.loginPage, name='loginPage'),
     path('logout/', views.logoutUser, name='logoutUser'),
-
-    # Ruta principal después del login
-    path('principal/', views.cargar_datos_principal, name='cargar_datos_principal'),
 
     # Rutas para diferentes secciones de la aplicación
     path('almacen/', include('nomencladores.almacen.urls'), name='almacen'),
@@ -18,6 +18,7 @@ urlpatterns = [
     path('producto/', include('producto.urls'), name='producto'),
     path('tapa/', include('envase_embalaje.tapa.urls'), name='tapa'),
     path('tanque/', include('envase_embalaje.tanque.urls'), name='tanque'),
+    path('tipo_envase_embalaje/', include('envase_embalaje.tipo_envase_embalaje.urls'), name='tipo_envase_embalaje'),
     path('pomo/', include('envase_embalaje.pomo.urls'), name='pomo'),
     path('caja/', include('envase_embalaje.caja.urls'), name='caja'),
     path('formato/', include('envase_embalaje.formato.urls'), name='formato'),

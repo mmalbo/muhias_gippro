@@ -11,9 +11,30 @@ class TanqueForm(forms.ModelForm):
 
     class Meta:
         model = Tanque
-        fields = ['codigo','nombre', 'color']
+        # fields = ['codigo','nombre', 'color']
+        fields = ['nombre', 'color']
         widgets = {
-            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            # 'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            # 'codigo': 'Código',
+            'nombre': 'Nombre',
+        }
+
+
+class UpdateTanqueForm(forms.ModelForm):
+    color = forms.ModelChoiceField(
+        queryset=Color.objects.all(),
+        label='Color',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Tanque
+        fields = ['codigo', 'nombre', 'color']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
         }
         labels = {

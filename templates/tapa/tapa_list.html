@@ -26,7 +26,7 @@
                             <th>Nombre</th>
                             <th>Color</th>
                             <th>Descripción</th>
-                            {#                            <th>Tipo de envase o embalaje</th>#}
+                            <th>Material</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -37,7 +37,7 @@
                                 <td>{{ tapa.nombre }}</td>
                                 <td>{{ tapa.color }}</td>
                                 <td>{{ tapa.descripcion }}</td>
-                                {#                                <td>{{ tapa.tipo_envase_embalaje }}</td>#}
+                                <td>{{ tapa.material }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'tapa:actualizar' tapa.pk %}"

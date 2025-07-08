@@ -5,17 +5,18 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-11 col-lg-11">
-                    <h4 class="card-title">{% if object %}Actualizar pomo{% else %}Crear pomo{% endif %}</h4>
+                    <h4 class="card-title">{% if object %}Actualizar pomo: {{ object.codigo }}{% else %}Crear pomo{% endif %}</h4>
                     <div class="card">
                         <div class="card-body">
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="form-row">
-
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.codigo.label_tag }}
-                                        {{ form.codigo }}
-                                    </div>
+                                    {% if object %}
+                                        <div class="col-md-6 mb-3">
+                                            {{ form.codigo.label_tag }}
+                                            {{ form.codigo }}
+                                        </div>
+                                    {% endif %}
                                     <div class="col-md-6 mb-3">
                                         {{ form.nombre.label_tag }}
                                         {{ form.nombre }}

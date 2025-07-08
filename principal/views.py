@@ -1,5 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -10,55 +12,33 @@ from bases.views import BaseView, ModeloBaseTemplateView
 from materia_prima.models import MateriaPrima
 from materia_prima.tipo_materia_prima.models import TipoMateriaPrima
 from produccion.models import Produccion
-# from producto_base.models import ProductoBase
-# from producto_final.models import ProductoFinal
 from usuario.models import CustomUser
-
 
 # Create your views here.
 class GestionView(BaseView):
     pass
 
-
-# Create your views here.
-class PrincipalTemplateView(GestionView, ModeloBaseTemplateView):
-    template_name = "index.html"
-
-
-class LoginTemplateView(GestionView, ModeloBaseTemplateView):
+class LoginTemplateView(GestionView, ModeloBaseTemplateView):    
     template_name = "autenticacion/auth-sign-in.html"
 
-
-class ListExpedientesTemplateView(GestionView, ModeloBaseTemplateView):
-    template_name = "gestion/gestion/erta/listExpPendInspTec.html"
-
-
 @never_cache
+@login_required(login_url='login')
 def cargar_datos_principal(request):
     usuario_logeado = request.user
-    cant_tipo_materia_prima = TipoMateriaPrima.objects.all().count()
     cant_materia_prima = MateriaPrima.objects.all().count()
-    # cant_producto_base = ProductoBase.objects.all().count()
-    # cant_producto_final = ProductoFinal.objects.all().count()
     cant_produccion = Produccion.objects.all().count()
-    # Pasa las variables al contexto del template principal
     context = {
-        'cant_tipo_materia_prima': cant_tipo_materia_prima,
         'cant_materia_prima': cant_materia_prima,
-        # 'cant_producto_base': cant_producto_base,
-        # 'cant_producto_final': cant_producto_final,
         'cant_produccion': cant_produccion,
     }
-    # Renderiza el template principal con el contexto
     return render(request, 'base/base.html', context)
-
 
 def authenticate_user(request, username=None, password=None):
     user = authenticate(request, username=username, password=password)
 
     if user is None:
         try:
-            user = CustomUser.objects.get(username=username)
+            user = CustomUser.objects.get(username=username,is_active=True )
 
             if user.check_password(password):
                 return user
@@ -67,12 +47,11 @@ def authenticate_user(request, username=None, password=None):
 
     return user
 
-
 @csrf_protect
 @ensure_csrf_cookie
 def loginPage(request):
     if request.user.is_authenticated:
-        return redirect('cargar_datos_principal')
+        return redirect('principal')
     else:
         if request.method == 'POST':
             username = request.POST['username']
@@ -87,7 +66,7 @@ def loginPage(request):
                 #     action='Entró al sistema',
                 #     affected_model='Sistema'
                 # )
-                return redirect('cargar_datos_principal')
+                return redirect('principal')
             else:
                 messages.error(request, 'Usuario o contraseña incorrecta')
                 ctx = {'error_message': 'Usuario o contraseña incorrecta'}
@@ -95,7 +74,6 @@ def loginPage(request):
 
         ctx = {}
         return render(request, 'autenticacion/auth-sign-in.html', ctx)
-
 
 def logoutUser(request):
     """
