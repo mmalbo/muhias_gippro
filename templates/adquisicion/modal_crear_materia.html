@@ -1,0 +1,23 @@
+<form id="form-nueva-materia" method="post" action="{% url 'crear_materia_modal' %}">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <label class="form-label">Nombre *</label>
+        <input type="text" name="nombre" class="form-control" required>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Concentración</label>
+        <input type="text" name="concentracion" class="form-control">
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Conformación</label>
+        <input type="text" name="conformacion" class="form-control">
+    </div>
+    
+    <div class="text-end">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar Materia Prima</button>
+    </div>
+</form>

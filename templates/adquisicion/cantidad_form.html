@@ -1,0 +1,15 @@
+{% extends "adquisicion/wizard_base.html" %}
+{% load static %}
+
+{% block step_content %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Por favor indica cuántas materias primas diferentes deseas registrar para esta compra.
+    </div>
+    
+    <div class="mb-3">
+        {{ wizard.form.cantidad.label_tag }}
+        {{ wizard.form.cantidad }}
+        <div class="form-text">{{ wizard.form.cantidad.help_text }}</div>
+    </div>
+{% endblock %}

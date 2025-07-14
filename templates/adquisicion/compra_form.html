@@ -1,0 +1,22 @@
+{% extends "adquisicion/wizard_base.html" %}
+{% load static %}
+
+{% block step_content %}
+
+
+    <div class="mb-3">
+        <label class="form-label">Fecha:</label>
+        {{ wizard.form.fecha_compra}}
+    </div>
+    
+    <div class="mb-3 form-check form-switch">
+        {{ wizard.form.importada }}
+        <label class="form-check-label">¿Es importada?</label>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Factura:</label>
+        {{ wizard.form.factura }}
+        <div class="form-text">Sube el archivo de la factura en formato PDF o imagen</div>
+    </div>
+{% endblock %}

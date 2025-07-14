@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from bases.bases.models import ModeloBase
 from materia_prima.models import MateriaPrima
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
@@ -8,22 +7,23 @@ import os
 
 
 def factura_upload_to(instance, filename):
+    folder_name = 'materia_prima'
     # Obtenemos el tipo de adquisición
-    if isinstance(instance, MateriaPrimaAdquisicion):
+    """     if isinstance(instance, MateriaPrimaAdquisicion):
         folder_name = 'materia_prima'
     elif isinstance(instance, EnvaseAdquisicion):
         folder_name = 'envase'
     elif isinstance(instance, InsumosAdquisicion):
         folder_name = 'insumos'
     else:
-        raise ValidationError("Tipo de adquisición no válido")
+        raise ValidationError("Tipo de adquisición no válido") """
 
     # Retornamos la ruta completa donde se guardará el archivo
     return os.path.join('facturas', folder_name, filename)
 
 
-class Adquisicion(ModeloBase):
-    fecha_compra = models.DateTimeField(
+class Adquisicion(models.Model):
+    fecha_compra = models.DateField(
         verbose_name="Fecha de la compra",
         null=True,
         editable=True
@@ -37,57 +37,21 @@ class Adquisicion(ModeloBase):
         verbose_name="Importada",
         null=False, default=False
     )
-    cantidad = models.IntegerField(
-        verbose_name="Cantidad de elementos",
-        null=False, default=1
-    )
 
-    #class Meta:
-   #     abstract = True  # Define esta clase como abstracta
+    creado_en = models.DateTimeField(auto_now_add=True, null=True)
+    
+    def __str__(self):
+        return f"Compra #{self.id} - {self.fecha}"
 
 
-class MateriaPrimaAdquisicion(ModeloBase):
-    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.PROTECT)
+class DetallesAdquisicion(models.Model):
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles')
     materia_prima = models.ForeignKey(
-        MateriaPrima, on_delete=models.PROTECT,  # Cambiado a PROTECT
+        MateriaPrima, on_delete=models.CASCADE,  # Cambiado a PROTECT
         verbose_name="Materia prima adquirida"
     )
-    cant_mat_prim = models.IntegerField(verbose_name="Cantidad", null=False, default=1)
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
 
-    """ class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['materia_prima', 'fecha_compra', 'factura'],
-                name='unique_materia_prima_adquisicion'
-            )
-        ] 
-
-
-class EnvaseAdquisicion(Adquisicion):
-    envase = models.ForeignKey(
-        EnvaseEmbalaje, on_delete=models.PROTECT,  # Cambiado a PROTECT
-        verbose_name="Envase o embalaje"
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['envase', 'fecha_compra', 'factura'],
-                name='unique_envase_adquisicion'
-            )
-        ]
-
-
-class InsumosAdquisicion(Adquisicion):
-    insumo = models.ForeignKey(
-        InsumosOtros, on_delete=models.PROTECT,  # Cambiado a PROTECT
-        verbose_name="Insumo adquirido"
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['insumo', 'fecha_compra', 'factura'],
-                name='unique_insumos_adquisicion'
-            )
-        ]"""
+    def __str__(self):
+        return f"{self.materia_prima.nombre} - {self.adquisicion.fecha_compra}"
+    
