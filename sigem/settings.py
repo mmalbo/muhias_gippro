@@ -16,6 +16,14 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Configuración para el wizard
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
+
+# Directorio temporal para archivos del wizard
+TMP_STORAGE = os.path.join(BASE_DIR, 'tmp_wizard')
+if not os.path.exists(TMP_STORAGE):
+    os.makedirs(TMP_STORAGE)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -40,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'formtools',
+    'widget_tweaks',
     'django_bootstrap5',
     'envase_embalaje.apps.EnvaseEmbalajeConfig',
     'envase_embalaje.caja.apps.EnvaseCajaConfig',

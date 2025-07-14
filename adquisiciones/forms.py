@@ -1,193 +1,90 @@
 from django import forms
-from django.core.exceptions import ValidationError
-from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
-from .models import MateriaPrimaAdquisicion
-#, EnvaseAdquisicion, InsumosAdquisicion
+from .models import Adquisicion
+from materia_prima.models import MateriaPrima
 
-
-class MateriaPrimaAdquisicionForm(forms.ModelForm):
+class CompraForm(forms.ModelForm):
     class Meta:
-        model = MateriaPrimaAdquisicion
-        fields = ['fecha_compra', 'factura', 'importada', 'cantidad', 'materia_prima']
+        model = Adquisicion
+        fields = ['fecha_compra', 'importada', 'factura']
         widgets = {
-            'fecha_compra': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'factura': forms.FileInput(attrs={'class': 'form-control'}),  # Cambiado a FileInput
-            'importada': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'right:70%'}),
-            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'materia_prima': forms.Select(attrs={'class': 'form-control'}),
-        }
-        labels = {
-            'fecha_compra': 'Fecha de la compra',
-            'factura': 'Factura',
-            'importada': 'Es importada',
-            'cantidad': 'Cantidad',
-            'materia_prima': 'Materia prima',
+            'fecha_compra': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'importada': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'factura': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
-    def clean_fecha_compra(self):
-        fecha_compra = self.cleaned_data.get('fecha_compra')
-        if fecha_compra and fecha_compra > timezone.now():
-            raise ValidationError("La fecha de compra no puede ser mayor que la fecha actual.")
-        return fecha_compra
-
-    def clean_factura(self):
-        factura = self.cleaned_data.get('factura')
-        if factura:
-            # Validar el tipo de archivo
-            if not (factura.name.endswith('.pdf') or
-                    factura.name.endswith('.jpg') or
-                    factura.name.endswith('.jpeg') or
-                    factura.name.endswith('.png')):
-                raise ValidationError("El archivo debe ser un PDF o una imagen (JPG, JPEG, PNG).")
-
-            # Validar el tamaño del archivo
-            if factura.size > 1 * 1024 * 1024:  # 1 MB
-                raise ValidationError("El tamaño del archivo no puede ser mayor a 1 MB.")
-
-        return factura
-
-"""
-class EnvaseAdquisicionForm(forms.ModelForm):
-    class Meta:
-        model = EnvaseAdquisicion
-        fields = ['fecha_compra', 'factura', 'importada', 'cantidad', 'envase']
-        widgets = {
-            'fecha_compra': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'factura': forms.FileInput(attrs={'class': 'form-control'}),  # Cambiado a FileInput
-            'importada': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'right:70%'}),
-            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'envase': forms.Select(attrs={'class': 'form-control'}),
-        }
-        labels = {
-            'fecha_compra': 'Fecha de la compra',
-            'factura': 'Factura',
-            'importada': 'Es importada',
-            'cantidad': 'Cantidad',
-            'envase': 'Envase',
-        }
-
-    def clean_fecha_compra(self):
-        fecha_compra = self.cleaned_data.get('fecha_compra')
-        if fecha_compra and fecha_compra > timezone.now():
-            raise ValidationError("La fecha de compra no puede ser mayor que la fecha actual.")
-        return fecha_compra
-
-    def clean_factura(self):
-        factura = self.cleaned_data.get('factura')
-        if factura:
-            # Validar el tipo de archivo
-            if not (factura.name.endswith('.pdf') or
-                    factura.name.endswith('.jpg') or
-                    factura.name.endswith('.jpeg') or
-                    factura.name.endswith('.png')):
-                raise ValidationError("El archivo debe ser un PDF o una imagen (JPG, JPEG, PNG).")
-
-            # Validar el tamaño del archivo
-            if factura.size > 1 * 1024 * 1024:  # 1 MB
-                raise ValidationError("El tamaño del archivo no puede ser mayor a 1 MB.")
-
-        return factura
-
-
-class InsumosAdquisicionForm(forms.ModelForm):
-    class Meta:
-        model = InsumosAdquisicion
-        fields = ['fecha_compra', 'factura', 'importada', 'cantidad', 'insumo']
-        widgets = {
-            'fecha_compra': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'factura': forms.FileInput(attrs={'class': 'form-control'}),  # Cambiado a FileInput
-            'importada': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'right:70%'}),
-            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'insumo': forms.Select(attrs={'class': 'form-control'}),
-        }
-        labels = {
-            'fecha_compra': 'Fecha de la compra',
-            'factura': 'Factura',
-            'importada': 'Es importada',
-            'cantidad': 'Cantidad',
-            'insumo': 'Insumos y otros',
-        }
-
-    def clean_fecha_compra(self):
-        fecha_compra = self.cleaned_data.get('fecha_compra')
-        if fecha_compra and fecha_compra > timezone.now():
-            raise ValidationError("La fecha de compra no puede ser mayor que la fecha actual.")
-        return fecha_compra
-
-    def clean_factura(self):
-        factura = self.cleaned_data.get('factura')
-        if factura:
-            # Validar el tipo de archivo
-            if not (factura.name.endswith('.pdf') or
-                    factura.name.endswith('.jpg') or
-                    factura.name.endswith('.jpeg') or
-                    factura.name.endswith('.png')):
-                raise ValidationError("El archivo debe ser un PDF o una imagen (JPG, JPEG, PNG).")
-
-            # Validar el tamaño del archivo
-            if factura.size > 1 * 1024 * 1024:  # 1 MB
-                raise ValidationError("El tamaño del archivo no puede ser mayor a 1 MB.")
-
-        return factura
-"""
-
-class PasoAdquisicionForm(forms.Form):
-    fecha_compra = forms.DateTimeField(
-        label="Fecha de compra",
-        initial=timezone.now,
-        required=True,
-        widget=forms.DateInput(attrs={'type': 'date-local'})
-    )
-    factura = forms.FileField(
-        label="Factura",
-        required=False
-    )
-    importada = forms.BooleanField(
-        label="¿Es importada?",
-        required=False
-    )
+class CantidadMateriasForm(forms.Form):
     cantidad = forms.IntegerField(
-        label="Cantidad de elementos",
         min_value=1,
-        required=True,
-        initial=1
+        max_value=20,
+        label="¿Cuántas materias primas deseas registrar?",
+        help_text="Máximo 20 materias por compra",
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Número de materias primas'
+        })
     )
 
+class MateriaPrimaForm(forms.Form):
+    EXISTING = 'existing'
+    NEW = 'new'
+    MATERIA_CHOICES = [
+        (EXISTING, 'Usar materia prima existente'),
+        (NEW, 'Registrar nueva materia prima')
+    ]
+    
+    opcion = forms.ChoiceField(
+        choices=MATERIA_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=EXISTING
+    )
+    
+    materia_existente = forms.ModelChoiceField(
+        queryset=MateriaPrima.objects.all(),
+        required=False,
+        label="Seleccionar materia prima existente",
+        widget=forms.Select(attrs={'class': 'form-select materia-select'})
+    )
+    
+    cantidad = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0.01,
+        label="Cantidad adquirida",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    
+    # Campos para nueva materia prima
+    nombre = forms.CharField(
+        max_length=100, 
+        required=False, 
+        label="Nombre",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    concentracion = forms.CharField(
+        max_length=50, 
+        required=False, 
+        label="Concentración",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    conformacion = forms.CharField(
+        max_length=50, 
+        required=False, 
+        label="Conformación",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    
     def clean(self):
         cleaned_data = super().clean()
-        if not self.is_valid():  # Verificación explícita
-            raise ValidationError("Por favor completa todos los campos requeridos")
-        return cleaned_data
-
-    def clean_fecha_compra(self):
-        fecha_compra = self.cleaned_data.get('fecha_compra')
-        if fecha_compra and fecha_compra > timezone.now():
-            raise ValidationError("La fecha de compra no puede ser mayor que la fecha actual.")
-        return fecha_compra
-
-    def clean_factura(self):
-        factura = self.cleaned_data.get('factura')
-        if factura:
-            # Validar el tipo de archivo
-            if not (factura.name.endswith('.pdf') or
-                    factura.name.endswith('.jpg') or
-                    factura.name.endswith('.jpeg') or
-                    factura.name.endswith('.png')):
-                raise ValidationError("El archivo debe ser un PDF o una imagen (JPG, JPEG, PNG).")
-
-            # Validar el tamaño del archivo
-            if factura.size > 5 * 1024 * 1024:  # 1 MB
-                raise ValidationError("El tamaño del archivo no puede ser mayor a 1 MB.")
-
-        return factura
-
-
-class PasoMateriaPrimaForm(forms.ModelForm):
-    class Meta:
-        model = MateriaPrimaAdquisicion
-        fields = ['materia_prima','cant_mat_prim']
-        widgets = {
-            'materia_prima': forms.Select(attrs={'class': 'form-select'})
-        }
-
+        opcion = cleaned_data.get('opcion')
+        
+        if opcion == self.EXISTING:
+            if not cleaned_data.get('materia_existente'):
+                self.add_error('materia_existente', 'Debes seleccionar una materia prima existente')
+        elif opcion == self.NEW:
+            if not cleaned_data.get('nombre'):
+                self.add_error('nombre', 'El nombre es obligatorio para nuevas materias primas')
+            
+            # Validar que no exista una materia prima con el mismo nombre
+            nombre = cleaned_data.get('nombre')
+            if nombre and MateriaPrima.objects.filter(nombre=nombre).exists():
+                self.add_error('nombre', 'Ya existe una materia prima con este nombre')

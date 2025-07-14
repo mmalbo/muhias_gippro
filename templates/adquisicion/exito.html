@@ -1,0 +1,31 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card border-success">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">¡Compra Registrada Exitosamente!</h3>
+        </div>
+        
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+            </div>
+            
+            <p class="lead text-center">
+                La compra se ha registrado correctamente en el sistema.
+            </p>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                <a href="{% url 'nueva_compra' %}" class="btn btn-primary me-md-2">
+                    <i class="bi bi-plus-circle me-1"></i> Registrar otra compra
+                </a>
+                <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-house-door me-1"></i> Ir al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

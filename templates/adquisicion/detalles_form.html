@@ -1,0 +1,167 @@
+{% extends "adquisicion/wizard_base.html" %}
+
+{% block step_content %}
+<div class="compra-detalles">
+    <h3>Registro de Materias Primas</h3>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <label class="form-label">Seleccionar materia prima:</label>
+            {{ wizard.form.materia_existente }}
+        </div>
+        <div class="col-md-6">
+            <button type="button" class="btn btn-outline-primary mt-4" 
+                    id="btn-nueva-materia" style="margin-top: 0 !important;">
+                <i class="bi bi-plus-circle"></i> Nueva Materia Prima
+            </button>
+        </div>
+    </div>
+    
+    <!-- Área para mostrar detalles de la materia prima seleccionada -->
+    <div class="card mb-4" id="materia-details" style="display: none;">
+        <div class="card-header">Detalles de la Materia Prima</div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nombre:</dt>
+                <dd class="col-sm-9" id="detail-nombre">-</dd>
+                
+                <dt class="col-sm-3">Concentración:</dt>
+                <dd class="col-sm-9" id="detail-concentracion">-</dd>
+                
+                <dt class="col-sm-3">Conformación:</dt>
+                <dd class="col-sm-9" id="detail-conformacion">-</dd>
+            </dl>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        {{ wizard.form.cantidad.label_tag }}
+        {{ wizard.form.cantidad }}
+    </div>
+    
+    <!-- Modal para nueva materia prima -->
+    <div class="modal fade" id="nuevaMateriaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Nueva Materia Prima</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modal-body-content">
+                    <!-- El contenido se cargará via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectMateria = document.querySelector('.materia-select');
+    const detallesContainer = document.getElementById('materia-details');
+    const btnNuevaMateria = document.getElementById('btn-nueva-materia');
+    const nuevaMateriaModal = new bootstrap.Modal(document.getElementById('nuevaMateriaModal'));
+    
+    // Cargar detalles cuando se selecciona una materia prima
+    selectMateria.addEventListener('change', function() {
+        const materiaId = this.value;
+        detallesContainer.style.display = 'none'; // Ocultar mientras carga
+    
+        if (materiaId) {
+            fetch(`/adquisiciones/api/materias-primas/${materiaId}/`)
+                .then(response => {
+                    console.log('Respuesta cruda:', response);
+                    return response.text(); // Primero obtener como texto
+                })
+                .then(text => {
+                    console.log('Texto recibido:', text);
+                    try {
+                        return JSON.parse(text); // Intentar parsear manualmente
+                    } catch (e) {
+                        console.error('Error al parsear JSON:', e);
+                        throw new Error('Respuesta no es JSON válido');
+                    }
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('detail-nombre').textContent = data.nombre;
+                        document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
+                        document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
+                        detallesContainer.style.display = 'block';
+                    
+                        // Actualizar campos ocultos
+                        document.querySelector('[name="0-nombre"]').value = data.nombre;
+                        document.querySelector('[name="0-concentracion"]').value = data.concentracion || '';
+                        document.querySelector('[name="0-conformacion"]').value = data.conformacion || '';
+                    } else {
+                        console.error('Error del servidor:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener detalles:', error);
+                    alert('Error al cargar los detalles de la materia prima');
+                });
+        }
+    });
+
+    // Manejar clic en botón de nueva materia
+    btnNuevaMateria.addEventListener('click', function() {
+        // Cargar formulario via AJAX
+        fetch("{% url 'crear_materia_modal' %}")
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('modal-body-content').innerHTML = html;
+                nuevaMateriaModal.show();
+                
+                // Configurar envío del formulario modal
+                const formModal = document.querySelector('#nuevaMateriaModal form');
+                if (formModal) {
+                    formModal.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: new FormData(this),
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.id) {
+                                // Crear nueva opción en el select
+                                const option = document.createElement('option');
+                                option.value = data.id;
+                                option.textContent = data.nombre;
+                                option.selected = true;
+                                selectMateria.appendChild(option);
+                                
+                                // Actualizar detalles
+                                document.getElementById('detail-nombre').textContent = data.nombre;
+                                document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
+                                document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
+                                detallesContainer.style.display = 'block';
+                                
+                                // Actualizar campos ocultos
+                                document.querySelector('[name="0-nombre"]').value = data.nombre;
+                                document.querySelector('[name="0-concentracion"]').value = data.concentracion || '';
+                                document.querySelector('[name="0-conformacion"]').value = data.conformacion || '';
+                                
+                                nuevaMateriaModal.hide();
+                            } else if (data.errors) {
+                                // Mostrar errores
+                                alert('Errores: ' + JSON.stringify(data.errors));
+                            }
+                        });
+                    });
+                }
+            });
+    });
+    
+    // Disparar evento change si ya hay una selección
+    if (selectMateria.value) {
+        selectMateria.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}
