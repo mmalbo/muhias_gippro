@@ -5,7 +5,7 @@ from nomencladores.almacen.models import Almacen
 from django.core.exceptions import ValidationError
 
 
-class MateriaPrima(ModeloBase):
+class MateriaPrima(ModeloBase): # Analizar si hay que especificarlo o se autogenera
     codigo = models.CharField(
         verbose_name="Código de la materia prima",
         unique=True,
@@ -18,6 +18,8 @@ class MateriaPrima(ModeloBase):
         ('en_almacen', 'En almacén'),
         ('reservado', 'Reservado'),
     ]
+
+    # Este estado no debe ser de materia prima sino de una adquisición. No entiendo por que reservado aqui
     estado = models.CharField(
         choices=ESTADOS,
         max_length=255,
@@ -72,6 +74,7 @@ class MateriaPrima(ModeloBase):
         verbose_name="Costo",
     )
 
+    # La materia prima puede estar en más de un almacen. Por lo que aquí no pinta nada el almacen  
     almacen = models.ForeignKey(
         Almacen,
         on_delete=models.CASCADE,

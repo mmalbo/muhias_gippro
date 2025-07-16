@@ -53,19 +53,16 @@ class CompraWizard(SessionWizardView):
     def get_form_list(self):
         """Versión robusta que siempre retorna al menos los formularios base"""
         form_list = OrderedDict(self.form_list)
-        print("En el get form list")
         
         # Agregar pasos dinámicos si hay datos de cantidad
-        #try:
-        cantidad_data = self.storage.get_step_data('cantidad')
-        if cantidad_data and 'cantidad-cantidad' in cantidad_data:
-            num_materias = int(cantidad_data['cantidad-cantidad'][0])
-            for i in range(num_materias):
-                form_list[f'materia_{i}'] = MateriaPrimaForm
-        #except (KeyError, ValueError, TypeError):
-        #    pass
-        print("-------")
-        print(form_list)
+        try:
+            cantidad_data = self.storage.get_step_data('cantidad')
+            if cantidad_data and 'cantidad-cantidad' in cantidad_data:
+                num_materias = int(cantidad_data['cantidad-cantidad'][0])
+                for i in range(num_materias):
+                    form_list[f'materia_{i}'] = MateriaPrimaForm
+        except (KeyError, ValueError, TypeError):
+            pass
         return form_list
     
     def get_form_initial(self, step):
@@ -98,7 +95,6 @@ class CompraWizard(SessionWizardView):
     
     def get_form(self, step=None, data=None, files=None):
         # Asegurar que siempre haya una lista de formularios
-        print("En el get form")
         form_list = self.get_form_list()
         if not form_list:
             form_list = OrderedDict([
@@ -107,13 +103,9 @@ class CompraWizard(SessionWizardView):
             ])
         
         if step is None:
-            print(step)
             step = self.steps.current
-        print("------")
-        print(step)
         try:
             form_class = form_list[step]
-            print(form_class)
             return form_class(data=data, files=files, prefix=self.get_form_prefix(step, form_class))
         except KeyError:
             # Si el paso no existe, redirigir al primer paso
@@ -178,8 +170,8 @@ class CompraWizard(SessionWizardView):
             
             # Crear compra
             compra = Adquisicion.objects.create(
-                fecha=compra_data['fecha'],
-                es_importada=compra_data['es_importada'],
+                fecha_compra=compra_data['fecha_compra'],
+                importada=compra_data['importada'],
                 factura=compra_data['factura']
             )
             
@@ -189,16 +181,26 @@ class CompraWizard(SessionWizardView):
                 data = form.cleaned_data
                 
                 if data['opcion'] == MateriaPrimaForm.EXISTING:
+                    print("En el existing")
                     materia = data['materia_existente']
+                    print(materia)
                 else:
                     materia = MateriaPrima.objects.create(
+                        codigo=data['codigo'],
                         nombre=data['nombre'],
+                        tipo_materia_prima=data['tipo_materia_prima'],
+                        conformacion=data['conformacion'],
+                        unidad_medida=data['unidad_medida'],
                         concentracion=data['concentracion'],
-                        conformacion=data['conformacion']
+                        cantidad_almacen=data['cantidad_almacen'],
+                        costo=data['costo'],
+                        almacen=data['almacen'],
+                        ficha_tecnica=data['ficha_tecnica'],
+                        hoja_seguridad=data['hoja_seguridad'],
                     )
                 
                 DetallesAdquisicion.objects.create(
-                    compra=compra,
+                    adquisicion=compra,
                     materia_prima=materia,
                     cantidad=data['cantidad']
                 )
@@ -212,6 +214,8 @@ class CompraWizard(SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
+from materia_prima.tipo_materia_prima.choices import CHOICE_TIPO
+
 class MateriaPrimaDetalleView(View):
     def get(self, request, pk):
         try:
@@ -221,6 +225,8 @@ class MateriaPrimaDetalleView(View):
                 'nombre': materia.nombre,
                 'concentracion': materia.concentracion or '',
                 'conformacion': materia.conformacion or '',
+                'tipo': CHOICE_TIPO[int(materia.tipo_materia_prima.tipo)-1][1] or '',
+                'medida': materia.unidad_medida or '',
             })
         except MateriaPrima.DoesNotExist:
             return JsonResponse({'error': 'Materia prima no encontrada'}, status=404)

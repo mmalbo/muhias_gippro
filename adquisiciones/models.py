@@ -5,7 +5,6 @@ from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
 import os
 
-
 def factura_upload_to(instance, filename):
     folder_name = 'materia_prima'
     # Obtenemos el tipo de adquisición
@@ -37,11 +36,10 @@ class Adquisicion(models.Model):
         verbose_name="Importada",
         null=False, default=False
     )
-
     creado_en = models.DateTimeField(auto_now_add=True, null=True)
     
     def __str__(self):
-        return f"Compra #{self.id} - {self.fecha}"
+        return f"Compra #{self.id} - {self.fecha_compra}"
 
 
 class DetallesAdquisicion(models.Model):

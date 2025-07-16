@@ -30,20 +30,52 @@
                     {{ wizard.form.materia_existente }}
                 </div>
             </div>
-            
             <div id="new-section" style="{% if wizard.form.initial.opcion == 'new' %}display: block;{% else %}display: none;{% endif %}">
+                <div class="mb-3">
+                    {{ wizard.form.codigo.label_tag }}
+                    {{ wizard.form.codigo }}
+                </div>
                 <div class="mb-3">
                     {{ wizard.form.nombre.label_tag }}
                     {{ wizard.form.nombre }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.tipo_materia_prima.label_tag }}
+                    {{ wizard.form.tipo_materia_prima }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.conformacion.label_tag }}
+                    {{ wizard.form.conformacion }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.unidad_medida.label_tag }}
+                    {{ wizard.form.unidad_medida }}
                 </div>
                 <div class="mb-3">
                     {{ wizard.form.concentracion.label_tag }}
                     {{ wizard.form.concentracion }}
                 </div>
                 <div class="mb-3">
-                    {{ wizard.form.conformacion.label_tag }}
-                    {{ wizard.form.conformacion }}
+                    {{ wizard.form.cantidad_almacen.label_tag }}
+                    {{ wizard.form.cantidad_almacen }}
                 </div>
+                <div class="mb-3">
+                    {{ wizard.form.costo.label_tag }}
+                    {{ wizard.form.costo }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.almacen.label_tag }}
+                    {{ wizard.form.almacen }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.ficha_tecnica.label_tag }}
+                    {{ wizard.form.ficha_tecnica }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.hoja_seguridad.label_tag }}
+                    {{ wizard.form.hoja_seguridad }}
+                </div>
+                
             </div>
         </div>
         
@@ -52,14 +84,24 @@
                 <div class="card-header bg-light">Detalles de la Materia Prima</div>
                 <div class="card-body">
                     <dl class="row">
+                        <dt class="col-sm-4">Código:</dt>
+                        <dd class="col-sm-8" id="detail-codigo">-</dd>
+
                         <dt class="col-sm-4">Nombre:</dt>
                         <dd class="col-sm-8" id="detail-nombre">-</dd>
                         
-                        <dt class="col-sm-4">Concentración:</dt>
-                        <dd class="col-sm-8" id="detail-concentracion">-</dd>
-                        
+                        <dt class="col-sm-4">Tipo de MP:</dt>
+                        <dd class="col-sm-8" id="detail-tipo">-</dd>
+
                         <dt class="col-sm-4">Conformación:</dt>
                         <dd class="col-sm-8" id="detail-conformacion">-</dd>
+                        
+                        <dt class="col-sm-4">Unidad de medida:</dt>
+                        <dd class="col-sm-8" id="detail-medida">-</dd>
+
+                        <dt class="col-sm-4">Concentración:</dt>
+                        <dd class="col-sm-8" id="detail-concentracion">-</dd>
+
                     </dl>
                 </div>
             </div>
@@ -110,7 +152,7 @@
                 const materiaId = this.value;
                 
                 if (materiaId) {
-                    fetch(`/api/materias-primas/${materiaId}/`)
+                    fetch(`/adquisiciones/api/materias-primas/${materiaId}/`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Error en la respuesta');
@@ -119,8 +161,11 @@
                         })
                         .then(data => {
                             document.getElementById('detail-nombre').textContent = data.nombre || '-';
+                            document.getElementById('detail-codigo').textContent = data.id || '-';
                             document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
                             document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
+                            document.getElementById('detail-tipo').textContent = data.tipo || '-';
+                            document.getElementById('detail-medida').textContent = data.medida || '-';
                         })
                         .catch(error => {
                             console.error('Error al obtener detalles:', error);
@@ -131,6 +176,8 @@
                     document.getElementById('detail-nombre').textContent = '-';
                     document.getElementById('detail-concentracion').textContent = '-';
                     document.getElementById('detail-conformacion').textContent = '-';
+                    document.getElementById('detail-tipo').textContent = '-';
+                    document.getElementById('detail-medida').textContent = '-';
                 }
             });
             
