@@ -20,7 +20,6 @@ def factura_upload_to(instance, filename):
     # Retornamos la ruta completa donde se guardará el archivo
     return os.path.join('facturas', folder_name, filename)
 
-
 class Adquisicion(models.Model):
     fecha_compra = models.DateField(
         verbose_name="Fecha de la compra",
@@ -40,7 +39,6 @@ class Adquisicion(models.Model):
     
     def __str__(self):
         return f"Compra #{self.id} - {self.fecha_compra}"
-
 
 class DetallesAdquisicion(models.Model):
     adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles')
