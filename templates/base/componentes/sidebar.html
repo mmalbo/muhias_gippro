@@ -169,8 +169,25 @@
                             <i class="las la-angle-right iq-arrow-right arrow-active"></i>
                             <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
                         </a>
-                        <!--<ul id="adquisicionE" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                        <ul id="adquisicionE" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                            
                             <li class=" ">
+                                <a href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false">
+
+                                    <span class="ml-2">Materia prima</span>
+                                    <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                                    <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                                </a>
+                                <ul id="materia_prima" class="iq-submenu collapse" data-parent="#registrar">
+                                    <li class="">
+                                        <a href="{% url 'nueva_compra' %}">
+                                            <i class="las la-minus"></i><span>Nueva adquisición</span>
+                                        </a>
+                                    </li>
+                                    
+                                </ul>
+                            </li>
+                            <!--<li class=" ">
                                 <a href="#envase_embalaje" class="collapsed" data-toggle="collapse"
                                    aria-expanded="false">
                                     <span class="ml-2">Envase o embalajes</span>
@@ -210,23 +227,6 @@
                                     </li>
                                 </ul>
                             </li>-->
-                            <li class=" ">
-                                <a href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false">
-
-                                    <span class="ml-2">Materia prima</span>
-                                    <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                                    <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                </a>
-                                <ul id="materia_prima" class="iq-submenu collapse" data-parent="#registrar">
-                                    <li class="">
-                                        <a href="{% url 'nueva_compra' %}">
-                                            <i class="las la-minus"></i><span>Nueva adquisición</span>
-                                        </a>
-                                    </li>
-                                    
-                                </ul>
-                            </li>
-
                         </ul>
                     </li>
                 {% endif %}                
