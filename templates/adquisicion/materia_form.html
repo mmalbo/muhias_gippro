@@ -56,16 +56,8 @@
                     {{ wizard.form.concentracion }}
                 </div>
                 <div class="mb-3">
-                    {{ wizard.form.cantidad_almacen.label_tag }}
-                    {{ wizard.form.cantidad_almacen }}
-                </div>
-                <div class="mb-3">
                     {{ wizard.form.costo.label_tag }}
                     {{ wizard.form.costo }}
-                </div>
-                <div class="mb-3">
-                    {{ wizard.form.almacen.label_tag }}
-                    {{ wizard.form.almacen }}
                 </div>
                 <div class="mb-3">
                     {{ wizard.form.ficha_tecnica.label_tag }}
@@ -112,6 +104,11 @@
         {{ wizard.form.cantidad.label_tag }}
         {{ wizard.form.cantidad }}
         <div class="form-text">Cantidad adquirida en esta compra</div>
+    </div>
+    <div class="mb-3">
+        {{ wizard.form.almacen.label_tag }}
+        {{ wizard.form.almacen }}
+        <div class="form-text">Almacén donde será ubicada esta compra.</div>
     </div>
     
     <script>

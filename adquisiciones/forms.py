@@ -54,6 +54,12 @@ class MateriaPrimaForm(forms.Form):
         label="Cantidad adquirida",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+    almacen = forms.ModelChoiceField(
+        queryset=Almacen.objects.all(),
+        required=False,
+        label="Almacen para su ubicación",
+        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
+    )
     
     # Campos para nueva materia prima
     codigo = forms.CharField(
@@ -91,22 +97,17 @@ class MateriaPrimaForm(forms.Form):
         label="Concentración",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    cantidad_almacen = forms.IntegerField( 
+    """ cantidad_almacen = forms.IntegerField( 
         required=False, 
         label="Cantidad en almacen",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
+    ) """
     costo = forms.FloatField(
         required=False,
         label="Costo",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    almacen = forms.ModelChoiceField(
-        queryset=Almacen.objects.all(),
-        required=False,
-        label="Almacen para su ubicación",
-        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
-    )
+
     ficha_tecnica = forms.FileField(
         required=False,
         label= "Ficha Técnica",
@@ -121,10 +122,8 @@ class MateriaPrimaForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         opcion = cleaned_data.get('opcion')
-        print("En el clean")
         
         if opcion == self.EXISTING:
-            print("Existing")
             if not cleaned_data.get('materia_existente'):
                 self.add_error('materia_existente', 'Debes seleccionar una materia prima existente')
         elif opcion == self.NEW:

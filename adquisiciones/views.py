@@ -27,8 +27,6 @@ class CompraWizard(SessionWizardView):
         'cantidad': 'adquisicion/cantidad_form.html',
         'materia': 'adquisicion/materia_form.html',  # Para todos los pasos materia_*
     }
-    #template_name = "adquisicion/wizard_base.html"
-    #template_name = "adquisicion/compra_form.html"
 
     def get_template_names(self):
         """Determina qué plantilla usar para el paso actual"""
@@ -75,23 +73,7 @@ class CompraWizard(SessionWizardView):
                 initial.update(prev_data)
         
         return initial
-    
-    """ @classmethod
-    def get_initkwargs(cls, form_list=None, *args, **kwargs):
-        
-        Método de clase que garantiza form_list inicial
-        
-        # Usar form_list de clase si no se proporciona
-        if form_list is None:
-            print("en el if form_list de get initkwargs")
-            form_list = cls.form_list
-            
-        # Llamar al método padre con los kwargs actualizados
-        return super().get_initkwargs(
-            form_list=form_list,
-            *args,
-            **kwargs
-        ) """
+
     
     def get_form(self, step=None, data=None, files=None):
         # Asegurar que siempre haya una lista de formularios
@@ -163,7 +145,6 @@ class CompraWizard(SessionWizardView):
     
     def done(self, form_list, **kwargs):
         # Procesamiento seguro de los datos
-        print("En el done")
         try:
             compra_data = [f for f in form_list if isinstance(f, CompraForm)][0].cleaned_data
             cantidad_data = [f for f in form_list if isinstance(f, CantidadMateriasForm)][0].cleaned_data
@@ -181,9 +162,7 @@ class CompraWizard(SessionWizardView):
                 data = form.cleaned_data
                 
                 if data['opcion'] == MateriaPrimaForm.EXISTING:
-                    print("En el existing")
                     materia = data['materia_existente']
-                    print(materia)
                 else:
                     materia = MateriaPrima.objects.create(
                         codigo=data['codigo'],
@@ -192,9 +171,7 @@ class CompraWizard(SessionWizardView):
                         conformacion=data['conformacion'],
                         unidad_medida=data['unidad_medida'],
                         concentracion=data['concentracion'],
-                        cantidad_almacen=data['cantidad_almacen'],
                         costo=data['costo'],
-                        almacen=data['almacen'],
                         ficha_tecnica=data['ficha_tecnica'],
                         hoja_seguridad=data['hoja_seguridad'],
                     )
@@ -202,7 +179,8 @@ class CompraWizard(SessionWizardView):
                 DetallesAdquisicion.objects.create(
                     adquisicion=compra,
                     materia_prima=materia,
-                    cantidad=data['cantidad']
+                    cantidad=data['cantidad'],
+                    almacen=data['almacen']
                 )
             
             # Limpiar almacenamiento

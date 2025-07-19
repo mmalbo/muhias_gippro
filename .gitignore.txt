@@ -27,4 +27,4 @@ registro_perdida_almacen/migrations/*
 usuario/migrations/*
 
 #configuración
-#sigem/settings.py
+sigem/settings.py
