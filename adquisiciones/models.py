@@ -40,6 +40,21 @@ class Adquisicion(models.Model):
     
     def __str__(self):
         return f"Compra #{self.id} - {self.fecha_compra}"
+    
+    @property
+    def cantidad_mprimas(self):
+        cantidad = self.detalles.count()
+        return cantidad
+    
+    @property
+    def cantidad_envases(self):
+        cantidad = self.detalles_envases.count()
+        return cantidad
+    
+    @property
+    def cantidad_insumos(self):
+        cantidad = self.detalles_insumos.count()
+        return cantidad
 
 class DetallesAdquisicion(models.Model):
     adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles')
@@ -80,4 +95,24 @@ class DetallesAdquisicionEnvase(models.Model):
 
     def __str__(self):
         return f"{self.envase_embalaje.codigo_envase} - {self.adquisicion.fecha_compra}"
+    
+class DetallesAdquisicionInsumo(models.Model):
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles_insumos')
+    insumo = models.ForeignKey(
+        InsumosOtros, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        verbose_name="Insumo adquirido"
+    )
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
+    almacen = models.ForeignKey(
+        Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        null=True,
+        verbose_name="Almacén donde se ubicará el insumo"
+    )
+    recibida = models.BooleanField(
+        verbose_name="Recibida en almacén",
+        null=False, default=False
+    )
+
+    def __str__(self):
+        return f"{self.insumo.nombre} - {self.adquisicion.fecha_compra}"
     

@@ -6,7 +6,9 @@ from nomencladores.almacen.models import Almacen
 from envase_embalaje.models import EnvaseEmbalaje
 from envase_embalaje.tipo_envase_embalaje.models import TipoEnvaseEmbalaje
 from envase_embalaje.formato.models import Formato
+from InsumosOtros.models import InsumosOtros 
 
+""" Genérico para todos """
 class CompraForm(forms.ModelForm):
     class Meta:
         model = Adquisicion
@@ -17,6 +19,7 @@ class CompraForm(forms.ModelForm):
             'factura': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
+""" Para materias primas """
 class CantidadMateriasForm(forms.Form):
     cantidad = forms.IntegerField(
         min_value=1,
@@ -145,6 +148,7 @@ class MateriaPrimaForm(forms.Form):
         
         return cleaned_data
     
+""" Para envases y embalajes """
 class CantidadEnvasesForm(forms.Form):
     cantidad = forms.IntegerField(
         min_value=1,
@@ -233,5 +237,105 @@ class EnvasesForm(forms.Form):
                 self.add_error('nombre', 'Ya existe una materia prima con este nombre')
             if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
                 self.add_error('codigo', 'Ya existe una materia prima con este código') """
+        
+        return cleaned_data
+    
+""" Para insumos y otros """
+class CantidadInsumosForm(forms.Form):
+    cantidad = forms.IntegerField(
+        min_value=1,
+        max_value=20,
+        label="¿Cuántos insumos deseas registrar?",
+        help_text="Máximo 20 por compra",
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Número de insumos'
+        })
+    )
+
+class InsumosForm(forms.Form):
+    EXISTING = 'existing'
+    NEW = 'new'
+    INSUMOS_CHOICES = [
+        (EXISTING, 'Usar insumo existente'),
+        (NEW, 'Registrar nuevo insumo')
+    ]
+    
+    opcion = forms.ChoiceField(
+        choices=INSUMOS_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=EXISTING
+    )
+    
+    insumo_existente = forms.ModelChoiceField(
+        queryset=InsumosOtros.objects.all(),
+        required=False,
+        label="Seleccionar insumo existente",
+        widget=forms.Select(attrs={'class': 'form-select insumo-select'})
+    )
+    
+    cantidad = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0.01,
+        label="Cantidad adquirida",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    almacen = forms.ModelChoiceField(
+        queryset=Almacen.objects.all(),
+        required=False,
+        label="Almacen para su ubicación",
+        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
+    )
+    
+    # Campos para nuevo insumo
+
+    codigo = forms.CharField(
+        max_length=20, 
+        required=False, 
+        label="Código",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    nombre = forms.CharField(
+        max_length=255, 
+        required=False, 
+        label="Nombre",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    descripcion = forms.CharField(
+        max_length=600, 
+        required=False, 
+        label="Descripción",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    costo = forms.FloatField(
+        required=False,
+        label="Costo",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        opcion = cleaned_data.get('opcion')
+        
+        if opcion == self.EXISTING:
+            if not cleaned_data.get('insumo_existente'):
+                self.add_error('insumo_existente', 'Debes seleccionar un insumo existente')
+        elif opcion == self.NEW:
+            if not cleaned_data.get('codigo'):
+                self.add_error('codigo', 'El código es obligatorio para nuevos insumo')
+            if not cleaned_data.get('nombre'):
+                self.add_error('nombre', 'El nombre es obligatorio para nuevos insumos')
+            
+            # Validar que no exista un insumo con el mismo código o nombre
+            nombre = cleaned_data.get('nombre')
+            codigo = cleaned_data.get('codigo')
+            if nombre and InsumosOtros.objects.filter(nombre=nombre).exists():
+                self.add_error('nombre', 'Ya existe un insumo con este nombre')
+            if codigo and InsumosOtros.objects.filter(codigo=codigo).exists():
+                self.add_error('codigo', 'Ya existe un insumo con este código')
         
         return cleaned_data
