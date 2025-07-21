@@ -101,7 +101,7 @@ class CreateImportView(CreateView):
     form_class = MateriaPrimaForm
     template_name = 'materia_prima/import_form.html'
     success_url = '/materia_prima/'
-    success_message = "Se ha importado correctamente la caja."
+    success_message = "Se ha importado correctamente la materia prima."
 
 
 def importar(request):
@@ -243,7 +243,6 @@ def importar(request):
                                          'Las siguientes materias primas ya se encontraban registradas: ' + ', '.join(
                                              materia_existentes))
                         return redirect('materia_prima:importarMateriasPrimas')
-
                     else:
                         messages.warning(request, "No se importó ningún formato.")
                         return redirect('materia_prima:importarMateriasPrimas')

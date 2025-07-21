@@ -3,6 +3,9 @@ from .models import Adquisicion
 from materia_prima.models import MateriaPrima
 from materia_prima.tipo_materia_prima.models import TipoMateriaPrima 
 from nomencladores.almacen.models import Almacen
+from envase_embalaje.models import EnvaseEmbalaje
+from envase_embalaje.tipo_envase_embalaje.models import TipoEnvaseEmbalaje
+from envase_embalaje.formato.models import Formato
 
 class CompraForm(forms.ModelForm):
     class Meta:
@@ -54,6 +57,12 @@ class MateriaPrimaForm(forms.Form):
         label="Cantidad adquirida",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+    almacen = forms.ModelChoiceField(
+        queryset=Almacen.objects.all(),
+        required=False,
+        label="Almacen para su ubicación",
+        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
+    )
     
     # Campos para nueva materia prima
     codigo = forms.CharField(
@@ -91,22 +100,17 @@ class MateriaPrimaForm(forms.Form):
         label="Concentración",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    cantidad_almacen = forms.IntegerField( 
+    """ cantidad_almacen = forms.IntegerField( 
         required=False, 
         label="Cantidad en almacen",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
+    ) """
     costo = forms.FloatField(
         required=False,
         label="Costo",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    almacen = forms.ModelChoiceField(
-        queryset=Almacen.objects.all(),
-        required=False,
-        label="Almacen para su ubicación",
-        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
-    )
+
     ficha_tecnica = forms.FileField(
         required=False,
         label= "Ficha Técnica",
@@ -121,10 +125,8 @@ class MateriaPrimaForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         opcion = cleaned_data.get('opcion')
-        print("En el clean")
         
         if opcion == self.EXISTING:
-            print("Existing")
             if not cleaned_data.get('materia_existente'):
                 self.add_error('materia_existente', 'Debes seleccionar una materia prima existente')
         elif opcion == self.NEW:
@@ -140,5 +142,96 @@ class MateriaPrimaForm(forms.Form):
                 self.add_error('nombre', 'Ya existe una materia prima con este nombre')
             if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
                 self.add_error('codigo', 'Ya existe una materia prima con este código')
+        
+        return cleaned_data
+    
+class CantidadEnvasesForm(forms.Form):
+    cantidad = forms.IntegerField(
+        min_value=1,
+        max_value=20,
+        label="¿Cuántos envases o embalajes deseas registrar?",
+        help_text="Máximo 20 por compra",
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Número de envases o embalajes'
+        })
+    )
+
+class EnvasesForm(forms.Form):
+    EXISTING = 'existing'
+    NEW = 'new'
+    ENVASE_CHOICES = [
+        (EXISTING, 'Usar envase existente'),
+        (NEW, 'Registrar nuevo envase o embalaje')
+    ]
+    
+    opcion = forms.ChoiceField(
+        choices=ENVASE_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=EXISTING
+    )
+    
+    envase_existente = forms.ModelChoiceField(
+        queryset=EnvaseEmbalaje.objects.all(),
+        required=False,
+        label="Seleccionar envaseo embalaje existente",
+        widget=forms.Select(attrs={'class': 'form-select materia-select'})
+    )
+    
+    cantidad = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0.01,
+        label="Cantidad adquirida",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    almacen = forms.ModelChoiceField(
+        queryset=Almacen.objects.all(),
+        required=False,
+        label="Almacen para su ubicación",
+        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
+    )
+    
+    # Campos para nuevo envase
+    tipo_envase_embalaje = forms.ModelChoiceField(
+        queryset=TipoEnvaseEmbalaje.objects.all(),
+        required=False,
+        label="Seleccionar tipo de envase o embalaje",
+        widget=forms.Select(attrs={'class': 'form-select tipo-envase-select'})
+    )
+    formato = forms.ModelChoiceField(
+        queryset=Formato.objects.all(),
+        required=False,
+        label="Seleccionar formato",
+        widget=forms.Select(attrs={'class': 'form-select formato-select'})
+    )
+
+    costo = forms.FloatField(
+        required=False,
+        label="Costo",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        opcion = cleaned_data.get('opcion')
+        
+        if opcion == self.EXISTING:
+            if not cleaned_data.get('envase_existente'):
+                self.add_error('envase_existente', 'Debes seleccionar un envase existente')
+        elif opcion == self.NEW:
+            if not cleaned_data.get('tipo_envase_embalaje'):
+                self.add_error('tipo_envase_embalaje', 'El tipo de envase es obligatorio para nuevos evases o embalajes')
+            if not cleaned_data.get('formato'):
+                self.add_error('formato', 'El formato es obligatorio para nuevos eases o embalajes')
+            
+            """ # Validar que no exista una materia prima con el mismo nombre
+            nombre = cleaned_data.get('nombre')
+            codigo = cleaned_data.get('codigo')
+            if nombre and MateriaPrima.objects.filter(nombre=nombre).exists():
+                self.add_error('nombre', 'Ya existe una materia prima con este nombre')
+            if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
+                self.add_error('codigo', 'Ya existe una materia prima con este código') """
         
         return cleaned_data

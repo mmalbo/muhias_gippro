@@ -11,7 +11,7 @@
                            id="{{ wizard.form.prefix }}-opcion-existing" value="existing" 
                            {% if wizard.form.initial.opcion != 'new' %}checked{% endif %}>
                     <label class="form-check-label" for="{{ wizard.form.prefix }}-opcion-existing">
-                        Usar materia prima existente
+                        Usar envase o embalaje existente
                     </label>
                 </div>
                 <div class="form-check">
@@ -19,80 +19,46 @@
                            id="{{ wizard.form.prefix }}-opcion-new" value="new"
                            {% if wizard.form.initial.opcion == 'new' %}checked{% endif %}>
                     <label class="form-check-label" for="{{ wizard.form.prefix }}-opcion-new">
-                        Registrar nueva materia prima
+                        Registrar nuevo envase o embalaje
                     </label>
                 </div>
             </div>
             
             <div id="existing-section" style="{% if wizard.form.initial.opcion != 'new' %}display: block;{% else %}display: none;{% endif %}">
                 <div class="mb-3">
-                    <label class="form-label">Seleccionar materia prima:</label>
-                    {{ wizard.form.materia_existente }}
+                    <label class="form-label">Seleccionar envase:</label>
+                    {{ wizard.form.envase_existente }}
                 </div>
             </div>
             <div id="new-section" style="{% if wizard.form.initial.opcion == 'new' %}display: block;{% else %}display: none;{% endif %}">
                 <div class="mb-3">
-                    {{ wizard.form.codigo.label_tag }}
-                    {{ wizard.form.codigo }}
+                    {{ wizard.form.formato.label_tag }}
+                    {{ wizard.form.formato }}
                 </div>
                 <div class="mb-3">
-                    {{ wizard.form.nombre.label_tag }}
-                    {{ wizard.form.nombre }}
-                </div>
-                <div class="mb-3">
-                    {{ wizard.form.tipo_materia_prima.label_tag }}
-                    {{ wizard.form.tipo_materia_prima }}
-                </div>
-                <div class="mb-3">
-                    {{ wizard.form.conformacion.label_tag }}
-                    {{ wizard.form.conformacion }}
-                </div>
-                <div class="mb-3">
-                    {{ wizard.form.unidad_medida.label_tag }}
-                    {{ wizard.form.unidad_medida }}
-                </div>
-                <div class="mb-3">
-                    {{ wizard.form.concentracion.label_tag }}
-                    {{ wizard.form.concentracion }}
+                    {{ wizard.form.tipo_envase_embalaje.label_tag }}
+                    {{ wizard.form.tipo_envase_embalaje }}
                 </div>
                 <div class="mb-3">
                     {{ wizard.form.costo.label_tag }}
                     {{ wizard.form.costo }}
                 </div>
-                <div class="mb-3">
-                    {{ wizard.form.ficha_tecnica.label_tag }}
-                    {{ wizard.form.ficha_tecnica }}
-                </div>
-                <div class="mb-3">
-                    {{ wizard.form.hoja_seguridad.label_tag }}
-                    {{ wizard.form.hoja_seguridad }}
-                </div>
-                
             </div>
         </div>
         
         <div class="col-md-6">
-            <div class="card" id="materia-details" style="{% if wizard.form.initial.opcion == 'existing' and wizard.form.initial.materia_existente %}display: block;{% else %}display: none;{% endif %}">
-                <div class="card-header bg-light">Detalles de la Materia Prima</div>
+            <div class="card" id="envase-details" style="{% if wizard.form.initial.opcion == 'existing' and wizard.form.initial.envase_existente %}display: block;{% else %}display: none;{% endif %}">
+                <div class="card-header bg-light">Detalles del envase o embalaje</div>
                 <div class="card-body">
                     <dl class="row">
                         <dt class="col-sm-4">Código:</dt>
                         <dd class="col-sm-8" id="detail-codigo">-</dd>
 
-                        <dt class="col-sm-4">Nombre:</dt>
-                        <dd class="col-sm-8" id="detail-nombre">-</dd>
+                        <dt class="col-sm-4">Formato:</dt>
+                        <dd class="col-sm-8" id="detail-formato">-</dd>
                         
-                        <dt class="col-sm-4">Tipo de MP:</dt>
+                        <dt class="col-sm-4">Tipo de envase o embalaje:</dt>
                         <dd class="col-sm-8" id="detail-tipo">-</dd>
-
-                        <dt class="col-sm-4">Conformación:</dt>
-                        <dd class="col-sm-8" id="detail-conformacion">-</dd>
-                        
-                        <dt class="col-sm-4">Unidad de medida:</dt>
-                        <dd class="col-sm-8" id="detail-medida">-</dd>
-
-                        <dt class="col-sm-4">Concentración:</dt>
-                        <dd class="col-sm-8" id="detail-concentracion">-</dd>
 
                     </dl>
                 </div>
@@ -117,8 +83,8 @@
         const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
         const existingSection = document.getElementById('existing-section');
         const newSection = document.getElementById('new-section');
-        const detailsCard = document.getElementById('materia-details');
-        const selectMateria = document.querySelector(`select[name="${prefix}-materia_existente"]`);
+        const detailsCard = document.getElementById('envase-details');
+        const selectEnvase = document.querySelector(`select[name="${prefix}-envase_existente"]`);
         
         // Función para mostrar/ocultar secciones
         function toggleSections() {
@@ -143,13 +109,13 @@
             radio.addEventListener('change', toggleSections);
         });
         
-        // Cargar detalles cuando se selecciona una materia
-        if (selectMateria) {
-            selectMateria.addEventListener('change', function() {
-                const materiaId = this.value;
+        // Cargar detalles cuando se selecciona un envase
+        if (selectEnvase) {
+            selectEnvase.addEventListener('change', function() {
+                const envaseId = this.value;
                 
-                if (materiaId) {
-                    fetch(`/adquisiciones/api/materias-primas/${materiaId}/`)
+                if (envaseId) {
+                    fetch(`/adquisiciones/api/envases/${envaseId}/`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Error en la respuesta');
@@ -157,30 +123,25 @@
                             return response.json();
                         })
                         .then(data => {
-                            document.getElementById('detail-nombre').textContent = data.nombre || '-';
-                            document.getElementById('detail-codigo').textContent = data.id || '-';
-                            document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
-                            document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
+                            document.getElementById('detail-codigo').textContent = data.codigo || '-';
+                            document.getElementById('detail-formato').textContent = data.formato || '-';
                             document.getElementById('detail-tipo').textContent = data.tipo || '-';
-                            document.getElementById('detail-medida').textContent = data.medida || '-';
                         })
                         .catch(error => {
                             console.error('Error al obtener detalles:', error);
-                            alert('Error al cargar los detalles de la materia prima');
+                            alert('Error al cargar los detalles de los envases');
                         });
                 } else {
                     // Limpiar detalles si no hay selección
-                    document.getElementById('detail-nombre').textContent = '-';
-                    document.getElementById('detail-concentracion').textContent = '-';
-                    document.getElementById('detail-conformacion').textContent = '-';
+                    document.getElementById('detail-codigo').textContent = '-';
+                    document.getElementById('detail-formato').textContent = '-';
                     document.getElementById('detail-tipo').textContent = '-';
-                    document.getElementById('detail-medida').textContent = '-';
                 }
             });
             
             // Cargar detalles iniciales si hay una selección
-            if (selectMateria.value) {
-                selectMateria.dispatchEvent(new Event('change'));
+            if (selectEnvase.value) {
+                selectEnvase.dispatchEvent(new Event('change'));
             }
         }
     });

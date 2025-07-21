@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from materia_prima.models import MateriaPrima
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
+from nomencladores.almacen.models import Almacen
 import os
 
 def factura_upload_to(instance, filename):
@@ -47,7 +48,36 @@ class DetallesAdquisicion(models.Model):
         verbose_name="Materia prima adquirida"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
+    almacen = models.ForeignKey(
+        Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        null=True,
+        verbose_name="Almacén donde se ubicará la materia prima"
+    )
+    recibida = models.BooleanField(
+        verbose_name="Recibida en almacén",
+        null=False, default=False
+    )
 
     def __str__(self):
         return f"{self.materia_prima.nombre} - {self.adquisicion.fecha_compra}"
+    
+class DetallesAdquisicionEnvase(models.Model):
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles_envases')
+    envase_embalaje = models.ForeignKey(
+        EnvaseEmbalaje, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        verbose_name="Envase o embalaje adquirida"
+    )
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
+    almacen = models.ForeignKey(
+        Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        null=True,
+        verbose_name="Almacén donde se ubicará el envase o producto para el embalaje"
+    )
+    recibida = models.BooleanField(
+        verbose_name="Recibida en almacén",
+        null=False, default=False
+    )
+
+    def __str__(self):
+        return f"{self.envase_embalaje.codigo_envase} - {self.adquisicion.fecha_compra}"
     

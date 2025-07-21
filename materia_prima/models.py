@@ -4,7 +4,8 @@ from .tipo_materia_prima.models import TipoMateriaPrima
 from nomencladores.almacen.models import Almacen
 from django.core.exceptions import ValidationError
 
-class MateriaPrima(ModeloBase): # Analizar si hay que especificarlo o se autogenera
+class MateriaPrima(ModeloBase): 
+    # Analizar si hay que especificarlo o se autogenera
     codigo = models.CharField(
         verbose_name="Código de la materia prima",
         unique=True,
@@ -59,12 +60,12 @@ class MateriaPrima(ModeloBase): # Analizar si hay que especificarlo o se autogen
         verbose_name="Concentración",
     )
 
-    cantidad_almacen = models.IntegerField(
+    """ cantidad_almacen = models.IntegerField(
         null=True,
         blank=False,
         default=0,
         verbose_name="Cantidad",
-    )
+    ) """
 
     costo = models.FloatField(
         null=True,
@@ -74,12 +75,12 @@ class MateriaPrima(ModeloBase): # Analizar si hay que especificarlo o se autogen
     )
 
     # La materia prima puede estar en más de un almacen. Por lo que aquí no pinta nada el almacen  
-    almacen = models.ForeignKey(
+    """ almacen = models.ForeignKey(
         Almacen,
         on_delete=models.CASCADE,
         null=False,
         verbose_name='Almacen ubicación'
-    )
+    ) """
 
     ficha_tecnica = models.FileField(
         upload_to='fichas_tecnicas/',
@@ -105,7 +106,7 @@ class MateriaPrima(ModeloBase): # Analizar si hay que especificarlo o se autogen
         return self.hoja_seguridad.name if self.hoja_seguridad else ''
 
     def clean(self):
-        if self.cantidad_almacen < 0:
-            raise ValidationError('La cantidad en almacén no puede ser negativa.')
+        """ if self.cantidad_almacen < 0:
+            raise ValidationError('La cantidad en almacén no puede ser negativa.') """
         if self.costo < 0:
             raise ValidationError('El costo no puede ser negativo.')
