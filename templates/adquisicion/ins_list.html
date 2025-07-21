@@ -1,0 +1,125 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de adquisiciones de insumos</h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th style="width: 50%">Fecha</th>
+                            <th style="width: 25%">cantidad_productos</th>
+                            <th style="width: 25%">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for ad in adquisiciones %}
+                            <tr>
+                                <td>{{ ad.fecha_compra }}</td>
+                                <td>{{ ad.num_ad }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'detalles_ins_list' ad.id %}" title="Ver detalles"
+                                           class="btn far fa-edit"></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th style="width: 50%">Fecha</th>
+                            <th style="width: 25%">cantidad_productos</th>
+                            <th style="width: 25%">Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <a href="nueva_compra_insumo" class="btn btn-success">Crear nueva adquisición de insumos</a>
+                </div>
+            </div>
+        </div>
+        <!-- Agrega este código en la sección donde quieras mostrar el modal -->
+        <div id="materia_prima_modal" class="modal" style="text-align: left" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <span class="close-button">&times;</span>
+                    <div class="modal-header">
+                        <h2>Almacén: <strong><span id="modalCodigoMateriaPrima"></span></strong></h2>
+                    </div>
+                    <div style="margin-left: 1rem;">
+                        <strong><p>Listado de materias primas asociadas:</p></strong>
+                    </div>
+                    <ul id="almacenes-list"></ul>
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeModal()"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const showAlmacenesLinks = document.querySelectorAll('.show_materias_primas');
+            const modal = document.getElementById('materia_prima_modal');
+            const closeButton = document.getElementsByClassName('close-button')[0];
+
+            showAlmacenesLinks.forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const pk = this.dataset.pk;
+                    fetch(`/materia_prima/materias_primas/${pk}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const almacenesList = document.getElementById('almacenes-list');
+                            const modalCodigoMateriaPrima = document.getElementById('modalCodigoMateriaPrima');
+                            modalCodigoMateriaPrima.innerHTML = '';
+                            almacenesList.innerHTML = '';
+                            const codigo = document.createElement('codigo');
+                            if (data.length > 0) {
+                                data.forEach(almacen => {
+                                    const li = document.createElement('li');
+                                    li.textContent = almacen.nombre;
+                                    codigo.textContent = almacen.nombre_almacen;
+                                    almacenesList.appendChild(li);
+                                });
+                                modalCodigoMateriaPrima.appendChild(codigo);
+                            } else {
+                                almacenesList.innerHTML = 'No hay materias primas asociadas';
+                            }
+                            modal.style.display = 'block';
+                        });
+                });
+            });
+            window.addEventListener('click', function (event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        function closeModal() {
+            var modal = document.getElementById("materia_prima_modal");
+            modal.style.display = "none";
+        }
+    </script>
+{% endblock %}

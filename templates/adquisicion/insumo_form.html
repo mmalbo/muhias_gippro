@@ -1,0 +1,150 @@
+{% extends "adquisicion/wizard_base.html" %}
+{% load static %}
+
+{% block step_content %}
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="{{ wizard.form.prefix }}-opcion" 
+                           id="{{ wizard.form.prefix }}-opcion-existing" value="existing" 
+                           {% if wizard.form.initial.opcion != 'new' %}checked{% endif %}>
+                    <label class="form-check-label" for="{{ wizard.form.prefix }}-opcion-existing">
+                        Usar insumo existente
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="{{ wizard.form.prefix }}-opcion" 
+                           id="{{ wizard.form.prefix }}-opcion-new" value="new"
+                           {% if wizard.form.initial.opcion == 'new' %}checked{% endif %}>
+                    <label class="form-check-label" for="{{ wizard.form.prefix }}-opcion-new">
+                        Registrar nuevo insumo
+                    </label>
+                </div>
+            </div>
+            
+            <div id="existing-section" style="{% if wizard.form.initial.opcion != 'new' %}display: block;{% else %}display: none;{% endif %}">
+                <div class="mb-3">
+                    <label class="form-label">Seleccionar insumo:</label>
+                    {{ wizard.form.insumo_existente }}
+                </div>
+            </div>
+            <div id="new-section" style="{% if wizard.form.initial.opcion == 'new' %}display: block;{% else %}display: none;{% endif %}">
+                <div class="mb-3">
+                    {{ wizard.form.codigo.label_tag }}
+                    {{ wizard.form.codigo }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.nombre.label_tag }}
+                    {{ wizard.form.nombre }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.descripcion.label_tag }}
+                    {{ wizard.form.descripcion }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card" id="insumo-details" style="{% if wizard.form.initial.opcion == 'existing' and wizard.form.initial.insumo_existente %}display: block;{% else %}display: none;{% endif %}">
+                <div class="card-header bg-light">Detalles del insumo</div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Código:</dt>
+                        <dd class="col-sm-8" id="detail-codigo">-</dd>
+
+                        <dt class="col-sm-4">Nombre:</dt>
+                        <dd class="col-sm-8" id="detail-nombre">-</dd>
+                        
+                        <dt class="col-sm-4">Descripción:</dt>
+                        <dd class="col-sm-8" id="detail-descripcion">-</dd>
+
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        {{ wizard.form.cantidad.label_tag }}
+        {{ wizard.form.cantidad }}
+        <div class="form-text">Cantidad adquirida en esta compra</div>
+    </div>
+    <div class="mb-3">
+        {{ wizard.form.almacen.label_tag }}
+        {{ wizard.form.almacen }}
+        <div class="form-text">Almacén donde será ubicada esta compra.</div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const prefix = "{{ wizard.form.prefix }}";
+        const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
+        const existingSection = document.getElementById('existing-section');
+        const newSection = document.getElementById('new-section');
+        const detailsCard = document.getElementById('insumo-details');
+        const selectInsumo = document.querySelector(`select[name="${prefix}-insumo_existente"]`);
+        
+        // Función para mostrar/ocultar secciones
+        function toggleSections() {
+            const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
+            
+            if (selectedValue === 'existing') {
+                existingSection.style.display = 'block';
+                newSection.style.display = 'none';
+                detailsCard.style.display = 'block';
+            } else {
+                existingSection.style.display = 'none';
+                newSection.style.display = 'block';
+                detailsCard.style.display = 'none';
+            }
+        }
+        
+        // Inicializar estado
+        toggleSections();
+        
+        // Escuchar cambios en los radios
+        opcionRadios.forEach(radio => {
+            radio.addEventListener('change', toggleSections);
+        });
+        
+        // Cargar detalles cuando se selecciona un insumo
+        if (selectInsumo) {
+            selectInsumo.addEventListener('change', function() {
+                const insumoId = this.value;
+                
+                if (insumoId) {
+                    fetch(`/adquisiciones/api/insumo/${insumoId}/`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la respuesta');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById('detail-codigo').textContent = data.codigo || '-';
+                            document.getElementById('detail-nombre').textContent = data.nombre || '-';
+                            document.getElementById('detail-descripcion').textContent = data.descripcion || '-';
+                        })
+                        .catch(error => {
+                            console.error('Error al obtener detalles:', error);
+                            alert('Error al cargar los detalles de los insumos');
+                        });
+                } else {
+                    // Limpiar detalles si no hay selección
+                    document.getElementById('detail-codigo').textContent = '-';
+                    document.getElementById('detail-nombre').textContent = '-';
+                    document.getElementById('detail-descripcion').textContent = '-';
+                }
+            });
+            
+            // Cargar detalles iniciales si hay una selección
+            if (selectInsumo.value) {
+                selectInsumo.dispatchEvent(new Event('change'));
+            }
+        }
+    });
+    </script>
+
+    {% endblock %}

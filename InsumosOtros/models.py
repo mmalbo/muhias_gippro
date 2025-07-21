@@ -43,16 +43,17 @@ class InsumosOtros(ModeloBase):
         verbose_name="Cantidad",
     )
 
-    costo = models.IntegerField(
-        null=True, blank=False,
+    costo = models.FloatField(
+        null=True,
+        blank=False,
         default=0,
         verbose_name="Costo",
     )
 
-    almacen = models.ForeignKey(
+    """ almacen = models.ForeignKey(
         Almacen, on_delete=models.SET_NULL,
         null=True,
         verbose_name='Almacen ubicación'
-    )
+    ) """
     def __str__(self):
         return self.nombre
