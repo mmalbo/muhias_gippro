@@ -24,6 +24,9 @@ class Formato(ModeloBase):
 
     def __str__(self):
         return f"{self.capacidad} {self.unidad_medida}"
+    
+    def __unicode__(self):
+        return f"{self.capacidad} {self.unidad_medida}"
 
     def clean(self):
         if self.capacidad and not str(self.capacidad).isdigit():

@@ -1,9 +1,10 @@
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, redirect
 from formtools.wizard.views import SessionWizardView
-from .forms import CompraForm, CantidadMateriasForm, MateriaPrimaForm
-from .models import Adquisicion, DetallesAdquisicion
+from .forms import CompraForm, CantidadMateriasForm, MateriaPrimaForm, CantidadEnvasesForm, EnvasesForm
+from .models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase
 from materia_prima.models import MateriaPrima
+from envase_embalaje.models import EnvaseEmbalaje
 from django.views.generic.edit import CreateView
 from django.http import JsonResponse
 from collections import OrderedDict
@@ -12,6 +13,8 @@ from django.forms.models import modelform_factory
 from django import forms
 import os
 from django.views import View
+
+### Incorporar envases...
 
 # Configuración de almacenamiento temporal
 TMP_STORAGE = os.path.join(settings.BASE_DIR, 'tmp_wizard')
@@ -208,6 +211,189 @@ class MateriaPrimaDetalleView(View):
             })
         except MateriaPrima.DoesNotExist:
             return JsonResponse({'error': 'Materia prima no encontrada'}, status=404)
+
+class CompraEnvaseWizard(SessionWizardView):
+    file_storage = file_storage
+    # Diccionario que mapea cada paso con su template
+    template_dict = {
+        'compra': 'adquisicion/compra_form.html',
+        'cantidad': 'adquisicion/cantidad_form.html',
+        'envase': 'adquisicion/envase_form.html',  # Para todos los pasos envase_*
+    }
+
+    def get_template_names(self):
+        """Determina qué plantilla usar para el paso actual"""
+        current_step = self.steps.current
+        
+        # Si es un paso de materia prima, usa el template genérico
+        if current_step.startswith('envase_'):
+            return [self.template_dict['envase']]
+        
+        # Para pasos conocidos, usa su template específico
+        if current_step in self.template_dict:
+            return [self.template_dict[current_step]]
+        
+        # Fallback por defecto
+        return ['adquisicion/wizard_base.html']
+
+    form_list = [
+        ('compra', CompraForm),
+        ('cantidad', CantidadEnvasesForm),
+    ]
+
+    def get_form_list(self):
+        """Versión robusta que siempre retorna al menos los formularios base"""
+        form_list = OrderedDict(self.form_list)
+        
+        # Agregar pasos dinámicos si hay datos de cantidad
+        try:
+            cantidad_data = self.storage.get_step_data('cantidad')
+            if cantidad_data and 'cantidad-cantidad' in cantidad_data:
+                num_envases = int(cantidad_data['cantidad-cantidad'][0])
+                for i in range(num_envases):
+                    form_list[f'envase_{i}'] = EnvasesForm
+        except (KeyError, ValueError, TypeError):
+            pass
+        return form_list
+    
+    def get_form_initial(self, step):
+        initial = super().get_form_initial(step)
+        
+        # Para los pasos de envase, intentar mantener la selección previa
+        if step.startswith('envase_'):
+            prev_data = self.get_cleaned_data_for_step(step)
+            if prev_data:
+                initial.update(prev_data)
+        
+        return initial
+
+    
+    def get_form(self, step=None, data=None, files=None):
+        # Asegurar que siempre haya una lista de formularios
+        form_list = self.get_form_list()
+        if not form_list:
+            form_list = OrderedDict([
+                ('compra', CompraForm),
+                ('cantidad', CantidadEnvasesForm),
+            ])
+        
+        if step is None:
+            step = self.steps.current
+        try:
+            form_class = form_list[step]
+            return form_class(data=data, files=files, prefix=self.get_form_prefix(step, form_class))
+        except KeyError:
+            # Si el paso no existe, redirigir al primer paso
+            self.storage.current_step = 'compra'
+            form_class = form_list['compra']
+            return form_class(data=data, files=files, prefix=self.get_form_prefix('compra', form_class))
+    
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form, **kwargs)
+        
+        # Asegurar que siempre tengamos una lista de pasos
+        form_list = self.get_form_list()
+        if not form_list:
+            form_list = OrderedDict([
+                ('compra', CompraForm),
+                ('cantidad', CantidadEnvasesForm),
+            ])
+
+        # Añadir información específica del paso
+        current_step = self.steps.current
+        if current_step.startswith('envase_'):
+            envase_num = int(current_step.split('_')[1]) + 1
+            context['step_title'] = f"Envase {envase_num}"
+        else:
+            context['step_title'] = {
+                'compra': 'Información General',
+                'cantidad': 'Cantidad de Envases'
+            }.get(current_step, 'Paso del Proceso')
+        
+        # Calcular progreso
+        step_index = list(form_list.keys()).index(self.steps.current)
+        context.update({
+            'step_number': step_index + 1,
+            'total_steps': len(form_list),
+            'step_title': self.get_step_title(),
+            'form_list_keys': list(form_list.keys()),
+        })
+        
+        return context
+    
+    def get_step_title(self):
+        titles = {
+            'compra': "Información General",
+            'cantidad': "Cantidad de Envases",
+        }
+        
+        if self.steps.current.startswith('envase_'):
+            try:
+                index = int(self.steps.current.split('_')[1]) + 1
+                return f"Envase {index}"
+            except (ValueError, IndexError):
+                return "Registro de Envases"
+        
+        return titles.get(self.steps.current, "Paso del Proceso")
+    
+    def done(self, form_list, **kwargs):
+        # Procesamiento seguro de los datos
+        try:
+            compra_data = [f for f in form_list if isinstance(f, CompraForm)][0].cleaned_data
+            cantidad_data = [f for f in form_list if isinstance(f, CantidadEnvasesForm)][0].cleaned_data
+            
+            # Crear compra
+            compra = Adquisicion.objects.create(
+                fecha_compra=compra_data['fecha_compra'],
+                importada=compra_data['importada'],
+                factura=compra_data['factura']
+            )
+            
+            # Procesar materias primas
+            envase_forms = [f for f in form_list if isinstance(f, EnvasesForm)]
+            for form in envase_forms[:cantidad_data['cantidad']]:
+                data = form.cleaned_data
+                
+                if data['opcion'] == EnvasesForm.EXISTING:
+                    envase = data['envase_existente']
+                else:
+                    envase = EnvaseEmbalaje.objects.create(
+                        tipo_envase_embalaje=data['tipo_envase_embalaje'],
+                        formato=data['formato'],
+                        costo=data['costo'],
+                    )
+                
+                DetallesAdquisicionEnvase.objects.create(
+                    adquisicion=compra,
+                    envase_embalaje=envase,
+                    cantidad=data['cantidad'],
+                    almacen=data['almacen']
+                )
+            
+            # Limpiar almacenamiento
+            self.storage.reset()
+            return redirect('compra_exitosa')
+        
+        except Exception as e:
+            print(f"Error al procesar compra: {e}")
+            # Manejar el error adecuadamente
+            return redirect('error_page')
+
+#from materia_prima.tipo_materia_prima.choices import CHOICE_TIPO
+
+class EnvaseDetalleView(View):
+    def get(self, request, pk):
+        try:
+            envase = EnvaseEmbalaje.objects.get(pk=pk)
+            format = str(envase.formato.capacidad) + ' ' + envase.formato.unidad_medida
+            return JsonResponse({
+                'codigo': envase.codigo_envase,
+                'formato': format or '',
+                'tipo': envase.tipo_envase_embalaje.nombre or '',
+            })
+        except EnvaseEmbalaje.DoesNotExist:
+            return JsonResponse({'error': 'Envase no encontrado'}, status=404)
+
 
 def compra_exitosa(request):
     return render(request, 'adquisicion/exito.html')
