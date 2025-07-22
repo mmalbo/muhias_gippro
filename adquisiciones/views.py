@@ -192,7 +192,6 @@ class CompraWizard(SessionWizardView):
                 )
             
             # Limpiar almacenamiento
-            print(compra.cantidad_productos())
             self.storage.reset()
             return redirect('compra_exitosa')
         

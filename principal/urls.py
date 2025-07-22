@@ -27,6 +27,7 @@ urlpatterns = [
     path('usuario/', include('usuario.urls'), name='usuario'),
     path('adquisiciones/', include('adquisiciones.urls'), name='adquisiciones'),
     path('insumos/', include('InsumosOtros.urls'), name='insumos'),
+    path('utils/', include('utils.urls'), name='utils'),
 
     # Otras rutas pueden ser añadidas aquí
 ]

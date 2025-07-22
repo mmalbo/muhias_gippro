@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'registro_perdida_almacen.apps.RegistroPerdidaAlmacenConfig',
     'usuario.apps.UsuarioConfig',
     'adquisiciones.apps.AdquisicionesConfig',
+    'utils.apps.UtilsConfig',
 ]
 
 MIDDLEWARE = [
@@ -101,6 +102,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'utils.context_processors.notifications',
             ],
         },
     },
