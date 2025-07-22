@@ -1,7 +1,10 @@
 import requests
 from django.core.exceptions import ValidationError
 from materia_prima.models import MateriaPrima
-
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .models import Notification
+from django.views.decorators.csrf import csrf_exempt
 
 def importar_productos_desde_api():
     url = "http://testtienda.produccionesmuhia.ca/catalogo/listarGippro/"
@@ -41,3 +44,36 @@ def importar_productos_desde_api():
         raise ValidationError(f"Error al conectar con la API: {str(e)}")
     except Exception as e:
         raise ValidationError(f"Error inesperado: {str(e)}")
+    
+    # notifications/views.py
+
+
+@login_required
+def unread_notifications(request):
+    notifications = Notification.objects.filter(
+        user=request.user, 
+        read=False
+    ).order_by('-created_at').values('id', 'message', 'created_at', 'link')[:20]
+    
+    # Formatear fecha
+    for notif in notifications:
+        notif['created_at'] = notif['created_at'].strftime("%d/%m/%Y %H:%M")
+    
+    return JsonResponse(list(notifications), safe=False)
+
+@login_required
+@csrf_exempt
+def mark_as_read(request, notification_id):
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.read = True
+        notification.save()
+        return JsonResponse({"status": "success"})
+    except Notification.DoesNotExist:
+        return JsonResponse({"status": "error"}, status=404)
+
+@login_required
+@csrf_exempt
+def mark_all_read(request):
+    Notification.objects.filter(user=request.user, read=False).update(read=True)
+    return JsonResponse({"status": "success"})
