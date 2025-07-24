@@ -39,8 +39,8 @@ class CustomUserCreateView(CreateView):
 
     def form_valid(self, form):
         username = form.cleaned_data['username']
-        group = form.cleaned_data['groups'] 
-        group_objects = Group.objects.filter(name=group)
+        groups = form.cleaned_data['groups']
+        #group_objects = Group.objects.filter(name=group)
         try:
             user = CustomUser.objects.get(username=username)
             if not user.is_active:
@@ -50,8 +50,8 @@ class CustomUserCreateView(CreateView):
                 # Limpiar y actualizar grupo
                 user.groups.clear()
                 # Agregar el grupo seleccionado al usuario
-                user.groups.add(
-                    group_objects)  # Asignar los roles seleccionados al campo 'groups'
+                user.groups.set(
+                    groups)  # Asignar los roles seleccionados al campo 'groups'
 
                 return super().form_valid(form)
             else:
@@ -64,8 +64,9 @@ class CustomUserCreateView(CreateView):
 
             # Asignar grupo
             # Agregar el grupo seleccionado al usuario
-            user.groups.add(
-                group_objects)  # Asignar los roles seleccionados al campo 'groups'
+            user.groups.set(
+                groups)  # Asignar los roles seleccionados al campo 'groups'
+        print(user.groups)
         return super().form_valid(form)
 
 

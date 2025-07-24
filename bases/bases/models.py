@@ -63,7 +63,6 @@ class ModeloBase(models.Model):
                    "id",
                    "fecha_creacion",
                    "fecha_actualizacion",
-                   "fuc_id",
                ]
         ]
 

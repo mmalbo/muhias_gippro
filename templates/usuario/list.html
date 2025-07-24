@@ -34,7 +34,14 @@
                                                     <td>{{ usuario.full_name }}</td>
                                                     <td>{{ usuario.email }}</td>
                                                     <td>{{ usuario.username }}</td>
-                                                    <td>{{ usuario.groups.}}</td>
+                                                    <td>
+                                                        {% for group in usuario.groups.all %}
+                                                          {{ group.name }}
+                                                          {% if not forloop.last %}, {% endif %}
+                                                          {% empty %}
+                                                            No pertenece a ningún grupo
+                                                        {% endfor %}
+                                                    </td>
                                                     {% if usuario.is_active %}
                                                         <td class="text-left">Si</td>
                                                     {% else %}

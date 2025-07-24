@@ -25,12 +25,3 @@ class NomencladorCodificado(Nomenclador):
     class Meta:
         abstract = True
 
-
-class NomencladorCodificadoDpa(Nomenclador):
-    codigo_dpa = models.CharField(
-        max_length=50,
-        unique=True,
-    )
-
-    class Meta:
-        abstract = True
