@@ -12,8 +12,6 @@ class Almacen(ModeloBase):
     )
     ubicacion = models.CharField(
         max_length=255,
-        # unique=True,
-        # editable=False,
         verbose_name="Ubicación",
         null=False,
     )

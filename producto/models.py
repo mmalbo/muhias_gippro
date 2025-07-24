@@ -49,7 +49,7 @@ class Producto(ModeloBase):
 
     almacen = models.ForeignKey(
         Almacen,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         verbose_name="Almacén",
         null=False
     )

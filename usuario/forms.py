@@ -10,11 +10,10 @@ from usuario.models import CustomUser
 
 
 class CustomUserCreationForm(UserCreationForm):
-    groups = forms.ModelChoiceField(
-        queryset=Group.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control', 'style': 'width:50%'}),
-        required=True,
-        label='Rol:',
+    groups = forms.ModelMultipleChoiceField(
+    queryset=Group.objects.all(),    
+    label='Rol:',
+    required=True
     )
     password1 = forms.CharField(
         label="Contraseña",
