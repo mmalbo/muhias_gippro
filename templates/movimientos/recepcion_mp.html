@@ -1,0 +1,52 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+            <div class="container mt-4">
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    
+    <div id="form-container">
+        {% for form in formset %}
+            <div class="producto-form">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+    </div>
+    
+    <button type="button" id="add-form">Añadir otro producto</button>
+    <button type="submit">Guardar todo</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('form-container');
+        const addButton = document.getElementById('add-form');
+        const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+        let formCount = parseInt(totalForms.value);
+
+        addButton.addEventListener('click', () => {
+            const newForm = container.querySelector('.producto-form').cloneNode(true);
+            const newHtml = newForm.innerHTML.replace(/form-(\d+)-/g, `form-${formCount}-`);
+            newForm.innerHTML = newHtml;
+            
+            // Reset valores
+            const inputs = newForm.querySelectorAll('input, select');
+            inputs.forEach(input => input.value = '');
+            
+            container.appendChild(newForm);
+            formCount++;
+            totalForms.value = formCount;
+        });
+    });
+</script>
+
+{% endblock %}
