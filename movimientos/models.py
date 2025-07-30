@@ -16,7 +16,6 @@ class Vale_Movimiento_Almacen(ModeloBase):
     
     def save(self, *args, **kwargs):
         count = Vale_Movimiento_Almacen.objects.all().count()
-        print(count)
         self.consecutivo = count +1
         super(Vale_Movimiento_Almacen, self).save(*args, **kwargs)
 
@@ -87,3 +86,6 @@ class Movimiento_MP(ModeloBase):
         null=False, blank=False, related_name="movimientos")
     cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
 
+    def __str__(self):
+        entrada = 'Entrada ' if self.entrada else 'Salida '
+        return f'{entrada} de {self.materia_prima.nombre} en {self.vale.almacen.nombre}'

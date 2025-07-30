@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'usuario.apps.UsuarioConfig',
     'adquisiciones.apps.AdquisicionesConfig',
     'utils.apps.UtilsConfig',
+    'inventario.apps.InventarioConfig',
 ]
 
 MIDDLEWARE = [

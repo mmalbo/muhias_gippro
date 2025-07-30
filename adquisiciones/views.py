@@ -183,7 +183,8 @@ class CompraWizard(SessionWizardView):
                         ficha_tecnica=data['ficha_tecnica'],
                         hoja_seguridad=data['hoja_seguridad'],
                     )
-                
+                temp = data['cantidad']
+                print(f'cant:{temp}')
                 DetallesAdquisicion.objects.create(
                     adquisicion=compra,
                     materia_prima=materia,
