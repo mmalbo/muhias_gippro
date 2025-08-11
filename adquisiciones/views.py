@@ -26,7 +26,7 @@ if not os.path.exists(TMP_STORAGE):
     os.makedirs(TMP_STORAGE)
 file_storage = FileSystemStorage(location=TMP_STORAGE)
 
-# Para las maerias primas
+# Para las materias primas
 class CompraWizard(SessionWizardView):
     file_storage = file_storage
     # Diccionario que mapea cada paso con su template
@@ -183,7 +183,8 @@ class CompraWizard(SessionWizardView):
                         ficha_tecnica=data['ficha_tecnica'],
                         hoja_seguridad=data['hoja_seguridad'],
                     )
-                
+                temp = data['cantidad']
+                print(f'cant:{temp}')
                 DetallesAdquisicion.objects.create(
                     adquisicion=compra,
                     materia_prima=materia,
@@ -193,7 +194,7 @@ class CompraWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compra_exitosa')
+            return redirect('compras_mp_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -378,7 +379,7 @@ class CompraEnvaseWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compra_exitosa')
+            return redirect('compras_env_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -559,7 +560,7 @@ class CompraInsumoWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compra_exitosa')
+            return redirect('compras_ins_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
