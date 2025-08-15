@@ -4,8 +4,12 @@ from .tipo_materia_prima.models import TipoMateriaPrima
 from nomencladores.almacen.models import Almacen
 from django.core.exceptions import ValidationError
 
+<<<<<<< Updated upstream
 class MateriaPrima(ModeloBase): 
     # Analizar si hay que especificarlo o se autogenera
+=======
+class MateriaPrima(ModeloBase): # Analizar si hay que especificarlo o se autogenera
+>>>>>>> Stashed changes
     codigo = models.CharField(
         verbose_name="Código de la materia prima",
         unique=True,
