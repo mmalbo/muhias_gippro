@@ -171,7 +171,6 @@
                         </a>
                         <ul id="adquisicionE" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             
-<<<<<<< Updated upstream
                             <li class=" ">
                                 <a href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false">
 
@@ -192,25 +191,7 @@
                                     </li>                                    
                                 </ul>
                             </li>
-=======
->>>>>>> Stashed changes
                             <li class=" ">
-                                <a href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false">
-
-                                    <span class="ml-2">Materia prima</span>
-                                    <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                                    <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                </a>
-                                <ul id="materia_prima" class="iq-submenu collapse" data-parent="#registrar">
-                                    <li class="">
-                                        <a href="{% url 'nueva_compra' %}">
-                                            <i class="las la-minus"></i><span>Nueva adquisición</span>
-                                        </a>
-                                    </li>
-                                    
-                                </ul>
-                            </li>
-                            <!--<li class=" ">
                                 <a href="#envase_embalaje" class="collapsed" data-toggle="collapse"
                                    aria-expanded="false">
                                     <span class="ml-2">Envase o embalajes</span>
@@ -249,11 +230,7 @@
                                         </a>
                                     </li>
                                 </ul>
-<<<<<<< Updated upstream
                             </li>
-=======
-                            </li>-->
->>>>>>> Stashed changes
                         </ul>
                     </li>
                 {% endif %}                
@@ -359,7 +336,11 @@
                             </li>
                         </ul>
                     </li>
+                    <li></li>
                 {% endif %}
+                <li class=" ">
+                    <a href="{% url 'producto_list' %}" class="collapsed" data-toggle="collapse" aria-expanded="false"></a>
+                </li>
 
 
             </ul>

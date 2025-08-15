@@ -20,13 +20,20 @@ class CreatePomoView(CreateView):
     success_url = '/pomo/'
     success_message = "Se ha creado correctamente el pomo."
 
+    def form_valid(self, form):
+        # Asignar el color antes de guardar
+        envase = form.save(commit=False)
+        envase.color = form.cleaned_data['color_input']
+        envase.save()
+        return super().form_valid(form)
+
 
 class CreateImportView(CreateView):
     model = Pomo
     form_class = PomoForm
     template_name = 'pomo/import_form.html'
     success_url = '/pomo/'
-
+  
 
 class ListPomoView(ListView):
     model = Pomo
@@ -139,18 +146,18 @@ def importarPomo(request):
 
                     if color is None:
                         messages.error(request,
-                                       f"Fila {index + 2}: No existe el color {Col_Color} en el nomenclador de colores")
+                                       f"Fila : No existe el color {Col_Color} en el nomenclador de colores")
                         return redirect('pomo:importarPomo')
                     if len(nombre) > 255:
-                        messages.error(request, f"Fila {index + 2}: El nombre no puede exceder 255 caracteres.")
+                        messages.error(request, f"Fila : El nombre no puede exceder 255 caracteres.")
                         return redirect('pomo:importarPomo')
 
                     if len(forma) > 255:
-                        messages.error(request, f"Fila {index + 2}: El tamaño no puede exceder 255 caracteres.")
+                        messages.error(request, f"Fila : El tamaño no puede exceder 255 caracteres.")
                         return redirect('pomo:importarPomo')
 
                     if len(material) > 255:
-                        messages.error(request, f"Fila {index + 2}: El material no puede exceder 255 caracteres.")
+                        messages.error(request, f"Fila : El material no puede exceder 255 caracteres.")
                         return redirect('pomo:importarPomo')
 
                     try:
@@ -165,7 +172,7 @@ def importarPomo(request):
                         pomo.save()
                         No_fila += 1
                     except Exception as e:
-                        messages.error(request, f"Error al procesar la fila {index + 2}: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila : {str(e)}")
                         return redirect('pomo:importarPomo')
 
                 # Mensajes de resultado

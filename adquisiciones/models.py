@@ -43,27 +43,18 @@ class Adquisicion(models.Model):
     
     @property
     def cantidad_mprimas(self):
-        cantidad = DetallesAdquisicion.objects.filter(adquisicion__id=self.id)
+        cantidad = self.detalles.count()
         return cantidad
     
     @property
     def cantidad_envases(self):
-        cantidad = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id)
+        cantidad = self.detalles_envases.count()
         return cantidad
     
     @property
     def cantidad_insumos(self):
-        cantidad = DetallesAdquisicionInsumo.objects.filter(adquisicion__id=self.id)
+        cantidad = self.detalles_insumos.count()
         return cantidad
-    
-    @property
-    def tipo_adquisicion(self):
-        if self.cantidad_mprimas != 0:
-            return 'mp'
-        elif self.cantidad_envases != 0:
-            return 'env'
-        else:
-            return 'ins'
 
 class DetallesAdquisicion(models.Model):
     adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles')
@@ -75,8 +66,7 @@ class DetallesAdquisicion(models.Model):
     almacen = models.ForeignKey(
         Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
         null=True,
-        verbose_name="Almacén donde se ubicará la materia prima",
-        related_name='detalles_adquisicion'
+        verbose_name="Almacén donde se ubicará la materia prima"
     )
     recibida = models.BooleanField(
         verbose_name="Recibida en almacén",

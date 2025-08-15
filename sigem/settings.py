@@ -75,7 +75,6 @@ INSTALLED_APPS = [
     'usuario.apps.UsuarioConfig',
     'adquisiciones.apps.AdquisicionesConfig',
     'utils.apps.UtilsConfig',
-    'inventario.apps.InventarioConfig',
 ]
 
 MIDDLEWARE = [
@@ -117,7 +116,7 @@ WSGI_APPLICATION = 'sigem.wsgi.app'
 DATABASES = {
      'default': {
          'ENGINE': 'django.db.backends.sqlite3',
-         'NAME': BASE_DIR / 'gippro_db.sqlite3',
+         'NAME': BASE_DIR / 'gippro_db_test.sqlite3',
      }
 }
 

@@ -26,7 +26,7 @@ if not os.path.exists(TMP_STORAGE):
     os.makedirs(TMP_STORAGE)
 file_storage = FileSystemStorage(location=TMP_STORAGE)
 
-# Para las materias primas
+# Para las maerias primas
 class CompraWizard(SessionWizardView):
     file_storage = file_storage
     # Diccionario que mapea cada paso con su template
@@ -183,8 +183,7 @@ class CompraWizard(SessionWizardView):
                         ficha_tecnica=data['ficha_tecnica'],
                         hoja_seguridad=data['hoja_seguridad'],
                     )
-                temp = data['cantidad']
-                print(f'cant:{temp}')
+                
                 DetallesAdquisicion.objects.create(
                     adquisicion=compra,
                     materia_prima=materia,
