@@ -27,7 +27,6 @@ class CreateMateriaPrimaView(CreateView):
         messages.success(self.request, self.success_message)
         return super().form_valid(form)
 
-
 class ListMateriaPrimaView(ListView):
     model = MateriaPrima
     template_name = 'materia_prima/materia_prima_list.html'
@@ -45,7 +44,6 @@ class ListMateriaPrimaView(ListView):
         if 'mensaje_succes' in self.request.session:
             messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
-
 
 class UpdateMateriaPrimaView(UpdateView):
     model = MateriaPrima
@@ -77,12 +75,10 @@ class UpdateMateriaPrimaView(UpdateView):
         context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
         return context
 
-
 class DeleteMateriaPrimaView(DeleteView):
     model = MateriaPrima
     template_name = 'materia_prima/materia_prima_confirm_delete.html'
     success_url = reverse_lazy('materia_prima_list')  # Cambia esto al nombre de tu URL
-
 
 def get_materias_primas(request, pk):
     try:
@@ -95,14 +91,12 @@ def get_materias_primas(request, pk):
     except Almacen.DoesNotExist:
         raise Http404("Almacén no encontrado")
 
-
 class CreateImportView(CreateView):
     model = MateriaPrima
     form_class = MateriaPrimaForm
     template_name = 'materia_prima/import_form.html'
     success_url = '/materia_prima/'
     success_message = "Se ha importado correctamente la materia prima."
-
 
 def importar(request):
     if request.method == 'POST':

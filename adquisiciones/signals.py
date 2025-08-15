@@ -10,7 +10,7 @@ from utils.tasks import send_notification_email
 def notify_mp_arrival(sender, instance, created, **kwargs):
     if created:  # Solo para nuevos productos
         # Obtener grupos objetivo
-        target_groups = Group.objects.filter(name__in=["almaceneros", "direccion"])
+        target_groups = Group.objects.filter(name__in=["Almaceneros", "Presidencia-Admin"])
         
         # Crear notificaciones para cada usuario en esos grupos
         for group in target_groups:
@@ -28,7 +28,7 @@ def notify_mp_arrival(sender, instance, created, **kwargs):
 def notify_envase_arrival(sender, instance, created, **kwargs):
     if created:  # Solo para nuevos productos
         # Obtener grupos objetivo
-        target_groups = Group.objects.filter(name__in=["almaceneros", "direccion"])
+        target_groups = Group.objects.filter(name__in=["Almaceneros", "Presidencia-Admin"])
         
         # Crear notificaciones para cada usuario en esos grupos
         for group in target_groups:
@@ -46,7 +46,7 @@ def notify_envase_arrival(sender, instance, created, **kwargs):
 def notify_insumo_arrival(sender, instance, created, **kwargs):
     if created:  # Solo para nuevos productos
         # Obtener grupos objetivo
-        target_groups = Group.objects.filter(name__in=["almaceneros", "direccion"])
+        target_groups = Group.objects.filter(name__in=["Almaceneros", "Presidencia-Admin"])
         
         # Crear notificaciones para cada usuario en esos grupos
         for group in target_groups:

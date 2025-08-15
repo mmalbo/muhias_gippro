@@ -19,16 +19,19 @@ def importar_productos_desde_api():
         productos_data = response.json()
         contador = 0
 
+        print(productos_data)
+
         for producto_data in productos_data:
             # Verificar si el producto ya existe por SKU
-            materia_prima, created = MateriaPrima.objects.update_or_create(
-                sku=producto_data['sku'],
-                defaults={
-                    'gname': producto_data.get('gname', ''),
-                    'presentation': producto_data.get('presentation', ''),
-                    'is_feedstock': producto_data.get('is_feedstock', False),
-                    'count': producto_data.get('count', 0),
-                    'categories': producto_data.get('categories', []),
+            is_feedstock = producto_data.get('is_feedstock', False)
+            print(producto_data.get('sku', ''))
+            created = False
+            if is_feedstock:
+                materia_prima, created = MateriaPrima.objects.update_or_create(
+                    codigo=producto_data.get('sku', ''),
+                    defaults={
+                    'nombre': producto_data.get('gname', ''),
+                    'unidad_medida': producto_data.get('presentation', ''),
                 }
             )
 

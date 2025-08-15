@@ -29,13 +29,11 @@ class ListaProductoView(ListView):
             messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
 
-
 class CrearProductoView(CreateView):
     model = Producto
     form_class = ProductoForm
     template_name = 'producto_final/form.html'
     success_url = reverse_lazy('producto_final_list')
-
 
 class ActualizarProductoView(UpdateView):
     model = Producto
@@ -43,17 +41,14 @@ class ActualizarProductoView(UpdateView):
     template_name = 'producto_final/form.html'
     success_url = reverse_lazy('producto_final_list')
 
-
 class EliminarProductoView(DeleteView):
     model = Producto
     template_name = 'producto_final/eliminar_producto_final.html'
     success_url = reverse_lazy('producto_final_list')
 
-
 class DetalleProductoView(DetailView):
     model = Producto
     template_name = 'producto_final/detalle_producto_final.html'
-
 
 class CreateImportView(CreateView):
     model = Producto
@@ -61,7 +56,6 @@ class CreateImportView(CreateView):
     template_name = 'producto_final/import_form.html'
     success_url = '/producto_final/'
     success_message = "Se ha importado correctamente la caja."
-
 
 def importar(request):
     if request.method == 'POST':

@@ -37,7 +37,7 @@ class MateriaPrima(ModeloBase):
 
     tipo_materia_prima = models.ForeignKey(
         TipoMateriaPrima, on_delete=models.CASCADE,
-        null=False,
+        null=True,
         verbose_name='Tipo de materia prima'
     )
 

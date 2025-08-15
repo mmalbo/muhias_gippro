@@ -101,8 +101,8 @@ def importarTapa(request):
             messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
             return redirect('tapa:importarTapa')
 
-        try:
-            with transaction.atomic():
+        #try:
+        with transaction.atomic():
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
 
@@ -176,8 +176,8 @@ def importarTapa(request):
 
                 return redirect('tapa:listar')
 
-        except Exception as e:
-            messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
-            return redirect('tapa:listar')
+        #except Exception as e:
+        #    messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
+        #    return redirect('tapa:listar')
 
     return render(request, 'tapa/import_form.html')

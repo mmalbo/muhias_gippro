@@ -193,7 +193,7 @@ class CompraWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compra_exitosa')
+            return redirect('compras_mp_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -378,7 +378,7 @@ class CompraEnvaseWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compra_exitosa')
+            return redirect('compras_env_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -559,7 +559,7 @@ class CompraInsumoWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compra_exitosa')
+            return redirect('compras_ins_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")

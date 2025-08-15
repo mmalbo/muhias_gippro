@@ -2,6 +2,7 @@ from django.views.generic import ListView
 from envase_embalaje.caja.models import Caja
 from envase_embalaje.pomo.models import Pomo
 from envase_embalaje.tanque.models import Tanque
+from envase_embalaje.tapa.models import Tapa
 
 
 class TipoEnvaseEmbalajeListView(ListView):
@@ -13,9 +14,10 @@ class TipoEnvaseEmbalajeListView(ListView):
         cajas = Caja.objects.all()
         pomos = Pomo.objects.all()
         tanques = Tanque.objects.all()
+        tapas = Tapa.objects.all()
 
         # Combinar todos los objetos en una sola lista
-        tipos_envase_embalaje = list(cajas) + list(pomos) + list(tanques)
+        tipos_envase_embalaje = list(cajas) + list(pomos) + list(tanques)+list(tapas)
 
         return tipos_envase_embalaje
 

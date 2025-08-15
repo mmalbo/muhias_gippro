@@ -30,14 +30,11 @@ class BaseView(ContextMixin, View):
     def get_queryset(self):
         return self.model.objects.all()
 
-
 class ModeloBaseTemplateView(TemplateView):
     pass
 
-
 class ModeloBaseFormView(FormView):
     pass
-
 
 # class ModeloBaseFilterView(ExportMixin, SingleTableMixin, FilterView):
 #     template_name = "bases/paginas/filter.html"
@@ -56,7 +53,6 @@ class ModeloBaseFormView(FormView):
 #             return "_".join(["lot", fecha_actual, app_label])
 #         return "_".join(["lot", fecha_actual, app_label, nombre_aplicacion])
 
-
 class ModeloBaseCreateView(CreateView):
     template_name = "bases/paginas/form.html"
 
@@ -69,7 +65,6 @@ class ModeloBaseCreateView(CreateView):
     def form_invalid(self, form):
         messages.error(self.request, "")
         return super().form_invalid(form)
-
 
 class ModeloBaseUpdateView(UpdateView):
     def form_valid(self, form):
@@ -89,7 +84,6 @@ class ModeloBaseUpdateView(UpdateView):
             messages.error(self.request, e)
             return redirect(self.filter_url())
         return super().get(request, *args, **kwargs)
-
 
 class ModeloBaseDetailView(DetailView):
     template_name = "bases/paginas/detail.html"

@@ -32,8 +32,9 @@ class Pomo(TipoEnvaseEmbalaje):
     ) """
     color = models.ForeignKey(
         Color,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         verbose_name="Color",
+        null=True,
         validators=[validate_color]  # Aplicar la validación aquí
     )
     forma = models.CharField(

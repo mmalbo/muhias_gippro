@@ -30,12 +30,21 @@
                                         {{ form.material }}
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        {{ form.color.label_tag }}
-                                        {{ form.color }}
+                                        {{ form.color_input.label_tag }}
+                                        {{ form.color_input }}
+                                        <!-- Lista de sugerencias -->
+                                         <datalist id="colores-list">
+                                            {% for color in form.colores %}
+                                                <option value="{{ color }}">
+                                            {% endfor %}
+                                        </datalist>
+                                        <small class="form-text text-muted">
+                                            Seleccione un color existente o escriba uno nuevo
+                                        </small>
                                     </div>
 
                                 </div>
-                                {#                                {{ form.as_p }}#}
+                                
                                 <br>
                                 <div class="form-group" style="text-align: center;">
                                     <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}

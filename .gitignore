@@ -1,4 +1,5 @@
 /.venv/
 #/static/
 /static/
-*/migrations/
+*/migrations/*
+*/__pycache__/*
