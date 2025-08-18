@@ -48,7 +48,7 @@
                         <span class="ml-2">Inicio</span>
                     </a>
                 </li>
-                {% if perms.usuario.can_administracion or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
                     <li class=" ">
                         <a href="#Administracion" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash19" width="20" height="20"
@@ -76,7 +76,7 @@
                         </ul>
                     </li>
                 {% endif %}
-                {% if perms.usuario.can_clasificadores or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
                     <li class=" ">
                         <a href="#nomencladores" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash12" width="20" height="20"
@@ -153,7 +153,7 @@
                     </li>
                 {% endif %}
 
-                {% if perms.usuario.can_adquisiciones or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Comerciales' %}
                     <li class=" ">
                         <a href="#adquisicionE" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash14" width="20" height="20"
@@ -235,7 +235,7 @@
                     </li>
                 {% endif %}                
 
-                {% if perms.usuario.can_inventario or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
                     <li class=" ">
                         <a href="#registrar" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash14" width="20" height="20"
@@ -276,7 +276,7 @@
                     </li>
                 {% endif %}
 
-                {% if perms.usuario.can_produccion or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                     <li class=" ">
                         <a href="#producciones" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash14" width="20" height="20"
@@ -307,7 +307,7 @@
                     </li>
                 {% endif %}
 
-                {% if perms.usuario.can_envasado or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or  request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
                     <li class=" ">
                         <a href="#envasado" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash14" width="20" height="20"
