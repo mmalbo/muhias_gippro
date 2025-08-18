@@ -2,4 +2,4 @@
 #/static/
 /static/
 */migrations/
-*/__pycache__/*.pyc
+*/__pycache__/
