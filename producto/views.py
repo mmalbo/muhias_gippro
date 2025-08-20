@@ -55,7 +55,7 @@ class CreateImportView(CreateView):
     form_class = ProductoForm
     template_name = 'producto_final/import_form.html'
     success_url = '/producto_final/'
-    success_message = "Se ha importado correctamente la caja."
+    success_message = "Se ha importado correctamente."
 
 def importar(request):
     if request.method == 'POST':
