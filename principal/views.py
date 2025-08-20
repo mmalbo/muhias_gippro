@@ -25,8 +25,8 @@ class LoginTemplateView(GestionView, ModeloBaseTemplateView):
 @never_cache
 @login_required(login_url='login')
 def cargar_datos_principal(request):
-    notif = importar_productos_desde_api()
-    print(notif)
+#    notif = importar_productos_desde_api()
+#    print(notif)
     usuario_logeado = request.user
     cant_materia_prima = MateriaPrima.objects.all().count()
     cant_produccion = Produccion.objects.all().count()
