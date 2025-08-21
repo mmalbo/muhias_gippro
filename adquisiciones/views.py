@@ -26,7 +26,7 @@ if not os.path.exists(TMP_STORAGE):
     os.makedirs(TMP_STORAGE)
 file_storage = FileSystemStorage(location=TMP_STORAGE)
 
-# Para las maerias primas
+# Para las materias primas
 class CompraWizard(SessionWizardView):
     file_storage = file_storage
     # Diccionario que mapea cada paso con su template

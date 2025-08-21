@@ -1,4 +1,7 @@
 from django.db import models
+
+# Create your models here.
+from django.db import models
 from bases.bases.models import ModeloBase
 from nomencladores.almacen.models import Almacen
 from materia_prima.models import MateriaPrima
