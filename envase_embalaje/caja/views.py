@@ -3,9 +3,12 @@ from django.db import transaction
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from tablib import Dataset
+import re
+
 from envase_embalaje.caja.forms import CajaForm, UpdateCajaForm
 from envase_embalaje.caja.models import Caja
-import re
+from envase_embalaje.filters import *
+
 
 
 # Create your views here.
@@ -43,9 +46,28 @@ class ListCajaView(ListView):
     template_name = 'caja/caja_list.html'
     context_object_name = 'cajas'
 
+    def get_queryset(self):
+        consulta = super().get_queryset()
+        self.filter = Filtro_Caja(self.request.GET, queryset=consulta) #crea el objeto filtro
+        if self.filter:
+            nombre = self.request.GET.get('nombre')
+            tam = self.request.GET.get('tamanno')
+            mat = self.request.GET.get('material')
+            
+            if nombre: 
+                consulta = consulta.filter(nombre__icontains = nombre)
+            if tam:
+                consulta = consulta.filter(tamanno = tam)
+            if mat:
+                consulta = consulta.filter(material__icontains = mat)
+		#else:
+		#	return self.filter.qs
+        return consulta
+
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
         context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter
 
         # Agrega mensajes al contexto si existen
         if 'mensaje_error' in self.request.session:

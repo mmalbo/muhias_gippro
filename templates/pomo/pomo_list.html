@@ -5,6 +5,16 @@
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de pomos</h4>
+                                        
+                    <form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
+                    {% csrf_token %}
+                        <div> 
+                            <h6 > Buscar por: </h6> 
+                            {{ filter.form }}                
+                            <button type="submit" class="btn btn-primary" style="display: inline-block;"> <i class="fas fa-search mr-0"> </i> Filtrar</button>
+                        </div>   
+                    </form>
+
                     {% if messages %}
                         <script>
                             {% for message in messages %}

@@ -5,15 +5,47 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import render, redirect
+
 from .forms import TipoMateriaPrimaForm
 from .models import TipoMateriaPrima
 from materia_prima.tipo_materia_prima.choices import CHOICE_TIPO
+from materia_prima.filter import *
 
 
 class ListaTiposMateriaPrimaView(ListView):
     model = TipoMateriaPrima
     template_name = 'tipo_materia_prima/lista.html'
     context_object_name = 'tipos_materias_primas'
+
+    def get_queryset(self):
+        consulta = super().get_queryset()
+        self.filter = Filtro_Tipo(self.request.GET, queryset=consulta) #crea el objeto filtro
+        if self.filter:
+            nombre = self.request.GET.get('nombre')
+            tip = self.request.GET.get('tipo')
+            
+            if nombre: 
+                consulta = consulta.filter(nombre__icontains = nombre)
+            if tip:
+                consulta = consulta.filter(tipo = tip)
+            
+		#else:
+		#	return self.filter.qs
+        return consulta
+
+    def get_context_data(self, **kwargs):
+        # Llama al método de la clase base
+        context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter
+
+        # Agrega mensajes al contexto si existen
+        if 'mensaje_error' in self.request.session:
+            messages.error(self.request, self.request.session.pop('mensaje_error'))
+        if 'mensaje_warning' in self.request.session:
+            messages.warning(self.request, self.request.session.pop('mensaje_warning'))
+        if 'mensaje_succes' in self.request.session:
+            messages.success(self.request, self.request.session.pop('mensaje_succes'))
+        return context
 
 
 class CrearTipoMateriaPrimaView(CreateView):
