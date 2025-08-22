@@ -15,12 +15,12 @@ class Formato(ModeloBase):
         null=False,
         blank=False,
         default=0,
-        verbose_name="Unidad de medida",
+        verbose_name="Valor de capacidad",
     )
 
     class Meta:
-        verbose_name = "Unidad de medida"
-        verbose_name_plural = "Unidades de medidas"
+        verbose_name = "Formato"
+        verbose_name_plural = "Formatos"
 
     def __str__(self):
         return f"{self.capacidad} {self.unidad_medida}"

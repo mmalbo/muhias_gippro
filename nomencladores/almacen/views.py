@@ -15,19 +15,37 @@ from bases import forms
 from django import forms
 
 from envase_embalaje.models import EnvaseEmbalaje
-
+from nomencladores.filters import Filtro_Almacen
 
 # Create your views here.
-
 
 class AlmacenListView(ListView):
     model = Almacen
     template_name = 'almacenes/lista.html'
     context_object_name = 'almacenes'
 
+    def get_queryset(self):
+        consulta = super().get_queryset()
+        self.filter = Filtro_Almacen(self.request.GET, queryset=consulta) #crea el objeto filtro
+        if self.filter:
+            prop = self.request.GET.get('propio')
+            #nombre = self.request.GET.get('nombre')
+            
+            if prop:
+                if prop=="true":
+                    consulta = consulta.filter(propio = True)
+                elif prop=="false":
+                    consulta = consulta.filter(propio = False)
+            #if nombre: 
+            #    consulta = consulta.filter(nombre__icontains = nombre)
+		#else:
+		#	return self.filter.qs
+        return consulta
+
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
         context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter
 
         # Agrega mensajes al contexto si existen
         if 'mensaje_error' in self.request.session:

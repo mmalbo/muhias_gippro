@@ -10,6 +10,7 @@ from tablib import Dataset
 from envase_embalaje.tapa.forms import TapaForm, UpdateTapaForm
 from envase_embalaje.tapa.models import Tapa
 from nomencladores.color.models import Color
+from envase_embalaje.filters import *
 
 
 # Create your views here.
@@ -25,10 +26,30 @@ class ListTapaView(ListView):
     template_name = 'tapa/tapa_list.html'
     context_object_name = 'tapas'
 
+    def get_queryset(self):
+        consulta = super().get_queryset()
+        self.filter = Filtro_Tapa(self.request.GET, queryset=consulta) #crea el objeto filtro
+        if self.filter:
+            nombre = self.request.GET.get('nombre')
+            color = self.request.GET.get('color')
+            desc = self.request.GET.get('descripcion')
+            
+            if nombre: 
+                consulta = consulta.filter(nombre__icontains = nombre)
+            if color:
+                consulta = consulta.filter(color = color)
+            if desc: 
+                consulta = consulta.filter(descripcion__icontains = desc)
+            
+		#else:
+		#	return self.filter.qs
+        return consulta
+    
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
         context = super().get_context_data(**kwargs)
-
+        context['filter'] = self.filter
+        
         # Agrega mensajes al contexto si existen
         if 'mensaje_error' in self.request.session:
             messages.error(self.request, self.request.session.pop('mensaje_error'))

@@ -10,6 +10,7 @@ from tablib import Dataset
 from envase_embalaje.pomo.forms import PomoForm, UpdatePomoForm
 from envase_embalaje.pomo.models import Pomo
 from nomencladores.color.models import Color
+from envase_embalaje.filters import *
 
 
 # Create your views here.
@@ -40,9 +41,32 @@ class ListPomoView(ListView):
     template_name = 'pomo/pomo_list.html'
     context_object_name = 'pomos'
 
+    def get_queryset(self):
+        consulta = super().get_queryset()
+        self.filter = Filtro_Pomo(self.request.GET, queryset=consulta) #crea el objeto filtro
+        if self.filter:
+            nombre = self.request.GET.get('nombre')
+            color = self.request.GET.get('color')
+            forma = self.request.GET.get('forma')
+            mat = self.request.GET.get('material')
+            
+            if nombre: 
+                consulta = consulta.filter(nombre__icontains = nombre)
+            if color:
+                consulta = consulta.filter(color = color)
+            if forma:
+                consulta = consulta.filter(forma__icontains = forma)
+            if mat:
+                consulta = consulta.filter(material__icontains = mat)
+            
+		#else:
+		#	return self.filter.qs
+        return consulta
+
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
         context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter
 
         # Agrega mensajes al contexto si existen
         if 'mensaje_error' in self.request.session:

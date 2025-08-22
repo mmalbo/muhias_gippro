@@ -8,6 +8,7 @@ from tablib import Dataset
 
 from envase_embalaje.formato.forms import FormatoForm
 from envase_embalaje.formato.models import Formato
+from envase_embalaje.filters import *
 
 
 # Create your views here.
@@ -24,9 +25,25 @@ class ListFormatoView(ListView):
     template_name = 'capacidad/capacidad_list.html'
     context_object_name = 'capacidades'
 
+    def get_queryset(self):
+        consulta = super().get_queryset()
+        self.filter = Filtro_Formato(self.request.GET, queryset=consulta) #crea el objeto filtro
+        if self.filter:
+            unidad = self.request.GET.get('unidad_medida')
+            capa = self.request.GET.get('capacidad')
+            
+            if unidad:
+                consulta = consulta.filter(unidad_medida = unidad )
+            if capa: 
+                consulta = consulta.filter(capacidad__icontains = capa)
+		#else:
+		#	return self.filter.qs
+        return consulta
+
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
         context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter
 
         # Agrega mensajes al contexto si existen
         if 'mensaje_error' in self.request.session:
