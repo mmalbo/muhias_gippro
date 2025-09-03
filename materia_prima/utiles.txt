@@ -1,0 +1,7 @@
+# Contar materias primas por categoría
+    conteo_materias = {}
+    for categoria_valor, _ in tipos_mp:
+        conteo = MateriaPrima.objects.filter(categoria=categoria_valor, activo=True).count()
+        conteo_materias[categoria_valor] = conteo
+
+\"{{ etiqueta }}\"

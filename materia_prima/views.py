@@ -9,12 +9,13 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from tablib import Dataset
+from django.contrib.auth.decorators import login_required, user_passes_test
 
-from materia_prima.tipo_materia_prima.models import TipoMateriaPrima
 from nomencladores.almacen.models import Almacen
 from materia_prima.forms import MateriaPrimaForm, MateriaPrimaFormUpdate
 from materia_prima.models import MateriaPrima
-
+from .forms import AgregarTipoForm
+from .choices import obtener_tipos_materia_prima, eliminar_tipo_materia_prima, agregar_tipo_materia_prima
 
 class CreateMateriaPrimaView(CreateView):
     model = MateriaPrima
@@ -60,7 +61,7 @@ class UpdateMateriaPrimaView(UpdateView):
         instance = kwargs.get('instance')
         if instance:
             kwargs['initial'] = {
-                'tipo_materia_prima': instance.tipo_materia_prima.nombre,
+                #'tipo_materia_prima': instance.tipo_materia_prima.nombre,
                 # 'factura_adquisicion': instance.get_factura_adquisicion_name,
                 'ficha_tecnica': instance.get_ficha_tecnica_name,
                 'hoja_seguridad': instance.get_hoja_seguridad_name,
@@ -89,7 +90,7 @@ def get_materias_primas(request, pk):
 
         return JsonResponse(materias_primas_data, safe=False)
     except Almacen.DoesNotExist:
-        raise Http404("Almacén no encontrado")
+        raise Http404("Materia prima no encontrado")
 
 class CreateImportView(CreateView):
     model = MateriaPrima
@@ -119,8 +120,8 @@ def importar(request):
                 Col_Conformacion = 4
                 Col_Cantidad = 5
                 Col_Costo = 6
-                Col_TipoMateria = 7
-                Col_Almacen = 8
+                #Col_TipoMateria = 7
+                Col_Almacen = 7
                 i = 0
                 while i <= len(imported_data):
                     data = imported_data[i]
@@ -141,23 +142,22 @@ def importar(request):
                     conformacion = str(data[Col_Conformacion]).strip() if data[Col_Conformacion] is not None else None
                     cantidad = str(data[Col_Cantidad]).strip() if data[Col_Cantidad] is not None else None
                     costo = str(data[Col_Costo]).strip() if data[Col_Costo] is not None else None
-                    tipo_materia_prima = str(data[Col_TipoMateria]).strip() if data[
-                                                                                   Col_TipoMateria] is not None else None
+                    #tipo_materia_prima = str(data[Col_TipoMateria]).strip() if data[Col_TipoMateria] is not None else None
                     almacen = str(data[Col_Almacen]).strip() if data[Col_Almacen] is not None else None
 
-                    # Validaciones de los datos
+                    # Validaciones de los datostipo_materia_prima,
                     if not all(
-                            [codigo, nombre, concentracion, tipo_materia_prima, conformacion, unidad, cantidad, costo,
+                            [codigo, nombre, concentracion,  conformacion, unidad, cantidad, costo,
                              almacen]):
                         messages.error(request, f"Fila {No_fila + 2}: Todos los campos son obligatorios.")
                         return redirect('materia_prima:importarMateriasPrimas')
 
-                    tipo_materia_prima = TipoMateriaPrima.objects.filter(nombre__iexact=tipo_materia_prima).first()
+                    #tipo_materia_prima = TipoMateriaPrima.objects.filter(nombre__iexact=tipo_materia_prima).first()
                     almacen = Almacen.objects.filter(nombre__iexact=almacen).first()
-                    if tipo_materia_prima is None:
+                    """ if tipo_materia_prima is None:
                         messages.error(request,
                                        f"Fila {No_fila + 2}: No existe el tipo de materia prima  '{str(data[Col_TipoMateria]).strip()}' en el nomenclador")
-                        return redirect('materia_prima:importarMateriasPrimas')
+                        return redirect('materia_prima:importarMateriasPrimas') """
                     if almacen is None:
                         messages.error(request,
                                        f"Fila {No_fila + 2}: No existe el almacén  '{str(data[Col_Almacen]).strip()}' en el nomenclador")
@@ -205,7 +205,7 @@ def importar(request):
                             codigo=codigo,
                             nombre=nombre,
                             # estado=estado,
-                            tipo_materia_prima=tipo_materia_prima,  # Asumiendo que este es el ID
+                            #tipo_materia_prima=tipo_materia_prima,  # Asumiendo que este es el ID
                             conformacion=conformacion,
                             unidad_medida=unidad,
                             concentracion=concentracion,
@@ -247,3 +247,58 @@ def importar(request):
             messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
             return redirect('materia_prima:materia_prima_list')
     return render(request, 'materia_prima/import_form.html')
+
+###Gestionar Tipos de MP
+
+#@login_required
+def gestionar_tipos_MP(request):
+    # Obtener todas las categorías
+    print("entre en view gestionar")
+    tipos_mp = obtener_tipos_materia_prima()
+    
+    # Separar categorías base y dinámicas
+    from .choices import Tipo_mat_prima
+    categorias_base = Tipo_mat_prima
+    categorias_dinamicas = [cat for cat in tipos_mp if cat not in Tipo_mat_prima]
+           
+    if request.method == 'POST':
+        form = AgregarTipoForm(request.POST)
+        if form.is_valid():
+            valor = form.cleaned_data['valor']
+            etiqueta = form.cleaned_data['etiqueta']
+            
+            if agregar_tipo_materia_prima(valor, etiqueta):
+                messages.success(request, f'Tipo de materia prima "{etiqueta}" agregada exitosamente!')
+                return redirect('materia_prima:gestionar_tipos_categorias')
+            else:
+                messages.error(request, 'Error al agregar el tipo de materia prima')
+    else:
+        form = AgregarTipoForm()
+    
+    context = {
+        'form': form,
+        'categorias_base': categorias_base,
+        'categorias_dinamicas': categorias_dinamicas,
+        'total_categorias': len(tipos_mp),
+    }
+    print("ya casi")
+    return render(request, 'materia_prima/gestionar_tipos.html', context)
+
+#@login_required
+def eliminar_tipos_MP(request, valor):
+    if request.method == 'POST':
+        # Verificar si hay materias primas usando esta categoría
+        conteo = MateriaPrima.objects.filter(tipo_materia_prima=valor).count()
+        
+        if conteo > 0:
+            messages.error(
+                request, 
+                f'No se puede eliminar el tipo de materia prima. Hay {conteo} materias primas usando esta categoría.'
+            )
+        else:
+            if eliminar_tipo_materia_prima(valor):
+                messages.success(request, 'Categoría eliminada exitosamente!')
+            else:
+                messages.error(request, 'Error al eliminar la categoría')
+    
+    return redirect('materia_prima:gestionar_tipos_categorias')

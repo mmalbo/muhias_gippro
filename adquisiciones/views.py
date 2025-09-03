@@ -81,7 +81,6 @@ class CompraWizard(SessionWizardView):
                 initial.update(prev_data)
         
         return initial
-
     
     def get_form(self, step=None, data=None, files=None):
         # Asegurar que siempre haya una lista de formularios
@@ -173,7 +172,6 @@ class CompraWizard(SessionWizardView):
                     materia = data['materia_existente']
                 else:
                     materia = MateriaPrima.objects.create(
-                        codigo=data['codigo'],
                         nombre=data['nombre'],
                         tipo_materia_prima=data['tipo_materia_prima'],
                         conformacion=data['conformacion'],
@@ -200,7 +198,7 @@ class CompraWizard(SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
-from materia_prima.tipo_materia_prima.choices import CHOICE_TIPO
+#from materia_prima.tipo_materia_prima.choices import CHOICE_TIPO
 
 class MateriaPrimaDetalleView(View):
     def get(self, request, pk):
@@ -211,7 +209,7 @@ class MateriaPrimaDetalleView(View):
                 'nombre': materia.nombre,
                 'concentracion': materia.concentracion or '',
                 'conformacion': materia.conformacion or '',
-                'tipo': CHOICE_TIPO[int(materia.tipo_materia_prima.tipo)-1][1] or '',
+                'tipo': materia.tipo_materia_prima or '',
                 'medida': materia.unidad_medida or '',
             })
         except MateriaPrima.DoesNotExist:
@@ -272,7 +270,6 @@ class CompraEnvaseWizard(SessionWizardView):
                 initial.update(prev_data)
         
         return initial
-
     
     def get_form(self, step=None, data=None, files=None):
         # Asegurar que siempre haya una lista de formularios
@@ -578,7 +575,6 @@ class InsumoDetalleView(View):
             })
         except InsumosOtros.DoesNotExist:
             return JsonResponse({'error': 'Insumo no encontrado'}, status=404)
-
 
 def compra_exitosa(request):
     return render(request, 'adquisicion/exito.html')
