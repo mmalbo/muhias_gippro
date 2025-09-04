@@ -12,4 +12,6 @@ urlpatterns = [
     path('importar/', views.CreateImportView.as_view(), name='importarMateriasPrimas'),
     path('importar/importar/', views.importar, name='importarMP'),
 
+    path('categorias/', views.gestionar_tipos_MP, name='gestionar_tipos_categorias'),
+    path('categorias/eliminar/<str:valor>/', views.eliminar_tipos_MP, name='eliminar_categoria'),
 ]

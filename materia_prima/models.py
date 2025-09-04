@@ -1,6 +1,6 @@
 from django.db import models
 from bases.bases.models import ModeloBase
-from .tipo_materia_prima.models import TipoMateriaPrima
+from .choices import ESTADOS, Tipo_mat_prima, obtener_tipos_materia_prima
 from nomencladores.almacen.models import Almacen
 from django.core.exceptions import ValidationError
 
@@ -12,14 +12,7 @@ class MateriaPrima(ModeloBase):
         null=False,
         max_length=20
     )
-
-    ESTADOS = [
-        ('comprado', 'Comprado'),
-        ('en_almacen', 'En almacén'),
-        ('reservado', 'Reservado'),
-    ]
-
-    # Este estado no debe ser de materia prima sino de una adquisición. No entiendo por que reservado aqui
+    
     estado = models.CharField(
         choices=ESTADOS,
         max_length=255,
@@ -28,17 +21,17 @@ class MateriaPrima(ModeloBase):
         verbose_name='Estado'
     )
 
+    tipo_materia_prima = models.CharField(
+        max_length=20,
+        choices=obtener_tipos_materia_prima(),
+        default='otros',
+        verbose_name='Tipo de materia prima')
+
     nombre = models.CharField(
         max_length=255,
         verbose_name="Nombre",
         null=False,
         blank=False,
-    )
-
-    tipo_materia_prima = models.ForeignKey(
-        TipoMateriaPrima, on_delete=models.CASCADE,
-        null=True,
-        verbose_name='Tipo de materia prima'
     )
 
     conformacion = models.CharField(
@@ -60,13 +53,6 @@ class MateriaPrima(ModeloBase):
         verbose_name="Concentración",
     )
 
-    """ cantidad_almacen = models.IntegerField(
-        null=True,
-        blank=False,
-        default=0,
-        verbose_name="Cantidad",
-    ) """
-
     costo = models.FloatField(
         null=True,
         blank=False,
@@ -75,12 +61,6 @@ class MateriaPrima(ModeloBase):
     )
 
     # La materia prima puede estar en más de un almacen. Por lo que aquí no pinta nada el almacen  
-    """ almacen = models.ForeignKey(
-        Almacen,
-        on_delete=models.CASCADE,
-        null=False,
-        verbose_name='Almacen ubicación'
-    ) """
 
     ficha_tecnica = models.FileField(
         upload_to='fichas_tecnicas/',
@@ -96,6 +76,11 @@ class MateriaPrima(ModeloBase):
         verbose_name="Hoja de seguridad"
     )
 
+    class Meta:
+        verbose_name = 'Materia Prima'
+        verbose_name_plural = 'Materias Primas'
+        ordering = ['tipo_materia_prima']        
+
     def __str__(self):
         return self.nombre
 
@@ -105,8 +90,11 @@ class MateriaPrima(ModeloBase):
     def get_hoja_seguridad_name(self):
         return self.hoja_seguridad.name if self.hoja_seguridad else ''
 
+    def save(self, *args, **kwargs):
+        # Actualizar choices antes de guardar
+        self._meta.get_field('tipo_materia_prima').choices = obtener_tipos_materia_prima()
+        super().save(*args, **kwargs)
+    
     def clean(self):
-        """ if self.cantidad_almacen < 0:
-            raise ValidationError('La cantidad en almacén no puede ser negativa.') """
         if self.costo < 0:
             raise ValidationError('El costo no puede ser negativo.')

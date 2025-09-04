@@ -1,7 +1,7 @@
 from django import forms
 from .models import Adquisicion
 from materia_prima.models import MateriaPrima
-from materia_prima.tipo_materia_prima.models import TipoMateriaPrima 
+from materia_prima.choices import obtener_tipos_materia_prima
 from nomencladores.almacen.models import Almacen
 from envase_embalaje.models import EnvaseEmbalaje
 from envase_embalaje.tipo_envase_embalaje.models import TipoEnvaseEmbalaje
@@ -68,21 +68,22 @@ class MateriaPrimaForm(forms.Form):
     )
     
     # Campos para nueva materia prima
-    codigo = forms.CharField(
+    """ codigo = forms.CharField(
         max_length=20, 
         required=False, 
         label="Código",
         widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
+    ) """
     nombre = forms.CharField(
         max_length=100, 
-        required=False, 
+        required=True, 
         label="Nombre",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    tipo_materia_prima = forms.ModelChoiceField(
-        queryset=TipoMateriaPrima.objects.all(),
-        required=False,
+    tipo_materia_prima = forms.ChoiceField(
+        choices=obtener_tipos_materia_prima(),        
+        required=True,
+        initial='otros',
         label="Seleccionar tipo de materia prima",
         widget=forms.Select(attrs={'class': 'form-select tipo-materia-select'})
     )
@@ -135,17 +136,17 @@ class MateriaPrimaForm(forms.Form):
         elif opcion == self.NEW:
             if not cleaned_data.get('nombre'):
                 self.add_error('nombre', 'El nombre es obligatorio para nuevas materias primas')
-            if not cleaned_data.get('codigo'):
+            """ if not cleaned_data.get('codigo'):
                 self.add_error('codigo', 'El código es obligatorio para nuevas materias primas')
-            
+ """            
             # Validar que no exista una materia prima con el mismo nombre
             nombre = cleaned_data.get('nombre')
-            codigo = cleaned_data.get('codigo')
+            #codigo = cleaned_data.get('codigo')
             if nombre and MateriaPrima.objects.filter(nombre=nombre).exists():
                 self.add_error('nombre', 'Ya existe una materia prima con este nombre')
-            if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
+            """ if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
                 self.add_error('codigo', 'Ya existe una materia prima con este código')
-        
+ """        
         return cleaned_data
     
 """ Para envases y embalajes """
