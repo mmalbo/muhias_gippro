@@ -37,6 +37,11 @@ class Adquisicion(models.Model):
         null=False, default=False
     )
     creado_en = models.DateTimeField(auto_now_add=True, null=True)
+
+    registrada = models.BooleanField(
+        verbose_name="Recibida en almacén",
+        null=False, default=False
+    ) 
     
     def __str__(self):
         return f"Compra #{self.id} - {self.fecha_compra}"

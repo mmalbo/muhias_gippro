@@ -76,7 +76,7 @@ class MateriaPrimaForm(forms.Form):
     ) """
     nombre = forms.CharField(
         max_length=100, 
-        required=True, 
+        required=False, 
         label="Nombre",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
@@ -129,7 +129,7 @@ class MateriaPrimaForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         opcion = cleaned_data.get('opcion')
-        
+        print(cleaned_data.get('nombre'))
         if opcion == self.EXISTING:
             if not cleaned_data.get('materia_existente'):
                 self.add_error('materia_existente', 'Debes seleccionar una materia prima existente')

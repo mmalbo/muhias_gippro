@@ -79,8 +79,8 @@
                         <dt class="col-sm-4">Código:</dt>
                         <dd class="col-sm-8" id="detail-codigo">-</dd>
 
-                        <dt class="col-sm-4">Nombre:</dt>
-                        <dd class="col-sm-8" id="detail-nombre">-</dd>
+                        <!-- <dt class="col-sm-4">Nombre:</dt>
+                        <dd class="col-sm-8" id="detail-nombre">-</dd> -->
                         
                         <dt class="col-sm-4">Tipo de MP:</dt>
                         <dd class="col-sm-8" id="detail-tipo">-</dd>
@@ -157,7 +157,7 @@
                             return response.json();
                         })
                         .then(data => {
-                            document.getElementById('detail-nombre').textContent = data.nombre || '-';
+                            /* document.getElementById('detail-nombre').textContent = data.nombre || '-'; */
                             document.getElementById('detail-codigo').textContent = data.id || '-';
                             document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
                             document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
