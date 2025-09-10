@@ -93,6 +93,8 @@ class MateriaPrima(ModeloBase):
     def save(self, *args, **kwargs):
         # Actualizar choices antes de guardar
         self._meta.get_field('tipo_materia_prima').choices = obtener_tipos_materia_prima()
+        self.codigo = self.tipo_materia_prima[:3] + self.nombre[:3] + str(self.concentracion).zfill(3)
+        print(self.codigo)
         super().save(*args, **kwargs)
     
     def clean(self):
