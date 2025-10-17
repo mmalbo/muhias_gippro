@@ -1,0 +1,338 @@
+<!-- templates/produccion/crear_produccion.html -->
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="form-container">
+    <h1>Registro de Nueva Producción</h1>
+    
+    <!-- Indicadores de pasos -->
+    <div class="step-indicators">
+        <div class="step-indicator active" data-step="1">Datos de Producción</div>
+        <div class="step-indicator" data-step="2">Materias Primas</div>
+    </div>
+
+    <!-- Paso 1: Datos de producción -->
+    <div class="step active" id="step1">
+        <h2>Datos de la Producción</h2>
+        <form id="produccionForm">
+            {% csrf_token %}
+            
+            {% for field in produccion_form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="error">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </form>
+        
+        <div class="navigation-buttons">
+            <button type="button" class="btn-secondary" disabled>Anterior</button>
+            <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
+        </div>
+    </div>
+
+    <!-- Paso 2: Materias primas -->
+    <div class="step" id="step2">
+        <h2>Materias Primas Necesarias</h2>
+        
+        <button type="button" class="add-btn" onclick="agregarMateriaPrima()">
+            + Agregar Materia Prima
+        </button>
+        
+        <div id="materiasPrimasContainer">
+            <!-- Las materias primas se agregarán aquí dinámicamente -->
+        </div>
+        
+        <div class="navigation-buttons">
+            <button type="button" class="btn-secondary" onclick="prevStep(1)">Anterior</button>
+            <button type="button" class="btn-primary" onclick="enviarProduccion()">Finalizar Producción</button>
+        </div>
+    </div>
+</div>
+
+<!-- Template para materia prima (hidden) -->
+<template id="materiaPrimaTemplate">
+    <div class="materia-prima-item">
+        <h4>Materia Prima #<span class="item-number"></span></h4>
+        <div class="form-group">
+            <label>Materia Prima:</label>
+            <select class="materia-prima-select" name="materia_prima" required>
+                <option value="">Seleccionar materia prima...</option>
+                {% for mp in materia_prima_form.fields.materia_prima.queryset %}
+                <option value="{{ mp.id }}" data-costo="{{ mp.costo }}" data-unidad="{{ mp.unidad_medida }}">
+                    {{ mp.nombre }} ({{ mp.conformacion }} - {{ mp.unidad_medida }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Cantidad:</label>
+            <input type="number" class="cantidad-input" name="cantidad" step="0.001" required>
+            <span class="unidad-text"></span>
+        </div>
+        
+        <div class="form-group">
+            <label>Almacén:</label>
+            <select class="almacen-select" name="almacen" required>
+                <option value="">Seleccionar almacén...</option>
+                {% for almacen in materia_prima_form.fields.almacen.queryset %}
+                <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Costo estimado:</label>
+            <span class="costo-text">$0.00</span>
+        </div>
+        
+        <button type="button" class="remove-btn" onclick="removerMateriaPrima(this)">Eliminar</button>
+    </div>
+</template>
+
+<script>
+// Datos de materias primas desde Django
+const materiasPrimasData = {{ materias_primas_json|safe }};
+var materiaPrimaCount = 0;
+
+function nextStep(step) {
+    if (step === 2 && !validarPaso1()) {
+        alert('Por favor, complete todos los campos requeridos del paso 1.');
+        return;
+    }
+    
+    document.querySelector('.step.active').classList.remove('active');
+    document.querySelector('.step-indicator.active').classList.remove('active');
+    
+    document.getElementById(`step${step}`).classList.add('active');
+    document.querySelector(`.step-indicator[data-step="${step}"]`).classList.add('active');
+}
+
+function prevStep(step) {
+    document.querySelector('.step.active').classList.remove('active');
+    document.querySelector('.step-indicator.active').classList.remove('active');
+    
+    document.getElementById(`step${step}`).classList.add('active');
+    document.querySelector(`.step-indicator[data-step="${step}"]`).classList.add('active');
+}
+
+function validarPaso1() {
+    const requiredFields = document.querySelectorAll('#step1 input[required], #step1 select[required]');
+    
+    for (let field of requiredFields) {
+        if (!field.value.trim()) {
+            field.focus();
+            return false;
+        }
+    }
+    return true;
+}
+
+function agregarMateriaPrima() {
+    materiaPrimaCount++;
+    
+    const template = document.getElementById('materiaPrimaTemplate');
+    const clone = template.content.cloneNode(true);
+    const materiaPrimaDiv = clone.querySelector('.materia-prima-item');
+    
+    materiaPrimaDiv.id = `materia-prima-${materiaPrimaCount}`;
+    materiaPrimaDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+    
+    // Agregar event listeners
+    const select = materiaPrimaDiv.querySelector('.materia-prima-select');
+    const cantidadInput = materiaPrimaDiv.querySelector('.cantidad-input');
+    
+    select.addEventListener('change', function() {
+        actualizarInfoMateriaPrima(this);
+    });
+    
+    cantidadInput.addEventListener('input', function() {
+        calcularCostoMateriaPrima(this.closest('.materia-prima-item'));
+    });
+    
+    document.getElementById('materiasPrimasContainer').appendChild(materiaPrimaDiv);
+}
+
+function removerMateriaPrima(button) {
+    button.closest('.materia-prima-item').remove();
+}
+
+function actualizarInfoMateriaPrima(select) {
+    const item = select.closest('.materia-prima-item');
+    const selectedOption = select.options[select.selectedIndex];
+    const unidadSpan = item.querySelector('.unidad-text');
+    
+    if (selectedOption.value) {
+        const unidad = selectedOption.getAttribute('data-unidad');
+        unidadSpan.textContent = unidad;
+    } else {
+        unidadSpan.textContent = '';
+    }
+    
+    calcularCostoMateriaPrima(item);
+}
+
+function calcularCostoMateriaPrima(item) {
+    const select = item.querySelector('.materia-prima-select');
+    const cantidadInput = item.querySelector('.cantidad-input');
+    const costoSpan = item.querySelector('.costo-text');
+    
+    const selectedOption = select.options[select.selectedIndex];
+    const cantidad = parseFloat(cantidadInput.value) || 0;
+    const costoUnitario = parseFloat(selectedOption.getAttribute('data-costo')) || 0;
+    
+    const costoTotal = cantidad * costoUnitario;
+    costoSpan.textContent = `$${costoTotal.toFixed(2)}`;
+}
+
+function enviarProduccion() {
+    const items = document.querySelectorAll('.materia-prima-item');
+    
+    if (items.length === 0) {
+        alert('Debe agregar al menos una materia prima.');
+        return;
+    }
+    
+    if (!validarMateriasPrimas()) {
+        alert('Por favor, complete todos los campos de las materias primas.');
+        return;
+    }
+    
+    // Validar también el paso 1
+    if (!validarPaso1()) {
+        alert('Por favor, complete todos los campos del paso 1.');
+        prevStep(1);
+        return;
+    }
+    
+    // Primero guardar el paso 1 si no está guardado
+    guardarPaso1().then(() => {
+        // Luego enviar el paso 2
+        enviarPaso2(items);
+    }).catch(error => {
+        console.error('Error al guardar paso 1:', error);
+        alert('Error al guardar los datos de producción');
+    });
+}
+
+function guardarPaso1() {
+    return new Promise((resolve, reject) => {
+        const produccionForm = document.getElementById('produccionForm');
+        const formData = new FormData(produccionForm);
+        formData.append('step', '1');
+        
+        fetch('', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resolve(data);
+            } else {
+                reject(data.errors);
+            }
+        })
+        .catch(error => reject(error));
+    });
+}
+
+function enviarPaso2(items) {
+    const formData = new FormData();
+    formData.append('step', '2');
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Agregar datos de materias primas
+    items.forEach((item, index) => {
+        const materiaPrima = item.querySelector('.materia-prima-select').value;
+        const cantidad = item.querySelector('.cantidad-input').value;
+        const almacen = item.querySelector('.almacen-select').value;
+        
+        formData.append(`materias_primas[${index}][materia_prima]`, materiaPrima);
+        formData.append(`materias_primas[${index}][cantidad]`, cantidad);
+        formData.append(`materias_primas[${index}][almacen]`, almacen);
+    });
+    
+    // Mostrar loading
+    const submitBtn = document.querySelector('#step2 .btn-primary');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Guardando...';
+    submitBtn.disabled = true;
+    
+    // Enviar datos al servidor
+    fetch('', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+            }
+        } else {
+            alert('Error: ' + JSON.stringify(data.errors));
+            // Si el error es por datos de producción perdidos, volver al paso 1
+            if (data.errors && data.errors.includes('no encontrados')) {
+                prevStep(1);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al registrar la producción');
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function validarMateriasPrimas() {
+    const items = document.querySelectorAll('.materia-prima-item');
+    
+    for (let item of items) {
+        const materiaPrima = item.querySelector('.materia-prima-select').value;
+        const cantidad = item.querySelector('.cantidad-input').value;
+        const almacen = item.querySelector('.almacen-select').value;
+        
+        if (!materiaPrima || !cantidad || !almacen) {
+            return false;
+        }
+    }
+    return true;
+}
+</script>
+
+<style>
+/* Los mismos estilos CSS que en el ejemplo anterior */
+.form-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+.step { display: none; }
+.step.active { display: block; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-weight: bold; }
+input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.navigation-buttons { margin-top: 20px; display: flex; justify-content: space-between; }
+button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+.btn-primary { background-color: #007bff; color: white; }
+.btn-secondary { background-color: #6c757d; color: white; }
+.materia-prima-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px; }
+.remove-btn { background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; }
+.add-btn { background-color: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 3px; cursor: pointer; margin-bottom: 15px; }
+.step-indicators { display: flex; margin-bottom: 20px; }
+.step-indicator { flex: 1; text-align: center; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; }
+.step-indicator.active { background: #007bff; color: white; }
+</style>
+{% endblock %}

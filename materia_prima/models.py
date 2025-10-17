@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from bases.bases.models import ModeloBase
 from .choices import ESTADOS, Tipo_mat_prima, obtener_tipos_materia_prima
 from nomencladores.almacen.models import Almacen
@@ -79,7 +80,17 @@ class MateriaPrima(ModeloBase):
     class Meta:
         verbose_name = 'Materia Prima'
         verbose_name_plural = 'Materias Primas'
-        ordering = ['tipo_materia_prima']        
+        ordering = ['tipo_materia_prima']    
+
+    @property
+    def cantidad_total(self):
+        """
+        Calcula la cantidad total de esta materia prima en todos los almacenes
+        """
+        total = self.inventarios_mp.aggregate(
+            total=Sum('cantidad')
+        )['total']
+        return total if total is not None else 0    
 
     def __str__(self):
         return self.nombre

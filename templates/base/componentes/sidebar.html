@@ -48,7 +48,7 @@
                         <span class="ml-2">Inicio</span>
                     </a>
                 </li>
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                {% if user.is_superuser %}
                     <li class=" ">
                         <a href="#Administracion" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash19" width="20" height="20"
@@ -172,12 +172,11 @@
                         <ul id="adquisicionE" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             
                             <li class=" ">
-                                <a href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false">
-
-                                    <span class="ml-2">Materia prima</span>
+                                <a href="{% url 'compras_mp_list' %}"><span class="ml-2">Materia prima</span></a>
+                                    <!--
                                     <i class="las la-angle-right iq-arrow-right arrow-active"></i>
                                     <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                </a>
+                                href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false"
                                 <ul id="materia_prima" class="iq-submenu collapse" data-parent="#registrar">
                                     <li class="">
                                         <a href="{% url 'nueva_compra' %}">
@@ -189,15 +188,15 @@
                                             <i class="las la-minus"></i><span>Listar</span>
                                         </a>
                                     </li>                                    
-                                </ul>
+                                </ul>-->
                             </li>
                             <li class=" ">
-                                <a href="#envase_embalaje" class="collapsed" data-toggle="collapse"
-                                   aria-expanded="false">
-                                    <span class="ml-2">Envase o embalajes</span>
+                                <a href="{% url 'compras_env_list' %}"><span class="ml-2">Envase o embalajes</span></a>
+                                <!--
                                     <i class="las la-angle-right iq-arrow-right arrow-active"></i>
                                     <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                </a>
+                                href="#envase_embalaje" class="collapsed" data-toggle="collapse"
+                                   aria-expanded="false"
                                 <ul id="envase_embalaje" class="iq-submenu collapse" data-parent="#registrar">
                                     <li class="">
                                         <a href="{% url 'nueva_compra_envase' %}">
@@ -205,19 +204,17 @@
                                         </a>
                                     </li>
                                     <li class="">
-                                        <a href="{% url 'compras_env_list' %}">
+                                        <a >
                                             <i class="las la-minus"></i><span>Listar</span>
                                         </a>
                                     </li>
-                                </ul>
+                                </ul>-->
                             </li>
                             <li class=" ">
-                                <a href="#insumos" class="collapsed" data-toggle="collapse" aria-expanded="false">
-
-                                    <span class="ml-2">Insumos y otros</span>
+                                <a href="{% url 'compras_ins_list' %}"> <span class="ml-2">Insumos y otros</span></a><!--
                                     <i class="las la-angle-right iq-arrow-right arrow-active"></i>
                                     <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                </a>
+                                href="#insumos" class="collapsed" data-toggle="collapse" aria-expanded="false"
                                 <ul id="insumos" class="iq-submenu collapse" data-parent="#registrar">
                                     <li class="">
                                         <a href="{% url 'nueva_compra_insumo' %}">
@@ -225,11 +222,11 @@
                                         </a>
                                     </li>
                                     <li class="">
-                                        <a href="{% url 'compras_ins_list' %}">
+                                        <a >
                                             <i class="las la-minus"></i><span>Listar</span>
                                         </a>
                                     </li>
-                                </ul>
+                                </ul>-->
                             </li>
                         </ul>
                     </li>
@@ -252,6 +249,18 @@
                             <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
                         </a>
                         <ul id="registrar" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                            <li class=" ">
+                                <a href="{% url 'importar_tienda' %}" class="collapsed" aria-expanded="false">
+                                    <span class="ml-2">Sincronizar con tienda</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li class=" ">
+                                <a href="{% url 'materia_prima:materia_prima_list' %}" class="collapsed" aria-expanded="false">
+                                    <span class="ml-2">Materia prima</span>
+                                </a>
+                            </li>
                             <li class=" ">
                                 <a href="{% url 'envase_embalaje_lista' %}" class="collapsed" aria-expanded="false">
                                     <span class="ml-2">Envase o embalaje</span>
@@ -260,11 +269,6 @@
                             <li class=" ">
                                 <a href="{% url 'insumos_list' %}" class="collapsed" aria-expanded="false">
                                     <span class="ml-2">Insumos y otros</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'materia_prima:materia_prima_list' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Materia prima</span>
                                 </a>
                             </li>
                             <li class=" ">
@@ -294,7 +298,7 @@
                         </a>
                         <ul id="producciones" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             <li class=" ">
-                                <a href="{% url 'produccion_create' %}">
+                                <a href="{% url 'crear_produccion' %}">
                                     <i class="las la-minus"></i><span>Nueva producción</span>
                                 </a>
                             </li>
@@ -307,7 +311,7 @@
                     </li>
                 {% endif %}
 
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or  request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                     <li class=" ">
                         <a href="#envasado" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash14" width="20" height="20"
@@ -325,7 +329,7 @@
                         </a>
                         <ul id="envasado" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             <li class=" ">
-                                <a href="{% url 'produccion_create' %}">
+                                <a href="#">
                                     <i class="las la-minus"></i><span>Nuevo envasado</span>
                                 </a>
                             </li>

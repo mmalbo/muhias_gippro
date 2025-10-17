@@ -45,11 +45,13 @@
                                            title="Ver detalles">
                                             <i class="fas fa-eye"></i> <!-- Ícono de ojo -->
                                         </a>
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
                                         <a href="{% url 'insumos_update' insumo.pk %}"
                                            class="btn far fa-edit" title="Editar insumo"></a>
-                                        <a href="{% url 'insumos_delete' insumo.pk %}"
+                                        {% endif %}
+                                        <!--<a href="{% url 'insumos_delete' insumo.pk %}"
                                            title="Eliminar insumo"
-                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>-->
                                 </td>
                             </tr>
                         {% endfor %}

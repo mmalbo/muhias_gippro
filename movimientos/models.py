@@ -4,6 +4,7 @@ from nomencladores.almacen.models import Almacen, Responsable
 from produccion.envasado.models import Envasado
 from produccion.models import Produccion
 from materia_prima.models import MateriaPrima
+from envase_embalaje.models import EnvaseEmbalaje
 
 class Vale_Movimiento_Almacen(ModeloBase):
     consecutivo = models.IntegerField(null=False, verbose_name="Código del vale")
@@ -18,7 +19,6 @@ class Vale_Movimiento_Almacen(ModeloBase):
         count = Vale_Movimiento_Almacen.objects.all().count()
         self.consecutivo = count +1
         super(Vale_Movimiento_Almacen, self).save(*args, **kwargs)
-
         
 """ class Vale_Recepcion_Almacen(Vale_Movimiento_Almacen):
     fecha_solicitud = models.DateField(
@@ -56,7 +56,6 @@ class Vale_Salida_Almacen_Envasado(Vale_Movimiento_Almacen):
         verbose_name="Envasado"
     )
 
-
 class Conduce(Vale_Movimiento_Almacen):
     fecha_solicitud = models.DateField(
         auto_now=True, null=False,
@@ -89,6 +88,21 @@ class Movimiento_MP(ModeloBase):
     def __str__(self):
         entrada = 'Entrada ' if self.entrada else 'Salida '
         return f'{entrada} de {self.materia_prima.nombre} en {self.vale.almacen.nombre}'
+
+class Movimiento_EE(ModeloBase):
+    envase_embalaje = models.ForeignKey(EnvaseEmbalaje, on_delete=models.PROTECT,
+        verbose_name="Envase o embalaje",
+        null=False, blank=False,
+    )
+    entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
+    vale_e = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
+        verbose_name="Vale asociado a este movimiento",
+        null=False, blank=False, related_name="movimientos_e")
+    cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
+
+    def __str__(self):
+        entrada = 'Entrada ' if self.entrada else 'Salida '
+        return f'{entrada} de {self.envase_embalaje.nombre} en {self.vale_e.almacen.nombre}'
 
 """ class Vale_Salida_Almacen(ModeloBase):
     consecutivo = models.IntegerField(

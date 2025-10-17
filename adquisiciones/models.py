@@ -54,6 +54,7 @@ class Adquisicion(models.Model):
     @property
     def cantidad_envases(self):
         cantidad = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id)
+        print(cantidad)
         return cantidad
     
     @property

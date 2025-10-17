@@ -352,7 +352,7 @@ class CompraEnvaseWizard(SessionWizardView):
                 factura=compra_data['factura']
             )
             
-            # Procesar materias primas
+            # Procesar 
             envase_forms = [f for f in form_list if isinstance(f, EnvasesForm)]
             for form in envase_forms[:cantidad_data['cantidad']]:
                 data = form.cleaned_data

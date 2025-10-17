@@ -36,8 +36,6 @@
                             <th>Forma</th>
                             <th>Material</th>
                             <th>Color</th>
-                            {#                            <th>Tipo de envase o embalaje</th>#}
-
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -49,7 +47,6 @@
                                 <td>{{ pomo.forma }}</td>
                                 <td>{{ pomo.material }}</td>
                                 <td>{{ pomo.color }}</td>
-                                {#                                <td>{{ pomo.tipo_envase_embalaje }}</td>#}
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'pomo:actualizar' pomo.pk %}"
@@ -69,8 +66,6 @@
                             <th>Forma</th>
                             <th>Material</th>
                             <th>Color</th>
-                            {#                            <th>Tipo de envase o embalaje</th>#}
-                            {##}
                             <th>Acciones</th>
                         </tr>
                         </tfoot>
@@ -78,7 +73,7 @@
 
                     <a href="{% url 'pomo:crear' %}" class="btn btn-success">Crear pomo</a>
                     <a href="{% url 'pomo:importarPomo' %}" class="btn btn-success">
-                        Importar excel
+                        Importar desde archivo
                     </a>
 
                 </div>

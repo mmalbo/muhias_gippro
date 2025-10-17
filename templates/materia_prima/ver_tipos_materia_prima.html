@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Contenido de CHOICE.txt</h2>
+
+<a href="{% url 'agregar_opcion' %}" class="btn btn-primary mb-3">← Volver al formulario</a>
+<a href="{% url 'descargar_choice_txt' %}" class="btn btn-success mb-3">📥 Descargar</a>
+
+<pre class="bg-light p-3 border rounded">
+<code># ARCHIVO CHOICE.TXT
+# Generado automáticamente desde Django
+# Formato: valor:etiqueta
+
+{% for opcion in opciones %}{{ opcion.valor }}:{{ opcion.etiqueta }}
+{% endfor %}
+
+# Total de opciones: {{ opciones|length }}</code>
+</pre>
+{% endblock %}
