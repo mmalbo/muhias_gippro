@@ -24,11 +24,10 @@
                         <tr class="ligth">
                             <th>Código</th>
                             <th>Nombre</th>
-                            {#                            <th>Unidad de Medida</th>#}
+                            <th>U. de Medida</th>
                             <th>Concentración</th>
-                            <th>Conformación</th>
                             <th>Tipo</th>
-                            <th>Cantidad en almacén</th>
+                            <th>Cantidad</th>
                             <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
@@ -38,19 +37,19 @@
                             <tr>
                                 <td>{{ materia_prima.codigo }}</td>
                                 <td>{{ materia_prima.nombre }}</td>
-                                {#                                                                <td>{{ materia_prima.unidad_medida }}</td>#}
+                                <td>{{ materia_prima.unidad_medida }}</td>
                                 <td>{{ materia_prima.concentracion }}</td>
-                                <td>{{ materia_prima.conformacion }}</td>
-                                <td>{{ materia_prima.tipo_materia_prima.nombre }}</td>
-                                <td>{{ materia_prima.cantidad_almacen }}</td>
+                                <td>{{ materia_prima.tipo_materia_prima}}</td>
+                                <td>{{ materia_prima.cantidad_total }}</td>
                                 <td>{{ materia_prima.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
                                         <a href="{% url 'materia_prima:materia_prima_actualizar' materia_prima.pk %}"
-                                           title="Editar materia prima" class="btn far fa-edit"></a>
-                                        {#                                    <a href="{% url 'materia_prima:eliminar' materia_prima.pk %}"#}
-                                        {#                                       title="Eliminar almacén"#}
-                                        {#                                       class="btn far fa-trash-alt" style="color: #ed1010;"></a>#}
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
+                                        {% endif %}
+                                        <a href="{% url 'materia_prima:get_materias_primas' materia_prima.pk %}"
+                                            title="Ver detalles" class="btn far fa-trash-alt"></a>
                                     </div>
                                 </td>
                             </tr>
@@ -61,23 +60,19 @@
                         <tr>
                             <th>Código</th>
                             <th>Nombre</th>
-                            {#                            <th>Unidad de Medida</th>#}
+                            <th>U. de Medida</th>
                             <th>Concentración</th>
-                            <th>Conformación</th>
                             <th>Tipo</th>
-
-                            <th>Cantidad en almacén</th>
+                            <th>Cantidad</th>
                             <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
-
-                    <a href="{% url 'materia_prima:materia_prima_crear' %}" class="btn btn-success">Crear Materia
-                        Prima</a>
-                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success">
-                        Importar excel
-                    </a>
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'materia_prima:materia_prima_crear' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
                 </div>
             </div>
 

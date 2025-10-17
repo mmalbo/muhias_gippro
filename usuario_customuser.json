@@ -1,0 +1,63 @@
+[
+  { "model": "usuario.customuser",
+    "id": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$s727yAi1ugB1leUSRN5wAl$SafRCtgcIbe3gUCjWhkET0HfJT1m+r5pkizfq83ZaX4=",
+      "last_login": "2025-09-10 02:25:35.423600",
+      "is_superuser": 1,
+      "username": "admin_giprro",
+      "first_name": "",
+      "last_name": "",
+      "email": "informatica@produccionesmuhia.ca",
+      "is_staff": 1,
+      "is_active": 1,
+      "date_joined": "2025-08-29 13:23:59.062107"}
+  },
+  { "model": "usuario.customuser",
+    "id": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$AZcYadFMwo1o9W8bHOHDf8$3JjoiUPip4TJqnw1NoIeepFpoFYfhLamRIGH3DuvLNk=",
+      "last_login": null,
+      "is_superuser": 0,
+      "username": "ines",
+      "first_name": "Ines",
+      "last_name": "Vega",
+      "email": "presidencia@produccionesmuhia.ca",
+      "is_staff": 0,
+      "is_active": 1,
+      "date_joined": "2025-09-09 01:23:18.515378"
+    }
+  },
+  {
+    "model": "usuario.customuser",
+    "id": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$vsULAmQz7CvLOqFEMpAYpr$qTPZXvP1jFRtrATNtZLgdBrAI/IdFiBZfXsD73DqYmI=",
+      "last_login": "2025-09-09 01:50:38.107690",
+      "is_superuser": 0,
+      "username": "eduardo",
+      "first_name": "Eduardo",
+      "last_name": "A",
+      "email": "comercial@produccionesmuhia.ca",
+      "is_staff": 0,
+      "is_active": 1,
+      "date_joined": "2025-09-09 01:24:15.294908"
+    }
+  },
+  {
+    "model": "usuario.customuser",
+    "id": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$oyrFertqj6U8GI3cMH5lvK$6g8XseyJs12Y4KhzdkH8gPCFXGuHn26/Krxcxf+jlEg=",
+      "last_login": "2025-09-10 02:30:48.204598",
+      "is_superuser": 0,
+      "username": "alex",
+      "first_name": "Alexeis",
+      "last_name": "X",
+      "email": "almacen@produccionesmuhia.ca",
+      "is_staff": 0,
+      "is_active": 1,
+      "date_joined": "2025-09-09 01:25:31.166501"
+    }
+  }
+]

@@ -1,6 +1,5 @@
 /.venv/
-#/static/
-/static/
+/media/*
+/static/*
 */migrations/
-*/__pycache__/
-*.pyc
+*/__pycache__/*

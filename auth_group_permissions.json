@@ -1,0 +1,1337 @@
+[
+  {
+    "id": 1,
+    "group_id": 1,
+    "permission_id": 21
+  },
+  {
+    "id": 2,
+    "group_id": 1,
+    "permission_id": 22
+  },
+  {
+    "id": 3,
+    "group_id": 1,
+    "permission_id": 23
+  },
+  {
+    "id": 4,
+    "group_id": 1,
+    "permission_id": 24
+  },
+  {
+    "id": 5,
+    "group_id": 1,
+    "permission_id": 25
+  },
+  {
+    "id": 6,
+    "group_id": 1,
+    "permission_id": 26
+  },
+  {
+    "id": 7,
+    "group_id": 1,
+    "permission_id": 27
+  },
+  {
+    "id": 8,
+    "group_id": 1,
+    "permission_id": 28
+  },
+  {
+    "id": 9,
+    "group_id": 1,
+    "permission_id": 29
+  },
+  {
+    "id": 10,
+    "group_id": 1,
+    "permission_id": 30
+  },
+  {
+    "id": 11,
+    "group_id": 1,
+    "permission_id": 31
+  },
+  {
+    "id": 12,
+    "group_id": 1,
+    "permission_id": 32
+  },
+  {
+    "id": 13,
+    "group_id": 1,
+    "permission_id": 33
+  },
+  {
+    "id": 14,
+    "group_id": 1,
+    "permission_id": 34
+  },
+  {
+    "id": 15,
+    "group_id": 1,
+    "permission_id": 35
+  },
+  {
+    "id": 16,
+    "group_id": 1,
+    "permission_id": 36
+  },
+  {
+    "id": 17,
+    "group_id": 1,
+    "permission_id": 37
+  },
+  {
+    "id": 18,
+    "group_id": 1,
+    "permission_id": 38
+  },
+  {
+    "id": 19,
+    "group_id": 1,
+    "permission_id": 39
+  },
+  {
+    "id": 20,
+    "group_id": 1,
+    "permission_id": 40
+  },
+  {
+    "id": 21,
+    "group_id": 1,
+    "permission_id": 41
+  },
+  {
+    "id": 22,
+    "group_id": 1,
+    "permission_id": 42
+  },
+  {
+    "id": 23,
+    "group_id": 1,
+    "permission_id": 43
+  },
+  {
+    "id": 24,
+    "group_id": 1,
+    "permission_id": 44
+  },
+  {
+    "id": 25,
+    "group_id": 1,
+    "permission_id": 45
+  },
+  {
+    "id": 26,
+    "group_id": 1,
+    "permission_id": 46
+  },
+  {
+    "id": 27,
+    "group_id": 1,
+    "permission_id": 47
+  },
+  {
+    "id": 28,
+    "group_id": 1,
+    "permission_id": 48
+  },
+  {
+    "id": 29,
+    "group_id": 1,
+    "permission_id": 49
+  },
+  {
+    "id": 30,
+    "group_id": 1,
+    "permission_id": 50
+  },
+  {
+    "id": 31,
+    "group_id": 1,
+    "permission_id": 51
+  },
+  {
+    "id": 32,
+    "group_id": 1,
+    "permission_id": 52
+  },
+  {
+    "id": 33,
+    "group_id": 1,
+    "permission_id": 53
+  },
+  {
+    "id": 34,
+    "group_id": 1,
+    "permission_id": 54
+  },
+  {
+    "id": 35,
+    "group_id": 1,
+    "permission_id": 55
+  },
+  {
+    "id": 36,
+    "group_id": 1,
+    "permission_id": 56
+  },
+  {
+    "id": 37,
+    "group_id": 1,
+    "permission_id": 57
+  },
+  {
+    "id": 38,
+    "group_id": 1,
+    "permission_id": 58
+  },
+  {
+    "id": 39,
+    "group_id": 1,
+    "permission_id": 59
+  },
+  {
+    "id": 40,
+    "group_id": 1,
+    "permission_id": 60
+  },
+  {
+    "id": 41,
+    "group_id": 1,
+    "permission_id": 61
+  },
+  {
+    "id": 42,
+    "group_id": 1,
+    "permission_id": 62
+  },
+  {
+    "id": 43,
+    "group_id": 1,
+    "permission_id": 63
+  },
+  {
+    "id": 44,
+    "group_id": 1,
+    "permission_id": 64
+  },
+  {
+    "id": 45,
+    "group_id": 1,
+    "permission_id": 65
+  },
+  {
+    "id": 46,
+    "group_id": 1,
+    "permission_id": 66
+  },
+  {
+    "id": 47,
+    "group_id": 1,
+    "permission_id": 67
+  },
+  {
+    "id": 48,
+    "group_id": 1,
+    "permission_id": 68
+  },
+  {
+    "id": 49,
+    "group_id": 1,
+    "permission_id": 69
+  },
+  {
+    "id": 50,
+    "group_id": 1,
+    "permission_id": 70
+  },
+  {
+    "id": 51,
+    "group_id": 1,
+    "permission_id": 71
+  },
+  {
+    "id": 52,
+    "group_id": 1,
+    "permission_id": 72
+  },
+  {
+    "id": 53,
+    "group_id": 1,
+    "permission_id": 73
+  },
+  {
+    "id": 54,
+    "group_id": 1,
+    "permission_id": 74
+  },
+  {
+    "id": 55,
+    "group_id": 1,
+    "permission_id": 75
+  },
+  {
+    "id": 56,
+    "group_id": 1,
+    "permission_id": 76
+  },
+  {
+    "id": 57,
+    "group_id": 1,
+    "permission_id": 77
+  },
+  {
+    "id": 58,
+    "group_id": 1,
+    "permission_id": 78
+  },
+  {
+    "id": 59,
+    "group_id": 1,
+    "permission_id": 79
+  },
+  {
+    "id": 60,
+    "group_id": 1,
+    "permission_id": 80
+  },
+  {
+    "id": 61,
+    "group_id": 1,
+    "permission_id": 81
+  },
+  {
+    "id": 62,
+    "group_id": 1,
+    "permission_id": 82
+  },
+  {
+    "id": 63,
+    "group_id": 1,
+    "permission_id": 83
+  },
+  {
+    "id": 64,
+    "group_id": 1,
+    "permission_id": 84
+  },
+  {
+    "id": 65,
+    "group_id": 1,
+    "permission_id": 85
+  },
+  {
+    "id": 66,
+    "group_id": 1,
+    "permission_id": 86
+  },
+  {
+    "id": 67,
+    "group_id": 1,
+    "permission_id": 87
+  },
+  {
+    "id": 68,
+    "group_id": 1,
+    "permission_id": 88
+  },
+  {
+    "id": 69,
+    "group_id": 1,
+    "permission_id": 89
+  },
+  {
+    "id": 70,
+    "group_id": 1,
+    "permission_id": 90
+  },
+  {
+    "id": 71,
+    "group_id": 1,
+    "permission_id": 91
+  },
+  {
+    "id": 72,
+    "group_id": 1,
+    "permission_id": 92
+  },
+  {
+    "id": 73,
+    "group_id": 1,
+    "permission_id": 93
+  },
+  {
+    "id": 74,
+    "group_id": 1,
+    "permission_id": 94
+  },
+  {
+    "id": 75,
+    "group_id": 1,
+    "permission_id": 95
+  },
+  {
+    "id": 76,
+    "group_id": 1,
+    "permission_id": 96
+  },
+  {
+    "id": 77,
+    "group_id": 1,
+    "permission_id": 97
+  },
+  {
+    "id": 78,
+    "group_id": 1,
+    "permission_id": 98
+  },
+  {
+    "id": 79,
+    "group_id": 1,
+    "permission_id": 99
+  },
+  {
+    "id": 80,
+    "group_id": 1,
+    "permission_id": 100
+  },
+  {
+    "id": 81,
+    "group_id": 1,
+    "permission_id": 101
+  },
+  {
+    "id": 82,
+    "group_id": 1,
+    "permission_id": 102
+  },
+  {
+    "id": 83,
+    "group_id": 1,
+    "permission_id": 103
+  },
+  {
+    "id": 84,
+    "group_id": 1,
+    "permission_id": 104
+  },
+  {
+    "id": 85,
+    "group_id": 1,
+    "permission_id": 105
+  },
+  {
+    "id": 86,
+    "group_id": 1,
+    "permission_id": 106
+  },
+  {
+    "id": 87,
+    "group_id": 1,
+    "permission_id": 107
+  },
+  {
+    "id": 88,
+    "group_id": 1,
+    "permission_id": 108
+  },
+  {
+    "id": 89,
+    "group_id": 1,
+    "permission_id": 109
+  },
+  {
+    "id": 90,
+    "group_id": 1,
+    "permission_id": 110
+  },
+  {
+    "id": 91,
+    "group_id": 1,
+    "permission_id": 111
+  },
+  {
+    "id": 92,
+    "group_id": 1,
+    "permission_id": 112
+  },
+  {
+    "id": 93,
+    "group_id": 1,
+    "permission_id": 113
+  },
+  {
+    "id": 94,
+    "group_id": 1,
+    "permission_id": 114
+  },
+  {
+    "id": 95,
+    "group_id": 1,
+    "permission_id": 115
+  },
+  {
+    "id": 96,
+    "group_id": 1,
+    "permission_id": 116
+  },
+  {
+    "id": 97,
+    "group_id": 1,
+    "permission_id": 117
+  },
+  {
+    "id": 98,
+    "group_id": 1,
+    "permission_id": 118
+  },
+  {
+    "id": 99,
+    "group_id": 1,
+    "permission_id": 119
+  },
+  {
+    "id": 100,
+    "group_id": 1,
+    "permission_id": 120
+  },
+  {
+    "id": 101,
+    "group_id": 1,
+    "permission_id": 121
+  },
+  {
+    "id": 102,
+    "group_id": 1,
+    "permission_id": 122
+  },
+  {
+    "id": 103,
+    "group_id": 1,
+    "permission_id": 123
+  },
+  {
+    "id": 104,
+    "group_id": 1,
+    "permission_id": 124
+  },
+  {
+    "id": 105,
+    "group_id": 1,
+    "permission_id": 125
+  },
+  {
+    "id": 106,
+    "group_id": 1,
+    "permission_id": 126
+  },
+  {
+    "id": 107,
+    "group_id": 1,
+    "permission_id": 127
+  },
+  {
+    "id": 108,
+    "group_id": 1,
+    "permission_id": 128
+  },
+  {
+    "id": 109,
+    "group_id": 1,
+    "permission_id": 132
+  },
+  {
+    "id": 110,
+    "group_id": 1,
+    "permission_id": 133
+  },
+  {
+    "id": 111,
+    "group_id": 1,
+    "permission_id": 134
+  },
+  {
+    "id": 112,
+    "group_id": 1,
+    "permission_id": 135
+  },
+  {
+    "id": 113,
+    "group_id": 1,
+    "permission_id": 136
+  },
+  {
+    "id": 114,
+    "group_id": 1,
+    "permission_id": 137
+  },
+  {
+    "id": 115,
+    "group_id": 1,
+    "permission_id": 138
+  },
+  {
+    "id": 116,
+    "group_id": 1,
+    "permission_id": 139
+  },
+  {
+    "id": 117,
+    "group_id": 1,
+    "permission_id": 140
+  },
+  {
+    "id": 118,
+    "group_id": 1,
+    "permission_id": 141
+  },
+  {
+    "id": 119,
+    "group_id": 1,
+    "permission_id": 142
+  },
+  {
+    "id": 120,
+    "group_id": 1,
+    "permission_id": 143
+  },
+  {
+    "id": 121,
+    "group_id": 1,
+    "permission_id": 144
+  },
+  {
+    "id": 122,
+    "group_id": 1,
+    "permission_id": 145
+  },
+  {
+    "id": 123,
+    "group_id": 1,
+    "permission_id": 146
+  },
+  {
+    "id": 124,
+    "group_id": 1,
+    "permission_id": 147
+  },
+  {
+    "id": 125,
+    "group_id": 1,
+    "permission_id": 148
+  },
+  {
+    "id": 126,
+    "group_id": 1,
+    "permission_id": 149
+  },
+  {
+    "id": 127,
+    "group_id": 1,
+    "permission_id": 150
+  },
+  {
+    "id": 128,
+    "group_id": 1,
+    "permission_id": 151
+  },
+  {
+    "id": 129,
+    "group_id": 1,
+    "permission_id": 152
+  },
+  {
+    "id": 130,
+    "group_id": 1,
+    "permission_id": 153
+  },
+  {
+    "id": 131,
+    "group_id": 1,
+    "permission_id": 154
+  },
+  {
+    "id": 132,
+    "group_id": 1,
+    "permission_id": 155
+  },
+  {
+    "id": 133,
+    "group_id": 1,
+    "permission_id": 156
+  },
+  {
+    "id": 134,
+    "group_id": 1,
+    "permission_id": 157
+  },
+  {
+    "id": 135,
+    "group_id": 1,
+    "permission_id": 158
+  },
+  {
+    "id": 136,
+    "group_id": 1,
+    "permission_id": 159
+  },
+  {
+    "id": 137,
+    "group_id": 1,
+    "permission_id": 160
+  },
+  {
+    "id": 138,
+    "group_id": 1,
+    "permission_id": 161
+  },
+  {
+    "id": 139,
+    "group_id": 1,
+    "permission_id": 162
+  },
+  {
+    "id": 140,
+    "group_id": 1,
+    "permission_id": 163
+  },
+  {
+    "id": 141,
+    "group_id": 1,
+    "permission_id": 164
+  },
+  {
+    "id": 142,
+    "group_id": 1,
+    "permission_id": 165
+  },
+  {
+    "id": 143,
+    "group_id": 1,
+    "permission_id": 166
+  },
+  {
+    "id": 144,
+    "group_id": 1,
+    "permission_id": 167
+  },
+  {
+    "id": 145,
+    "group_id": 1,
+    "permission_id": 168
+  },
+  {
+    "id": 146,
+    "group_id": 1,
+    "permission_id": 169
+  },
+  {
+    "id": 147,
+    "group_id": 1,
+    "permission_id": 170
+  },
+  {
+    "id": 148,
+    "group_id": 2,
+    "permission_id": 139
+  },
+  {
+    "id": 149,
+    "group_id": 2,
+    "permission_id": 140
+  },
+  {
+    "id": 150,
+    "group_id": 2,
+    "permission_id": 141
+  },
+  {
+    "id": 151,
+    "group_id": 2,
+    "permission_id": 142
+  },
+  {
+    "id": 152,
+    "group_id": 2,
+    "permission_id": 143
+  },
+  {
+    "id": 153,
+    "group_id": 2,
+    "permission_id": 144
+  },
+  {
+    "id": 154,
+    "group_id": 2,
+    "permission_id": 145
+  },
+  {
+    "id": 155,
+    "group_id": 2,
+    "permission_id": 146
+  },
+  {
+    "id": 156,
+    "group_id": 2,
+    "permission_id": 147
+  },
+  {
+    "id": 157,
+    "group_id": 2,
+    "permission_id": 148
+  },
+  {
+    "id": 158,
+    "group_id": 2,
+    "permission_id": 149
+  },
+  {
+    "id": 159,
+    "group_id": 2,
+    "permission_id": 150
+  },
+  {
+    "id": 160,
+    "group_id": 2,
+    "permission_id": 151
+  },
+  {
+    "id": 161,
+    "group_id": 2,
+    "permission_id": 152
+  },
+  {
+    "id": 162,
+    "group_id": 2,
+    "permission_id": 153
+  },
+  {
+    "id": 163,
+    "group_id": 2,
+    "permission_id": 154
+  },
+  {
+    "id": 164,
+    "group_id": 2,
+    "permission_id": 25
+  },
+  {
+    "id": 165,
+    "group_id": 2,
+    "permission_id": 26
+  },
+  {
+    "id": 166,
+    "group_id": 2,
+    "permission_id": 27
+  },
+  {
+    "id": 167,
+    "group_id": 2,
+    "permission_id": 28
+  },
+  {
+    "id": 168,
+    "group_id": 2,
+    "permission_id": 22
+  },
+  {
+    "id": 169,
+    "group_id": 2,
+    "permission_id": 23
+  },
+  {
+    "id": 170,
+    "group_id": 2,
+    "permission_id": 24
+  },
+  {
+    "id": 171,
+    "group_id": 2,
+    "permission_id": 33
+  },
+  {
+    "id": 172,
+    "group_id": 2,
+    "permission_id": 34
+  },
+  {
+    "id": 173,
+    "group_id": 2,
+    "permission_id": 35
+  },
+  {
+    "id": 174,
+    "group_id": 2,
+    "permission_id": 36
+  },
+  {
+    "id": 175,
+    "group_id": 2,
+    "permission_id": 37
+  },
+  {
+    "id": 176,
+    "group_id": 2,
+    "permission_id": 38
+  },
+  {
+    "id": 177,
+    "group_id": 2,
+    "permission_id": 39
+  },
+  {
+    "id": 178,
+    "group_id": 2,
+    "permission_id": 40
+  },
+  {
+    "id": 179,
+    "group_id": 2,
+    "permission_id": 41
+  },
+  {
+    "id": 180,
+    "group_id": 2,
+    "permission_id": 42
+  },
+  {
+    "id": 181,
+    "group_id": 2,
+    "permission_id": 43
+  },
+  {
+    "id": 182,
+    "group_id": 2,
+    "permission_id": 44
+  },
+  {
+    "id": 183,
+    "group_id": 2,
+    "permission_id": 45
+  },
+  {
+    "id": 184,
+    "group_id": 2,
+    "permission_id": 46
+  },
+  {
+    "id": 185,
+    "group_id": 2,
+    "permission_id": 47
+  },
+  {
+    "id": 186,
+    "group_id": 2,
+    "permission_id": 49
+  },
+  {
+    "id": 187,
+    "group_id": 2,
+    "permission_id": 50
+  },
+  {
+    "id": 188,
+    "group_id": 2,
+    "permission_id": 51
+  },
+  {
+    "id": 189,
+    "group_id": 2,
+    "permission_id": 52
+  },
+  {
+    "id": 190,
+    "group_id": 2,
+    "permission_id": 53
+  },
+  {
+    "id": 191,
+    "group_id": 2,
+    "permission_id": 54
+  },
+  {
+    "id": 192,
+    "group_id": 2,
+    "permission_id": 55
+  },
+  {
+    "id": 193,
+    "group_id": 2,
+    "permission_id": 56
+  },
+  {
+    "id": 194,
+    "group_id": 2,
+    "permission_id": 57
+  },
+  {
+    "id": 195,
+    "group_id": 2,
+    "permission_id": 58
+  },
+  {
+    "id": 196,
+    "group_id": 2,
+    "permission_id": 59
+  },
+  {
+    "id": 197,
+    "group_id": 2,
+    "permission_id": 60
+  },
+  {
+    "id": 198,
+    "group_id": 2,
+    "permission_id": 61
+  },
+  {
+    "id": 199,
+    "group_id": 2,
+    "permission_id": 62
+  },
+  {
+    "id": 200,
+    "group_id": 2,
+    "permission_id": 63
+  },
+  {
+    "id": 201,
+    "group_id": 2,
+    "permission_id": 64
+  },
+  {
+    "id": 202,
+    "group_id": 2,
+    "permission_id": 65
+  },
+  {
+    "id": 203,
+    "group_id": 2,
+    "permission_id": 66
+  },
+  {
+    "id": 204,
+    "group_id": 2,
+    "permission_id": 67
+  },
+  {
+    "id": 205,
+    "group_id": 2,
+    "permission_id": 68
+  },
+  {
+    "id": 206,
+    "group_id": 2,
+    "permission_id": 21
+  },
+  {
+    "id": 207,
+    "group_id": 2,
+    "permission_id": 48
+  },
+  {
+    "id": 208,
+    "group_id": 2,
+    "permission_id": 117
+  },
+  {
+    "id": 209,
+    "group_id": 2,
+    "permission_id": 118
+  },
+  {
+    "id": 210,
+    "group_id": 2,
+    "permission_id": 119
+  },
+  {
+    "id": 211,
+    "group_id": 2,
+    "permission_id": 120
+  },
+  {
+    "id": 212,
+    "group_id": 2,
+    "permission_id": 121
+  },
+  {
+    "id": 213,
+    "group_id": 2,
+    "permission_id": 122
+  },
+  {
+    "id": 214,
+    "group_id": 2,
+    "permission_id": 123
+  },
+  {
+    "id": 215,
+    "group_id": 2,
+    "permission_id": 124
+  },
+  {
+    "id": 216,
+    "group_id": 3,
+    "permission_id": 128
+  },
+  {
+    "id": 217,
+    "group_id": 3,
+    "permission_id": 21
+  },
+  {
+    "id": 218,
+    "group_id": 3,
+    "permission_id": 22
+  },
+  {
+    "id": 219,
+    "group_id": 3,
+    "permission_id": 23
+  },
+  {
+    "id": 220,
+    "group_id": 3,
+    "permission_id": 24
+  },
+  {
+    "id": 221,
+    "group_id": 3,
+    "permission_id": 159
+  },
+  {
+    "id": 222,
+    "group_id": 3,
+    "permission_id": 160
+  },
+  {
+    "id": 223,
+    "group_id": 3,
+    "permission_id": 161
+  },
+  {
+    "id": 224,
+    "group_id": 3,
+    "permission_id": 162
+  },
+  {
+    "id": 225,
+    "group_id": 3,
+    "permission_id": 163
+  },
+  {
+    "id": 226,
+    "group_id": 3,
+    "permission_id": 164
+  },
+  {
+    "id": 227,
+    "group_id": 3,
+    "permission_id": 165
+  },
+  {
+    "id": 228,
+    "group_id": 3,
+    "permission_id": 166
+  },
+  {
+    "id": 229,
+    "group_id": 3,
+    "permission_id": 167
+  },
+  {
+    "id": 230,
+    "group_id": 3,
+    "permission_id": 168
+  },
+  {
+    "id": 231,
+    "group_id": 3,
+    "permission_id": 169
+  },
+  {
+    "id": 232,
+    "group_id": 3,
+    "permission_id": 170
+  },
+  {
+    "id": 233,
+    "group_id": 3,
+    "permission_id": 61
+  },
+  {
+    "id": 234,
+    "group_id": 3,
+    "permission_id": 62
+  },
+  {
+    "id": 235,
+    "group_id": 3,
+    "permission_id": 63
+  },
+  {
+    "id": 236,
+    "group_id": 3,
+    "permission_id": 64
+  },
+  {
+    "id": 237,
+    "group_id": 3,
+    "permission_id": 65
+  },
+  {
+    "id": 238,
+    "group_id": 3,
+    "permission_id": 66
+  },
+  {
+    "id": 239,
+    "group_id": 3,
+    "permission_id": 67
+  },
+  {
+    "id": 240,
+    "group_id": 3,
+    "permission_id": 68
+  },
+  {
+    "id": 241,
+    "group_id": 3,
+    "permission_id": 69
+  },
+  {
+    "id": 242,
+    "group_id": 3,
+    "permission_id": 70
+  },
+  {
+    "id": 243,
+    "group_id": 3,
+    "permission_id": 71
+  },
+  {
+    "id": 244,
+    "group_id": 3,
+    "permission_id": 72
+  },
+  {
+    "id": 245,
+    "group_id": 3,
+    "permission_id": 73
+  },
+  {
+    "id": 246,
+    "group_id": 3,
+    "permission_id": 74
+  },
+  {
+    "id": 247,
+    "group_id": 3,
+    "permission_id": 75
+  },
+  {
+    "id": 248,
+    "group_id": 3,
+    "permission_id": 76
+  },
+  {
+    "id": 249,
+    "group_id": 3,
+    "permission_id": 77
+  },
+  {
+    "id": 250,
+    "group_id": 3,
+    "permission_id": 78
+  },
+  {
+    "id": 251,
+    "group_id": 3,
+    "permission_id": 79
+  },
+  {
+    "id": 252,
+    "group_id": 3,
+    "permission_id": 80
+  },
+  {
+    "id": 253,
+    "group_id": 3,
+    "permission_id": 81
+  },
+  {
+    "id": 254,
+    "group_id": 3,
+    "permission_id": 82
+  },
+  {
+    "id": 255,
+    "group_id": 3,
+    "permission_id": 83
+  },
+  {
+    "id": 256,
+    "group_id": 3,
+    "permission_id": 84
+  },
+  {
+    "id": 257,
+    "group_id": 3,
+    "permission_id": 85
+  },
+  {
+    "id": 258,
+    "group_id": 3,
+    "permission_id": 86
+  },
+  {
+    "id": 259,
+    "group_id": 3,
+    "permission_id": 87
+  },
+  {
+    "id": 260,
+    "group_id": 3,
+    "permission_id": 88
+  },
+  {
+    "id": 261,
+    "group_id": 3,
+    "permission_id": 121
+  },
+  {
+    "id": 262,
+    "group_id": 3,
+    "permission_id": 122
+  },
+  {
+    "id": 263,
+    "group_id": 3,
+    "permission_id": 123
+  },
+  {
+    "id": 264,
+    "group_id": 3,
+    "permission_id": 124
+  },
+  {
+    "id": 265,
+    "group_id": 3,
+    "permission_id": 125
+  },
+  {
+    "id": 266,
+    "group_id": 3,
+    "permission_id": 126
+  },
+  {
+    "id": 267,
+    "group_id": 3,
+    "permission_id": 127
+  }
+]

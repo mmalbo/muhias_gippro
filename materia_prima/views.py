@@ -18,7 +18,9 @@ from .forms import AgregarTipoForm
 from .choices import obtener_tipos_materia_prima, eliminar_tipo_materia_prima, agregar_tipo_materia_prima
 
 class CreateMateriaPrimaView(CreateView):
-    model = MateriaPrima
+    #Hay que replicar acá similar a la adquisición pero creando los objetos a la inversa, primero las materias primas y
+    #la adquisición se crea vacía con la fecha actual
+    """ model = MateriaPrima
     form_class = MateriaPrimaForm
     template_name = 'materia_prima/materia_prima_form.html'
     success_url = reverse_lazy('materia_prima:materia_prima_list')  # Cambia esto al nombre de tu URL
@@ -26,7 +28,7 @@ class CreateMateriaPrimaView(CreateView):
 
     def form_valid(self, form):
         messages.success(self.request, self.success_message)
-        return super().form_valid(form)
+        return super().form_valid(form) """
 
 class ListMateriaPrimaView(ListView):
     model = MateriaPrima
@@ -90,6 +92,7 @@ def get_materias_primas(request, pk):
 
         return JsonResponse(materias_primas_data, safe=False)
     except Almacen.DoesNotExist:
+        print(Almacen.objects.get(pk=pk))
         raise Http404("Materia prima no encontrado")
 
 class CreateImportView(CreateView):
@@ -113,14 +116,81 @@ def importar(request):
             with (transaction.atomic()):
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
-                Col_Coddigo = 0
+
+                for data in imported_data:
+                    nombre = str(data[1]).strip() if data[1] is not None else None  # Asegúrate de que sea un string
+                    unidad = str(data[2]).strip() if data[2] is not None else None
+                    concentracion = str(data[3]).strip() if data[3] is not None else None
+                    conformacion = str(data[4]).strip() if data[4] is not None else None
+                    cantidad = str(data[5]).strip() if data[5] is not None else None
+                    costo = str(data[6]).strip() if data[6] is not None else None
+                    tipo_materia_prima = str(data[7]).strip() if data[Col_TipoMateria] is not None else None
+                    almacen = str(data[8]).strip() if data[Col_Almacen] is not None else None
+
+                    if not all([nombre, concentracion,  conformacion, unidad, cantidad, costo,almacen]):
+                        messages.error(request, f"Fila {No_fila + 2}: Todos los campos son obligatorios.")
+                        return redirect('materia_prima:importarMateriasPrimas')
+
+                    almacen_id = Almacen.objects.filter(nombre__iexact=almacen).first()
+
+                    if len(nombre) > 255:
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: El nombre de la materia prima no puede exceder 255 caracteres.")
+                        return redirect('materia_prima:importarMateriasPrimas')
+                    if len(unidad) > 10:
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: La unidad de medida no puede exceder 10 caracteres.")
+                        return redirect('materia_prima:importarMateriasPrimas')
+                    if len(conformacion) > 50:
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: La conformación no puede exceder 50 caracteres.")
+                        return redirect('materia_prima:importarMateriasPrimas')
+
+                    if not concentracion.isdigit() or int(concentracion) <= 0:
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: 'Concentración' debe ser un número entero mayor que cero.")
+                        return redirect('materia_prima:importarMateriasPrimas')
+                    # Validación de los números
+                    if not cantidad.isdigit() or int(cantidad) <= 0:
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: 'Cantidad' debe ser un número entero mayor que cero.")
+                        return redirect('materia_prima:importarMateriasPrimas')
+                    if not re.match(r'^-?\d+(\.\d+)?$', costo) or float(costo) <= 0:
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: 'Costo' debe ser un número decimal válido mayor que cero.")
+                        return redirect('materia_prima:importarMateriasPrimas')
+
+                    costo = float(costo)  # Convertimos a entero después de la validación
+                    concentracion = int(concentracion)  # Convertimos a entero después de la validación
+                    cantidad = int(cantidad)  # Convertimos a entero después de la validación
+
+                    try:
+                        materia_prima = MateriaPrima(
+                            nombre=nombre,
+                            tipo_materia_prima=tipo_materia_prima,  # Asumiendo que este es el ID
+                            conformacion=conformacion,
+                            unidad_medida=unidad,
+                            concentracion=concentracion,
+                            costo=costo,  # Asumiendo que este es el ID
+                        )
+                        materia_prima.clean()  # Valida los datos antes de guardar
+                        materia_prima.save()
+                        
+                        No_fila += 1 # Incrementa solo si se guarda correctamente
+                        
+
+                    except Exception as e:
+                        messages.error(request, f"Error al procesar la fila {No_fila + 2}: {str(e)}")
+                        return redirect('materia_prima:importarMateriasPrimas')
+
+                """ Col_Coddigo = 0
                 Col_Nombre = 1
                 Col_Unidad = 2
                 Col_concentracion = 3
                 Col_Conformacion = 4
                 Col_Cantidad = 5
                 Col_Costo = 6
-                #Col_TipoMateria = 7
+                Col_TipoMateria = 7
                 Col_Almacen = 7
                 i = 0
                 while i <= len(imported_data):
@@ -154,10 +224,10 @@ def importar(request):
 
                     #tipo_materia_prima = TipoMateriaPrima.objects.filter(nombre__iexact=tipo_materia_prima).first()
                     almacen = Almacen.objects.filter(nombre__iexact=almacen).first()
-                    """ if tipo_materia_prima is None:
+                    if tipo_materia_prima is None:
                         messages.error(request,
                                        f"Fila {No_fila + 2}: No existe el tipo de materia prima  '{str(data[Col_TipoMateria]).strip()}' en el nomenclador")
-                        return redirect('materia_prima:importarMateriasPrimas') """
+                        return redirect('materia_prima:importarMateriasPrimas')
                     if almacen is None:
                         messages.error(request,
                                        f"Fila {No_fila + 2}: No existe el almacén  '{str(data[Col_Almacen]).strip()}' en el nomenclador")
@@ -219,7 +289,7 @@ def importar(request):
 
                     except Exception as e:
                         messages.error(request, f"Error al procesar la fila {No_fila + 2}: {str(e)}")
-                        return redirect('materia_prima:importarMateriasPrimas')
+                         return redirect('materia_prima:importarMateriasPrimas')"""
 
                 # Mensajes finales
                 if No_fila > 0:
@@ -250,7 +320,6 @@ def importar(request):
 
 ###Gestionar Tipos de MP
 
-#@login_required
 def gestionar_tipos_MP(request):
     # Obtener todas las categorías
     print("entre en view gestionar")

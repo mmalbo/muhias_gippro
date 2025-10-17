@@ -12,32 +12,22 @@
                     <table id="datatable" class="table data-table table-striped">
                         <thead>
                         <tr>
-{#                            <th>Lote</th>#}
+                            <th>Lote</th>
                             <th>Nombre del Producto</th>
-{#                            <th>Tipo de Producto</th>#}
                             <th>Cantidad Estimada</th>
-{#                            <th>Costo</th>#}
+                            <th>Costo</th>
                             <th>Planta</th>
-                            <th>Envase/Embalaje</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {% for produccion in producciones %}
+                        {% for produccion in produccions %}
                             <tr>
-{#                                <td>{{ produccion.lote }}</td>#}
+                                <td>{{ produccion.lote }}</td>
                                 <td>{{ produccion.nombre_producto }}</td>
-{#                                <td>#}
-{#                                    {% if produccion.tipo_prod_result %}#}
-{#                                        Producto Terminado#}
-{#                                    {% else %}#}
-{#                                        Producto en Proceso#}
-{#                                    {% endif %}#}
-{#                                </td>#}
                                 <td>{{ produccion.cantidad_estimada }}</td>
-{#                                <td>{{ produccion.costo }}</td>#}
+                                <td>{{ produccion.costo }}</td>
                                 <td>{{ produccion.planta }}</td>
-                                <td>{{ produccion.envase_embalaje.nombre }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
 
@@ -53,18 +43,16 @@
                         </tbody>
                         <tfoot>
                         <tr>
-{#                            <th>Lote</th>#}
+                            <th>Lote</th>
                             <th>Nombre del Producto</th>
-{#                            <th>Tipo de Producto</th>#}
                             <th>Cantidad Estimada</th>
-{#                            <th>Costo</th>#}
+                            <th>Costo</th>
                             <th>Planta</th>
-                            <th>Envase/Embalaje</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
-                    <a href="{% url 'produccion_create' %}" class="btn btn-success">Crear producción</a>
+                    <a href="{% url 'crear_produccion' %}" class="btn btn-success">Crear producción</a>
                 </div>
             </div>
         </div>

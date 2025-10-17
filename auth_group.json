@@ -1,0 +1,30 @@
+[
+  { "model": "auth.group",
+    "id": 1,
+    "fields": 
+    {
+    "name": "Presidencia-Admin"
+    }
+  },
+  { "model": "auth.group",
+    "id": 2,
+    "fields": 
+    {
+    "name": "Comerciales"
+    }
+  },
+  { "model": "auth.group",
+    "id": 3,
+    "fields": 
+    {
+    "name": "Almaceneros"
+    }
+  },
+  { "model": "auth.group",
+    "id": 4,
+    "fields": 
+    {
+    "name": "Tecnologa"
+    }
+  }
+]

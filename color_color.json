@@ -1,0 +1,50 @@
+[
+  { "model": "color.color",
+    "id": "1ac73fbec13f4721b81195471d01b1f4",
+    "fields": {
+      "fecha_creacion": "2025-09-09 01:37:23.895771",
+      "fecha_actualizacion": "2025-09-09 01:37:23.895771",
+      "nombre": "Transparente"
+    }
+  },
+  { "model": "color.color",
+    "id": "8d73a1826ef24249a373defeec3401ff",
+    "fields": {
+      "fecha_creacion": "2025-09-09 01:37:36.665248",
+      "fecha_actualizacion": "2025-09-09 01:37:36.665248",
+      "nombre": "Negros"
+    }
+  },
+  { "model": "color.color",
+    "id": "eecd764d8f724d3695b14b2e0e3e539b",
+    "fields": {
+      "fecha_creacion": "2025-09-09 01:37:48.119108",
+      "fecha_actualizacion": "2025-09-09 01:37:48.119108",
+      "nombre": "Opaca"
+    }
+  },
+  { "model": "color.color",
+    "id": "db59acf74ac443a5a51fb3313a7ebd05",
+    "fields": {
+      "fecha_creacion": "2025-09-09 01:37:59.368187",
+      "fecha_actualizacion": "2025-09-09 01:37:59.368187",
+      "nombre": "Blanco"
+    }
+  },
+  { "model": "color.color",
+    "id": "0f8c84130f3248cba6722751e86bf29f",
+    "fields": {
+      "fecha_creacion": "2025-09-09 01:38:08.922371",
+      "fecha_actualizacion": "2025-09-09 01:38:08.922371",
+      "nombre": "Ambar"
+    }
+  },
+  {  "model": "color.color",
+    "id": "b72edbe5c3cf4aa786bb286135405b76",
+    "fields": {
+      "fecha_creacion": "2025-09-09 01:38:19.702052",
+      "fecha_actualizacion": "2025-09-09 01:38:19.702052",
+      "nombre": "Azul"
+    }
+  }
+]
