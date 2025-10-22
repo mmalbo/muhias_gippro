@@ -126,6 +126,7 @@ class CompraWizard(SessionWizardView):
         
         # Calcular progreso
         step_index = list(form_list.keys()).index(self.steps.current)
+        
         context.update({
             'step_number': step_index + 1,
             'total_steps': len(form_list),
@@ -160,7 +161,8 @@ class CompraWizard(SessionWizardView):
             compra = Adquisicion.objects.create(
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
-                factura=compra_data['factura']
+                factura=compra_data['factura'],
+                tipo_adquisicion='mp'
             )
             
             # Procesar materias primas
@@ -181,17 +183,20 @@ class CompraWizard(SessionWizardView):
                         ficha_tecnica=data['ficha_tecnica'],
                         hoja_seguridad=data['hoja_seguridad'],
                     )
-                
+                print(f'Materia: {materia}')
+                print('A crear detalles')
                 DetallesAdquisicion.objects.create(
                     adquisicion=compra,
                     materia_prima=materia,
                     cantidad=data['cantidad'],
                     almacen=data['almacen']
                 )
-            
+                print('Creado detalle')
+                print(compra)
+                print(materia)
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compras_mp_list')
+            return redirect('materia_prima:materia_prima_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -349,7 +354,8 @@ class CompraEnvaseWizard(SessionWizardView):
             compra = Adquisicion.objects.create(
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
-                factura=compra_data['factura']
+                factura=compra_data['factura'],
+                tipo_adquisicion='env'
             )
             
             # Procesar 
@@ -375,7 +381,7 @@ class CompraEnvaseWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compras_env_list')
+            return redirect('envase_embalaje_lista')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -530,7 +536,8 @@ class CompraInsumoWizard(SessionWizardView):
             compra = Adquisicion.objects.create(
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
-                factura=compra_data['factura']
+                factura=compra_data['factura'],
+                tipo_adquisicion='ins'
             )
             
             # Procesar insumos
@@ -556,7 +563,7 @@ class CompraInsumoWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('compras_ins_list')
+            return redirect('insumos_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")

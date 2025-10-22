@@ -179,8 +179,8 @@ class EnvasesForm(forms.Form):
     envase_existente = forms.ModelChoiceField(
         queryset=EnvaseEmbalaje.objects.all(),
         required=False,
-        label="Seleccionar envaseo embalaje existente",
-        widget=forms.Select(attrs={'class': 'form-select materia-select'})
+        label="Seleccionar envase o embalaje existente",
+        widget=forms.Select(attrs={'class': 'form-select envase-select'})
     )
     
     cantidad = forms.DecimalField(

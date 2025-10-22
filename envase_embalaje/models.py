@@ -41,8 +41,9 @@ class EnvaseEmbalaje(ModeloBase):
     @transaction.atomic
     def save(self, *args, **kwargs):
         # Verificar si el objeto ya existe en la base de datos
-        print(self)
+        print("En el save")
         if self.pk:  # Si el objeto ya tiene un ID (ya existe)
+            print(self)
             
             # Obtener el objeto actual desde la base de datos
             envase_actual = EnvaseEmbalaje.objects.filter(pk=self.pk).first
@@ -78,6 +79,7 @@ class EnvaseEmbalaje(ModeloBase):
 
                 # Generar el código completo
                 self.codigo_envase = f"{tipo_envase_codigo}{capacidad}{nuevo_consecutivo}"
+                print(self.codigo_envase)
 
         # Guardar el objeto
         super().save(*args, **kwargs)
