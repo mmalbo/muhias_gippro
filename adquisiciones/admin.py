@@ -1,5 +1,5 @@
 from django.contrib import admin
-from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase
+from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo
 
 # Register your models here.
 @admin.register(Adquisicion)
@@ -12,4 +12,8 @@ class DetallesAdquisicionAdmin(admin.ModelAdmin):
 
 @admin.register(DetallesAdquisicionEnvase)
 class DetallesAdquisicionEnvaseAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(DetallesAdquisicionInsumo)
+class DetallesAdquisicionInsumoAdmin(admin.ModelAdmin):
     pass

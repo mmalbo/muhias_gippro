@@ -70,7 +70,7 @@
                         </tfoot>
                     </table>
                     {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
-                    <a href="{% url 'materia_prima:materia_prima_crear' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
                     <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                 </div>

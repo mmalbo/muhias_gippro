@@ -1,0 +1,64 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Movimientos de Inventarios</h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>No.</th>
+                            <th>Almacén</th>
+                            <th>Fecha</th>
+                            <th>Tipo de movimiento</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for mov in movimientos %}
+                            <tr>
+                                <td>{{ mov.consecutivo }}</td>
+                                <td>{{ mov.almacen }}</td>
+                                <td>{{ mov.fecha_movimiento }}</td>
+                                <td>{% if mov.entrada %} Entrada {% else %} Salida {% endif %}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'movimiento_detalle' mov.consecutivo %}" class="btn btn-success">Detalles</a>
+                                        <a href="{% url 'generar_vale' mov.consecutivo %}" class="btn btn-success">Generar vale</a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>No.</th>
+                            <th>Almacén</th>
+                            <th>Fecha</th>
+                            <th>Tipo de movimiento</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

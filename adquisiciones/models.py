@@ -36,6 +36,10 @@ class Adquisicion(models.Model):
         verbose_name="Importada",
         null=False, default=False
     )
+    tipo_adquisicion = models.CharField(
+        verbose_name="Tipo de adquisición",
+        null=False, default="mp", max_length=10,
+    )
     creado_en = models.DateTimeField(auto_now_add=True, null=True)
 
     registrada = models.BooleanField(
@@ -48,33 +52,30 @@ class Adquisicion(models.Model):
     
     @property
     def cantidad_mprimas(self):
-        cantidad = DetallesAdquisicion.objects.filter(adquisicion__id=self.id)
+        print(self.id)
+        cantidad = DetallesAdquisicion.objects.filter(adquisicion=self.id).count()
+        print(cantidad)
         return cantidad
     
     @property
     def cantidad_envases(self):
-        cantidad = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id)
+        print(self.id)
+        detalles = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id)
+        print(detalles)
+        cantidad = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id).count()
         print(cantidad)
         return cantidad
     
     @property
     def cantidad_insumos(self):
-        cantidad = DetallesAdquisicionInsumo.objects.filter(adquisicion__id=self.id)
+        cantidad = DetallesAdquisicionInsumo.objects.filter(adquisicion=self.id).count()
+        print(cantidad)
         return cantidad
     
-    @property
-    def tipo_adquisicion(self):
-        if self.cantidad_mprimas != 0:
-            return 'mp'
-        elif self.cantidad_envases != 0:
-            return 'env'
-        else:
-            return 'ins'
-
 class DetallesAdquisicion(models.Model):
-    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles')
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, null=True, related_name='detalles')
     materia_prima = models.ForeignKey(
-        MateriaPrima, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        MateriaPrima, null=True, on_delete=models.CASCADE,  # Cambiado a PROTECT
         verbose_name="Materia prima adquirida"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
@@ -95,7 +96,7 @@ class DetallesAdquisicion(models.Model):
 class DetallesAdquisicionEnvase(models.Model):
     adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles_envases')
     envase_embalaje = models.ForeignKey(
-        EnvaseEmbalaje, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        EnvaseEmbalaje, null=True, on_delete=models.CASCADE,  # Cambiado a PROTECT
         verbose_name="Envase o embalaje adquirida"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)

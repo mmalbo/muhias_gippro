@@ -104,6 +104,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'utils.context_processors.notifications',
+                'utils.context_processors.group_of',
                 'materia_prima.context_processors.choices_context',
             ],
         },

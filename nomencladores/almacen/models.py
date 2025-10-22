@@ -1,7 +1,6 @@
 from django.db import models
 from bases.bases.models import ModeloBase
 
-
 class Almacen(ModeloBase):
     nombre = models.CharField(
         max_length=255,
@@ -26,24 +25,6 @@ class Almacen(ModeloBase):
 
     def __str__(self):
         return self.nombre
-
-
-class Responsable(ModeloBase):
-    responsable_CI = models.CharField(
-        max_length=11,
-        verbose_name="Carnet de identidad",
-        null=True, blank=True,
-    )
-
-    responsable_Nombre = models.CharField(
-        max_length=200, null=True,
-        verbose_name='Nombre y apellidos',
-    )
-
-    responsable_Cargo = models.CharField(
-        max_length=200, null=False,
-        verbose_name="Responsabilidad(cargo)"
-    )
 
 
 #
