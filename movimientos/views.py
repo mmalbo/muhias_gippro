@@ -121,6 +121,57 @@ def recepcion_envase(request, adq_id):
                     print(f"Error...{e}") 
                     pass
             else:
+<<<<<<< Updated upstream
+=======
+                print("No se encontro cantidad")
+        
+        return redirect('envase_embalaje_lista')  # Redirigir a página de éxito
+
+    # Si es GET, mostrar el formulario con los valores actuales
+    return render(request, 'movimientos/recepcion_env.html', {
+        'productos': inv_env
+    })
+
+def recepcion_insumo(request, adq_id):
+    # Obtener los productos que quieres mostrar (ejemplo: todos)
+    inv_ins = DetallesAdquisicionInsumo.objects.filter(adquisicion__id=adq_id)
+    adquisicion = get_object_or_404(Adquisicion, id=adq_id)
+    if adquisicion.registrada:
+        print("Ya registrada en almacén")
+        return redirect('insumos_list')  # Redirigir a página de éxito        
+    almacen = adquisicion.detalles_insumos.first().almacen
+    if request.method == 'POST':
+        vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                entrada=True
+            )
+        # Procesar cada producto
+        for inv in inv_ins:
+            field_name = str(inv.insumo.id)
+            cantidad = decimal.Decimal('0.00')
+            cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+            if cantidad:
+                try:
+                    Movimiento_Ins.objects.create(
+                        insumo=inv.insumo,
+                        vale_e=vale,  # Ejemplo: atributo fijo
+                        cantidad=cantidad
+                    )
+                    inventario_in, created = Inv_Insumos.objects.get_or_create(
+                        insumos=inv.insumo, almacen=almacen)
+                    if created:
+                        inventario_in.cantidad = cantidad
+                        inventario_in.save()
+                    else:
+                        inventario_in.cantidad = inventario_in.cantidad + cantidad
+                        inventario_in.save()
+                    adquisicion.registrada = True
+                    adquisicion.save()
+                except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}") 
+                    pass
+            else:
+>>>>>>> Stashed changes
                 print("No encontró cantidad")
         
         return redirect('envase_embalaje:envase_embalaje_lista')  # Redirigir a página de éxito

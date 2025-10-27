@@ -41,7 +41,11 @@ class EnvaseEmbalaje(ModeloBase):
     @transaction.atomic
     def save(self, *args, **kwargs):
         # Verificar si el objeto ya existe en la base de datos
+<<<<<<< Updated upstream
         print(self)
+=======
+       
+>>>>>>> Stashed changes
         if self.pk:  # Si el objeto ya tiene un ID (ya existe)
             
             # Obtener el objeto actual desde la base de datos
