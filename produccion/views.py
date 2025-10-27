@@ -4,10 +4,12 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
+import datetime
 import json
 # formtools.wizard.views import SessionWizardView
 from collections import OrderedDict
@@ -21,12 +23,6 @@ class ProduccionListView(ListView):
     model = Produccion
     template_name = 'produccion/list.html'
     context_object_name = 'produccions'
-
-class ProduccionUpdateView(UpdateView):
-    model = Produccion
-    form_class = ProduccionForm
-    template_name = 'produccion/form.html'
-    success_url = reverse_lazy('produccion_list')
 
 class ProduccionDeleteView(DeleteView):
     model = Produccion
@@ -195,149 +191,72 @@ def get_materias_primas_data(request):
     )
     return JsonResponse(list(materias_primas), safe=False)
 
-""" class ProduccionCreateView(CreateView):
+#Este es el que está en uso
+def iniciar_produccion(request, pk):
+    """View para iniciar una producción específica"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    if produccion.estado == 'pendiente':
+        produccion.estado = 'En proceso'
+        produccion.save()
+        messages.success(request, f'✅ Producción {produccion.lote} iniciada correctamente')
+    else:
+        messages.warning(request, f'⚠️ La producción {produccion.lote} ya está en estado: {produccion.estado}')
+    
+    return redirect('produccion_list')
+#Este dió error
+class CambiarEstadoProduccionView(View):
+    def post(self, request, pk):
+        produccion_p = get_object_or_404(Produccion, pk=pk)
+        nuevo_estado = request.POST.get('estado')
+        
+        if nuevo_estado:
+            estado_anterior = produccion_p.estado
+            produccion_p.estado = nuevo_estado
+            produccion_p.save()
+            
+            messages.success(request, f'Estado cambiado de {estado_anterior} a {nuevo_estado}')
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'estado_actual': produccion_p.estado,
+                    'mensaje': f'Estado cambiado exitosamente a {nuevo_estado}'
+                })
+        
+        return redirect('produccion_list')
+
+""" class ProduccionUpdateView(UpdateView):
     model = Produccion
     form_class = ProduccionForm
     template_name = 'produccion/form.html'
-    success_url = reverse_lazy('produccion_list') 
-# Configuración de almacenamiento temporal
-TMP_Almac = os.path.join(settings.BASE_DIR, 'tmp_wizard')
-if not os.path.exists(TMP_Almac):
-    os.makedirs(TMP_Almac)
-file_alm = FileSystemStorage(location=TMP_Almac)
+    success_url = reverse_lazy('produccion_list') """
 
-class ProduccionWizard(SessionWizardView):
-    file = file_alm
-    # Diccionario que mapea cada paso con su template
-    template_dict = {
-        'datos': 'produccion/datos_form.html',
-        'materias': 'produccion/materias_form.html',  # Para todos los pasos materia_*
-    }
+def concluir_produccion(request, pk):
+    """View para mostrar formulario de conclusión"""
+    produccion = get_object_or_404(Produccion, pk=pk)
     
-    ## Debemos revisarlo
-    def get_template_names(self):
-        Determina qué plantilla usar para el paso actual
-        current_step = self.steps.current
+    if request.method == 'POST' and produccion.estado == 'En proceso':
+        cantidad_real = request.POST.get('cantidad_real')
         
-        # Para pasos conocidos, usa su template específico
-        if current_step in self.template_dict:
-            return [self.template_dict[current_step]]
-        
-        # Fallback por defecto
-        return ['produccion/wizard_base.html']
-
-    form_list = [
-        ('produccion', ProduccionForm),
-        ('cantidad', Inv_MP_Form),
-    ]
-
-    def get_form_list(self):
-        Versión robusta que siempre retorna al menos los formularios base
-        form_list = OrderedDict(self.form_list)        
-       
-        return form_list
+        if cantidad_real:
+            try:
+                cantidad_real = float(cantidad_real)
+                if cantidad_real > 0:
+                    produccion.cantidad_real = cantidad_real
+                    produccion.estado = 'Terminada'
+                    produccion.fecha_actualizacion = datetime.datetime.now()
+                    produccion.save()
+                    
+                    messages.success(request, f'✅ Producción {produccion.lote} completada. Cantidad obtenida: {cantidad_real}')
+                    return redirect('produccion_list')
+                else:
+                    messages.error(request, '❌ La cantidad real debe ser mayor a 0')
+            except ValueError:
+                messages.error(request, '❌ La cantidad debe ser un número válido')
+        else:
+            messages.error(request, '❌ Debe especificar la cantidad obtenida')
     
-    def get_form_initial(self, step):
-        initial = super().get_form_initial(step)
-        
-        # Para los pasos de materia prima, intentar mantener la selección previa
-        if step.startswith('materia'):
-            prev_data = self.get_cleaned_data_for_step(step)
-            if prev_data:
-                initial.update(prev_data)
-        
-        return initial
-    
-    def get_form(self, step=None, data=None, files=None):
-        # Asegurar que siempre haya una lista de formularios
-        form_list = self.get_form_list()
-        if not form_list:
-            form_list = OrderedDict([
-                ('produccion', ProduccionForm),
-                ('cantidad', Inv_MP_Form),
-            ])
-        
-        if step is None:
-            step = self.steps.current
-        try:
-            form_class = form_list[step]
-            return form_class(data=data, files=files, prefix=self.get_form_prefix(step, form_class))
-        except KeyError:
-            # Si el paso no existe, redirigir al primer paso
-            self.storage.current_step = 'produccion'
-            form_class = form_list['produccion']
-            return form_class(data=data, files=files, prefix=self.get_form_prefix('produccion', form_class))
-    
-    def get_context_data(self, form, **kwargs):
-        context = super().get_context_data(form, **kwargs)
-        
-        # Asegurar que siempre tengamos una lista de pasos
-        form_list = self.get_form_list()
-        if not form_list:
-            form_list = OrderedDict([
-                ('produccion', ProduccionForm),
-                ('cantidad', Inv_MP_Form),
-            ])
-
-        Añadir información específica del paso
-        current_step = self.steps.current
-        context['step_title'] = {
-                'produccion': 'Información General',
-                'cantidad': 'Cantidad de Materias Primas necesarias'
-            }.get(current_step, 'Paso del Proceso')
-        
-        Calcular progreso
-        step_index = list(form_list.keys()).index(self.steps.current)
-        context.update({
-            'step_number': step_index + 1,
-            'total_steps': len(form_list),
-            'step_title': self.get_step_title(),
-            'form_list_keys': list(form_list.keys()),
-        })
-        
-        return context
-    
-    def get_step_title(self):
-        titles = {
-            'produccion': 'Información General',
-            'cantidad': 'Cantidad de Materias Primas necesarias',
-        }
-
-        return titles.get(self.steps.current, "Paso del Proceso")
-    
-    def done(self, form_list, **kwargs):
-        Procesamiento seguro de los datos
-        try:
-            produccion_data = [f for f in form_list if isinstance(f, ProduccionForm)][0].cleaned_data
-            cantidad_data = [f for f in form_list if isinstance(f, Inv_MP_Form)][0].cleaned_data
-            
-            Crear Produccion
-            datos_prod = Produccion.objects.create(
-                lote=produccion_data['lote'],
-                nombre_producto=produccion_data['nombre_producto'],
-                cantidad_estimada=produccion_data['cantidad_estimada'],
-                costo=produccion_data['costo'],
-                planta=produccion_data['planta']
-            )
-            
-            Procesar materias primas
-            materia_forms = [f for f in form_list if isinstance(f, Inv_MP_Form)]
-            for form in materia_forms[:cantidad_data['cantidad']]:
-                data = form.cleaned_data
-                
-                materia = Inv_MP_Form.objects.create(
-                        lote_prod=datos_prod,
-                        inv_materia_prima=data['inv_materia_prima'],
-                        cantidad_materia_prima=data['cantidad_materia_prima'],
-                    )      
-            
-            Limpiar almacenamiento
-            self.storage.reset()
-            return redirect('produccion_list')
-        
-        except Exception as e:
-            print(f"Error al procesar la solicitud de producción: {e}")
-            # Manejar el error adecuadamente
-            return redirect('error_page')"""
-
-    
+    return render(request, 'produccion/concluir_produccion.html', {
+        'produccion': produccion
+    })

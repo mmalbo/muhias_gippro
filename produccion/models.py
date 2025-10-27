@@ -16,57 +16,25 @@ def generate_unique_filename(instance, filename):
 
 
 class Produccion(ModeloBase):
-    lote = models.CharField(
-        unique=True,
-        null=False, blank=False,
-        max_length=20,
-        verbose_name="Lote",
-    )
+    lote = models.CharField(unique=True, null=False, blank=False, max_length=20, verbose_name="Lote",)
 
-    nombre_producto = models.CharField(
-        max_length=255,
-        verbose_name="Nombre del producto",
-        null=False,
-    )
+    nombre_producto = models.CharField(max_length=255, verbose_name="Nombre del producto", null=False,)
 
-    prod_result = models.BooleanField(
-        default=False,
-        verbose_name="Producto base",
-    )
+    prod_result = models.BooleanField(default=False, verbose_name="Producto base",)
 
-    cantidad_estimada = models.IntegerField(
-        null=False,
-        blank=False,
-        default=0,
-        verbose_name="Cantidad estimada",
-    )
+    cantidad_estimada = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False, default=0, 
+                                            verbose_name="Cantidad estimada",)
 
-    pruebas_quimicas = models.FileField(
-        upload_to=generate_unique_filename,
-        null=True,
-        blank=True,
-        verbose_name="Pruebas químicas",
-        validators=[FileExtensionValidator(allowed_extensions=['pdf'])]
-    )
+    cantidad_real = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Cantidad real",)
 
-    costo = models.FloatField(
-        null=False,
-        blank=False,
-        verbose_name="Costo",
-    )
+    pruebas_quimicas = models.FileField(upload_to=generate_unique_filename, null=True, blank=True, verbose_name="Pruebas químicas",
+        validators=[FileExtensionValidator(allowed_extensions=['pdf'])])
 
-    planta = models.ForeignKey(
-        Planta, on_delete=models.DO_NOTHING,
-        null=False,
-        verbose_name="Planta"
-    )
+    costo = models.FloatField(null=False, blank=False, verbose_name="Costo",)
 
-    estado = models.CharField(
-        verbose_name='Estado',
-        max_length=50,
-        choices=CHOICE_ESTADO,
-        blank=False, null=False
-    )
+    planta = models.ForeignKey(Planta, on_delete=models.DO_NOTHING, null=False, verbose_name="Planta")
+
+    estado = models.CharField(verbose_name='Estado', max_length=50, choices=CHOICE_ESTADO, blank=False, null=False )
 
     def __str__(self):
         return f"Lote {self.lote} - {self.nombre_producto}"

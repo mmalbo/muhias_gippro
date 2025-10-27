@@ -17,6 +17,7 @@
                             <th>Cantidad Estimada</th>
                             <th>Costo</th>
                             <th>Planta</th>
+                            <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -28,14 +29,30 @@
                                 <td>{{ produccion.cantidad_estimada }}</td>
                                 <td>{{ produccion.costo }}</td>
                                 <td>{{ produccion.planta }}</td>
+                                <td>{{ produccion.estado }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-
-                                        <a href="{% url 'produccion_update' produccion.pk %}"
-                                           title="Editar producción" class="btn far fa-edit"></a>
-{#                                        <a href="{% url 'produccion_delete' produccion.pk %}"#}
-{#                                           title="Eliminar producción"#}
-{#                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>#}
+                                        <!--Iniciar producción--> <!--acción de cambio de estado directofas fa-play (En procesourl 'produccion_update' produccion.pk )-->
+                                        {% if produccion.estado == 'pendiente' %}
+                                            <a href="{% url 'iniciar_produccion' produccion.id %}"
+                                                title="Iniciar producción" class="btn bi bi-play-btn" fill="currentColor">
+                                                
+                                            </a>
+                                        {% endif %}
+                                        <!--Terminada producción--> <!--fas fa-checkformulario confirmando la cantidad del producto-->
+                                        {% if produccion.estado == 'En proceso' %}    
+                                            <a href="{% url 'concluir_produccion' produccion.id %}"
+                                                title="Cierre de producción" class="btn bi bi-check2-square"></a>
+                                        {% endif %}
+                                        <!--Registrar pruebas químicas--> <!--formulario para subir doc de PQ y se cambia 
+                                        el estado a disponible para la venta o indicar ajuste de inventario-->
+                                        <a href="#"
+                                           title="Registrar pruebas químicas" class="btn far fa-edit"></a>
+                                        <!--Cancelar producción--> <!--formulario para indicar la causa ¿Pregunta que
+                                         hago con la materia prima o el semiproducto?-->
+                                        <a href="#"
+                                           title="Cancelar producción"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>
                                     </div>
                                 </td>
                             </tr>
@@ -48,6 +65,7 @@
                             <th>Cantidad Estimada</th>
                             <th>Costo</th>
                             <th>Planta</th>
+                            <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

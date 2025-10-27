@@ -133,7 +133,7 @@ def recepcion_envase(request, adq_id):
                     print(f"Error...{e}") 
                     pass
             else:
-                print("No se encontró cantidad")
+                print("No se encontro cantidad")
         
         return redirect('envase_embalaje_lista')  # Redirigir a página de éxito
 
