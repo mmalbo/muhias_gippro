@@ -46,10 +46,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     'rest_framework',
     'formtools',
     'widget_tweaks',
     'django_bootstrap5',
+    
     'envase_embalaje.apps.EnvaseEmbalajeConfig',
     'envase_embalaje.caja.apps.EnvaseCajaConfig',
     'envase_embalaje.formato.apps.FormatoConfig',

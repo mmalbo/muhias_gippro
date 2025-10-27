@@ -1,0 +1,50 @@
+<!-- templates/produccion/concluir_produccion.html -->
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Concluir Producción</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Lote:</strong> {{ produccion.lote }}</p>
+                    <p><strong>Producto:</strong> {{ produccion.nombre_producto }}</p>
+                    <p><strong>Cantidad Estimada:</strong> {{ produccion.cantidad_estimada }}</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="cantidad_real" class="form-label">
+                                <strong>Cantidad Real Obtenida *</strong>
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="cantidad_real" 
+                                   name="cantidad_real" 
+                                   step="0.01"
+                                   min="0.01"
+                                   required
+                                   placeholder="Ingrese la cantidad real producida">
+                            <div class="form-text">
+                                Especifique la cantidad real del producto que se logró obtener.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Concluir Producción
+                            </button>
+                            <a href="{% url 'produccion_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
