@@ -1,6 +1,6 @@
 from django.forms import formset_factory
 from .forms import RecepcionMateriaPrimaForm
-from .models import Movimiento_MP, Vale_Movimiento_Almacen, Movimiento_EE
+from .models import Movimiento_MP, Vale_Movimiento_Almacen, Movimiento_EE, Movimiento_Ins
 from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo
 from inventario.models import Inv_Mat_Prima, Inv_Insumos, Inv_Envase 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -35,17 +35,23 @@ import decimal
     return render(request, 'movimientos/recepcion_mp.html', {'formset': formset}) """
 
 def recepcion_materia_prima(request, adq_id):
+    print(adq_id)
     # Obtener los productos que quieres mostrar (ejemplo: todos)
     inv_mat = DetallesAdquisicion.objects.filter(adquisicion__id=adq_id)
+    print(inv_mat)
+    print(inv_mat.first())
     adquisicion = get_object_or_404(Adquisicion, id=adq_id)
     if adquisicion.registrada:
         print("Ya registrada en almacén")
         return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
-    almacen = adquisicion.detalles.first().almacen
+    almacen = inv_mat.first().almacen
     if request.method == 'POST':
+        print("En post")
         vale = Vale_Movimiento_Almacen.objects.create(
-                almacen = almacen
+                almacen = almacen,
+                entrada = True
             )
+        print("Creado Vale")
         # Procesar cada producto
         for inv in inv_mat:
             field_name = str(inv.materia_prima.id)
@@ -56,8 +62,8 @@ def recepcion_materia_prima(request, adq_id):
                     Movimiento_MP.objects.create(
                         materia_prima=inv.materia_prima,
                         vale=vale,  # Ejemplo: atributo fijo
-                        cantidad=cantidad,
-                        entrada=True
+                        cantidad=cantidad
+                        
                     )
                     inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
                         materia_prima=inv.materia_prima, almacen=almacen)
@@ -70,7 +76,7 @@ def recepcion_materia_prima(request, adq_id):
                     adquisicion.registrada = True
                     adquisicion.save()
                 except Exception as e: #(ValueError, TypeError):
-                    print(f"Error...{e}") 
+                    print(f"Error...{e}")
                     pass
             else:
                 print("No encontró cantidad")
@@ -88,24 +94,30 @@ def recepcion_envase(request, adq_id):
     adquisicion = get_object_or_404(Adquisicion, id=adq_id)
     if adquisicion.registrada:
         print("Ya registrada en almacén")
-        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
+        return redirect('envase_embalaje_lista')  # Redirigir a página de éxito        
     almacen = adquisicion.detalles_envases.first().almacen
+    print(almacen)
     if request.method == 'POST':
+        print("En post")
         vale = Vale_Movimiento_Almacen.objects.create(
-                almacen = almacen
+                almacen = almacen,
+                entrada=True
             )
+        print("Creo vale")
         # Procesar cada producto
         for inv in inv_env:
-            field_name = str(inv.envase_embalaje.id)
+            field_name = str(inv.envase_embalaje.codigo_envase)
             cantidad = decimal.Decimal('0.00')
+            print(field_name)
             cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+            print(request.POST.get(field_name))
+            print(cantidad)
             if cantidad:
                 try:
                     Movimiento_EE.objects.create(
-                        envase=inv.envase_embalaje,
+                        envase_embalaje=inv.envase_embalaje,
                         vale_e=vale,  # Ejemplo: atributo fijo
-                        cantidad=cantidad,
-                        entrada=True
+                        cantidad=cantidad
                     )
                     inventario_ev, created = Inv_Envase.objects.get_or_create(
                         envase=inv.envase_embalaje, almacen=almacen)
@@ -121,8 +133,6 @@ def recepcion_envase(request, adq_id):
                     print(f"Error...{e}") 
                     pass
             else:
-<<<<<<< Updated upstream
-=======
                 print("No se encontro cantidad")
         
         return redirect('envase_embalaje_lista')  # Redirigir a página de éxito
@@ -171,12 +181,23 @@ def recepcion_insumo(request, adq_id):
                     print(f"Error...{e}") 
                     pass
             else:
->>>>>>> Stashed changes
                 print("No encontró cantidad")
         
-        return redirect('envase_embalaje:envase_embalaje_lista')  # Redirigir a página de éxito
+        return redirect('insumos_list')  # Redirigir a página de éxito
     
     # Si es GET, mostrar el formulario con los valores actuales
-    return render(request, 'movimientos/recepcion_mp.html', {
-        'productos': inv_env
+    return render(request, 'movimientos/recepcion_ins.html', {
+        'productos': inv_ins
     })
+
+def movimiento_list(request):
+    movimientos = Vale_Movimiento_Almacen.objects.all()
+    return render(request, 'movimientos/movimientos_list.html', {
+        'movimientos': movimientos
+    })
+
+def generar_vale(request, cons):
+    pass
+
+def movimiento_detalle(request, cons):
+    pass

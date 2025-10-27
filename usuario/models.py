@@ -28,3 +28,7 @@ class CustomUser(AbstractUser):
             ("can_envasado", "Envasado"),
             ("can_produccion", "Producción"),
         )
+
+    @property
+    def of_group(self, group_name):
+        return self.groups.filter(name = group_name).exists()
