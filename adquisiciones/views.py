@@ -162,7 +162,8 @@ class CompraWizard(SessionWizardView):
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
                 factura=compra_data['factura'],
-                tipo_adquisicion='mp'
+                tipo_adquisicion='mp',
+                almacen=compra_data['almacen']
             )
             
             # Procesar materias primas
@@ -183,17 +184,11 @@ class CompraWizard(SessionWizardView):
                         ficha_tecnica=data['ficha_tecnica'],
                         hoja_seguridad=data['hoja_seguridad'],
                     )
-                print(f'Materia: {materia}')
-                print('A crear detalles')
                 DetallesAdquisicion.objects.create(
                     adquisicion=compra,
                     materia_prima=materia,
                     cantidad=data['cantidad'],
-                    almacen=data['almacen']
                 )
-                print('Creado detalle')
-                print(compra)
-                print(materia)
             # Limpiar almacenamiento
             self.storage.reset()
             return redirect('materia_prima:materia_prima_list')
@@ -355,7 +350,8 @@ class CompraEnvaseWizard(SessionWizardView):
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
                 factura=compra_data['factura'],
-                tipo_adquisicion='env'
+                tipo_adquisicion='env', 
+                almacen = compra_data['almacen']
             )
             
             # Procesar 
@@ -375,8 +371,7 @@ class CompraEnvaseWizard(SessionWizardView):
                 DetallesAdquisicionEnvase.objects.create(
                     adquisicion=compra,
                     envase_embalaje=envase,
-                    cantidad=data['cantidad'],
-                    almacen=data['almacen']
+                    cantidad=data['cantidad']
                 )
             
             # Limpiar almacenamiento
@@ -537,7 +532,8 @@ class CompraInsumoWizard(SessionWizardView):
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
                 factura=compra_data['factura'],
-                tipo_adquisicion='ins'
+                tipo_adquisicion='ins',
+                almacen = compra_data['almacen']
             )
             
             # Procesar insumos
@@ -557,8 +553,7 @@ class CompraInsumoWizard(SessionWizardView):
                 DetallesAdquisicionInsumo.objects.create(
                     adquisicion=compra,
                     insumo=insumo,
-                    cantidad=data['cantidad'],
-                    almacen=data['almacen']
+                    cantidad=data['cantidad']
                 )
             
             # Limpiar almacenamiento

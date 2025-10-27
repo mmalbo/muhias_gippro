@@ -1,0 +1,169 @@
+{% load static %}
+
+<html>
+
+<head>
+    <style>
+        @page {
+            /* Configuracion general de la hoja */
+            /* size: a4 landscape; */
+            size: a4 landscape;
+            margin: 1cm, 1cm, 1cm, 1cm;
+        }
+
+        th,
+        th {
+            font-size: 10px;
+            font-weight: bold;
+            word-wrap: break-word,
+        }
+
+        td {
+            font-size: 10px;
+            padding: 2px;
+            word-wrap: break-word,
+        }
+
+        .first-td {
+            font-size: 12px;
+            padding: 1px;
+            word-wrap: break-word,
+        }
+
+        .table-info-td {
+            font-size: 10px;
+            padding: 0.8px;
+            word-wrap: break-word,
+        }
+
+        #descripcion_cargas {
+            border-collapse: collapse;
+            width: 100%;
+            table-layout: fixed;
+            font-size: 1px;
+        }
+
+        #footer_content label{
+            font-size: 9px;
+        }
+    </style>
+</head>
+
+<body>
+    <table border="1" style="border-collapse: collapse;">
+        <tbody>
+            <tr>
+                <td rowspan="2" style="width: 100px; height: 40px;">
+                    <img style="height: 100%; width: 100%;" src="img/LogoStrech.png" />
+                </td>
+                <td colspan="2" class="header-td" style="text-align: center; font-size: 14px; margin-left: 125px;">
+                    <h1 >PRODUCCIONES MUHIA SRL. VALE DE ALMACÉN</h1> 
+                </td>
+            </tr>
+            <tr>
+                <td class="first-td" style="text-align: center;">
+                    <h1>Almacén: {{data.almacen}}</h1> 
+                </td>                
+                <td>
+                    <h1 style="text-align: left; font-size: 12px;">{{data.tipoi}}</h1> 
+                </td>                
+            </tr>
+        </tbody>
+    </table>
+    <table border="1" style="border-collapse: collapse;">
+        <tbody>
+            <tr>
+                <td colspan="4" style="text-align: left;" class="first-td">Suministrador <br></td>
+            </tr>
+            <tr>
+                <td rowspan="2" class="first-td"><strong>DEPEND. PROCED.</strong></td>
+                <td >Orden No.</td>
+                <td >Centro de Costo</td>
+                <td >Código</td>
+            </tr>
+            <tr>
+                <td >Lote No. </td>
+                <td >Producto </td>
+                <td >Otros </td>
+            </tr>
+            <tr>
+                <td colspan="2">A- Nombre y apellidos del Transportista <br></td>
+                <td >B- No. CI <br></td>
+                <td >C- Chapa del vehículo <br></td>
+            </tr>
+        </tbody>
+    </table>
+    <table border="1" style="border-collapse: collapse; text-align: center;">
+        <tbody>
+            <tr>
+                <td rowspan="2" style="text-align: center;" class="first-td">Código</td>
+                <td colspan="3" rowspan="2" style="text-align: center;" class="first-td">Descripción</td>
+                <td rowspan="2" style="text-align: center;" class="first-td">UM</td>
+                <td rowspan="2" style="text-align: center;" class="first-td">Cantidad</td>
+                <td colspan="2" style="text-align: center;" class="first-td">Precio</td>
+                <td colspan="3" style="text-align: center;" class="first-td">Importe</td>
+                <td rowspan="2" style="text-align: center;" class="first-td">Saldo existencia</td>
+            </tr>
+            <tr>
+                <td> MN </td>
+                <td> USD </td>
+                <td> Total </td>
+                <td> MN </td>
+                <td> USD </td>
+            </tr>
+            {% for item in inventarios %}
+            {% if data.tipop == 'MP' %}
+            <tr>
+                <td>  </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.materia_prima.nombre }} </td>
+                <td> </td>
+                <td> {{ item.cantidad }} </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+            </tr>
+            {% elif data.tipop == 'ENV' %}
+            <tr>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.envase_embalaje.codigo_envase }} </td>
+                <td class="table-info-td" style="width: 100px;"> {{ item.cantidad }} </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.insumo.nombre }} </td>
+                <td class="table-info-td" style="width: 100px;"> {{ item.cantidad }} </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    <table border="1" style="border-collapse: collapse;">
+        <tbody>
+            <tr>
+                <td colspan="4" style="text-align: center;" class="first-td"><strong>DESPACHADO O DEVUELTO POR:</strong></td>
+                <td colspan="4" style="text-align: center;" class="first-td"><strong>RECIBIDO POR:</strong></td>
+                <td colspan="4" style="text-align: center;" class="first-td"><strong>AUTORIZADO POR:</strong></td>
+            </tr>
+            <tr>
+                <td colspan="3"> nombre y apellidos <br></td>
+                <td> Firma <br></td>
+                <td colspan="3" > nombre y apellidos <br></td>
+                <td > Firma <br></td>
+                <td colspan="3"> nombre y apellidos <br></td>
+                <td > Firma <br></td>
+            </tr>
+            <tr>
+                <td colspan="3"> Anotado Sub - Mayor Inventario <br></td>
+                <td colspan="3"> Contabilizado por <br></td>
+                <td> Solic. No. <br></td>
+                <td style="text-align: center;" class="first-td">D <br> {{data.fecha|date:"d"}} </td>
+                <td style="text-align: center;" class="first-td">M <br> {{data.fecha|date:"m"}} </td>
+                <td style="text-align: center;" class="first-td">A <br> {{data.fecha|date:"Y"}} </td>
+                <td style="text-align: center;" class="first-td" colspan="2"> <strong> {{data.consecutivo}} </strong></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

@@ -10,9 +10,16 @@ from InsumosOtros.models import InsumosOtros
 
 """ Genérico para todos """
 class CompraForm(forms.ModelForm):
+    almacen = forms.ModelChoiceField(
+        queryset=Almacen.objects.all(),
+        required=False,
+        label="Almacen para su ubicación",
+        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
+    )
+    
     class Meta:
         model = Adquisicion
-        fields = ['fecha_compra', 'importada', 'factura']
+        fields = ['fecha_compra', 'importada', 'factura', 'almacen']
         widgets = {
             'fecha_compra': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'importada': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -59,12 +66,6 @@ class MateriaPrimaForm(forms.Form):
         min_value=0.01,
         label="Cantidad adquirida",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
-    almacen = forms.ModelChoiceField(
-        queryset=Almacen.objects.all(),
-        required=False,
-        label="Almacen para su ubicación",
-        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
     )
     
     # Campos para nueva materia prima
@@ -190,12 +191,12 @@ class EnvasesForm(forms.Form):
         label="Cantidad adquirida",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    almacen = forms.ModelChoiceField(
+    """ almacen = forms.ModelChoiceField(
         queryset=Almacen.objects.all(),
         required=False,
         label="Almacen para su ubicación",
         widget=forms.Select(attrs={'class': 'form-select almacen-select'})
-    )
+    ) """
     
     # Campos para nuevo envase
     tipo_envase_embalaje = forms.ModelChoiceField(
@@ -282,12 +283,12 @@ class InsumosForm(forms.Form):
         label="Cantidad adquirida",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    almacen = forms.ModelChoiceField(
+    """ almacen = forms.ModelChoiceField(
         queryset=Almacen.objects.all(),
         required=False,
         label="Almacen para su ubicación",
         widget=forms.Select(attrs={'class': 'form-select almacen-select'})
-    )
+    ) """
     
     # Campos para nuevo insumo
 

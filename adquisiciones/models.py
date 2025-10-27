@@ -40,6 +40,12 @@ class Adquisicion(models.Model):
         verbose_name="Tipo de adquisición",
         null=False, default="mp", max_length=10,
     )
+    almacen = models.ForeignKey(
+        Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        null=True,
+        verbose_name="Almacén donde se ubicará la materia prima",
+        related_name='detalles_adquisicion'
+    )
     creado_en = models.DateTimeField(auto_now_add=True, null=True)
 
     registrada = models.BooleanField(
@@ -79,12 +85,7 @@ class DetallesAdquisicion(models.Model):
         verbose_name="Materia prima adquirida"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
-    almacen = models.ForeignKey(
-        Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
-        null=True,
-        verbose_name="Almacén donde se ubicará la materia prima",
-        related_name='detalles_adquisicion'
-    )
+    #El almacén debe ser para la adquisición. No para cada detalle de adquisicion. 
     recibida = models.BooleanField(
         verbose_name="Recibida en almacén",
         null=False, default=False

@@ -6,6 +6,9 @@
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de adquisiciones de insumos</h4>
+                    <a href="{% url 'nueva_compra_insumo' %}" class="btn btn-success">Registrar nueva adquisición</a>
+                    <br>
+                    <br>
                     {% if messages %}
                         <script>
                             {% for message in messages %}
@@ -49,7 +52,7 @@
                         </tr>
                         </tfoot>
                     </table>
-                    <a href="{% url 'nueva_compra_insumo' %}" class="btn btn-success">Crear nueva adquisición de insumos</a>
+                    <a href="{% url 'nueva_compra_insumo' %}" class="btn btn-success">Registrar nueva adquisición</a>
                 </div>
             </div>
         </div>

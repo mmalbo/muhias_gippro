@@ -1,6 +1,7 @@
 from django import forms
 from .models import Almacen
 from django.apps import apps
+from usuario.models import CustomUser
 
 class AlmacenForm(forms.ModelForm):
     materias_primas = forms.ModelMultipleChoiceField(
@@ -9,6 +10,12 @@ class AlmacenForm(forms.ModelForm):
         required=False,
         label='Materias Primas'
     )
+
+    """ responsable = forms.ModelChoiceField(
+        queryset=CustomUser.objects.filter(groups_name__in = ["Almaceneros"]),
+        required=False,
+        label='Responsable Almacén'
+    ) """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,6 +29,7 @@ class AlmacenForm(forms.ModelForm):
             'ubicacion',
             'propio',
             'materias_primas',
+            'responsable',
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
@@ -32,4 +40,5 @@ class AlmacenForm(forms.ModelForm):
             'nombre': 'Nombre:',
             'ubicacion': 'Ubicación:',
             'propio': 'Propio:',
+            'responsable': 'Responsable',
         }

@@ -9,24 +9,36 @@ from InsumosOtros.models import InsumosOtros as Insu
 from usuario.models import CustomUser
 
 class Transportista(ModeloBase):
-    responsable_CI = models.CharField(
+    cI = models.CharField(
         max_length=11,
         verbose_name="Carnet de identidad",
         null=True, blank=True,
     )
 
-    responsable_Nombre = models.CharField(
+    nombre = models.CharField(
         max_length=200, null=True,
         verbose_name='Nombre y apellidos',
     )
 
-    responsable_Cargo = models.CharField(
+    cargo = models.CharField(
         max_length=200, null=False,
         verbose_name="Responsabilidad(cargo)"
     )
 
+
 # Esta es la clase que registra los movimientos de almacén y guarda todos los datos para generar el vale correspondiente
 class Vale_Movimiento_Almacen(ModeloBase):
+    
+    VALE_TYPES = (('factura','Factura'),
+                      ('transferencia','Transferencia'),
+                      ('ajuste','Ajuste de inventario'),
+                      ('recepcion','Recepción'),
+                      ('devolucion','Vale de devolución'),
+                      ('solicitud','Solicitud'),
+                      ('produccion','Producción terminada'),
+                      ('conduce','Conduce'),
+    )
+    tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='Recepción', verbose_name = "Tipo de movimiento")
     consecutivo = models.IntegerField(null=False, verbose_name="Código del vale")
     # Revisar aquí hay una inconsistencia, si se borra el almacén esteatributo dice que no hace nada, pero no puede ser nulo.
     almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen_origen", null=False, blank=False,)
@@ -113,6 +125,7 @@ class Movimiento_EE(ModeloBase):
         verbose_name="Vale asociado a este movimiento",
         null=False, blank=False, related_name="movimientos_e")
     cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")    
+    #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '
@@ -128,6 +141,7 @@ class Movimiento_Ins(ModeloBase):
         verbose_name="Vale asociado a este movimiento",
         null=False, blank=False, related_name="movimientos_i")
     cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
+    #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '

@@ -3,9 +3,9 @@
     <div class="wrapper">
         <div class="content-page">
             <div class="container-fluid">
-
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Lista de Adquisiciones de Materia Prima</h4>
+                    <a href="{% url 'nueva_materia_prima_adquisicion' %}" class="btn btn-primary">Agregar Nueva</a>
                     {% if messages %}
                         <script>
                             {% for message in messages %}

@@ -1,5 +1,6 @@
 from django.db import models
 from bases.bases.models import ModeloBase
+from usuario.models import CustomUser
 
 class Almacen(ModeloBase):
     nombre = models.CharField(
@@ -18,6 +19,8 @@ class Almacen(ModeloBase):
         default=False,
         verbose_name="Propio",
     )
+
+    responsable = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, verbose_name="Responsable de almacén", null=True, blank=True)
 
     class Meta:
         verbose_name = "Almacen"
