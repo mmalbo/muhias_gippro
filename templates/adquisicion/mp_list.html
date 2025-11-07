@@ -23,7 +23,8 @@
                         <thead>
                         <tr class="ligth">
                             <th style="width: 50%">Fecha</th>
-                            <th style="width: 25%">cantidad_productos</th>
+                            <th style="width: 25%">Cantidad productos</th>
+                            <th style="width: 25%">Registrada</th>
                             <th style="width: 25%">Acciones</th>
                         </tr>
                         </thead>
@@ -31,11 +32,12 @@
                         {% for ad in adquisiciones %}
                             <tr>
                                 <td>{{ ad.fecha_compra }}</td>
-                                <td>{{ ad.num_ad }}</td>
+                                <td>{{ ad.num_ad }}</td>                                
+                                <td>{% if ad.registrada %} Si {% else %} No {% endif%}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'detalles_mp_list' ad.id %}" title="Ver detalles"
-                                           class="btn far fa-edit"></a>
+                                           class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
                             </tr>
@@ -44,7 +46,8 @@
                         <tfoot>
                         <tr>
                             <th style="width: 50%">Fecha</th>
-                            <th style="width: 25%">cantidad_productos</th>
+                            <th style="width: 25%">Cantidad productos</th>
+                            <th style="width: 25%">Registrada</th>
                             <th style="width: 25%">Acciones</th>
                         </tr>
                         </tfoot>

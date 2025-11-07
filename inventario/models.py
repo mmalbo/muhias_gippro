@@ -40,7 +40,6 @@ class Inv_Envase(ModeloBase):
     def __str__(self):
         return f'{self.envase.codigo_envase} en {self.almacen.nombre}'
 
-
 class Inv_Insumos(ModeloBase):
     insumos = models.ForeignKey(
         InsumosOtros, on_delete=models.DO_NOTHING,

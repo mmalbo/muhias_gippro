@@ -5,19 +5,27 @@ from django.core.files.storage import FileSystemStorage
 from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
+<<<<<<< Updated upstream
 from django.http import JsonResponse
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
+=======
+from django.http import JsonResponse, FileResponse
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.utils.decorators import method_decorator
+from django.utils import timezone
+>>>>>>> Stashed changes
 import datetime
 import json
-# formtools.wizard.views import SessionWizardView
+
 from collections import OrderedDict
 from .models import Produccion
 from materia_prima.models import MateriaPrima
 from inventario.models import Inv_Mat_Prima
 from nomencladores.almacen.models import Almacen
-from .forms import ProduccionForm, MateriaPrimaForm
+from .forms import ProduccionForm, MateriaPrimaForm, SubirPruebasQuimicasForm, CancelarProduccionForm
 
 class ProduccionListView(ListView):
     model = Produccion
@@ -62,13 +70,13 @@ class CrearProduccionView(View):
         """Guardar solo los valores primitivos en sesión"""
         produccion_form = ProduccionForm(request.POST)
         if produccion_form.is_valid():
-            # Extraer solo datos primitivos para la sesión
+            # Extraer solo datos primitivos para la sesión'pruebas_quimicas': request.POST.get('pruebas_quimicas'),
             session_data = {
                 'lote': request.POST.get('lote'),
                 'nombre_producto': request.POST.get('nombre_producto'),
                 'cantidad_estimada': request.POST.get('cantidad_estimada'),
                 'costo': request.POST.get('costo'),
-                'pruebas_quimicas': request.POST.get('pruebas_quimicas'),
+                'prod_result': request.POST.get('prod_result'),
                 'planta_id': request.POST.get('planta'),  # Guardar el ID como string
             }
             
@@ -114,6 +122,11 @@ class CrearProduccionView(View):
             # Obtener la instancia de Planta
             from .models import Planta
             planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
+
+            if produccion_data['prod_result']: 
+                product=True
+            else:
+                product=False
             
             # Guardar producción
             produccion = Produccion.objects.create(
@@ -121,9 +134,9 @@ class CrearProduccionView(View):
                 nombre_producto=produccion_data['nombre_producto'],
                 cantidad_estimada=produccion_data['cantidad_estimada'],
                 costo=produccion_data['costo'],
-                pruebas_quimicas=produccion_data.get('pruebas_quimicas', ''),
+                prod_result=product,
                 planta=planta_instance,
-                estado='pendiente'
+                estado='Planificada'
             )
             
             # Guardar materias primas
@@ -196,7 +209,11 @@ def iniciar_produccion(request, pk):
     """View para iniciar una producción específica"""
     produccion = get_object_or_404(Produccion, pk=pk)
     
+<<<<<<< Updated upstream
     if produccion.estado == 'pendiente':
+=======
+    if produccion.estado == 'Planificada':
+>>>>>>> Stashed changes
         produccion.estado = 'En proceso'
         produccion.save()
         messages.success(request, f'✅ Producción {produccion.lote} iniciada correctamente')
@@ -205,7 +222,11 @@ def iniciar_produccion(request, pk):
     
     return redirect('produccion_list')
 #Este dió error
+<<<<<<< Updated upstream
 class CambiarEstadoProduccionView(View):
+=======
+"""class CambiarEstadoProduccionView(View):
+>>>>>>> Stashed changes
     def post(self, request, pk):
         produccion_p = get_object_or_404(Produccion, pk=pk)
         nuevo_estado = request.POST.get('estado')
@@ -226,7 +247,11 @@ class CambiarEstadoProduccionView(View):
         
         return redirect('produccion_list')
 
+<<<<<<< Updated upstream
 """ class ProduccionUpdateView(UpdateView):
+=======
+class ProduccionUpdateView(UpdateView):
+>>>>>>> Stashed changes
     model = Produccion
     form_class = ProduccionForm
     template_name = 'produccion/form.html'
@@ -256,7 +281,127 @@ def concluir_produccion(request, pk):
                 messages.error(request, '❌ La cantidad debe ser un número válido')
         else:
             messages.error(request, '❌ Debe especificar la cantidad obtenida')
+<<<<<<< Updated upstream
     
     return render(request, 'produccion/concluir_produccion.html', {
+=======
+    
+    return render(request, 'produccion/concluir_produccion.html', {
+        'produccion': produccion
+    })
+
+def subir_pruebas_quimicas(request, pk):
+    """View para subir archivo de pruebas químicas"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    if request.method == 'POST':
+        form = SubirPruebasQuimicasForm(request.POST, request.FILES, instance=produccion)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'✅ Archivo de pruebas químicas subido correctamente para {produccion.lote}')
+            produccion.estado = 'Evaluada'
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'mensaje': 'Archivo subido correctamente',
+                    'nombre_archivo': produccion.nombre_archivo_pruebas()
+                })
+            
+            return redirect('produccion_list')
+        else:
+            messages.error(request, '❌ Error al subir el archivo')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': form.errors
+                })
+    else:
+        form = SubirPruebasQuimicasForm(instance=produccion)
+    
+    return render(request, 'produccion/subir_pruebas.html', {
+        'produccion': produccion,
+        'form': form
+    })
+
+def descargar_pruebas_quimicas(request, pk):
+    """View para descargar el archivo de pruebas químicas"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    if not produccion.pruebas_quimicas:
+        messages.error(request, 'No hay archivo de pruebas químicas para descargar')
+        return redirect('produccion_list')
+    
+    # Servir el archivo para descarga
+    response = FileResponse(produccion.pruebas_quimicas)
+    response['Content-Disposition'] = f'attachment; filename="{produccion.nombre_archivo_pruebas()}"'
+    return response
+
+def eliminar_pruebas_quimicas(request, pk):
+    """View para eliminar el archivo de pruebas químicas"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    if produccion.pruebas_quimicas:
+        # Eliminar el archivo físico del sistema de archivos
+        if os.path.isfile(produccion.pruebas_quimicas.path):
+            os.remove(produccion.pruebas_quimicas.path)
+        
+        # Limpiar el campo en la base de datos
+        produccion.pruebas_quimicas.delete(save=False)
+        produccion.pruebas_quimicas = None
+        produccion.save()
+        
+        messages.success(request, f'✅ Archivo de pruebas químicas eliminado para {produccion.lote}')
+    else:
+        messages.warning(request, 'No hay archivo para eliminar')
+    
+    return redirect('produccion_list')
+
+def cancelar_produccion(request, pk):
+    """View para cancelar una producción con observaciones"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    # Verificar si puede ser cancelada
+    if not produccion.puede_ser_cancelada():
+        messages.error(request, f'❌ No se puede cancelar la producción {produccion.lote} porque ya está {produccion.get_estado_display().lower()}')
+        return redirect('produccion_list')
+    
+    if request.method == 'POST':
+        form = CancelarProduccionForm(request.POST, produccion=produccion)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'✅ Producción {produccion.lote} cancelada correctamente')
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'mensaje': 'Producción cancelada correctamente',
+                    'nuevo_estado': produccion.estado
+                })
+            
+            return redirect('produccion_list')
+        else:
+            messages.error(request, '❌ Error al cancelar la producción')
+    else:
+        form = CancelarProduccionForm(produccion=produccion)
+    
+    return render(request, 'produccion/cancelar_produccion.html', {
+        'produccion': produccion,
+        'form': form
+    })
+
+# View para ver detalles de cancelación
+def detalle_cancelacion(request, pk):
+    """View para ver los detalles de una producción cancelada"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    if produccion.estado != 'Cancelada':
+        messages.warning(request, 'Esta producción no está cancelada')
+        return redirect('produccion_list')
+    
+    return render(request, 'produccion/detalle_cancelacion.html', {
+>>>>>>> Stashed changes
         'produccion': produccion
     })

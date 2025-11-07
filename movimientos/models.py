@@ -9,27 +9,38 @@ from InsumosOtros.models import InsumosOtros as Insu
 from usuario.models import CustomUser
 
 class Transportista(ModeloBase):
-    responsable_CI = models.CharField(
+    cI = models.CharField(
         max_length=11,
         verbose_name="Carnet de identidad",
         null=True, blank=True,
     )
 
-    responsable_Nombre = models.CharField(
+    nombre = models.CharField(
         max_length=200, null=True,
         verbose_name='Nombre y apellidos',
     )
 
-    responsable_Cargo = models.CharField(
+    cargo = models.CharField(
         max_length=200, null=False,
         verbose_name="Responsabilidad(cargo)"
     )
 
 # Esta es la clase que registra los movimientos de almacén y guarda todos los datos para generar el vale correspondiente
 class Vale_Movimiento_Almacen(ModeloBase):
+    
+    VALE_TYPES = (('factura','Factura'),
+                      ('transferencia','Transferencia'),
+                      ('ajuste','Ajuste de inventario'),
+                      ('recepcion','Recepción'),
+                      ('devolucion','Vale de devolución'),
+                      ('solicitud','Solicitud'),
+                      ('produccion','Producción terminada'),
+                      ('conduce','Conduce'),
+    )
+    tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='Recepción', verbose_name = "Tipo de movimiento")
     consecutivo = models.IntegerField(null=False, verbose_name="Código del vale")
     # Revisar aquí hay una inconsistencia, si se borra el almacén esteatributo dice que no hace nada, pero no puede ser nulo.
-    almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen_origen", null=False, blank=False,)
+    almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen_origen", null=True, blank=False,)
     fecha_movimiento = models.DateField(auto_now=True, null=False,verbose_name="Fecha de solicitud")
     suministrador = models.ForeignKey(CustomUser, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Suministrador")
     orden_No = models.IntegerField(blank=True, null=True, verbose_name="Número de orden")
@@ -68,7 +79,6 @@ class Vale_Salida_Almacen_Produccion(ModeloBase):
         verbose_name="Movimiento"
     )
 
-
 class Vale_Salida_Almacen_Envasado(ModeloBase):
     fecha_solicitud = models.DateField(
         auto_now=True, null=True,
@@ -95,7 +105,7 @@ class Movimiento_MP(ModeloBase):
     )
     vale = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
         verbose_name="Vale asociado a este movimiento",
-        null=False, blank=False, related_name="movimientos")
+        null=True, blank=False, related_name="movimientos")
     cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
     #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
@@ -106,13 +116,13 @@ class Movimiento_MP(ModeloBase):
 #Relación mucho a mucho de vale con envase y embalaje 
 class Movimiento_EE(ModeloBase):
     envase_embalaje = models.ForeignKey(EnvaseEmbalaje, on_delete=models.PROTECT,
-        verbose_name="Envase o embalaje",
-        null=False, blank=False,
+        verbose_name="Envase o embalaje", null=True, blank=False,
     )
     vale_e = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
         verbose_name="Vale asociado a este movimiento",
-        null=False, blank=False, related_name="movimientos_e")
+        null=True, blank=False, related_name="movimientos_e")
     cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")    
+    #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '
@@ -122,12 +132,13 @@ class Movimiento_EE(ModeloBase):
 class Movimiento_Ins(ModeloBase):
     insumo = models.ForeignKey(Insu, on_delete=models.PROTECT,
         verbose_name="Insumos",
-        null=False, blank=False,
+        null=True, blank=False,
     )
     vale_e = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
         verbose_name="Vale asociado a este movimiento",
-        null=False, blank=False, related_name="movimientos_i")
+        null=True, blank=False, related_name="movimientos_i")
     cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
+    #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '

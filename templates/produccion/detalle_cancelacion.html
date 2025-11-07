@@ -1,0 +1,57 @@
+<!-- templates/produccion/detalle_cancelacion.html -->
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-ban"></i>
+                        Detalles de Cancelación - {{ produccion.lote }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-circle"></i> Producción Cancelada</h5>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Lote:</strong> {{ produccion.lote }}</p>
+                            <p><strong>Producto:</strong> {{ produccion.nombre_producto }}</p>
+                            <p><strong>Cantidad Estimada:</strong> {{ produccion.cantidad_estimada }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Fecha de Cancelación:</strong> 
+                                {{ produccion.fecha_cancelacion|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Planta:</strong> {{ produccion.planta.nombre }}</p>
+                            <p><strong>Costo Estimado:</strong> ${{ produccion.costo }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6><i class="fas fa-clipboard-list"></i> Observaciones de Cancelación:</h6>
+                        <div class="card">
+                            <div class="card-body bg-light">
+                                {% if produccion.observaciones_cancelacion %}
+                                    {{ produccion.observaciones_cancelacion|linebreaks }}
+                                {% else %}
+                                    <p class="text-muted fst-italic">No se registraron observaciones.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'produccion_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver al Listado
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

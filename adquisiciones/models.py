@@ -40,6 +40,12 @@ class Adquisicion(models.Model):
         verbose_name="Tipo de adquisición",
         null=False, default="mp", max_length=10,
     )
+    almacen = models.ForeignKey(
+        Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        null=True,
+        verbose_name="Almacén donde se ubicará los elementos adquiridos",
+        related_name='adquisiciones'
+    )
     creado_en = models.DateTimeField(auto_now_add=True, null=True)
 
     registrada = models.BooleanField(
@@ -79,12 +85,7 @@ class DetallesAdquisicion(models.Model):
         verbose_name="Materia prima adquirida"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
-    almacen = models.ForeignKey(
-        Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
-        null=True,
-        verbose_name="Almacén donde se ubicará la materia prima",
-        related_name='detalles_adquisicion'
-    )
+    #El almacén debe ser para la adquisición. No para cada detalle de adquisicion. 
     recibida = models.BooleanField(
         verbose_name="Recibida en almacén",
         null=False, default=False
@@ -94,17 +95,17 @@ class DetallesAdquisicion(models.Model):
         return f"{self.materia_prima.nombre} - {self.adquisicion.fecha_compra}"
     
 class DetallesAdquisicionEnvase(models.Model):
-    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles_envases')
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles_envases', null=True)
     envase_embalaje = models.ForeignKey(
         EnvaseEmbalaje, null=True, on_delete=models.CASCADE,  # Cambiado a PROTECT
         verbose_name="Envase o embalaje adquirida"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
-    almacen = models.ForeignKey(
+    """ almacen = models.ForeignKey(
         Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
         null=True,
         verbose_name="Almacén donde se ubicará el envase o producto para el embalaje"
-    )
+    ) """
     recibida = models.BooleanField(
         verbose_name="Recibida en almacén",
         null=False, default=False
@@ -114,17 +115,17 @@ class DetallesAdquisicionEnvase(models.Model):
         return f"{self.envase_embalaje.codigo_envase} - {self.adquisicion.fecha_compra}"
     
 class DetallesAdquisicionInsumo(models.Model):
-    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles_insumos')
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, related_name='detalles_insumos', null=True)
     insumo = models.ForeignKey(
-        InsumosOtros, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        InsumosOtros, on_delete=models.CASCADE, null=True, # Cambiado a PROTECT
         verbose_name="Insumo adquirido"
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
-    almacen = models.ForeignKey(
+    """ almacen = models.ForeignKey(
         Almacen, on_delete=models.CASCADE,  # Cambiado a PROTECT
         null=True,
         verbose_name="Almacén donde se ubicará el insumo"
-    )
+    ) """
     recibida = models.BooleanField(
         verbose_name="Recibida en almacén",
         null=False, default=False
