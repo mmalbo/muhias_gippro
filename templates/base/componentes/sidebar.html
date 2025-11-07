@@ -144,11 +144,6 @@
                                     </li>
                                 </ul>
                             </li>
-                           <li class=" "style="width: 300px">
-                                <a href="{% url 'tipo_materia_prima:lista' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-3">Tipos de materias primas</span>
-                                </a> 
-                            </li>
                         </ul>
                     </li>
                 {% endif %}
@@ -172,61 +167,13 @@
                         <ul id="adquisicionE" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             
                             <li class=" ">
-                                <a href="{% url 'compras_mp_list' %}"><span class="ml-2">Materia prima</span></a>
-                                    <!--
-                                    <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                                    <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                href="#materia_prima" class="collapsed" data-toggle="collapse" aria-expanded="false"
-                                <ul id="materia_prima" class="iq-submenu collapse" data-parent="#registrar">
-                                    <li class="">
-                                        <a href="{% url 'nueva_compra' %}">
-                                            <i class="las la-minus"></i><span>Nueva adquisición</span>
-                                        </a>
-                                    </li>
-                                    <li class=""> 
-                                        <a href="{% url 'compras_mp_list' %}">
-                                            <i class="las la-minus"></i><span>Listar</span>
-                                        </a>
-                                    </li>                                    
-                                </ul>-->
+                                <a href="{% url 'compras_mp_list' %}"><span class="ml-2">Materia prima</span></a>                                    
                             </li>
                             <li class=" ">
-                                <a href="{% url 'compras_env_list' %}"><span class="ml-2">Envase o embalajes</span></a>
-                                <!--
-                                    <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                                    <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                href="#envase_embalaje" class="collapsed" data-toggle="collapse"
-                                   aria-expanded="false"
-                                <ul id="envase_embalaje" class="iq-submenu collapse" data-parent="#registrar">
-                                    <li class="">
-                                        <a href="{% url 'nueva_compra_envase' %}">
-                                            <i class="las la-minus"></i><span>Nueva adquisición</span>
-                                        </a>
-                                    </li>
-                                    <li class="">
-                                        <a >
-                                            <i class="las la-minus"></i><span>Listar</span>
-                                        </a>
-                                    </li>
-                                </ul>-->
+                                <a href="{% url 'compras_env_list' %}"><span class="ml-2">Envase o embalajes</span></a>                                
                             </li>
                             <li class=" ">
-                                <a href="{% url 'compras_ins_list' %}"> <span class="ml-2">Insumos y otros</span></a><!--
-                                    <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                                    <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                href="#insumos" class="collapsed" data-toggle="collapse" aria-expanded="false"
-                                <ul id="insumos" class="iq-submenu collapse" data-parent="#registrar">
-                                    <li class="">
-                                        <a href="{% url 'nueva_compra_insumo' %}">
-                                            <i class="las la-minus"></i><span>Nueva adquisición</span>
-                                        </a>
-                                    </li>
-                                    <li class="">
-                                        <a >
-                                            <i class="las la-minus"></i><span>Listar</span>
-                                        </a>
-                                    </li>
-                                </ul>-->
+                                <a href="{% url 'compras_ins_list' %}"> <span class="ml-2">Insumos y otros</span></a>
                             </li>
                         </ul>
                     </li>
@@ -276,6 +223,31 @@
                                     <span class="ml-2">Productos</span>
                                 </a>
                             </li>
+                        </ul>
+                    </li>
+                {% endif %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                    <li class=" ">
+                        <a href="#mov" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                            <svg class="svg-icon" id="p-dash14" width="20" height="20"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span class="ml-2">Movimientos</span>
+                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                        </a>
+                        <ul id="mov" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">                            
+                            <li class=" ">
+                                <a href="{% url 'producto_list' %}" class="collapsed" aria-expanded="false">
+                                    <span class="ml-2">Recepciones pendientes</span>
+                                </a>
+                            </li>
                             <li class=" ">
                                 <a href="{% url 'movimiento_list' %}" class="collapsed" aria-expanded="false">
                                     <span class="ml-2">Movimientos</span>
@@ -284,6 +256,7 @@
                         </ul>
                     </li>
                 {% endif %}
+
 
                 {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                     <li class=" ">

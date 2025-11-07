@@ -24,10 +24,8 @@
                         <tr class="ligth">
                             <th>Código</th>
                             <th>Nombre</th>
-                            <th>Almacén</th>
                             <th>Cantidad Almacenada</th>
                             <th>Es final</th>
-                            {#                            <th>Almacenes</th>#}
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -36,7 +34,6 @@
                             <tr>
                                 <td>{{ producto_final.codigo_producto }}</td>
                                 <td>{{ producto_final.nombre_comercial }}</td>
-                                <td>{{ producto_final.almacen }}</td>
                                 <td>{{ producto_final.cantidad_alm }}</td>
                                 {% if producto_final.product_final %}
                                      <td>Si</td>
@@ -64,16 +61,14 @@
 
                             <th>Código</th>
                             <th>Nombre</th>
-                            <th>Almacén</th>
                             <th>Cantidad Almacenada</th>
                             <th>Es final</th>
-                            {#                            <th>Almacenes</th>#}
                             <th>Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
 
-                    <a href="{% url 'crear_producto' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+                    <a href="{% url 'crear_producto' %}" class="btn btn-success">Nueva recepción en almacen</a>
                     <a href="{% url 'importarProducto' %}" class="btn btn-success">
                         Importar excel
                     </a>

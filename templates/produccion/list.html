@@ -29,6 +29,7 @@
                                 <td>{{ produccion.cantidad_estimada }}</td>
                                 <td>{{ produccion.costo }}</td>
                                 <td>{{ produccion.planta }}</td>
+<<<<<<< Updated upstream
                                 <td>{{ produccion.estado }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -53,6 +54,65 @@
                                         <a href="#"
                                            title="Cancelar producción"
                                            class="btn far fa-trash-alt" style="color: #ed1010;"></a>
+=======
+                                <td><span class="badge
+                                    {% if produccion.estado == 'Planificada' %}bg-warning
+                                    {% elif produccion.estado == 'En Proceso' %}bg-primary
+                                    {% elif produccion.estado == 'Terminada' %}bg-success
+                                    {% elif produccion.estado == 'Evaluada' %}bg-success
+                                    {% elif produccion.estado == 'Cancelada' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ produccion.estado }}
+                                </span></td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <!--Iniciar producción--> <!-- bi bi-play-btnacción de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->
+                                        {% if produccion.estado == 'Planificada' %}
+                                            <a href="{% url 'iniciar_produccion' produccion.id %}"
+                                                title="Iniciar producción" class="btn fas fa-play" fill="currentColor">
+                                                
+                                            </a>
+                                        {% endif %}
+                                        <!--Terminada producción--> <!--formulario confirmando la cantidad del productobi bi-check2-square-->
+                                        {% if produccion.estado == 'En proceso' %}    
+                                            <a href="{% url 'concluir_produccion' produccion.id %}"
+                                                title="Cierre de producción" class="btn fas fa-check"></a>
+                                        {% endif %}
+                                        <!--Registrar pruebas químicas--> <!--formulario para subir doc de PQ y se cambia 
+                                        el estado a disponible para la venta o indicar ajuste de inventario-->
+                                        {% if produccion.estado == 'Terminada' %}
+                                            {% if produccion.pruebas_quimicas %}    
+                                                <a href="{% url 'descargar_pruebas' produccion.id %}"
+                                                    class="btn btn-info btn-sm"
+                                                    title="Gestionar pruebas químicas">
+                                                    <i class="fas fa-vial"></i>
+                                                    Ver Pruebas
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'subir_pruebas' produccion.id %}"
+                                                    class="btn btn-info btn-sm"
+                                                    title="Gestionar pruebas químicas">
+                                                    <i class="fas fa-vial"></i>
+                                                    Subir Pruebas
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                        <!--Cancelar producción--> <!--formulario para indicar la causa ¿Pregunta que
+                                         hago con la materia prima o el semiproducto?|split -->
+                                        {% if produccion.estado == 'Planificada' or produccion.estado == 'En proceso'%}
+                                            <a href="{% url 'cancelar_produccion' produccion.id %}" 
+                                                class="btn btn-danger btn-sm"
+                                                title="Cancelar producción">
+                                                <i class="fas fa-ban"></i>
+                                            </a>
+                                        {% elif produccion.estado == 'Cancelada' %}
+                                            <a href="{% url 'detalle_cancelacion' produccion.id %}"
+                                                class="btn btn-outline-danger btn-sm"
+                                                title="Ver detalles de cancelación">
+                                                <i class="fas fa-info-circle"></i> Ver Cancelación
+                                            </a>
+                                        {% endif %}
+>>>>>>> Stashed changes
                                     </div>
                                 </td>
                             </tr>

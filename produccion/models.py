@@ -28,13 +28,29 @@ class Produccion(ModeloBase):
     cantidad_real = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Cantidad real",)
 
     pruebas_quimicas = models.FileField(upload_to=generate_unique_filename, null=True, blank=True, verbose_name="Pruebas químicas",
+<<<<<<< Updated upstream
         validators=[FileExtensionValidator(allowed_extensions=['pdf'])])
+=======
+        validators=[FileExtensionValidator(allowed_extensions=['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'])])
+    
+    prod_conform = models.BooleanField(null=True, blank=True, default=False, verbose_name="Producto Conforme",)
+>>>>>>> Stashed changes
 
     costo = models.FloatField(null=False, blank=False, verbose_name="Costo",)
 
     planta = models.ForeignKey(Planta, on_delete=models.DO_NOTHING, null=False, verbose_name="Planta")
 
     estado = models.CharField(verbose_name='Estado', max_length=50, choices=CHOICE_ESTADO, blank=False, null=False )
+<<<<<<< Updated upstream
+=======
+
+    observaciones_cancelacion = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Observaciones de Cancelación/Detención"
+    )
+    fecha_cancelacion = models.DateTimeField(null=True, blank=True)
+>>>>>>> Stashed changes
 
     def __str__(self):
         return f"Lote {self.lote} - {self.nombre_producto}"
@@ -42,6 +58,22 @@ class Produccion(ModeloBase):
     @property
     def total_materias_primas(self):
         return self.prod_inv_mp.count()
+
+    def puede_ser_cancelada(self):
+        """Determina si la producción puede ser cancelada"""
+        return self.estado in ['Planificada', 'En proceso']
+
+    def nombre_archivo_pruebas(self):
+        """Retorna el nombre del archivo sin la ruta"""
+        if self.pruebas_quimicas:
+            return os.path.basename(self.pruebas_quimicas.name)
+        return None
+    
+    def extension_archivo(self):
+        """Retorna la extensión del archivo"""
+        if self.pruebas_quimicas:
+            return os.path.splitext(self.pruebas_quimicas.name)[1].lower()
+        return None
 
 class Prod_Inv_MP(ModeloBase):
     lote_prod = models.ForeignKey(

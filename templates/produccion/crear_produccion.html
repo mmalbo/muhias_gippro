@@ -2,54 +2,85 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block contenido %}
-<div class="form-container">
-    <h1>Registro de Nueva Producción</h1>
-    
-    <!-- Indicadores de pasos -->
-    <div class="step-indicators">
-        <div class="step-indicator active" data-step="1">Datos de Producción</div>
-        <div class="step-indicator" data-step="2">Materias Primas</div>
-    </div>
+{% block contenido %} <!---->
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+            <div class="container mt-4">
+                <div class="form-container">
+                    <h1>Registro de Nueva Producción</h1>
+        
+                    <!-- Indicadores de pasos -->
+                    <div class="step-indicators">
+                        <div class="step-indicator active" data-step="1">Datos de Producción</div>
+                        <div class="step-indicator" data-step="2">Materias Primas</div>
+                    </div>
 
-    <!-- Paso 1: Datos de producción -->
-    <div class="step active" id="step1">
-        <h2>Datos de la Producción</h2>
-        <form id="produccionForm">
-            {% csrf_token %}
+                    <!-- Paso 1: Datos de producción -->
+                    <div class="step active" id="step1">
+                        <h2>Datos de la Producción</h2>
+                        <form id="produccionForm">
+                        {% csrf_token %}
             
-            {% for field in produccion_form %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                <div class="error">{{ field.errors }}</div>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </form>
-        
-        <div class="navigation-buttons">
-            <button type="button" class="btn-secondary" disabled>Anterior</button>
-            <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
-        </div>
-    </div>
+                        <div class="form-row">
+                        
+                            <div class="col-md-3 mb-3">
+                                {{ produccion_form.lote.label_tag }}
+                                {{ produccion_form.lote }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ produccion_form.nombre_producto.label_tag }}
+                                {{ produccion_form.nombre_producto }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ produccion_form.prod_result.label_tag }}
+                                {{ produccion_form.prod_result }}
+                            </div>
 
-    <!-- Paso 2: Materias primas -->
-    <div class="step" id="step2">
-        <h2>Materias Primas Necesarias</h2>
+                        </div>
+                        <div class="form-row">
+                        
+                            <div class="col-md-3 mb-3">
+                                {{ produccion_form.cantidad_estimada.label_tag }}
+                                {{ produccion_form.cantidad_estimada }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ produccion_form.costo.label_tag }}
+                                {{ produccion_form.costo }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ produccion_form.planta.label_tag }}
+                                {{ produccion_form.planta }}
+                            </div>
+
+                        </div>
+
+                        </form>
         
-        <button type="button" class="add-btn" onclick="agregarMateriaPrima()">
-            + Agregar Materia Prima
-        </button>
+                        <div class="navigation-buttons">
+                            <button type="button" class="btn-secondary" disabled>Anterior</button>
+                            <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
+                        </div>
+                </div>
+
+                <!-- Paso 2: Materias primas -->
+                <div class="step" id="step2">
+                    <h2>Materias Primas Necesarias</h2>
         
-        <div id="materiasPrimasContainer">
-            <!-- Las materias primas se agregarán aquí dinámicamente -->
-        </div>
+                    <button type="button" class="add-btn" onclick="agregarMateriaPrima()">
+                        + Agregar Materia Prima
+                    </button>
         
-        <div class="navigation-buttons">
-            <button type="button" class="btn-secondary" onclick="prevStep(1)">Anterior</button>
-            <button type="button" class="btn-primary" onclick="enviarProduccion()">Finalizar Producción</button>
+                    <div id="materiasPrimasContainer">
+                        <!-- Las materias primas se agregarán aquí dinámicamente -->
+                    </div>
+        
+                    <div class="navigation-buttons">
+                        <button type="button" class="btn-secondary" onclick="prevStep(1)">Anterior</button>
+                        <button type="button" class="btn-primary" onclick="enviarProduccion()">Finalizar Producción</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

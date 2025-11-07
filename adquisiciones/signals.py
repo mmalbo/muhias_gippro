@@ -9,9 +9,16 @@ from utils.tasks import send_notification_email
 @receiver(post_save, sender=Adquisicion)
 def notify_adquisition_arrival(sender, instance, created, **kwargs):
     if created:  # Solo para nuevas adquisiciones
+        # Enviar notificación al almacenero responsable del almacén a donde va la adquisición
+        almacenero = instance.almacen.responsable
+        Notification.objects.create(
+                    user=almacenero,
+                    message=f"Nueva adquisición recibida: {instance}",
+                    link=f'/movimientos/recepcion/{instance.tipo_adquisicion}/{instance.id}/'  # Ir a página para realizar la entrada al almacén.  
+                )
         # Obtener grupos objetivo
-        target_groups = Group.objects.filter(name__in=["Almaceneros", "Presidencia-Admin"])
-        # Crear notificaciones para cada usuario en esos grupos
+        target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+        # Crear notificaciones para cada usuario en ese grupo
         for group in target_groups:
             for user in group.customuser_set.all():
                 # Notificación en base de datos

@@ -1,0 +1,70 @@
+<!-- templates/produccion/cancelar_produccion.html -->
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Cancelar Producción
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5><i class="fas fa-info-circle"></i> Confirmación Requerida</h5>
+                        <p class="mb-0">
+                            Está a punto de cancelar la producción. Esta acción no se puede deshacer.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Detalles de la Producción:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Lote:</strong> {{ produccion.lote }}</p>
+                                <p><strong>Producto:</strong> {{ produccion.nombre_producto }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Estado Actual:</strong> 
+                                    <span class="badge bg-warning">{{ produccion.get_estado_display }}</span>
+                                </p>
+                                <p><strong>Cantidad Estimada:</strong> {{ produccion.cantidad_estimada }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.observaciones.id_for_label }}" class="form-label">
+                                <strong>{{ form.observaciones.label }} *</strong>
+                            </label>
+                            {{ form.observaciones }}
+                            {% if form.observaciones.errors %}
+                            <div class="text-danger small">{{ form.observaciones.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                {{ form.observaciones.help_text }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'produccion_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-warning" 
+                                    onclick="return confirm('¿Está completamente seguro de cancelar esta producción?')">
+                                <i class="fas fa-ban"></i> Confirmar Cancelación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

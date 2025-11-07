@@ -126,7 +126,6 @@ class CompraWizard(SessionWizardView):
         
         # Calcular progreso
         step_index = list(form_list.keys()).index(self.steps.current)
-        
         context.update({
             'step_number': step_index + 1,
             'total_steps': len(form_list),
@@ -162,7 +161,8 @@ class CompraWizard(SessionWizardView):
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
                 factura=compra_data['factura'],
-                tipo_adquisicion='mp'
+                tipo_adquisicion='mp',
+                almacen=compra_data['almacen']
             )
             
             # Procesar materias primas
@@ -183,17 +183,11 @@ class CompraWizard(SessionWizardView):
                         ficha_tecnica=data['ficha_tecnica'],
                         hoja_seguridad=data['hoja_seguridad'],
                     )
-                print(f'Materia: {materia}')
-                print('A crear detalles')
                 DetallesAdquisicion.objects.create(
                     adquisicion=compra,
                     materia_prima=materia,
                     cantidad=data['cantidad'],
-                    almacen=data['almacen']
                 )
-                print('Creado detalle')
-                print(compra)
-                print(materia)
             # Limpiar almacenamiento
             self.storage.reset()
             return redirect('materia_prima:materia_prima_list')
@@ -355,7 +349,8 @@ class CompraEnvaseWizard(SessionWizardView):
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
                 factura=compra_data['factura'],
-                tipo_adquisicion='env'
+                tipo_adquisicion='env', 
+                almacen = compra_data['almacen']
             )
             
             # Procesar 
@@ -375,8 +370,7 @@ class CompraEnvaseWizard(SessionWizardView):
                 DetallesAdquisicionEnvase.objects.create(
                     adquisicion=compra,
                     envase_embalaje=envase,
-                    cantidad=data['cantidad'],
-                    almacen=data['almacen']
+                    cantidad=data['cantidad']
                 )
             
             # Limpiar almacenamiento
@@ -537,7 +531,8 @@ class CompraInsumoWizard(SessionWizardView):
                 fecha_compra=compra_data['fecha_compra'],
                 importada=compra_data['importada'],
                 factura=compra_data['factura'],
-                tipo_adquisicion='ins'
+                tipo_adquisicion='ins',
+                almacen = compra_data['almacen']
             )
             
             # Procesar insumos
@@ -557,8 +552,7 @@ class CompraInsumoWizard(SessionWizardView):
                 DetallesAdquisicionInsumo.objects.create(
                     adquisicion=compra,
                     insumo=insumo,
-                    cantidad=data['cantidad'],
-                    almacen=data['almacen']
+                    cantidad=data['cantidad']
                 )
             
             # Limpiar almacenamiento
@@ -607,7 +601,8 @@ def list_ins_adquisiciones(request, template_name="adquisicion/ins_list.html"):
 def list_detalles_mp_adquisicion(request, id, template_name="adquisicion/detalles_mp_list.html"):
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
-        detalles = DetallesAdquisicion.objects.filter(adquisicion=id).order_by('almacen')
+        detalles = DetallesAdquisicion.objects.filter(adquisicion=id)
+        #.order_by('almacen')
     else:
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
@@ -615,7 +610,8 @@ def list_detalles_mp_adquisicion(request, id, template_name="adquisicion/detalle
 def list_detalles_env_adquisicion(request, id, template_name="adquisicion/detalles_env_list.html"):
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
-        detalles = DetallesAdquisicionEnvase.objects.filter(adquisicion=id).order_by('almacen')
+        detalles = DetallesAdquisicionEnvase.objects.filter(adquisicion=id)
+        #.order_by('almacen')
     else:
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
@@ -623,7 +619,8 @@ def list_detalles_env_adquisicion(request, id, template_name="adquisicion/detall
 def list_detalles_ins_adquisicion(request, id, template_name="adquisicion/detalles_ins_list.html"):
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
-        detalles = DetallesAdquisicionInsumo.objects.filter(adquisicion=id).order_by('almacen')
+        detalles = DetallesAdquisicionInsumo.objects.filter(adquisicion=id)
+        #.order_by('almacen')
     else:
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
