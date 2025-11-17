@@ -1,25 +1,17 @@
 # urls.py
 from django.urls import path
-<<<<<<< Updated upstream
-from .views import ProduccionListView, ProduccionDeleteView, CrearProduccionView, get_materias_primas_data, CambiarEstadoProduccionView, iniciar_produccion,concluir_produccion
-=======
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionView, get_materias_primas_data,
                     iniciar_produccion, concluir_produccion, subir_pruebas_quimicas, descargar_pruebas_quimicas,
                     eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion )
->>>>>>> Stashed changes
 
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
     #path('<uuid:pk>/editar/', ProduccionUpdateView.as_view(), name='produccion_update'),
     path('<uuid:pk>/eliminar/', ProduccionDeleteView.as_view(), name='produccion_delete'),
 
-<<<<<<< Updated upstream
-    #Creación de nuevas producciones
-=======
     #CreaciÃ³n de nuevas producciones
->>>>>>> Stashed changes
     path('nueva/', CrearProduccionView.as_view(), name='crear_produccion'),
     path('api/materias-primas/', get_materias_primas_data, name='materias_primas_data'),
     
@@ -27,13 +19,6 @@ urlpatterns = [
     path('<uuid:pk>/iniciar/', iniciar_produccion, name='iniciar_produccion'),
     #path('<uuid:pk>/iniciar/', CambiarEstadoProduccionView.as_view(), name='cambiar_produccion'),
 
-<<<<<<< Updated upstream
-    #Concluir producción
-    path('produccion/<uuid:pk>/concluir/', concluir_produccion, name='concluir_produccion'),
-
-    #Concluir producción
-]
-=======
     #Concluir producciÃ³n
     path('produccion/<uuid:pk>/concluir/', concluir_produccion, name='concluir_produccion'),
 
@@ -50,4 +35,3 @@ urlpatterns = [
 # Para servir archivos en desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
->>>>>>> Stashed changes

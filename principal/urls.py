@@ -12,7 +12,7 @@ urlpatterns = [
 
     # Rutas para diferentes secciones de la aplicación
     path('almacen/', include('nomencladores.almacen.urls'), name='almacen'),
-    path('tipos_materia_prima/', include('materia_prima.tipo_materia_prima.urls'), name='tipos_materia_prima'),
+#    path('tipos_materia_prima/', include('materia_prima.tipo_materia_prima.urls'), name='tipos_materia_prima'),
     path('materia_prima/', include('materia_prima.urls'), name='materia_prima'),
     path('produccion/', include('produccion.urls'), name='produccion'),
     path('producto/', include('producto.urls'), name='producto'),

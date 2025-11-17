@@ -6,23 +6,104 @@ from materia_prima.models import MateriaPrima
 from nomencladores.planta.models import Planta
 from nomencladores.almacen.models import Almacen
 from .models import Produccion, Prod_Inv_MP
+from producto.models import Producto
+from envase_embalaje.formato.models import Formato
+
+class ProductoRapidoForm(forms.ModelForm):
+    """Form para crear producto rápido desde producción"""
+    class Meta:
+        model = Producto
+        fields = ['nombre_comercial']
+        widgets = {
+            'nombre_comercial': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del nuevo producto...'
+            }),            
+        }
 
 
 class ProduccionForm(forms.ModelForm):
     planta = forms.ModelChoiceField( queryset=Planta.objects.all(), 
                                     widget=forms.Select(attrs={'class': 'form-control'}), required=True)
+
+    # Campo para seleccionar producto existente
+    catalogo_producto = forms.ModelChoiceField(
+        queryset=Producto.objects.all(),
+        required=False,
+        label="Seleccionar Producto Existente",
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        help_text="Seleccione un producto del catálogo"
+    )
+
+    # Campo para crear nuevo producto
+    nuevo_producto_nombre = forms.CharField(
+        required=False,
+        max_length=200,
+        label="O Crear Nuevo Producto",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nombre del nuevo producto...'
+        }),
+        help_text="Si el producto no existe en el catálogo, ingrese el nombre aquí"
+    )
     
     class Meta:
         model = Produccion
-        fields = ['lote', 'nombre_producto', 'cantidad_estimada', 'costo', 'planta', 'prod_result']
+        fields = ['lote', 'cantidad_estimada', 'costo', 'planta', 'prod_result']
         widgets = {
             'lote': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre_producto': forms.TextInput(attrs={'class': 'form-control'}),
             'cantidad_estimada': forms.NumberInput(attrs={'class': 'form-control'}),
             'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'prod_result': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             #'planta': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Obtener formato a granel por defecto
+        formato_agranel = Formato.objects.filter(capacidad=0).first()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        catalogo_producto = cleaned_data.get('catalogo_producto')
+        nuevo_producto_nombre = cleaned_data.get('nuevo_producto_nombre')
+        
+        # Validar que se seleccione un producto existente o se cree uno nuevo
+        if not catalogo_producto and not nuevo_producto_nombre:
+            raise forms.ValidationError(
+                "Debe seleccionar un producto existente o ingresar el nombre de un nuevo producto"
+            )
+        
+        # Validar que no se hagan ambas cosas
+        if catalogo_producto and nuevo_producto_nombre:
+            raise forms.ValidationError(
+                "Solo puede seleccionar un producto existente O crear uno nuevo, no ambas opciones"
+            )
+        
+        # Validar que el nuevo producto no exista ya
+        if nuevo_producto_nombre:
+            if Producto.objects.filter(nombre_comercial__iexact=nuevo_producto_nombre.strip()).exists():
+                raise forms.ValidationError(
+                    f"El producto '{nuevo_producto_nombre}' ya existe en el catálogo. Por favor selecciónelo de la lista."
+                )
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        # Primero crear el producto si es necesario
+        nuevo_producto_nombre = self.cleaned_data.get('nuevo_producto_nombre')
+        if nuevo_producto_nombre:            
+            # Crear nuevo producto en el catálogo
+            catalogo_producto = Producto.objects.create(
+                nombre=nuevo_producto_nombre.strip(),
+                formato_default=Formato.objects.filter(capacidad=0).first()
+                #self.formato_agranel
+            )
+            self.instance.catalogo_producto = catalogo_producto
+        else:
+            self.instance.catalogo_producto = self.cleaned_data['catalogo_producto']
+        
+        return super().save(commit)
 
 class MateriaPrimaForm(forms.Form):
     materia_prima = forms.ModelChoiceField(

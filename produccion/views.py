@@ -5,18 +5,11 @@ from django.core.files.storage import FileSystemStorage
 from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
-<<<<<<< Updated upstream
-from django.http import JsonResponse
-from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from django.utils.decorators import method_decorator
-=======
 from django.http import JsonResponse, FileResponse
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 from django.utils import timezone
->>>>>>> Stashed changes
 import datetime
 import json
 
@@ -24,6 +17,8 @@ from collections import OrderedDict
 from .models import Produccion
 from materia_prima.models import MateriaPrima
 from inventario.models import Inv_Mat_Prima
+from producto.models import Producto
+from envase_embalaje.models import Formato
 from nomencladores.almacen.models import Almacen
 from .forms import ProduccionForm, MateriaPrimaForm, SubirPruebasQuimicasForm, CancelarProduccionForm
 
@@ -70,24 +65,65 @@ class CrearProduccionView(View):
         """Guardar solo los valores primitivos en sesión"""
         produccion_form = ProduccionForm(request.POST)
         if produccion_form.is_valid():
-            # Extraer solo datos primitivos para la sesión'pruebas_quimicas': request.POST.get('pruebas_quimicas'),
+            # Procesar producto (existente o nuevo)
+            catalogo_producto_id = self.procesar_producto(request)
+            if not catalogo_producto_id:
+                return JsonResponse({
+                    'success': False, 
+                    'errors': 'Error al procesar el producto'
+                })
+            
+            # Extraer solo datos primitivos para la sesión
             session_data = {
                 'lote': request.POST.get('lote'),
-                'nombre_producto': request.POST.get('nombre_producto'),
+                'catalogo_producto_id': str(catalogo_producto_id),  # Guardar como string
                 'cantidad_estimada': request.POST.get('cantidad_estimada'),
                 'costo': request.POST.get('costo'),
                 'prod_result': request.POST.get('prod_result'),
                 'planta_id': request.POST.get('planta'),  # Guardar el ID como string
-            }
-            
+            }            
             # Guardar en sesión
             request.session['produccion_data'] = session_data
             request.session.modified = True
-            print("Datos sesion 1: ", request.session['produccion_data'])
             return JsonResponse({'success': True, 'step': 2})
         else:
+            print("❌ Errores en formulario:", produccion_form.errors)
             return JsonResponse({'success': False, 'errors': produccion_form.errors})
-    
+
+    def procesar_producto(self, request):
+        """Procesa el producto (existente o nuevo) y retorna el ID"""
+        nuevo_producto_nombre = request.POST.get('nuevo_producto_nombre')
+        catalogo_producto_id = request.POST.get('catalogo_producto')
+
+        if nuevo_producto_nombre:
+            # Crear nuevo producto en el catálogo
+            try:
+                formato_agranel = Formato.objects.filter(capacidad=0).first()
+
+                # Crear en CatalogoProducto (no en Producto)
+                catalogo_producto = Producto.objects.create(
+                    nombre_comercial=nuevo_producto_nombre.strip(),
+                    formato=formato_agranel,
+                    estado="produccion",
+                    costo=0
+                )
+                return catalogo_producto.id
+                
+            except Exception as e:
+                print(f"Error al crear producto: {e}")
+                return None
+        elif catalogo_producto_id:
+            # Usar producto existente - verificar que existe
+            try:
+                catalogo_producto = Producto.objects.get(id=catalogo_producto_id)
+                return catalogo_producto_id
+            except Producto.DoesNotExist:
+                print(f"❌ Producto con ID {catalogo_producto_id} no existe")
+                return None
+        else:
+            print("❌ No se proporcionó ni nuevo producto ni producto existente")
+            return None
+
     def procesar_paso_2(self, request):
         # Recuperar datos del paso 1 de la sesión
         
@@ -103,7 +139,7 @@ class CrearProduccionView(View):
             
         
         # Verificar que los datos mínimos estén presentes
-        required_fields = ['lote', 'nombre_producto', 'cantidad_estimada', 'costo', 'planta_id']
+        required_fields = ['lote', 'catalogo_producto_id', 'cantidad_estimada', 'costo', 'planta_id']
         missing_fields = [field for field in required_fields if not produccion_data.get(field)]
         
         if missing_fields:
@@ -122,23 +158,27 @@ class CrearProduccionView(View):
             # Obtener la instancia de Planta
             from .models import Planta
             planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
+            print(f"🔍 Buscando catalogo_producto con ID: {produccion_data['catalogo_producto_id']}")
+            catalogo_producto_instance = Producto.objects.get(id=produccion_data['catalogo_producto_id'])
+            print(f"✅ Producto encontrado: {catalogo_producto_instance.nombre_comercial}")
 
             if produccion_data['prod_result']: 
                 product=True
             else:
                 product=False
-            
+
+            print(f"✅ Producto base: {product}" )
             # Guardar producción
             produccion = Produccion.objects.create(
                 lote=produccion_data['lote'],
-                nombre_producto=produccion_data['nombre_producto'],
-                cantidad_estimada=produccion_data['cantidad_estimada'],
-                costo=produccion_data['costo'],
+                catalogo_producto=catalogo_producto_instance,
                 prod_result=product,
+                cantidad_estimada=produccion_data['cantidad_estimada'],
+                costo=produccion_data['costo'],                
                 planta=planta_instance,
                 estado='Planificada'
             )
-            
+            print(produccion.lote)
             # Guardar materias primas
             for mp_data in materias_primas:
                 Inv_Mat_Prima.objects.create(
@@ -156,7 +196,7 @@ class CrearProduccionView(View):
             return JsonResponse({
                 'success': True, 
                 'message': 'Producción creada exitosamente', 
-                'produccion_id': produccion.id,
+                'produccion_id': produccion,
                 'redirect_url': reverse('produccion_list')  # Ajusta esta URL
             })
             
@@ -209,11 +249,7 @@ def iniciar_produccion(request, pk):
     """View para iniciar una producción específica"""
     produccion = get_object_or_404(Produccion, pk=pk)
     
-<<<<<<< Updated upstream
-    if produccion.estado == 'pendiente':
-=======
     if produccion.estado == 'Planificada':
->>>>>>> Stashed changes
         produccion.estado = 'En proceso'
         produccion.save()
         messages.success(request, f'✅ Producción {produccion.lote} iniciada correctamente')
@@ -222,11 +258,7 @@ def iniciar_produccion(request, pk):
     
     return redirect('produccion_list')
 #Este dió error
-<<<<<<< Updated upstream
-class CambiarEstadoProduccionView(View):
-=======
 """class CambiarEstadoProduccionView(View):
->>>>>>> Stashed changes
     def post(self, request, pk):
         produccion_p = get_object_or_404(Produccion, pk=pk)
         nuevo_estado = request.POST.get('estado')
@@ -247,11 +279,7 @@ class CambiarEstadoProduccionView(View):
         
         return redirect('produccion_list')
 
-<<<<<<< Updated upstream
-""" class ProduccionUpdateView(UpdateView):
-=======
 class ProduccionUpdateView(UpdateView):
->>>>>>> Stashed changes
     model = Produccion
     form_class = ProduccionForm
     template_name = 'produccion/form.html'
@@ -281,10 +309,6 @@ def concluir_produccion(request, pk):
                 messages.error(request, '❌ La cantidad debe ser un número válido')
         else:
             messages.error(request, '❌ Debe especificar la cantidad obtenida')
-<<<<<<< Updated upstream
-    
-    return render(request, 'produccion/concluir_produccion.html', {
-=======
     
     return render(request, 'produccion/concluir_produccion.html', {
         'produccion': produccion
@@ -402,6 +426,5 @@ def detalle_cancelacion(request, pk):
         return redirect('produccion_list')
     
     return render(request, 'produccion/detalle_cancelacion.html', {
->>>>>>> Stashed changes
         'produccion': produccion
     })

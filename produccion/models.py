@@ -6,6 +6,7 @@ from bases.bases.models import ModeloBase
 from nomencladores.planta.models import Planta
 from produccion.choices import CHOICE_ESTADO
 from inventario.models import Inv_Mat_Prima
+from producto.models import Producto
 
 
 def generate_unique_filename(instance, filename):
@@ -18,7 +19,10 @@ def generate_unique_filename(instance, filename):
 class Produccion(ModeloBase):
     lote = models.CharField(unique=True, null=False, blank=False, max_length=20, verbose_name="Lote",)
 
-    nombre_producto = models.CharField(max_length=255, verbose_name="Nombre del producto", null=False,)
+    #nombre_producto = models.CharField(max_length=255, verbose_name="Nombre del producto", null=False,)
+    catalogo_producto = models.ForeignKey(Producto, on_delete=models.PROTECT, verbose_name="Producto", null=True,
+        related_name='producciones'
+    )
 
     prod_result = models.BooleanField(default=False, verbose_name="Producto base",)
 
@@ -28,21 +32,15 @@ class Produccion(ModeloBase):
     cantidad_real = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Cantidad real",)
 
     pruebas_quimicas = models.FileField(upload_to=generate_unique_filename, null=True, blank=True, verbose_name="Pruebas químicas",
-<<<<<<< Updated upstream
-        validators=[FileExtensionValidator(allowed_extensions=['pdf'])])
-=======
         validators=[FileExtensionValidator(allowed_extensions=['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'])])
     
     prod_conform = models.BooleanField(null=True, blank=True, default=False, verbose_name="Producto Conforme",)
->>>>>>> Stashed changes
 
     costo = models.FloatField(null=False, blank=False, verbose_name="Costo",)
 
     planta = models.ForeignKey(Planta, on_delete=models.DO_NOTHING, null=False, verbose_name="Planta")
 
     estado = models.CharField(verbose_name='Estado', max_length=50, choices=CHOICE_ESTADO, blank=False, null=False )
-<<<<<<< Updated upstream
-=======
 
     observaciones_cancelacion = models.TextField(
         blank=True,
@@ -50,10 +48,9 @@ class Produccion(ModeloBase):
         verbose_name="Observaciones de Cancelación/Detención"
     )
     fecha_cancelacion = models.DateTimeField(null=True, blank=True)
->>>>>>> Stashed changes
 
     def __str__(self):
-        return f"Lote {self.lote} - {self.nombre_producto}"
+        return f"Lote {self.lote} - {self.catalogo_producto.nombre}"
 
     @property
     def total_materias_primas(self):
@@ -79,6 +76,7 @@ class Prod_Inv_MP(ModeloBase):
     lote_prod = models.ForeignKey(
         Produccion,  # Referencia al modelo completo
         on_delete=models.DO_NOTHING, verbose_name="Lote producto",
+        related_name='inv_mp'
     )
 
     inv_materia_prima = models.ForeignKey(

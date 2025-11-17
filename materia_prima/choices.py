@@ -6,6 +6,7 @@ from django.conf import settings
 
 ESTADOS = [
     ('adquirida', _('Adquirida')),
+    ('produccion', _('Producción')),
     ('inventario', _('Inventario')),
     ('disponibleV', _('Disponible Venta')),
     ('reservada', _('Reservada')),
