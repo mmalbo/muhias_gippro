@@ -5,6 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from utils.models import Notification
 from produccion.models import Produccion, Prod_Inv_MP
+from usuario.models import CustomUser
 #from inventario.models import Inv_Mat_Prima
 
 @receiver(post_save, sender=Produccion)
@@ -13,37 +14,64 @@ def notificar_produccion_creada(sender, instance, created, **kwargs):
     """Signal para notificar cuando se crea una nueva producción"""
     if created:
        # Obtener las materias primas involucradas (si ya están guardadas)
-        materias_primas = Prod_Inv_MP.objects.filter(lote_prod=instance).__getattribute__
+        materias_primas_info = obtener_materias_primas_de_produccion(instance)
         
         # 1. NOTIFICACIÓN PARA RESPONSABLES DE ALMACÉN
-        notificar_responsables_almacen(instance, materias_primas)
+        notificar_responsables_almacen(instance, materias_primas_info)
         
         # 2. NOTIFICACIÓN PARA GRUPO ADMINISTRATIVO
-        notificar_grupo_administrativo(instance, materias_primas)
+        notificar_grupo_administrativo(instance, materias_primas_info)
 
-def notificar_responsables_almacen(produccion, materias_primas):
+def obtener_materias_primas_de_produccion(produccion):
+    """Obtener información de materias primas a través de Prod_Inv_MP"""
+    try:
+        # Navegar: Produccion -> Prod_Inv_MP -> Inv_Mat_Prima
+        relaciones_mp = Prod_Inv_MP.objects.filter(lote_prod=produccion)
+        print(produccion)
+        materias_primas_info = []
+        for relacion in relaciones_mp:
+            print(relacion.inv_materia_prima)
+            inv_mp = relacion.inv_materia_prima  # Esto es un objeto Inv_Mat_Prima
+            
+            materias_primas_info.append({
+                'materia_prima': inv_mp.materia_prima,
+                'almacen': inv_mp.almacen,
+                'cantidad_necesaria': relacion.cantidad_materia_prima,  # De Prod_Inv_MP
+                'cantidad_disponible': inv_mp.cantidad,  # De Inv_Mat_Prima
+                'unidad_medida': inv_mp.materia_prima.unidad_medida,
+            })
+        
+        return materias_primas_info
+        
+    except Exception as e:
+        print(f"Error obteniendo materias primas de producción: {e}")
+        return []
+
+
+def notificar_responsables_almacen(produccion, materias_primas_info):
     """Notificar a los responsables de almacén de las materias primas involucradas"""
 
     try:
         # Obtener almacenes únicos de las materias primas
-        almacenes_ids = materias_primas.values_list('almacen' ).distinct()
-            #, flat=True)
-        print(almacenes_ids)
+        almacenes_ids = list(set([mp['almacen'].id for mp in materias_primas_info]))
+        
         # Buscar usuarios responsables de estos almacenes
         # Asumiendo que tienes un modelo Almacen con campo 'responsable'
-        from nomencladores.almacen.models import Almacen
-        responsables = User.objects.filter(
-            almacenes_responsable__id__in=almacenes_ids,
+        responsables = CustomUser.objects.filter(
+            almacen__id__in=almacenes_ids,
         ).distinct()
-        print(responsables)
         # Si no hay responsables específicos, notificar al grupo "Almacen"
         if not responsables.exists():
             try:
-                grupo_almacen = Group.objects.get(name='Almaceneros')
-                responsables = grupo_almacen.user_set.filter(is_active=True)
+                responsables = CustomUser.objects.filter(
+                    groups__name__in=['Almaceneros'],
+                    is_active=True
+                ).distinct()
+                #grupo_almacen = Group.objects.get(name='Almaceneros')
+                #responsables = grupo_almacen.user_set.filter(is_active=True)
             except Group.DoesNotExist:
                 # Si no existe el grupo, notificar a supervisores
-                responsables = User.objects.filter(
+                responsables = CustomUser.objects.filter(
                     groups__name__in=['Presidencia-Admin', 'Comerciales'],
                     is_active=True
                 ).distinct()
@@ -57,18 +85,21 @@ def notificar_responsables_almacen(produccion, materias_primas):
         )
         
         # Agregar detalles de materias primas si están disponibles
-        if materias_primas.exists():
+        if len(materias_primas_info)>0:
             mensaje_almacen += '\n\nMateriales requeridos:\n'
-            for mp in materias_primas:
+            for mp in materias_primas_info:
                 mensaje_almacen += f'• {mp.materia_prima.nombre}: {mp.cantidad} {mp.materia_prima.unidad_medida} (Almacén: {mp.almacen.nombre})\n'
+
+        print(len(materias_primas_info))
         
         for responsable in responsables:
+            print(responsable)
             Notification.objects.create(
-                usuario=responsable,
+                user=responsable,
                 #tipo='produccion_creada',
                 #nivel='warning',  # Warning porque requiere acción
                 #titulo=f'📦 Producción Requiere Materiales - Lote {produccion.lote}',
-                mensaje=mensaje_almacen,
+                message=mensaje_almacen,
                #relacion_contenido_type=contenido_type,
                 #relacion_contenido_id=produccion.id
             )
@@ -121,44 +152,3 @@ def notificar_grupo_administrativo(produccion, materias_primas):
     except Exception as e:
         print(f"Error notificando grupo administrativo: {e}")
 
-"""@receive r(post_save, sender=Produccion)
-def notificar_cambio_estado_produccion(sender, instance, **kwargs):
-    Signal para notificar cambios de estado en la producción
-    if not kwargs.get('created', False):  # Solo para actualizaciones
-        # Verificar si el estado cambió
-        if instance.tracker.has_changed('estado'):
-            estado_anterior = instance.tracker.previous('estado')
-            estado_nuevo = instance.estado
-            
-            # Definir niveles y mensajes según el cambio de estado
-            config_notificacion = {
-                'pendiente': {'nivel': 'info', 'accion': 'planificada'},
-                'en_proceso': {'nivel': 'warning', 'accion': 'iniciada'},
-                'completada': {'nivel': 'success', 'accion': 'completada'},
-                'cancelada': {'nivel': 'error', 'accion': 'cancelada'},
-            }
-            
-            if estado_nuevo in config_notificacion:
-                config = config_notificacion[estado_nuevo]
-                
-                usuarios_notificar = User.objects.filter(
-                    is_active=True,
-                    groups__name__in=['Supervisores', 'Produccion']
-                ).distinct()
-                
-                contenido_type = ContentType.objects.get_for_model(instance)
-                
-                for usuario in usuarios_notificar:
-                    Notificacion.objects.create(
-                        usuario=usuario,
-                        tipo=f'produccion_{config["accion"]}',
-                        nivel=config['nivel'],
-                        titulo=f'Producción {config["accion"].title()} - Lote {instance.lote}',
-                        mensaje=(
-                            f'La producción del producto "{instance.catalogo_producto.nombre}" '
-                            f'ha cambiado de estado de "{estado_anterior}" a "{estado_nuevo}". '
-                            f'Lote: {instance.lote}'
-                        ),
-                        relacion_contenido_type=contenido_type,
-                        relacion_contenido_id=instance.id
-                    ) """

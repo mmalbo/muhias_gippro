@@ -179,14 +179,15 @@ class CrearProduccionView(View):
                 estado='Planificada'
             )
             print(produccion.lote)
+
             # Guardar materias primas
-            for mp_data in materias_primas:
+            """ for mp_data in materias_primas:
                 Inv_Mat_Prima.objects.create(
                     #produccion=produccion,
                     materia_prima=mp_data['materia_prima'],
                     almacen=mp_data['almacen'],
                     cantidad=mp_data['cantidad']
-                )
+                ) """
             
             # Limpiar sesión
             if 'produccion_data' in request.session:
@@ -196,7 +197,7 @@ class CrearProduccionView(View):
             return JsonResponse({
                 'success': True, 
                 'message': 'Producción creada exitosamente', 
-                'produccion_id': produccion,
+                'produccion_id': produccion.id,
                 'redirect_url': reverse('produccion_list')  # Ajusta esta URL
             })
             

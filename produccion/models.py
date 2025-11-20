@@ -50,11 +50,11 @@ class Produccion(ModeloBase):
     fecha_cancelacion = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Lote {self.lote} - {self.catalogo_producto.nombre}"
+        return f"Lote {self.lote} - {self.catalogo_producto.nombre_comercial}"
 
     @property
     def total_materias_primas(self):
-        return self.prod_inv_mp.count()
+        return self.inventarios_prod.count()
 
     def puede_ser_cancelada(self):
         """Determina si la producción puede ser cancelada"""

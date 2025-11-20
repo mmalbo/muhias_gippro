@@ -4,6 +4,7 @@ from bases.bases.models import ModeloBase
 from ficha_tecnica.models import FichaTecnica
 from materia_prima.choices import ESTADOS
 from envase_embalaje.formato.models import Formato
+from django.db.models import Sum
 
 class Producto(ModeloBase):
     codigo_producto = models.CharField( max_length=20, verbose_name="Código del producto", null=True,
@@ -43,6 +44,16 @@ class Producto(ModeloBase):
     def __str__(self):
         return f"{self.codigo_producto} - {self.nombre_comercial}"
 
+    @property
+    def cantidad_total(self):
+        """
+        Calcula la cantidad total de este producto en todos los almacenes
+        """
+        total = self.inventarios_prod.aggregate(
+            total=Sum('cantidad')
+        )['total']
+        return total if total is not None else 0
+
     # Agregar estos métodos a la clase Producto
     def clean(self):
         """Validaciones a nivel de modelo"""
@@ -69,6 +80,7 @@ class Producto(ModeloBase):
     
         if errors:
             raise ValidationError(errors)
+
     def save(self, *args, **kwargs):
         """Validaciones adicionales al guardar"""
         self.full_clean()

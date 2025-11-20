@@ -18,8 +18,8 @@ ESTADOS = [
 Fichero_tipos_dinamicos = os.path.join(settings.BASE_DIR, 'dynamic_choices.json')
 
 Tipo_mat_prima = [
-    ('base', _('Bases')),
-    ('color', _('Color')),
+    ('bases', _('Bases')),
+    ('colorantes', _('Color')),
     ('conservantes', _('Conservantes')),
     ('espesantes', _('Espesantes')),
     ('fragancias', _('Fragancias')),

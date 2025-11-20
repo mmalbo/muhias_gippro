@@ -4,6 +4,7 @@ from nomencladores.almacen.models import Almacen
 from produccion.envasado.models import Envasado
 from produccion.models import Produccion
 from materia_prima.models import MateriaPrima
+from producto.models import Producto
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros as Insu
 from usuario.models import CustomUser
@@ -106,7 +107,7 @@ class Movimiento_MP(ModeloBase):
     vale = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
         verbose_name="Vale asociado a este movimiento",
         null=True, blank=False, related_name="movimientos")
-    cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
+    cantidad = models.DecimalField(max_digits=6, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
     #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
@@ -128,19 +129,33 @@ class Movimiento_EE(ModeloBase):
         entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '
         return f'{entrada} de {self.envase_embalaje.codigo_envase} en {self.vale_e.almacen.nombre}'
 
-#Relación mucho a mucho de vale con materia prima     
-class Movimiento_Ins(ModeloBase):
-    insumo = models.ForeignKey(Insu, on_delete=models.PROTECT,
-        verbose_name="Insumos",
+#Relación mucho a mucho de vale con producto     
+class Movimiento_Prod(ModeloBase):
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT,
+        verbose_name="Productos",
         null=True, blank=False,
     )
     vale_e = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
         verbose_name="Vale asociado a este movimiento",
-        null=True, blank=False, related_name="movimientos_i")
+        null=True, blank=False, related_name="movimientos_prod")
     cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")
     #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '
+        return f'{entrada} de {self.producto.nombre_comercial} en {self.vale_e.almacen.nombre}'
+
+#Relación mucho a mucho de vale con insumo
+class Movimiento_Ins(ModeloBase):
+    insumo = models.ForeignKey(Insu, on_delete=models.PROTECT,
+        verbose_name="Insumos", null=True, blank=False,
+    )
+    vale_e = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
+        verbose_name="Vale asociado a este movimiento",
+        null=True, blank=False, related_name="movimientos_i")
+    cantidad = models.DecimalField(max_digits=4, decimal_places=2, default=1.00, verbose_name="Cantidad del movimiento")    
+    #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
+
+    def __str__(self):
+        entrada = 'Entrada ' if self.vale_i.entrada else 'Salida '
         return f'{entrada} de {self.insumo.nombre} en {self.vale_e.almacen.nombre}'
-    

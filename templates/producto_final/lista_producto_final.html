@@ -25,7 +25,7 @@
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Cantidad Almacenada</th>
-                            <th>Es final</th>
+                            <th>formato</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -34,11 +34,11 @@
                             <tr>
                                 <td>{{ producto_final.codigo_producto }}</td>
                                 <td>{{ producto_final.nombre_comercial }}</td>
-                                <td>{{ producto_final.cantidad_alm }}</td>
-                                {% if producto_final.product_final %}
-                                     <td>Si</td>
+                                <td>{{ producto_final.cantidad_total }}</td>
+                                {% if producto_final.formato.capacidad == 0 %}
+                                     <td>A granel</td>
                                 {% else %}
-                                    <td>No</td>
+                                    <td>{{producto_final.formato}}</td>
                                 {% endif %} 
 
                                 <td>
