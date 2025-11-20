@@ -50,7 +50,7 @@ class MateriaPrima(ModeloBase):
     concentracion = models.IntegerField(
         null=True,
         blank=True,
-        default=0,
+        default=0, #Valorar ue  100
         verbose_name="Concentración",
     )
 
@@ -103,9 +103,18 @@ class MateriaPrima(ModeloBase):
 
     def save(self, *args, **kwargs):
         # Actualizar choices antes de guardar
+        #if not self.codigo:
         self._meta.get_field('tipo_materia_prima').choices = obtener_tipos_materia_prima()
-        self.codigo = self.tipo_materia_prima[:3] + self.nombre[:3] + str(self.concentracion).zfill(3)
-        print(self.codigo)
+        codigo = self.tipo_materia_prima[:3] + self.nombre[:3] + str(self.concentracion).zfill(3) + '0'
+        while True:
+            print("En wile True")
+            if MateriaPrima.objects.filter(codigo=codigo).exists():
+                tem = int(codigo[-1]) + 1
+                codigo = codigo[:-1] + str(tem)
+            else:
+                self.codigo = codigo
+                break
+        print(f'codigo generado al guardar {self.codigo}')
         super().save(*args, **kwargs)
     
     def clean(self):

@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 
 from bases.views import BaseView, ModeloBaseTemplateView
 from materia_prima.models import MateriaPrima
-from materia_prima.tipo_materia_prima.models import TipoMateriaPrima
+#from materia_prima.tipo_materia_prima.models import TipoMateriaPrima
 from produccion.models import Produccion
 from usuario.models import CustomUser
 from utils.views import importar_productos_desde_api

@@ -22,16 +22,48 @@
                         <form id="produccionForm">
                         {% csrf_token %}
             
-                        <div class="form-row">
-                        
+                        <div class="form-row">                        
                             <div class="col-md-3 mb-3">
                                 {{ produccion_form.lote.label_tag }}
                                 {{ produccion_form.lote }}
                             </div>
-                            <div class="col-md-6 mb-3">
-                                {{ produccion_form.nombre_producto.label_tag }}
-                                {{ produccion_form.nombre_producto }}
-                            </div>
+                            <!-- Selección de producto -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Selección del Producto</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Opción 1: Producto existente -->
+                                    <div class="mb-3">
+                                        <label for="{{ produccion_form.catalogo_producto.id_for_label }}" class="form-label">
+                                            {{ produccion_form.catalogo_producto.label }}
+                                        </label>
+                                        {{ produccion_form.catalogo_producto }}
+                                        {% if produccion_form.catalogo_producto.errors %}
+                                            <div class="text-danger small">{{ produccion_form.catalogo_producto.errors }}</div>
+                                        {% endif %}
+                                        <div class="form-text">{{ produccion_form.catalogo_producto.help_text }}</div>
+                                    </div>
+
+                                    <div class="text-center my-3">
+                                        <strong class="text-muted">- O -</strong>
+                                    </div>
+
+                                    <!-- Opción 2: Nuevo producto -->
+                                    <div class="border-start border-3 border-primary ps-3">
+                                        <div class="mb-3">
+                                            <label for="{{ produccion_form.nuevo_producto_nombre.id_for_label }}" class="form-label">
+                                                {{ produccion_form.nuevo_producto_nombre.label }}
+                                            </label>
+                                            {{ produccion_form.nuevo_producto_nombre }}
+                                            {% if produccion_form.nuevo_producto_nombre.errors %}
+                                                <div class="text-danger small">{{ produccion_form.nuevo_producto_nombre.errors }}</div>
+                                            {% endif %}
+                                            <div class="form-text">{{ produccion_form.nuevo_producto_nombre.help_text }}</div>
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>  
                             <div class="col-md-3 mb-3">
                                 {{ produccion_form.prod_result.label_tag }}
                                 {{ produccion_form.prod_result }}
@@ -74,9 +106,11 @@
                     <div id="materiasPrimasContainer">
                         <!-- Las materias primas se agregarán aquí dinámicamente -->
                     </div>
-        
+                    
+                    
                     <div class="navigation-buttons">
                         <button type="button" class="btn-secondary" onclick="prevStep(1)">Anterior</button>
+                        <button type="button" class="add-btn" onclick="agregarMateriaPrima()">+ Agregar Materia Prima</button>
                         <button type="button" class="btn-primary" onclick="enviarProduccion()">Finalizar Producción</button>
                     </div>
                 </div>
@@ -125,6 +159,40 @@
         <button type="button" class="remove-btn" onclick="removerMateriaPrima(this)">Eliminar</button>
     </div>
 </template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Alternar entre producto existente y nuevo
+    const productoExistente = document.getElementById('{{ form.catalogo_producto.id_for_label }}');
+    const nuevoProductoNombre = document.getElementById('{{ form.nuevo_producto_nombre.id_for_label }}');
+    
+    function toggleCamposProducto() {
+        const nuevoProductoSection = nuevoProductoNombre.closest('.border-start');
+        
+        if (productoExistente.value) {
+            // Si hay producto seleccionado, deshabilitar campos de nuevo producto
+            nuevoProductoNombre.value = '';
+            nuevoProductoNombre.disabled = true;
+            nuevoProductoSection.style.opacity = '0.6';
+        } else if (nuevoProductoNombre.value) {
+            // Si hay nombre de nuevo producto, deshabilitar selección existente
+            productoExistente.value = '';
+            productoExistente.disabled = true;
+        } else {
+            // Si ambos están vacíos, habilitar ambos
+            nuevoProductoNombre.disabled = false;
+            productoExistente.disabled = false;
+            nuevoProductoSection.style.opacity = '1';
+        }
+    }
+    
+    productoExistente.addEventListener('change', toggleCamposProducto);
+    nuevoProductoNombre.addEventListener('input', toggleCamposProducto);
+    
+    // Inicializar estado
+    toggleCamposProducto();
+});
+</script>
 
 <script>
 // Datos de materias primas desde Django

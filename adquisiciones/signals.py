@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import Group
 from utils.models import Notification
+from nomencladores.almacen.models import Almacen
 from .models import DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo, Adquisicion
 from utils.tasks import send_notification_email
 
