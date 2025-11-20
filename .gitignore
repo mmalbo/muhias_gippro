@@ -1,5 +1,48 @@
-/.venv/
-/media/*
-/static/*
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Migraciones de Django - EXCLUYE TODO excepto __init__.py
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# También puedes ser más específico con carpetas comunes
+app/migrations/
 */migrations/
-*/__pycache__/*
+
+# Base de datos
+*.sqlite3
+*.db
+db.sqlite3
+
+# Archivos de entorno
+.env
+.env.local
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Static files (si usas collectstatic)
+/staticfiles/
+/mediafiles/
+
+# Logs
+*.log
+logs/
+
+# Archivos de cobertura
+htmlcov/
+.coverage
+.coverage.*
