@@ -6,7 +6,6 @@
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de producciones</h4>
-
                 </div>
                 <div class="col-sm-12 col-lg-12">
                     <table id="datatable" class="table data-table table-striped">
@@ -25,15 +24,16 @@
                         {% for produccion in produccions %}
                             <tr>
                                 <td>{{ produccion.lote }}</td>
-                                <td>{{ produccion.nombre_producto }}</td>
+                                <td>{{ produccion.catalogo_producto.nombre_comercial }}</td>
                                 <td>{{ produccion.cantidad_estimada }}</td>
                                 <td>{{ produccion.costo }}</td>
                                 <td>{{ produccion.planta }}</td>
                                 <td><span class="badge
                                     {% if produccion.estado == 'Planificada' %}bg-warning
-                                    {% elif produccion.estado == 'En Proceso' %}bg-primary
-                                    {% elif produccion.estado == 'Terminada' %}bg-success
-                                    {% elif produccion.estado == 'Evaluada' %}bg-success
+                                    {% elif produccion.estado == 'Iniciando mezcla' %}bg-primary
+                                    {% elif produccion.estado == 'En proceso: Agitado' %}bg-primary
+                                    {% elif produccion.estado == 'En proceso: Validación' %}bg-success
+                                    {% elif produccion.estado == 'Concluida' %}bg-success
                                     {% elif produccion.estado == 'Cancelada' %}bg-danger
                                     {% else %}bg-secondary{% endif %}">
                                     {{ produccion.estado }}
@@ -47,14 +47,25 @@
                                                 
                                             </a>
                                         {% endif %}
-                                        <!--Terminada producción--> <!--formulario confirmando la cantidad del productobi bi-check2-square-->
-                                        {% if produccion.estado == 'En proceso' %}    
-                                            <a href="{% url 'concluir_produccion' produccion.id %}"
-                                                title="Cierre de producción" class="btn fas fa-check"></a>
+                                        {% if produccion.estado == 'Iniciando mezcla' %}
+                                            <a href="{% url 'agita_produccion' produccion.id %}"
+                                                title="Iniciar mezclado" class="btn fas fa-fast-forward" fill="currentColor">
+                                                
+                                            </a>
                                         {% endif %}
-                                        <!--Registrar pruebas químicas--> <!--formulario para subir doc de PQ y se cambia 
+                                        <!--Terminada producción--> <!--formulario confirmando fas fa-sign-in-alt la cantidad del productobi bi-check2-square-->
+                                        {% if produccion.estado == 'En proceso: Agitado' %}    
+                                            <a href="{% url 'concluir_produccion' produccion.id %}" 
+                                                title="Iniciar agitado" class="btn fas fa-fast-forward"></a>
+                                        {% endif %}
+                                        <!--Registrar pruebas químicas--> 
+                                        {% if produccion.estado == 'En proceso: Validación' %}    
+                                            <a href="{% url 'crear_prueba_quimica' produccion.id %}"
+                                                title="Evaluar producción" class="btn fas fa-check2-circle"></a>
+                                        {% endif %}
+                                        <!--formulario para subir doc de PQ y se cambia 
                                         el estado a disponible para la venta o indicar ajuste de inventario-->
-                                        {% if produccion.estado == 'Terminada' %}
+                                        {% if produccion.estado == 'Concluida' %}
                                             {% if produccion.pruebas_quimicas %}    
                                                 <a href="{% url 'descargar_pruebas' produccion.id %}"
                                                     class="btn btn-info btn-sm"
@@ -73,7 +84,7 @@
                                         {% endif %}
                                         <!--Cancelar producción--> <!--formulario para indicar la causa ¿Pregunta que
                                          hago con la materia prima o el semiproducto?|split -->
-                                        {% if produccion.estado == 'Planificada' or produccion.estado == 'En proceso'%}
+                                        {% if produccion.estado == 'Planificada' or produccion.estado == 'Iniciando mezcla'%}
                                             <a href="{% url 'cancelar_produccion' produccion.id %}" 
                                                 class="btn btn-danger btn-sm"
                                                 title="Cancelar producción">

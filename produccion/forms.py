@@ -5,6 +5,7 @@ from django import forms
 from materia_prima.models import MateriaPrima
 from nomencladores.planta.models import Planta
 from nomencladores.almacen.models import Almacen
+<<<<<<< Updated upstream
 from .models import Produccion, Prod_Inv_MP
 from producto.models import Producto
 from envase_embalaje.formato.models import Formato
@@ -20,7 +21,24 @@ class ProductoRapidoForm(forms.ModelForm):
                 'placeholder': 'Nombre del nuevo producto...'
             }),            
         }
+=======
+from .models import Produccion, Prod_Inv_MP, PruebaQuimica, DetallePruebaQuimica, ParametroPrueba
+from producto.models import Producto
+from envase_embalaje.formato.models import Formato
+from .choices import TIPOS_PARAMETRO
+>>>>>>> Stashed changes
 
+class ProductoRapidoForm(forms.ModelForm):
+    """Form para crear producto rápido desde producción"""
+    class Meta:
+        model = Producto
+        fields = ['nombre_comercial']
+        widgets = {
+            'nombre_comercial': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del nuevo producto...'
+            }),            
+        }
 
 class ProduccionForm(forms.ModelForm):
     planta = forms.ModelChoiceField( queryset=Planta.objects.all(), 
@@ -131,21 +149,21 @@ class MateriaPrimaForm(forms.Form):
 class SubirPruebasQuimicasForm(forms.ModelForm):
     class Meta:
         model = Produccion
-        fields = ['pruebas_quimicas', 'prod_conform']
+        fields = ['pruebas_quimicas_ext', 'prod_conform']
         widgets = {
-            'pruebas_quimicas': forms.FileInput(attrs={
+            'pruebas_quimicas_ext': forms.FileInput(attrs={
                 'class': 'form-control',
                 'accept': '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
             }),
             'prod_conform': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         labels = {
-            'pruebas_quimicas': 'Archivo de Pruebas (PDF, Excel, Imagen, etc.)',
+            'pruebas_quimicas_ext': 'Archivo de Pruebas (PDF, Excel, Imagen, etc.)',
             'prod_conform': 'Producto conforme'
         }
     
     def clean_archivo_pruebas(self):
-        archivo = self.cleaned_data.get('pruebas_quimicas')
+        archivo = self.cleaned_data.get('pruebas_quimicas_ext')
         if archivo:
             # Validar tamaño del archivo (5MB máximo)
             max_size = 5 * 1024 * 1024  # 5MB
@@ -195,45 +213,124 @@ class CancelarProduccionForm(forms.ModelForm):
         
         return self.produccion
             
-""" class ProduccionForm(forms.ModelForm):    
-    planta = forms.ModelChoiceField(queryset=Planta.objects.all(),
-                                    label='Planta', 
-                                    widget=forms.Select(attrs={'class': 'form-control'}))
+class ParametroPruebaForm(forms.ModelForm):
     class Meta:
-        model = Produccion
-        fields = ['lote','nombre_producto','cantidad_estimada',
-            'costo','planta',]
+        model = ParametroPrueba
+        fields = [
+            'nombre', 'tipo', 'unidad_medida', 'descripcion', 'metodo_ensayo', 
+            'valor_minimo', 'valor_maximo', 'valor_objetivo', 'activo'
+        ]
         widgets = {
-            'lote': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre_producto': forms.TextInput(attrs={'class': 'form-control'}),
-            'cantidad_estimada': forms.NumberInput(attrs={'class': 'form-control'}),
-            'costo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo': forms.Select(attrs={'class': 'form-control'}),
+            'unidad_medida': forms.Select(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2
+            }),
+            'metodo_ensayo': forms.TextInput(attrs={'class': 'form-control'}),
+            'valor_minimo': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.000001'
+            }),
+            'valor_maximo': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.000001'
+            }),
+            'valor_objetivo': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.000001'
+            }),
         }
-        labels = {
-            'lote': 'Lote',
-            'nombre_producto': 'Nombre del Producto:',
-            'cantidad_estimada': 'Cantidad Estimada:',
-            'costo': 'Costo:',
+ 
+    def clean(self):
+        cleaned_data = super().clean()
+        valor_minimo = cleaned_data.get('valor_minimo')
+        valor_maximo = cleaned_data.get('valor_maximo')
+        
+        # Validar que mínimo sea menor que máximo
+        if valor_minimo and valor_maximo and valor_minimo >= valor_maximo:
+            raise forms.ValidationError(
+                "El valor mínimo debe ser menor que el valor máximo"
+            )
+        
+        return cleaned_data
+
+class BuscarParametroForm(forms.Form):
+    """Formulario para buscar y filtrar parámetros"""
+    tipo = forms.ChoiceField(
+        choices=[('', 'Todos')] + TIPOS_PARAMETRO,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    activo = forms.ChoiceField(
+        choices=[('', 'Todos'), ('true', 'Activos'), ('false', 'Inactivos')],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    buscar = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Buscar por código o nombre...'
+        })
+    )
+
+class PruebaQuimicaForm(forms.ModelForm):
+    class Meta:
+        model = PruebaQuimica
+        fields = ['fecha_vencimiento', 'observaciones', 'archivo_resultado']
+        widgets = {
+            'fecha_vencimiento': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'observaciones': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Observaciones generales de la prueba...'
+            }),
+            'archivo_resultado': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
+            })
         }
 
-class Inv_MP_Form(forms.ModelForm):    
+class DetallePruebaForm(forms.ModelForm):
     class Meta:
-        model = Prod_Inv_MP
-        fields = ['inv_materia_prima', 'cantidad_materia_prima']
+        model = DetallePruebaQuimica
+        fields = ['parametro', 'valor_medido', 'observaciones']
         widgets = {
-            'inv_materia_prima': forms.Select(attrs={'class': 'form-select'}),
-            'cantidad_materia_prima': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'parametro': forms.Select(attrs={'class': 'form-control'}),
+            'valor_medido': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.001'
+            }),
+            'observaciones': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Observaciones específicas...'
+            })
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['inv_materia_prima'].queryset = Inv_MP_Form.objects.all().order_by('materia_prima')
-        self.fields['inv_materia_prima'].label_from_instance = lambda obj: f"{obj.materia_prima.nombre} ({obj.materia_prima.unidad_medida})"
+        # Filtrar parámetros activos
+        self.fields['parametro'].queryset = ParametroPrueba.objects.filter(activo=True)
 
-class PruebasQuimicasForm(forms.ModelForm):
-    class Meta:
-        model = Produccion
-        fields = ['pruebas_quimicas']
-        widgets = {
-            'pruebas_quimicas': forms.FileInput(attrs={'class': 'form-control'}),
-        }    """     
+class AprobarPruebaForm(forms.Form):
+    observaciones_aprobacion = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Observaciones de la aprobación...'
+        })
+    )
+
+DetallePruebaFormSet = forms.inlineformset_factory(
+    PruebaQuimica,
+    DetallePruebaQuimica,
+    form=DetallePruebaForm,
+    extra=5,  # Número de forms vacíos a mostrar
+    can_delete=True
+)

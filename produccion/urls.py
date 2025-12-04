@@ -4,7 +4,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionView, get_materias_primas_data,
                     iniciar_produccion, concluir_produccion, subir_pruebas_quimicas, descargar_pruebas_quimicas,
+<<<<<<< Updated upstream
                     eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion )
+=======
+                    eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion, agita_produccion, 
+                    lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica )
+>>>>>>> Stashed changes
 
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
@@ -19,13 +24,28 @@ urlpatterns = [
     path('<uuid:pk>/iniciar/', iniciar_produccion, name='iniciar_produccion'),
     #path('<uuid:pk>/iniciar/', CambiarEstadoProduccionView.as_view(), name='cambiar_produccion'),
 
-    #Concluir producción
-    path('produccion/<uuid:pk>/concluir/', concluir_produccion, name='concluir_produccion'),
+<<<<<<< Updated upstream
+=======
+    #Iniciar produccion 
+    path('<uuid:pk>/avance/', agita_produccion, name='agita_produccion'),
 
+>>>>>>> Stashed changes
+    #Concluir producción
+    path('<uuid:pk>/concluir/', concluir_produccion, name='concluir_produccion'),
+
+    #Crear pruebas
+    path('<uuid:pk>/reg_prueba/', crear_prueba_quimica, name='crear_prueba_quimica'),
+    
     #Subir pruebas
     path('produccion/<uuid:pk>/pruebas/', subir_pruebas_quimicas, name='subir_pruebas'),
     path('produccion/<uuid:pk>/pruebas/descargar/', descargar_pruebas_quimicas, name='descargar_pruebas'),
     path('produccion/<uuid:pk>/pruebas/eliminar/', eliminar_pruebas_quimicas, name='eliminar_pruebas'),
+
+    #Gestionar pruebas químicas
+    path('parametros/', lista_parametros, name='parametros_lista'),
+    path('parametros/crear/', crear_parametro, name='crear_parametro'),
+    path('parametros/<uuid:parametro_id>/editar/', editar_parametro, name='editar_parametro'),
+    path('parametros/<uuid:parametro_id>/', detalle_parametro, name='detalle_parametro'),
 
     #Cancelación
     path('produccion/<uuid:pk>/cancelar/', cancelar_produccion, name='cancelar_produccion'),

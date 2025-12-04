@@ -1,0 +1,729 @@
+<!-- templates/produccion/crear_prueba_quimica.html -->
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="page-title">
+                            <i class="fas fa-flask me-1"></i>
+                            Nueva Prueba Química
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Información de la producción -->
+                            <div class="alert alert-info mb-4">
+                                <h5 class="alert-heading mb-3">
+                                    <i class="fas fa-industry me-2"></i>
+                                    Producción a Evaluar
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <strong><i class="fas fa-barcode me-1"></i> Lote:</strong>
+                                        <span class="badge bg-primary">{{ produccion.lote }}</span>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <strong><i class="fas fa-box me-1"></i> Producto:</strong>
+                                        {{ produccion.catalogo_producto.nombre }}
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <strong><i class="fas fa-building me-1"></i> Planta:</strong>
+                                        {{ produccion.planta.nombre }}
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <strong><i class="fas fa-calendar me-1"></i> Fecha Producción:</strong>
+                                        {{ produccion.fecha_creacion|date:"d/m/Y" }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Formulario principal -->
+                            <form method="post" enctype="multipart/form-data" id="pruebaForm">
+                                {% csrf_token %}
+                                
+                                <!-- Campos del formulario Django -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="id_fecha_prueba" class="form-label">
+                                                <strong>Fecha de la Prueba *</strong>
+                                            </label>
+                                            <input type="datetime-local" 
+                                                   class="form-control" 
+                                                   id="id_fecha_prueba" 
+                                                   name="fecha_prueba"
+                                                   value="{{ form.fecha_prueba.value|default:'' }}"
+                                                   required>
+                                            {% if form.fecha_prueba.errors %}
+                                            <div class="text-danger small">{{ form.fecha_prueba.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="id_fecha_vencimiento" class="form-label">
+                                                {{ form.fecha_vencimiento.label }}
+                                            </label>
+                                            {{ form.fecha_vencimiento }}
+                                            {% if form.fecha_vencimiento.errors %}
+                                            <div class="text-danger small">{{ form.fecha_vencimiento.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Parámetros de la prueba -->
+                                <div class="card mb-4 border-primary">
+                                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-list-check me-1"></i>
+                                            Parámetros a Evaluar
+                                        </h5>
+                                        <button type="button" class="btn btn-sm btn-light" id="btnAgregarParametro">
+                                            <i class="fas fa-plus me-1"></i> Agregar Parámetro
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="parametrosContainer">
+                                            <!-- Parámetros dinámicos se agregarán aquí -->
+                                        </div>
+                                        
+                                        <!-- Mensaje inicial -->
+                                        <div id="sinParametros" class="text-center text-muted py-4">
+                                            <i class="fas fa-flask fa-3x mb-3"></i>
+                                            <h5>No hay parámetros agregados</h5>
+                                            <p class="mb-0">Agregue al menos un parámetro para realizar la prueba</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Campos restantes -->
+                                <div class="row mb-4">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="id_observaciones" class="form-label">
+                                                {{ form.observaciones.label }}
+                                            </label>
+                                            {{ form.observaciones }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="id_archivo_resultado" class="form-label">
+                                                {{ form.archivo_resultado.label }}
+                                            </label>
+                                            {{ form.archivo_resultado }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Resumen -->
+                                <div class="card mb-4 border-info">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-chart-bar me-1"></i>
+                                            Resumen de la Prueba
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="text-center mb-3">
+                                                    <div class="display-6 fw-bold" id="totalParametros">0</div>
+                                                    <div class="text-muted">Parámetros</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center mb-3">
+                                                    <div class="display-6 fw-bold text-success" id="parametrosValidos">0</div>
+                                                    <div class="text-muted">Válidos</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center mb-3">
+                                                    <div class="display-6 fw-bold text-danger" id="parametrosInvalidos">0</div>
+                                                    <div class="text-muted">Con problemas</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="alertaPrueba" class="alert alert-warning d-none">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <span id="mensajeAlerta"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Botones -->
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'produccion_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i> Cancelar
+                                    </a>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-primary me-2" id="btnValidar">
+                                            <i class="fas fa-check-circle me-1"></i> Validar
+                                        </button>
+                                        <button type="submit" class="btn btn-success" id="btnGuardar" disabled>
+                                            <i class="fas fa-save me-1"></i> Guardar Prueba
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template HTML para parámetro -->
+<template id="parametroTemplate">
+    <div class="parametro-item card mb-3" data-index="0">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+                <i class="fas fa-vial me-1"></i>
+                Parámetro #<span class="numero-parametro">1</span>
+            </h6>
+            <button type="button" class="btn btn-sm btn-danger btn-eliminar">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Parámetro *</label>
+                        <select class="form-control parametro-select" name="parametros[]" required>
+                            <option value="">Seleccionar parámetro...</option>
+                            {% for parametro in parametros_existentes %}
+                            <option value="{{ parametro.id }}" 
+                                    data-min="{{ parametro.valor_minimo|default:'' }}"
+                                    data-max="{{ parametro.valor_maximo|default:'' }}"
+                                    data-unidad="{{ parametro.unidad_medida|default:'' }}"
+                                    data-tipo="{{ parametro.tipo }}">
+                                {{ parametro.nombre }}
+                                {% if parametro.unidad_medida %}({{ parametro.unidad_medida }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Valor Medido *</label>
+                        <input type="text" class="form-control valor-input" name="valores[]" required>
+                        <small class="form-text text-muted unidad-text"></small>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones</label>
+                        <input type="text" class="form-control" name="observaciones_param[]" 
+                               placeholder="Observaciones específicas...">
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-light p-2 mb-0">
+                <span class="badge bg-secondary estado-badge">
+                    <i class="fas fa-question me-1"></i> Sin validar
+                </span>
+                <span class="ms-2 small estado-text text-muted">Seleccione un parámetro e ingrese valor</span>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block javascript %}
+<script>
+// Clase para manejar los parámetros
+class GestorParametros {
+    constructor() {
+        this.contador = 0;
+        this.parametros = new Map(); // Almacena parámetros por ID
+        this.init();
+    }
+
+    init() {
+        console.log('Inicializando Gestor de Parámetros...');
+        
+        // Botón agregar parámetro
+        const btnAgregar = document.getElementById('btnAgregarParametro');
+        if (btnAgregar) {
+            btnAgregar.addEventListener('click', () => this.agregarParametro());
+        }
+        
+        // Botón validar
+        const btnValidar = document.getElementById('btnValidar');
+        if (btnValidar) {
+            btnValidar.addEventListener('click', () => this.validarPruebaCompleta());
+        }
+        
+        // Configurar fecha mínima para vencimiento
+        const fechaVencimiento = document.getElementById('id_fecha_vencimiento');
+        if (fechaVencimiento) {
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaVencimiento.min = hoy;
+        }
+        
+        // Agregar primer parámetro automáticamente
+        setTimeout(() => this.agregarParametro(), 100);
+    }
+
+    agregarParametro() {
+        try {
+            const template = document.getElementById('parametroTemplate');
+            if (!template) {
+                console.error('Template no encontrado');
+                return;
+            }
+
+            const clone = template.content.cloneNode(true);
+            const parametroDiv = clone.querySelector('.parametro-item');
+            
+            this.contador++;
+            const parametroId = `parametro_${this.contador}`;
+            parametroDiv.dataset.id = parametroId;
+            
+            // Actualizar número
+            const numeroSpan = parametroDiv.querySelector('.numero-parametro');
+            if (numeroSpan) {
+                numeroSpan.textContent = this.contador;
+            }
+            
+            // Configurar nombres únicos
+            this.configurarNombres(parametroDiv, this.contador);
+            
+            // Agregar eventos
+            this.agregarEventos(parametroDiv);
+            
+            // Agregar al DOM
+            const container = document.getElementById('parametrosContainer');
+            if (container) {
+                container.appendChild(parametroDiv);
+            }
+            
+            // Ocultar mensaje de "sin parámetros"
+            this.ocultarMensajeSinParametros();
+            
+            // Actualizar resumen
+            this.actualizarResumen();
+            
+            console.log(`Parámetro ${this.contador} agregado`);
+            
+        } catch (error) {
+            console.error('Error al agregar parámetro:', error);
+        }
+    }
+
+    configurarNombres(parametroDiv, index) {
+        // Actualizar nombres de los campos para enviar al servidor
+        const select = parametroDiv.querySelector('.parametro-select');
+        const valorInput = parametroDiv.querySelector('.valor-input');
+        const obsInput = parametroDiv.querySelector('input[name="observaciones_param[]"]');
+        
+        if (select) select.name = `parametro_${index}`;
+        if (valorInput) valorInput.name = `valor_medido_${index}`;
+        if (obsInput) obsInput.name = `observacion_param_${index}`;
+    }
+
+    agregarEventos(parametroDiv) {
+        // Botón eliminar
+        const btnEliminar = parametroDiv.querySelector('.btn-eliminar');
+        if (btnEliminar) {
+            btnEliminar.addEventListener('click', () => this.eliminarParametro(parametroDiv));
+        }
+        
+        // Evento cambio en select
+        const select = parametroDiv.querySelector('.parametro-select');
+        if (select) {
+            select.addEventListener('change', () => {
+                this.actualizarUnidad(select);
+                this.validarParametroIndividual(parametroDiv);
+                this.actualizarResumen();
+            });
+        }
+        
+        // Evento input en valor
+        const valorInput = parametroDiv.querySelector('.valor-input');
+        if (valorInput) {
+            valorInput.addEventListener('input', () => {
+                this.validarParametroIndividual(parametroDiv);
+                this.actualizarResumen();
+            });
+        }
+    }
+
+    eliminarParametro(parametroDiv) {
+        try {
+            parametroDiv.remove();
+            this.renumerarParametros();
+            this.mostrarMensajeSiNoHayParametros();
+            this.actualizarResumen();
+        } catch (error) {
+            console.error('Error al eliminar parámetro:', error);
+        }
+    }
+
+    renumerarParametros() {
+        const parametros = document.querySelectorAll('.parametro-item');
+        parametros.forEach((div, index) => {
+            const numeroSpan = div.querySelector('.numero-parametro');
+            if (numeroSpan) {
+                numeroSpan.textContent = index + 1;
+            }
+            // Reconfigurar nombres
+            this.configurarNombres(div, index + 1);
+        });
+        this.contador = parametros.length;
+    }
+
+    actualizarUnidad(select) {
+        try {
+            const opcion = select.options[select.selectedIndex];
+            if (!opcion) return;
+            
+            const unidad = opcion.dataset.unidad || '';
+            const parametroDiv = select.closest('.parametro-item');
+            const unidadText = parametroDiv?.querySelector('.unidad-text');
+            
+            if (unidadText) {
+                unidadText.textContent = unidad ? `Unidad: ${unidad}` : '';
+            }
+        } catch (error) {
+            console.error('Error al actualizar unidad:', error);
+        }
+    }
+
+    validarParametroIndividual(parametroDiv) {
+        try {
+            const select = parametroDiv.querySelector('.parametro-select');
+            const valorInput = parametroDiv.querySelector('.valor-input');
+            const estadoBadge = parametroDiv.querySelector('.estado-badge');
+            const estadoText = parametroDiv.querySelector('.estado-text');
+            
+            if (!select || !valorInput || !estadoBadge || !estadoText) {
+                return false;
+            }
+            
+            const parametroId = select.value;
+            const valor = valorInput.value.trim();
+            
+            // Validaciones básicas
+            if (!parametroId) {
+                this.marcarEstado(parametroDiv, 'secondary', 'Sin seleccionar', 'Seleccione un parámetro');
+                return false;
+            }
+            
+            if (!valor) {
+                this.marcarEstado(parametroDiv, 'warning', 'Sin valor', 'Ingrese el valor medido');
+                return false;
+            }
+            
+            // Obtener datos del parámetro
+            const opcion = select.options[select.selectedIndex];
+            const valorMin = opcion.dataset.min ? parseFloat(opcion.dataset.min) : null;
+            const valorMax = opcion.dataset.max ? parseFloat(opcion.dataset.max) : null;
+            const tipoValor = opcion.dataset.tipo || 'numerico';
+            
+            // Validación según tipo
+            if (tipoValor === 'numerico') {
+                const valorNum = parseFloat(valor);
+                if (isNaN(valorNum)) {
+                    this.marcarEstado(parametroDiv, 'danger', 'Inválido', 'El valor debe ser numérico');
+                    return false;
+                }
+                
+                // Validar rangos
+                let mensaje = '';
+                let valido = true;
+                
+                if (valorMin !== null && valorNum < valorMin) {
+                    valido = false;
+                    mensaje = `Debajo del mínimo (${valorMin})`;
+                }
+                if (valorMax !== null && valorNum > valorMax) {
+                    valido = false;
+                    mensaje = `Sobre el máximo (${valorMax})`;
+                }
+                
+                if (valido) {
+                    this.marcarEstado(parametroDiv, 'success', 'Válido', 'Dentro de especificación');
+                    return true;
+                } else {
+                    this.marcarEstado(parametroDiv, 'danger', 'Fuera de espec', mensaje);
+                    return false;
+                }
+            } else {
+                this.marcarEstado(parametroDiv, 'success', 'Válido', 'Valor registrado');
+                return true;
+            }
+            
+        } catch (error) {
+            console.error('Error al validar parámetro individual:', error);
+            this.marcarEstado(parametroDiv, 'danger', 'Error', 'Error en validación');
+            return false;
+        }
+    }
+
+    marcarEstado(parametroDiv, tipo, estado, mensaje) {
+        const estadoBadge = parametroDiv.querySelector('.estado-badge');
+        const estadoText = parametroDiv.querySelector('.estado-text');
+        
+        if (estadoBadge) {
+            estadoBadge.className = `badge bg-${tipo}`;
+            estadoBadge.innerHTML = `<i class="fas fa-${this.getIconoTipo(tipo)} me-1"></i> ${estado}`;
+        }
+        
+        if (estadoText) {
+            estadoText.textContent = mensaje;
+            estadoText.className = `ms-2 small estado-text text-${tipo}`;
+        }
+    }
+
+    getIconoTipo(tipo) {
+        const iconos = {
+            'success': 'check',
+            'danger': 'times',
+            'warning': 'exclamation',
+            'secondary': 'question'
+        };
+        return iconos[tipo] || 'question';
+    }
+
+    actualizarResumen() {
+        try {
+            const parametros = document.querySelectorAll('.parametro-item');
+            let total = parametros.length;
+            let validos = 0;
+            let invalidos = 0;
+            
+            parametros.forEach(parametroDiv => {
+                const select = parametroDiv.querySelector('.parametro-select');
+                const valorInput = parametroDiv.querySelector('.valor-input');
+                
+                if (select?.value && valorInput?.value.trim()) {
+                    if (this.validarParametroIndividual(parametroDiv)) {
+                        validos++;
+                    } else {
+                        invalidos++;
+                    }
+                } else {
+                    invalidos++;
+                }
+            });
+            
+            // Actualizar UI
+            this.actualizarContadores(total, validos, invalidos);
+            this.actualizarEstadoBotonGuardar(total, validos, invalidos);
+            
+        } catch (error) {
+            console.error('Error al actualizar resumen:', error);
+        }
+    }
+
+    actualizarContadores(total, validos, invalidos) {
+        const actualizarElemento = (id, valor) => {
+            const elemento = document.getElementById(id);
+            if (elemento) elemento.textContent = valor;
+        };
+        
+        actualizarElemento('totalParametros', total);
+        actualizarElemento('parametrosValidos', validos);
+        actualizarElemento('parametrosInvalidos', invalidos);
+    }
+
+    actualizarEstadoBotonGuardar(total, validos, invalidos) {
+        const btnGuardar = document.getElementById('btnGuardar');
+        const alerta = document.getElementById('alertaPrueba');
+        const mensajeAlerta = document.getElementById('mensajeAlerta');
+        
+        if (!btnGuardar || !alerta || !mensajeAlerta) return;
+        
+        if (total === 0) {
+            this.mostrarAlerta('warning', 'Debe agregar al menos un parámetro para la prueba.');
+            btnGuardar.disabled = true;
+        } else if (validos === 0) {
+            this.mostrarAlerta('danger', 'Ningún parámetro tiene valores válidos. Complete los datos.');
+            btnGuardar.disabled = true;
+        } else if (invalidos > 0) {
+            this.mostrarAlerta('warning', `${invalidos} parámetro(s) tienen problemas. Puede guardar de todas formas.`);
+            btnGuardar.disabled = false;
+        } else {
+            this.ocultarAlerta();
+            btnGuardar.disabled = false;
+        }
+    }
+
+    mostrarAlerta(tipo, mensaje) {
+        const alerta = document.getElementById('alertaPrueba');
+        const mensajeAlerta = document.getElementById('mensajeAlerta');
+        
+        if (alerta && mensajeAlerta) {
+            alerta.className = `alert alert-${tipo}`;
+            mensajeAlerta.textContent = mensaje;
+            alerta.classList.remove('d-none');
+        }
+    }
+
+    ocultarAlerta() {
+        const alerta = document.getElementById('alertaPrueba');
+        if (alerta) {
+            alerta.classList.add('d-none');
+        }
+    }
+
+    ocultarMensajeSinParametros() {
+        const sinParametros = document.getElementById('sinParametros');
+        if (sinParametros) {
+            sinParametros.style.display = 'none';
+        }
+    }
+
+    mostrarMensajeSiNoHayParametros() {
+        const sinParametros = document.getElementById('sinParametros');
+        const parametros = document.querySelectorAll('.parametro-item');
+        
+        if (sinParametros && parametros.length === 0) {
+            sinParametros.style.display = 'block';
+        }
+    }
+
+    validarPruebaCompleta() {
+        try {
+            const parametros = document.querySelectorAll('.parametro-item');
+            let errores = [];
+            let advertencias = [];
+            
+            // Validar fecha de prueba
+            const fechaPrueba = document.getElementById('id_fecha_prueba');
+            if (!fechaPrueba || !fechaPrueba.value) {
+                errores.push('Debe especificar la fecha de la prueba');
+            }
+            
+            // Validar cada parámetro
+            parametros.forEach((parametroDiv, index) => {
+                const esValido = this.validarParametroIndividual(parametroDiv);
+                if (!esValido) {
+                    const select = parametroDiv.querySelector('.parametro-select');
+                    const nombre = select?.options[select.selectedIndex]?.text || `Parámetro ${index + 1}`;
+                    errores.push(`${nombre}: No cumple con las especificaciones`);
+                }
+            });
+            
+            // Mostrar resultados
+            this.mostrarResultadosValidacion(errores);
+            
+        } catch (error) {
+            console.error('Error al validar prueba completa:', error);
+            alert('Error al validar la prueba: ' + error.message);
+        }
+    }
+
+    mostrarResultadosValidacion(errores) {
+        if (typeof Swal !== 'undefined') {
+            if (errores.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Errores encontrados',
+                    html: `
+                        <div class="text-start">
+                            <p>Por favor corrija los siguientes errores:</p>
+                            <ul class="text-danger">
+                                ${errores.map(error => `<li>${error}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `,
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Prueba válida!',
+                    text: 'Todos los parámetros son correctos.',
+                    confirmButtonText: 'Continuar'
+                });
+            }
+        } else {
+            // Fallback sin SweetAlert
+            if (errores.length > 0) {
+                alert('Errores:\n' + errores.join('\n'));
+            } else {
+                alert('¡Prueba válida! Todos los parámetros son correctos.');
+            }
+        }
+    }
+
+    // Método para obtener datos para enviar al servidor
+    obtenerDatosParametros() {
+        const datos = [];
+        const parametros = document.querySelectorAll('.parametro-item');
+        
+        parametros.forEach(parametroDiv => {
+            const select = parametroDiv.querySelector('.parametro-select');
+            const valorInput = parametroDiv.querySelector('.valor-input');
+            const obsInput = parametroDiv.querySelector('input[name^="observacion_param_"]');
+            
+            if (select && valorInput) {
+                datos.push({
+                    parametro_id: select.value,
+                    valor_medido: valorInput.value,
+                    observaciones: obsInput ? obsInput.value : ''
+                });
+            }
+        });
+        
+        return datos;
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, inicializando gestor de parámetros...');
+    window.gestorParametros = new GestorParametros();
+});
+</script>
+
+<style>
+.parametro-item {
+    border-left: 4px solid #0d6efd;
+    transition: all 0.3s ease;
+}
+
+.parametro-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-eliminar:hover {
+    transform: scale(1.1);
+}
+
+.valor-input:valid {
+    border-color: #198754;
+}
+
+.valor-input:invalid {
+    border-color: #dc3545;
+}
+
+.badge {
+    min-width: 120px;
+    font-size: 0.85em;
+}
+
+.alert-light {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}

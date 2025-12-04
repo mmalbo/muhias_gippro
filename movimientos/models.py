@@ -2,7 +2,6 @@ from django.db import models
 from bases.bases.models import ModeloBase
 from nomencladores.almacen.models import Almacen
 from produccion.envasado.models import Envasado
-from produccion.models import Produccion
 from materia_prima.models import MateriaPrima
 from producto.models import Producto
 from envase_embalaje.models import EnvaseEmbalaje
@@ -29,7 +28,7 @@ class Transportista(ModeloBase):
 # Esta es la clase que registra los movimientos de almacén y guarda todos los datos para generar el vale correspondiente
 class Vale_Movimiento_Almacen(ModeloBase):
     
-    VALE_TYPES = (('factura','Factura'),
+    VALE_TYPES = (('entrega','Entrega'),
                       ('transferencia','Transferencia'),
                       ('ajuste','Ajuste de inventario'),
                       ('recepcion','Recepción'),
@@ -52,6 +51,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
     recibido_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Quien recibe")
     autorizado_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Autoriza")
     entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
+    despachado = models.BooleanField(default=False, verbose_name="Verdadero: Cuando se haga efectivo el movimiento")
 
     def __str__(self):
         return f'Vale No. {self.consecutivo}. Fecha: {self.fecha_movimiento}'
@@ -63,6 +63,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
         
 #Relación mucho a mucho de movimiento con Produccion
 class Vale_Salida_Almacen_Produccion(ModeloBase):
+    from produccion.models import Produccion
     fecha_solicitud = models.DateField(
         auto_now=True, null=False,
         verbose_name="Fecha de solicitud"
@@ -80,6 +81,7 @@ class Vale_Salida_Almacen_Produccion(ModeloBase):
         verbose_name="Movimiento"
     )
 
+#Relación mucho a mucho de movimiento con envasado
 class Vale_Salida_Almacen_Envasado(ModeloBase):
     fecha_solicitud = models.DateField(
         auto_now=True, null=True,
@@ -157,5 +159,9 @@ class Movimiento_Ins(ModeloBase):
     #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
+<<<<<<< Updated upstream
         entrada = 'Entrada ' if self.vale_i.entrada else 'Salida '
+=======
+        entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '
+>>>>>>> Stashed changes
         return f'{entrada} de {self.insumo.nombre} en {self.vale_e.almacen.nombre}'

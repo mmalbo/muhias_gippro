@@ -144,6 +144,11 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class=" ">
+                                <a href="{% url 'parametros_lista' %}" class="collapsed" aria-expanded="false">
+                                    <span class="ml-3">Parámetros químicos</span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 {% endif %}
@@ -179,7 +184,7 @@
                     </li>
                 {% endif %}                
 
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
                     <li class=" ">
                         <a href="#registrar" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <svg class="svg-icon" id="p-dash14" width="20" height="20"
@@ -244,13 +249,23 @@
                         </a>
                         <ul id="mov" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">                            
                             <li class=" ">
-                                <a href="{% url 'producto_list' %}" class="collapsed" aria-expanded="false">
+                                <a href="{% url 'rec_pend_list' %}" class="collapsed" aria-expanded="false">
                                     <span class="ml-2">Recepciones pendientes</span>
                                 </a>
                             </li>
                             <li class=" ">
                                 <a href="{% url 'movimiento_list' %}" class="collapsed" aria-expanded="false">
                                     <span class="ml-2">Movimientos</span>
+                                </a>
+                            </li>
+                            <li class=" ">
+                                <a href="{% url 'solicitudes_almacen' %}" class="collapsed" aria-expanded="false">
+                                    <span class="ml-2">Solicitudes a almacén</span>
+                                </a>
+                            </li>
+                            <li class=" ">
+                                <a href="{% url 'solicitudes_pendientes' %}" class="collapsed" aria-expanded="false">
+                                    <span class="ml-2">Solicitudes pendientes</span>
                                 </a>
                             </li>
                         </ul>

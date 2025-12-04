@@ -127,13 +127,29 @@
             </tr>
             {% elif data.tipop == 'ENV' %}
             <tr>
-                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.envase_embalaje.codigo_envase }} </td>
-                <td class="table-info-td" style="width: 100px;"> {{ item.cantidad }} </td>
+                <td> {{ item.envase_embalaje.codigo_envase }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.envase_embalaje }} </td>
+                <td> </td>
+                <td> {{ item.cantidad }} </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
             </tr>
             {% else %}
-            <tr>
+    <tr>
+                <td> {{ item.insumo.codigo }} </td>
                 <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.insumo.nombre }} </td>
-                <td class="table-info-td" style="width: 100px;"> {{ item.cantidad }} </td>
+                <td> </td>
+                <td> {{ item.cantidad }} </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
             </tr>
             {% endif %}
             {% endfor %}

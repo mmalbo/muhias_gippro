@@ -7,20 +7,29 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, FileResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 from django.utils import timezone
+<<<<<<< Updated upstream
+=======
+from django.db.models import Q
+from decimal import Decimal, InvalidOperation
+>>>>>>> Stashed changes
 import datetime
 import json
 
 from collections import OrderedDict
-from .models import Produccion
+from .models import Produccion, Prod_Inv_MP, PruebaQuimica, ParametroPrueba, DetallePruebaQuimica
 from materia_prima.models import MateriaPrima
 from inventario.models import Inv_Mat_Prima
 from producto.models import Producto
 from envase_embalaje.models import Formato
 from nomencladores.almacen.models import Almacen
-from .forms import ProduccionForm, MateriaPrimaForm, SubirPruebasQuimicasForm, CancelarProduccionForm
+from movimientos.models import Vale_Movimiento_Almacen
+from .forms import (ProduccionForm, MateriaPrimaForm, 
+    SubirPruebasQuimicasForm, CancelarProduccionForm, PruebaQuimicaForm, 
+    DetallePruebaFormSet, AprobarPruebaForm, ParametroPruebaForm, BuscarParametroForm)
 
 class ProduccionListView(ListView):
     model = Produccion
@@ -179,6 +188,7 @@ class CrearProduccionView(View):
                 estado='Planificada'
             )
             print(produccion.lote)
+<<<<<<< Updated upstream
 
             # Guardar materias primas
             """ for mp_data in materias_primas:
@@ -188,6 +198,29 @@ class CrearProduccionView(View):
                     almacen=mp_data['almacen'],
                     cantidad=mp_data['cantidad']
                 ) """
+=======
+            print(produccion.catalogo_producto)
+
+            #generar un vale de almacen tipo solicitud
+            print('Voy a crear vale')
+            vale = Vale_Movimiento_Almacen.objects.create(
+                tipo = 'Solicitud',
+                entrada = False
+            )
+            print(vale.tipo)
+
+            # Guardar relación con materias primas
+            for mp_data in materias_primas:
+                if not vale.almacen:
+                    vale.almacen = mp_data['almacen']
+                Prod_Inv_MP.objects.create(
+                    lote_prod=produccion,
+                    inv_materia_prima=mp_data['materia_prima'],
+                    cantidad_materia_prima=mp_data['cantidad'],
+                    almacen=mp_data['almacen'],
+                    vale = vale
+                )
+>>>>>>> Stashed changes
             
             # Limpiar sesión
             if 'produccion_data' in request.session:
@@ -251,13 +284,18 @@ def iniciar_produccion(request, pk):
     produccion = get_object_or_404(Produccion, pk=pk)
     
     if produccion.estado == 'Planificada':
+<<<<<<< Updated upstream
         produccion.estado = 'En proceso'
+=======
+        produccion.estado = 'Iniciando mezcla'
+>>>>>>> Stashed changes
         produccion.save()
         messages.success(request, f'✅ Producción {produccion.lote} iniciada correctamente')
     else:
         messages.warning(request, f'⚠️ La producción {produccion.lote} ya está en estado: {produccion.estado}')
     
     return redirect('produccion_list')
+<<<<<<< Updated upstream
 #Este dió error
 """class CambiarEstadoProduccionView(View):
     def post(self, request, pk):
@@ -285,12 +323,28 @@ class ProduccionUpdateView(UpdateView):
     form_class = ProduccionForm
     template_name = 'produccion/form.html'
     success_url = reverse_lazy('produccion_list') """
+=======
+
+def agita_produccion(request, pk):
+    produccion_p = get_object_or_404(Produccion, pk=pk)
+        
+    if produccion_p.estado == 'Iniciando mezcla':
+        produccion_p.estado = 'En proceso: Agitado'
+        produccion_p.save()
+            
+        messages.success(request, f'✅ Producción {produccion_p.lote} actualizada correctamente')
+            
+    else:
+        messages.warning(request, f'⚠️ La producción {produccion_p.lote} ya está en estado: {produccion_p.estado}')
+    
+    return redirect('produccion_list')
+>>>>>>> Stashed changes
 
 def concluir_produccion(request, pk):
     """View para mostrar formulario de conclusión"""
     produccion = get_object_or_404(Produccion, pk=pk)
     
-    if request.method == 'POST' and produccion.estado == 'En proceso':
+    if request.method == 'POST' and produccion.estado == 'En proceso: Agitado':
         cantidad_real = request.POST.get('cantidad_real')
         
         if cantidad_real:
@@ -298,9 +352,10 @@ def concluir_produccion(request, pk):
                 cantidad_real = float(cantidad_real)
                 if cantidad_real > 0:
                     produccion.cantidad_real = cantidad_real
-                    produccion.estado = 'Terminada'
+                    produccion.estado = 'En proceso: Validación'
                     produccion.fecha_actualizacion = datetime.datetime.now()
                     produccion.save()
+
                     
                     messages.success(request, f'✅ Producción {produccion.lote} completada. Cantidad obtenida: {cantidad_real}')
                     return redirect('produccion_list')
@@ -311,9 +366,13 @@ def concluir_produccion(request, pk):
         else:
             messages.error(request, '❌ Debe especificar la cantidad obtenida')
     
+<<<<<<< Updated upstream
     return render(request, 'produccion/concluir_produccion.html', {
         'produccion': produccion
     })
+=======
+    return render(request, 'produccion/concluir_produccion.html', { 'produccion': produccion })
+>>>>>>> Stashed changes
 
 def subir_pruebas_quimicas(request, pk):
     """View para subir archivo de pruebas químicas"""
@@ -428,4 +487,294 @@ def detalle_cancelacion(request, pk):
     
     return render(request, 'produccion/detalle_cancelacion.html', {
         'produccion': produccion
+    })
+
+###---Registro de pruebas químicas---###
+
+@login_required
+#@permission_required('produccion.add_pruebaquimica')
+def crear_prueba_quimica_base(request, pk):
+    """Crear una nueva prueba química para una producción específica"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    # Obtener parámetros existentes para el select
+    parametros_existentes = ParametroPrueba.objects.filter(activo=True)
+    
+    if request.method == 'POST':
+        form = PruebaQuimicaForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            try:
+                # Validar fecha de prueba
+                fecha_prueba_str = request.POST.get('fecha_prueba')
+                if not fecha_prueba_str:
+                    messages.error(request, 'La fecha de prueba es obligatoria')
+                    return render(request, 'produccion/crear_prueba_quimica.html', {
+                        'produccion': produccion,
+                        'form': form,
+                        'parametros_existentes': parametros_existentes
+                    })
+                
+                # Convertir fecha de prueba
+                from django.utils.dateparse import parse_datetime
+                fecha_prueba = parse_datetime(fecha_prueba_str)
+                if not fecha_prueba:
+                    messages.error(request, 'Formato de fecha inválido')
+                    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                        'produccion': produccion,
+                        'form': form,
+                        'parametros_existentes': parametros_existentes
+                    })
+                
+                # Crear la prueba química
+                prueba = form.save(commit=False)
+                prueba.produccion = produccion
+                prueba.fecha_prueba = fecha_prueba
+                prueba.save()
+                
+                # Procesar parámetros del formulario
+                parametros_ids = request.POST.getlist('parametro')
+                valores = request.POST.getlist('valor_medido')
+                observaciones = request.POST.getlist('observaciones_parametro')
+                
+                # Validar que haya al menos un parámetro
+                if not parametros_ids or not any(parametros_ids):
+                    messages.error(request, 'Debe agregar al menos un parámetro')
+                    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                        'produccion': produccion,
+                        'form': form,
+                        'parametros_existentes': parametros_existentes
+                    })
+                
+                # Guardar cada parámetro
+                for i in range(len(parametros_ids)):
+                    if parametros_ids[i]:  # Solo procesar si hay parámetro seleccionado
+                        try:
+                            parametro = ParametroPrueba.objects.get(id=parametros_ids[i])
+                            
+                            # Crear detalle de prueba
+                            DetallePruebaQuimica.objects.create(
+                                prueba=prueba,
+                                parametro=parametro,
+                                valor_medido=valores[i] if i < len(valores) else '',
+                                observaciones=observaciones[i] if i < len(observaciones) else ''
+                            )
+                        except ParametroPrueba.DoesNotExist:
+                            messages.error(request, f'Parámetro con ID {parametros_ids[i]} no existe')
+                            continue
+                
+                # Calcular resultado final
+                prueba.resultado_final = prueba.calcular_resultado_final()
+                prueba.save()
+                
+                messages.success(request, f'Prueba química creada exitosamente para lote {produccion.lote}')
+                return redirect('produccion_list')
+                
+            except Exception as e:
+                messages.error(request, f'Error al crear la prueba: {str(e)}')
+    else:
+        form = PruebaQuimicaForm()
+    
+    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+        'produccion': produccion,
+        'form': form,
+        'parametros_existentes': parametros_existentes
+    })
+
+def crear_prueba_quimica(request, pk):
+    produccion = get_object_or_404(Produccion, pk=pk)
+    parametros_existentes = ParametroPrueba.objects.filter(activo=True)
+    
+    if request.method == 'POST':
+        # Capturar datos del formulario principal
+        fecha_prueba = request.POST.get('fecha_prueba')
+        fecha_vencimiento = request.POST.get('fecha_vencimiento') or None
+        observaciones = request.POST.get('observaciones', '')
+        
+        # Validar fecha de prueba
+        if not fecha_prueba:
+            return render(request, 'produccion/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+                'error': 'La fecha de prueba es obligatoria'
+            })
+        
+        # Crear la prueba química
+        prueba = PruebaQuimica.objects.create(
+            produccion=produccion,
+            fecha_prueba=fecha_prueba,
+            fecha_vencimiento=fecha_vencimiento,
+            observaciones=observaciones,
+            usuario=request.user
+        )
+        
+        # Procesar parámetros dinámicos
+        contador = 1
+        while True:
+            parametro_id = request.POST.get(f'parametro_{contador}')
+            valor_medido = request.POST.get(f'valor_medido_{contador}')
+            
+            if not parametro_id or not valor_medido:
+                break
+            
+            try:
+                parametro = ParametroPrueba.objects.get(id=parametro_id)
+                
+                # Validar valor según tipo
+                if parametro.tipo_valor == 'numerico':
+                    try:
+                        valor_decimal = Decimal(valor_medido)
+                        
+                        # Validar rangos si existen
+                        if parametro.valor_minimo and valor_decimal < parametro.valor_minimo:
+                            # Podrías registrar esto como advertencia
+                            pass
+                        
+                        if parametro.valor_maximo and valor_decimal > parametro.valor_maximo:
+                            # Podrías registrar esto como advertencia
+                            pass
+                            
+                    except (InvalidOperation, ValueError):
+                        # Valor no es decimal válido
+                        pass
+                
+                # Crear parámetro de prueba
+                observacion_param = request.POST.get(f'observacion_param_{contador}', '')
+                
+                ParametroPrueba.objects.create(
+                    prueba=prueba,
+                    parametro=parametro,
+                    valor_medido=valor_medido,
+                    observaciones=observacion_param,
+                    dentro_especificacion=parametro.validar_valor(valor_medido)
+                )
+                
+            except ParametroPrueba.DoesNotExist:
+                pass
+            
+            contador += 1
+        
+        return redirect('produccion_list')
+    
+    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+        'produccion': produccion,
+        'parametros_existentes': parametros_existentes,
+    })
+
+@login_required
+def detalle_prueba_quimica(request, prueba_id):
+    """Ver detalle de una prueba química"""
+    prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
+    detalles = prueba.detalles.select_related('parametro')
+    
+    return render(request, 'produccion/detalle_prueba_quimica.html', {
+        'prueba': prueba,
+        'detalles': detalles
+    })
+
+@login_required
+@permission_required('produccion.change_pruebaquimica')
+def aprobar_prueba_quimica(request, prueba_id):
+    """Aprobar o rechazar una prueba química"""
+    prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
+    
+    if request.method == 'POST':
+        form = AprobarPruebaForm(request.POST)
+        accion = request.POST.get('accion')
+        
+        if form.is_valid():
+            if accion == 'aprobar':
+                prueba.aprobar(request.user)
+                messages.success(request, 'Prueba aprobada correctamente')
+            elif accion == 'rechazar':
+                prueba.rechazar(request.user)
+                messages.warning(request, 'Prueba rechazada')
+            
+            return redirect('detalle_prueba_quimica', prueba_id=prueba.id)
+    else:
+        form = AprobarPruebaForm()
+    
+    return render(request, 'produccion/aprobar_prueba_quimica.html', {
+        'prueba': prueba,
+        'form': form
+    })
+
+# views.py
+
+@login_required
+@permission_required('produccion.view_parametroprueba')
+def lista_parametros(request):
+    """Lista y busca parámetros con filtros avanzados"""
+    form = BuscarParametroForm(request.GET or None)
+    parametros = ParametroPrueba.objects.all()
+    
+    """if form.is_valid():
+        tipo = form.cleaned_data.get('tipo')
+        activo = form.cleaned_data.get('activo')
+        buscar = form.cleaned_data.get('buscar')
+        
+        if tipo:
+            parametros = parametros.filter(tipo=tipo)
+        if activo == 'true':
+            parametros = parametros.filter(activo=True)
+        elif activo == 'false':
+            parametros = parametros.filter(activo=False)
+        if buscar:
+            parametros = parametros.filter(
+                Q(nombre__icontains=buscar) |
+                Q(descripcion__icontains=buscar)
+            )
+    
+    parametros = parametros.select_related('tipo').order_by('tipo', 'nombre')"""
+    
+    return render(request, 'produccion/parametros/list.html', {
+        'parametros': parametros,
+        'form': form
+    })
+
+@login_required
+@permission_required('produccion.add_parametroprueba')
+def crear_parametro(request):
+    """Crear nuevo parámetro personalizado"""
+    if request.method == 'POST':
+        form = ParametroPruebaForm(request.POST)
+        if form.is_valid():
+            parametro = form.save()
+            messages.success(request, f'Parámetro {parametro.nombre} creado exitosamente')
+            return redirect('parametros_lista')
+    else:
+        form = ParametroPruebaForm()
+    
+    return render(request, 'produccion/parametros/crear_parametro.html', {'form': form})
+
+@login_required
+@permission_required('produccion.change_parametroprueba')
+def editar_parametro(request, parametro_id):
+    """Editar parámetro existente"""
+    parametro = get_object_or_404(ParametroPrueba, id=parametro_id)
+    
+    if request.method == 'POST':
+        form = ParametroPruebaForm(request.POST, instance=parametro)
+        if form.is_valid():
+            parametro = form.save()
+            messages.success(request, f'Parámetro {parametro.nombre} actualizado')
+            return redirect('parametros_lista')
+    else:
+        # Convertir lista de opciones a texto separado por líneas
+        initial = {}
+               
+        form = ParametroPruebaForm(instance=parametro, initial=initial)
+    
+    return render(request, 'produccion/parametros/crear_parametro.html', {
+        'form': form,
+        'parametro': parametro
+    })
+
+@login_required
+def detalle_parametro(request, parametro_id):
+    """Ver detalle completo de un parámetro"""
+    parametro = get_object_or_404(ParametroPrueba, id=parametro_id)
+    
+    return render(request, 'produccion/parametros/detalle_parametro.html', {
+        'parametro': parametro,
     })

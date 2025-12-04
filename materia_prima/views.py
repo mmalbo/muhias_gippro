@@ -14,6 +14,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from nomencladores.almacen.models import Almacen
 from materia_prima.forms import MateriaPrimaForm, MateriaPrimaFormUpdate
 from materia_prima.models import MateriaPrima
+from inventario.models import Inv_Mat_Prima
 from .forms import AgregarTipoForm
 from .choices import obtener_tipos_materia_prima, eliminar_tipo_materia_prima, agregar_tipo_materia_prima
 
@@ -34,6 +35,7 @@ class ListMateriaPrimaView(ListView):
     model = MateriaPrima
     template_name = 'materia_prima/materia_prima_list.html'
     context_object_name = 'materias_primas'
+    #Hacer un query para mostrar solo la materias primas de un almacen si el usuario es almacenero, el almacen al que el pertenece
 
     def get_context_data(self, **kwargs):
         # Llama al método de la clase base
@@ -47,6 +49,50 @@ class ListMateriaPrimaView(ListView):
         if 'mensaje_succes' in self.request.session:
             messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
+
+@login_required
+def listMateriasPrimas(request):
+    almacen_id = request.GET.get('almacen')
+    producto_id = request.GET.get('producto')
+    
+    almacen = None
+    if request.user.groups.filter(name='Almaceneros').exists():
+        print('Almacenero')
+        almacen = Almacen.objects.filter(responsable=request.user).first()
+
+    materias_primas = Inv_Mat_Prima.objects.select_related('materia_prima', 'almacen')
+
+    if request.user.groups.filter(name='Presidencia-Admin').exists():
+        print('Presidencia')
+        if almacen_id and almacen_id != 'todos':
+            materias_primas = materias_primas.filter(almacen=almacen_id)
+    else:
+        if almacen:
+            materias_primas = materias_primas.filter(almacen=almacen)
+        else:
+            materias_primas = Inv_Mat_Prima.objects.none()
+
+    if producto_id:
+        materias_primas = materias_primas.filter(materia_prima=producto_id)
+
+    materias_primas = materias_primas.order_by('materia_prima__nombre', 'almacen__nombre')
+    almacenes = Almacen.objects.all()
+    productos = MateriaPrima.objects.all()
+    total_productos = materias_primas.count()
+
+    context = {
+        'materias_primas':materias_primas,
+        'almacenes':almacenes,
+        'productos':productos,
+        'almacen_id':almacen_id,
+        'producto_id':producto_id,
+        'almacen':almacen,
+        'total_productos':total_productos,
+        'es_admin': request.user.groups.filter(name='Presidencia-Admin').exists(),
+        'es_almacenero': request.user.groups.filter(name='Almaceneros').exists(),
+    }
+
+    return render(request, 'materia_prima/materia_prima_list.html', context)
 
 class UpdateMateriaPrimaView(UpdateView):
     model = MateriaPrima
@@ -77,6 +123,7 @@ class UpdateMateriaPrimaView(UpdateView):
         context['ficha_tecnica_nombre'] = basename(obj.ficha_tecnica.name) if obj.ficha_tecnica else ''
         context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
         return context
+
 
 class DeleteMateriaPrimaView(DeleteView):
     model = MateriaPrima
@@ -124,8 +171,8 @@ def importar(request):
                     conformacion = str(data[4]).strip() if data[4] is not None else None
                     cantidad = str(data[5]).strip() if data[5] is not None else None
                     costo = str(data[6]).strip() if data[6] is not None else None
-                    tipo_materia_prima = str(data[7]).strip() if data[Col_TipoMateria] is not None else None
-                    almacen = str(data[8]).strip() if data[Col_Almacen] is not None else None
+                    tipo_materia_prima = str(data[7]).strip() if data[7] is not None else None
+                    almacen = str(data[8]).strip() if data[8] is not None else None
 
                     if not all([nombre, concentracion,  conformacion, unidad, cantidad, costo,almacen]):
                         messages.error(request, f"Fila {No_fila + 2}: Todos los campos son obligatorios.")

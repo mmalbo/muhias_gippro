@@ -5,7 +5,9 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
-                    <h4 class="card-title">Listado de Materias Primas</h4>
+                    <h4 class="card-title">Listado de Materias Primas {% if es_almacenero and almacen %}
+                        - {{almacen.nombre}} {% endif %}
+                    </h4>
                     {% if messages %}
                         <script>
                             {% for message in messages %}
@@ -17,6 +19,38 @@
                             {% endfor %}
                         </script>
                     {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filtroForm">
+                        <div class="row">
+                            {% if es_admin %}
+                            <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="almacen"><i class="fas fawarehouse"></i> Almacén </label>
+                                <select name="almacen" id="almacen" class="form-control" onchange="this.form.submit()">
+                                    <option value="todos">Todos los almacenes</option>
+                                    {% for almacen in almacenes %}
+                                    <option value="{{almacen.id}}" 
+                                        {% if almacen_id == almacen.id|stringformat:"i" %}selected{% endif %}>
+                                        {{almacen.nombre}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            </div>
+                            {% else %}
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="almacen"><i class="fas fa-warehouse"></i>
+                                        Almacén
+                                    </label> 
+                                    <input type="text" class="form-control" value="{{ almacen.nombre|default:'No asignado'}}"
+                                    disabled>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </form>
                 </div>
                 <div class="col-sm-12 col-lg-12">
                     <table id="datatable" class="table data-table table-striped">
@@ -35,17 +69,23 @@
                         <tbody>
                         {% for materia_prima in materias_primas %}
                             <tr>
-                                <td>{{ materia_prima.codigo }}</td>
-                                <td>{{ materia_prima.nombre }}</td>
-                                <td>{{ materia_prima.unidad_medida }}</td>
-                                <td>{{ materia_prima.concentracion }}</td>
-                                <td>{{ materia_prima.tipo_materia_prima}}</td>
-                                <td>{{ materia_prima.cantidad_total }}</td>
-                                <td>{{ materia_prima.costo }}</td>
+                                <td>{{ materia_prima.materia_prima.codigo }}</td>
+                                <td>{{ materia_prima.materia_prima.nombre }}</td>
+                                <td>{{ materia_prima.materia_prima.unidad_medida }}</td>
+                                <td>{{ materia_prima.materia_prima.concentracion }}</td>
+                                <td>{{ materia_prima.materia_prima.tipo_materia_prima}}</td>
+                                <td>{{ materia_prima.materia_prima.cantidad_total }}</td>
+                                <td>{{ materia_prima.materia_prima.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
                                         <a href="{% url 'materia_prima:materia_prima_actualizar' materia_prima.pk %}"
+                                           title="Editar materia prima" class="btn far fa-edit"></a>
+                                        <a href="{% url 'ajuste_inv_mp' materia_prima.pk %}"
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
+                                        {% endif %}
+                                        {% if request.user.groups.all.0.name == 'Almaceneros'%}
+                                        <a href="{% url 'ajuste_inv_mp' materia_prima.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
                                         <a href="{% url 'materia_prima:get_materias_primas' materia_prima.pk %}"

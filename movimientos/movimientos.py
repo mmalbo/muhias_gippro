@@ -8,11 +8,12 @@ import os
 
 def export_vale(request, id_movimiento):
    data = {}
+   print(id_movimiento)
    #data['date'] = 
    #Diccionario de vale
    current_vale = {}        
    movimiento = Vale_Movimiento_Almacen.objects.filter(consecutivo=id_movimiento)[0]
-
+   print(movimiento)
    inventarios = Movimiento_MP.objects.filter(vale=movimiento.id)
    data['tipop'] = 'MP'
    if not inventarios:
