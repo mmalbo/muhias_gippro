@@ -16,6 +16,7 @@ from django import forms
 
 from envase_embalaje.models import EnvaseEmbalaje
 from nomencladores.filters import Filtro_Almacen
+from .choices import Conceptos, obtener_conceptos_almacen
 
 # Create your views here.
 
@@ -66,7 +67,7 @@ class AlmacenCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['materias_primas'] = Almacen.objects.all()
+        context['concepto'] = obtener_conceptos_almacen()
         # Agrega mensajes al contexto si existen
         if 'mensaje_error' in self.request.session:
             messages.error(self.request, self.request.session.pop('mensaje_error'))

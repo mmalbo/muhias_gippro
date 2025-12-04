@@ -4,6 +4,7 @@ from bases.bases.models import ModeloBase
 from .formato.models import Formato
 from .tipo_envase_embalaje.models import TipoEnvaseEmbalaje
 from nomencladores.almacen.models import Almacen
+from django.db.models import Sum
 
 
 class EnvaseEmbalaje(ModeloBase):
@@ -31,8 +32,18 @@ class EnvaseEmbalaje(ModeloBase):
         verbose_name_plural = "Envases o embalajes"
 
     def __str__(self):
-        return self.codigo_envase
+        return self.tipo_envase_embalaje.nombre + ' ' + str(self.formato.capacidad) + ' ' + self.formato.unidad_medida 
 
+    @property
+    def cantidad_total(self):
+        """
+        Calcula la cantidad total de este envase en todos los almacenes
+        """
+        total = self.inventarios_env.aggregate(
+            total=Sum('cantidad')
+        )['total']
+        return total if total is not None else 0 
+    
     @property
     def all_almacenes(self):
         Almacen = apps.get_model('almacen', 'Almacen')

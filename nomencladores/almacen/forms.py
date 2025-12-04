@@ -4,23 +4,23 @@ from django.apps import apps
 from usuario.models import CustomUser
 
 class AlmacenForm(forms.ModelForm):
-    materias_primas = forms.ModelMultipleChoiceField(
+    """ materias_primas = forms.ModelMultipleChoiceField(
         queryset=None,
         widget=forms.SelectMultiple(attrs={'class': 'form-select', 'style': 'width:100%'}),
         required=False,
         label='Materias Primas'
     )
 
-    """ responsable = forms.ModelChoiceField(
+    responsable = forms.ModelChoiceField(
         queryset=CustomUser.objects.filter(groups_name__in = ["Almaceneros"]),
         required=False,
         label='Responsable Almacén'
     ) """
 
-    def __init__(self, *args, **kwargs):
+    """def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         MateriaPrima = apps.get_model('materia_prima', 'MateriaPrima')
-        self.fields['materias_primas'].queryset = MateriaPrima.objects.all()
+        self.fields['materias_primas'].queryset = MateriaPrima.objects.all()"""
 
     class Meta:
         model = Almacen
@@ -28,17 +28,19 @@ class AlmacenForm(forms.ModelForm):
             'nombre',
             'ubicacion',
             'propio',
-            'materias_primas',
             'responsable',
+            'concepto',
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'ubicacion': forms.TextInput(attrs={'class': 'form-control'}),
             'propio': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'right:80%'}),
+            'concepto': forms.Select(attrs={'class': 'form-select'}),
         }
         labels = {
             'nombre': 'Nombre:',
             'ubicacion': 'Ubicación:',
             'propio': 'Propio:',
             'responsable': 'Responsable',
+            'concepto': 'Concepto de almacen',
         }

@@ -1,0 +1,64 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de parámetros de pruebas químicas</h4>
+
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Unidad medida</th>
+                            <th>Valor mínimo</th>
+                            <th>Valor máximo</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for parametro in parametros %}
+                            <tr>
+                                <td>{{ parametro.nombre }}</td>
+                                <td>{{ parametro.tipo }}</td>
+                                <td>{{ parametro.unidad_medida }}</td>
+                                <td>{{ parametro.valor_minimo }}</td>
+                                <td>{{ parametro.valor_maximo }}</td>
+                                <td>
+                                    {% if parametro.activo %} Si {% else %} No {% endif %} </td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'editar_parametro' parametro.id %}"
+                                                title="Cierre de producción" class="btn fas fa-check"> Editar </a>
+                                        
+                                        <a href="{% url 'detalle_parametro' parametro.id %}"
+                                                class="btn btn-outline-danger btn-sm"
+                                                title="Ver detalles de cancelación">
+                                                <i class="fas fa-info-circle"></i> Detalle
+                                            </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Unidad medida</th>
+                            <th>Valor mínimo</th>
+                            <th>Valor máximo</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <a href="{% url 'crear_parametro' %}" class="btn btn-success">Crear parámetro</a>
+                </div>
+            </div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+            <div class="container mt-4">
+                <form method="post">
+                    {% csrf_token %}                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Materia prima</th>
+                                <th>Almacen</th>
+                                <th>Cantidad</th>
+                                <th>Nueva Cantidad</th>
+                                <th>Actualizar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <form method="post">
+                                {% csrf_token %}
+                                <td>{{ form.materia_prima }}</td>
+                                {% if request.user.groups.all.0.name == 'Almaceneros'%}
+                                    <td>{{ inv_mat_prima.almacen.nombre }}
+                                        <input type="hidden" name="almacen" value="{{inv_mat_prima.almacen.id}">
+                                    </td>
+                                {% elif request.user.groups.all.0.name == 'Presidencia-Admin' %}
+                                    <td>{{ form.almacen }}</td>
+                                {% endif %}
+                                <td>{{ inv_mat_prima.cantidad }}</td>
+                                
+                                <td>          
+                                    {{ form.cantidad }}
+                                </td>
+                                <td>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-save"></i> Guardar Ajuste
+                                    </button>
+                                </td>
+                                </form>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="text-end mt-4">
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

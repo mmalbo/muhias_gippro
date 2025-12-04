@@ -8,18 +8,65 @@ from .movimientos import export_vale
 import decimal
 from django.contrib.auth.models import Group
 from utils.models import Notification
+from adquisiciones.models import Adquisicion
+from produccion.models import Prod_Inv_MP, Produccion
+
+def solicitud_salida(request):
+    pass
+
+def salida_produccion(request, prod_id):
+    mp_prod = Prod_Inv_MP.objects.filter(lote_prod=prod_id).all()
+    produccion = get_object_or_404(Produccion, id=prod_id)
+    if produccion.estado == 'Planificada':
+        if request.method == 'POST':
+            almacen = mp_prod[0].almacen
+            vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                entrada = False,
+                tipo = 'Entrega'
+            )
+        # Procesar cada mp
+        for mp in mp_prod:
+            try:
+                field_name = str(mp.inv_materia_prima.id)
+                print(field_name)
+                cantidad = decimal.Decimal('0.00')
+                cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+                print(request.POST.get(field_name))
+                Movimiento_MP.objects.create(
+                        materia_prima=mp.inv_materia_prima,
+                        vale=vale,  # Ejemplo: atributo fijo
+                        cantidad=cantidad                        
+                    )
+                print(mp.inv_materia_prima.id)
+                print(almacen.id)
+                inventario_mp = get_object_or_404(Inv_Mat_Prima,
+                    materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
+                inventario_mp.cantidad = inventario_mp.cantidad - cantidad
+                inventario_mp.save()  
+                return redirect('materia_prima:materia_prima_list')
+            except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}")
+                    pass         
+        return render(request, 'movimientos/salida_mp.html', {
+        'materias_primas': mp_prod, 'produccion': produccion
+        })
 
 def recepcion_materia_prima(request, adq_id):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
     inv_mat = DetallesAdquisicion.objects.filter(adquisicion__id=adq_id)
     adquisicion = get_object_or_404(Adquisicion, id=adq_id)
+    print(adquisicion)
     if adquisicion.registrada:
         return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
     almacen = adquisicion.almacen
+    print(almacen)
+    print(almacen.id)
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                entrada = True
+                entrada = True,
+                tipo = 'Recepción'
             )
         # Procesar cada producto
         for inv in inv_mat:
@@ -78,7 +125,8 @@ def recepcion_envase(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                entrada=True
+                entrada=True,
+                tipo = 'Recepción'
             )
         # Procesar cada producto
         for inv in inv_env:
@@ -137,7 +185,8 @@ def recepcion_insumo(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                entrada=True
+                entrada=True,
+                tipo = 'Recepción'
             )
         # Procesar cada producto
         for inv in inv_ins:
@@ -191,8 +240,27 @@ def movimiento_list(request):
         'movimientos': movimientos
     })
 
+def recepciones_pendientes_list(request):
+    rec_pendientes = Adquisicion.objects.filter(registrada=False).all()
+    almacen = request.user
+    print(f'almacen{almacen}')
+    return render(request, 'movimientos/recepciones_list.html', {
+        'rec_pendientes': rec_pendientes
+    })
+
+def solicitudes_pendientes_list(request):
+    sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False).all()
+    return render(request, 'movimientos/solicitudes_list.html', {
+        'sol_pendientes': sol_pendientes
+    })
+    
+#Este debe llamarse desde los tipos de movimientos: recepciones, salidas a produccion, ventas, ajustes de inventario  
 def generar_vale(request, cons):
     return export_vale(request,cons)
 
 def movimiento_detalle(request, cons):
-    pass
+    vale = Vale_Movimiento_Almacen.objects.filter(consecutivo=cons).first()
+    if vale.tipo == 'Solicitud':
+        print('vale soliditud')
+    else:
+        print(f'{vale.tipo}')

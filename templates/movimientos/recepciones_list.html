@@ -1,0 +1,76 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Recepciones pendientes</h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table data-table table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Fecha</th>
+                            <th>Tipo de recepción</th>
+                            <th>Cantidad de productos<th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for rp in rec_pendientes %}
+                            <tr>
+                                <td>{{ rp.fecha_compra }}</td>
+                                <td>{{ rp.tipo_adquisicion }}</td>
+                                {% if tipo_adquisicion == mp %}
+                                <td>{{ rp.cantidad_mprimas }}</td>
+                                {% elif tipo_adquisicion == env %}
+                                <td>{{ rp.cantidad_envases }}</td>
+                                {% else %}
+                                <td>{{ rp.cantidad_insumos }}</td>
+                                {% endif %}
+                                <td>
+                                    {% if tipo_adquisicion == mp %}
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'recepcion_mp' rp.id %}" class="btn btn-success">Recepcionar</a>
+                                    </div>
+                                    {% elif tipo_adquisicion == env %}
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'recepcion_env' rp.id %}" class="btn btn-success">Recepcionar</a>
+                                    </div>
+                                    {% else %}
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'recepcion_ins' rp.id %}" class="btn btn-success">Recepcionar</a>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr class="ligth">
+                            <th>Fecha</th>
+                            <th>Tipo de adquisición</th>
+                            <th>Cantidad de productos<th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

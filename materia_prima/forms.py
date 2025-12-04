@@ -53,6 +53,7 @@ class MateriaPrimaFormUpdate(forms.ModelForm):
             'conformacion': 'Conformación',
             'costo': 'Costo',
         }
+        
 
 class AgregarTipoForm(forms.Form):
     valor = forms.CharField(
