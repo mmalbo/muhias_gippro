@@ -38,7 +38,7 @@
                                 <td>{{ mov.tipo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-                                        <a href="{% url 'movimiento_detalle' mov.consecutivo %}" class="btn btn-success">Detalles</a>
+                                        <a href="{% url 'movimiento_update' mov.id %}" class="btn btn-success">Detalles</a>
                                         <a href="{% url 'generar_vale' mov.consecutivo %}" class="btn btn-success">Generar vale</a>
                                     </div>
                                 </td>

@@ -1,9 +1,12 @@
 from django.forms import formset_factory
-from .forms import RecepcionMateriaPrimaForm
+from .forms import RecepcionMateriaPrimaForm, MovimientoFormUpdate
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from .models import Movimiento_MP, Vale_Movimiento_Almacen, Movimiento_EE, Movimiento_Ins
 from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo
 from inventario.models import Inv_Mat_Prima, Inv_Insumos, Inv_Envase 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
+from django.contrib import messages
 from .movimientos import export_vale
 import decimal
 from django.contrib.auth.models import Group
@@ -256,11 +259,118 @@ def solicitudes_pendientes_list(request):
     
 #Este debe llamarse desde los tipos de movimientos: recepciones, salidas a produccion, ventas, ajustes de inventario  
 def generar_vale(request, cons):
-    return export_vale(request,cons)
+    return export_vale(request, cons)
 
-def movimiento_detalle(request, cons):
-    vale = Vale_Movimiento_Almacen.objects.filter(consecutivo=cons).first()
+def vale_detalle(request, pk):
+    print(pk)
+    vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
+    tipo = vale.tipo
+    print(f'tipo: {tipo}')
+    if request.method == 'POST':
+        form = MovimientoFormUpdate(request.POST, instance=vale) 
+        if form.is_valid():
+            form.save()
+            print('Actualizado correctamente')
+            messages.success(request, 'Actualizado correctamente')
+            return redirect('materia_prima:materia_prima_list') 
+        else:
+            print(f'Error en la form: {form.errors}')
+            messages.error(request, f'Error en la form: {form.errors}')
+            return redirect('materia_prima:materia_prima_list')
+    form = MovimientoFormUpdate(instance=vale)
     if vale.tipo == 'Solicitud':
-        print('vale soliditud')
-    else:
-        print(f'{vale.tipo}')
+        activos = vale.mp_produccion.all()
+        if activos:
+            tipo = 'Solicitud'
+        else:
+            print('No se encontró solicitudes de este vale')
+    elif vale.tipo == 'Recepción':
+        print('En recepcion')
+        activos = vale.movimientos.all()
+        print(activos)
+        if activos:
+            tipo = 'materias primas'
+        else:
+            activos = vale.movimientos_e.all()
+            if activos:
+                tipo = 'envase o embalaje'
+            else:
+                activos = vale.movimientos_prod.all()
+                if activos:
+                    tipo = 'productos'
+                else:
+                    activos = vale.movimientos_i.all()
+                    if activos:
+                        tipo = 'insumos'
+    elif vale.tipo.lower() == 'entrega' or vale.tipo == 'Conduce':
+        activos = vale.movimientos.all()
+        if activos:
+            tipo = 'materias primas'
+        else:
+            activos = vale.movimientos_e.all()
+            if activos:
+                tipo = 'envases y embalajes'
+            else:
+                activos = vale.movimientos_prod.all()
+                if activos:
+                    tipo = 'productos'
+                else:
+                    activos = vale.movimientos_i.all()
+                    if activos:
+                        tipo = 'insumos'
+    elif vale.tipo == 'Ajuste de inventario':
+        activos = vale.movimientos.all()
+        if activos:
+            tipo = 'materias primas'
+        else:
+            activos = vale.movimientos_e.all()
+            if activos:
+                tipo = 'envase y embalajes'
+            else:
+                activos = vale.movimientos_prod.all()
+                if activos:
+                    tipo = 'productos'
+                else:
+                    activos = vale.movimientos_i.all()
+                    if activos:
+                        tipo = 'insumos'
+    context = {
+        'activos':activos,
+        'tipo':tipo,
+        'vale':vale,
+        'form':form,
+    }
+
+    print(f'context:{context}')
+
+    return render(request, 'movimientos/movimiento_update.html', context)
+
+class UpdateMovimientoView(UpdateView):
+    model = Vale_Movimiento_Almacen
+    form_class = MovimientoFormUpdate
+    template_name = 'movimientos/movimiento_update.html'
+    success_url = reverse_lazy('movimientos:movimiento_list')  # Cambia esto al nombre de tu URL
+
+    def form_valid(self, form):
+        messages.success(self.request, "Se ha actualizado correctamente el inventario.")
+        return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        instance = kwargs.get('instance')
+        if instance:
+            kwargs['initial'] = {
+                #'tipo_materia_prima': instance.tipo_materia_prima.nombre,
+                # 'factura_adquisicion': instance.get_factura_adquisicion_name,
+                #'ficha_tecnica': instance.get_ficha_tecnica_name,
+                #'hoja_seguridad': instance.get_hoja_seguridad_name,
+            }
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        # context['factura_adquisicion_nombre'] = basename(obj.factura_adquisicion.name) if obj.factura_adquisicion else ''
+        context['ficha_tecnica_nombre'] = ''#basename(obj.ficha_tecnica.name) if obj.ficha_tecnica else ''
+        context['hoja_seguridad_nombre'] = ''#basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
+        return context

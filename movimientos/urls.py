@@ -11,5 +11,7 @@ urlpatterns = [
      path('solicitud_salida/', solicitud_salida, name='solicitudes_almacen'),
      path('lista/', movimiento_list, name='movimiento_list'),
      path('vale/<int:cons>/', generar_vale, name='generar_vale'),
-     path('detalle/<int:cons>/', movimiento_detalle, name='movimiento_detalle'),
+     path('actualizar/<uuid:pk>/', vale_detalle, name='movimiento_update'),
+     path('detalle/<int:cons>/', vale_detalle, name='movimiento_detalle'),
 ]
+#UpdateMovimientoView.as_view()

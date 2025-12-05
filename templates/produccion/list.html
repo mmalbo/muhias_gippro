@@ -1,9 +1,7 @@
 {% extends 'base/base.html' %}
 
 {% block contenido %}
-    <div class="wrapper">
-        <div class="content-page">
-            <div class="container-fluid">
+
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de producciones</h4>
                 </div>
@@ -40,7 +38,7 @@
                                 </span></td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-                                        <!--Iniciar producción--> <!-- bi bi-play-btnacción de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->
+                                        <!--Iniciar producción--> <!-- bi bi-play-btnacciónfast-forward de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->
                                         {% if produccion.estado == 'Planificada' %}
                                             <a href="{% url 'iniciar_produccion' produccion.id %}"
                                                 title="Iniciar producción" class="btn fas fa-play" fill="currentColor">
@@ -49,24 +47,28 @@
                                         {% endif %}
                                         {% if produccion.estado == 'Iniciando mezcla' %}
                                             <a href="{% url 'agita_produccion' produccion.id %}"
-                                                title="Iniciar mezclado" class="btn fas fa-fast-forward" fill="currentColor">
+                                                title="Iniciar mezclado" class="btn fas fa-industry" fill="currentColor">
                                                 
                                             </a>
                                         {% endif %}
                                         <!--Terminada producción--> <!--formulario confirmando fas fa-sign-in-alt la cantidad del productobi bi-check2-square-->
                                         {% if produccion.estado == 'En proceso: Agitado' %}    
                                             <a href="{% url 'concluir_produccion' produccion.id %}" 
-                                                title="Iniciar agitado" class="btn fas fa-fast-forward"></a>
+                                                title="Iniciar agitado" class="btn fas fa-blender"></a>
                                         {% endif %}
                                         <!--Registrar pruebas químicas--> 
                                         {% if produccion.estado == 'En proceso: Validación' %}    
                                             <a href="{% url 'crear_prueba_quimica' produccion.id %}"
-                                                title="Evaluar producción" class="btn fas fa-check2-circle"></a>
+                                                title="Evaluar producción" class="btn fas fa-flask-vial"></a>
+                                            <!--{% if produccion.pruebas_quimicas.estado == 'En Proceso' %}
+                                            <a href="{% url 'detalle_prueba_quimica' produccion.id %}"
+                                                title="Concluir pruebas químicas" class="btn fas fa-clipboard-check"></a>
+                                            {% endif %}-->
                                         {% endif %}
                                         <!--formulario para subir doc de PQ y se cambia 
                                         el estado a disponible para la venta o indicar ajuste de inventario-->
                                         {% if produccion.estado == 'Concluida' %}
-                                            {% if produccion.pruebas_quimicas %}    
+                                            {% if produccion.pruebas_quimicas == '' %}    
                                                 <a href="{% url 'descargar_pruebas' produccion.id %}"
                                                     class="btn btn-info btn-sm"
                                                     title="Gestionar pruebas químicas">
@@ -116,7 +118,5 @@
                     </table>
                     <a href="{% url 'crear_produccion' %}" class="btn btn-success">Crear producción</a>
                 </div>
-            </div>
-        </div>
-    </div>
+
 {% endblock %}

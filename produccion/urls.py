@@ -4,12 +4,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionView, get_materias_primas_data,
                     iniciar_produccion, concluir_produccion, subir_pruebas_quimicas, descargar_pruebas_quimicas,
-<<<<<<< Updated upstream
-                    eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion )
-=======
                     eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion, agita_produccion, 
-                    lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica )
->>>>>>> Stashed changes
+                    lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica,
+                    detalle_prueba_quimica)
 
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
@@ -24,17 +21,15 @@ urlpatterns = [
     path('<uuid:pk>/iniciar/', iniciar_produccion, name='iniciar_produccion'),
     #path('<uuid:pk>/iniciar/', CambiarEstadoProduccionView.as_view(), name='cambiar_produccion'),
 
-<<<<<<< Updated upstream
-=======
     #Iniciar produccion 
     path('<uuid:pk>/avance/', agita_produccion, name='agita_produccion'),
 
->>>>>>> Stashed changes
     #Concluir producción
     path('<uuid:pk>/concluir/', concluir_produccion, name='concluir_produccion'),
 
     #Crear pruebas
     path('<uuid:pk>/reg_prueba/', crear_prueba_quimica, name='crear_prueba_quimica'),
+    path('<uuid:pk>/det_prueba/', detalle_prueba_quimica, name='detalle_prueba_quimica'),
     
     #Subir pruebas
     path('produccion/<uuid:pk>/pruebas/', subir_pruebas_quimicas, name='subir_pruebas'),

@@ -3,7 +3,7 @@ from os.path import basename
 
 from django.db import transaction
 from django.http import JsonResponse, Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.contrib import messages
@@ -61,7 +61,7 @@ def listMateriasPrimas(request):
         almacen = Almacen.objects.filter(responsable=request.user).first()
 
     materias_primas = Inv_Mat_Prima.objects.select_related('materia_prima', 'almacen')
-
+    
     if request.user.groups.filter(name='Presidencia-Admin').exists():
         print('Presidencia')
         if almacen_id and almacen_id != 'todos':
