@@ -5,28 +5,10 @@ from django import forms
 from materia_prima.models import MateriaPrima
 from nomencladores.planta.models import Planta
 from nomencladores.almacen.models import Almacen
-<<<<<<< Updated upstream
-from .models import Produccion, Prod_Inv_MP
-from producto.models import Producto
-from envase_embalaje.formato.models import Formato
-
-class ProductoRapidoForm(forms.ModelForm):
-    """Form para crear producto rápido desde producción"""
-    class Meta:
-        model = Producto
-        fields = ['nombre_comercial']
-        widgets = {
-            'nombre_comercial': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre del nuevo producto...'
-            }),            
-        }
-=======
 from .models import Produccion, Prod_Inv_MP, PruebaQuimica, DetallePruebaQuimica, ParametroPrueba
 from producto.models import Producto
 from envase_embalaje.formato.models import Formato
 from .choices import TIPOS_PARAMETRO
->>>>>>> Stashed changes
 
 class ProductoRapidoForm(forms.ModelForm):
     """Form para crear producto rápido desde producción"""

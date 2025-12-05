@@ -1,0 +1,474 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="page-title mb-0">
+                            <i class="fas fa-flask me-2"></i>
+                            Prueba Química #{{ prueba.id }}
+                        </h4>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb m-0 p-0">
+                                <li class="breadcrumb-item"><a href="{% url 'produccion_list' %}">Producción</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'detalle_produccion' prueba.produccion.id %}">Lote {{ prueba.produccion.lote }}</a></li>
+                                <li class="breadcrumb-item active">Prueba Química</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-{{ prueba.color_estado }} fs-6 p-2">
+                            <i class="fas fa-{{ prueba.icono_estado }} me-1"></i>
+                            {{ prueba.get_estado_display|upper }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Total Parámetros</h5>
+                            <h3 class="my-2">{{ total_parametros }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list-check text-primary fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Aprobados</h5>
+                            <h3 class="my-2 text-success">{{ parametros_aprobados }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle text-success fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Rechazados</h5>
+                            <h3 class="my-2 text-danger">{{ parametros_rechazados }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle text-danger fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover bg-{{ prueba.color_estado }} text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-normal mt-0 mb-2">% Aprobación</h5>
+                            <h2 class="my-2">{{ porcentaje_aprobacion }}%</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-pie fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna izquierda: Información y Acciones -->
+        <div class="col-lg-4">
+            <!-- Información de la Prueba -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i> Información de la Prueba
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Producción:</dt>
+                        <dd class="col-sm-7">
+                            <a href="{% url 'detalle_produccion' prueba.produccion.id %}" class="text-decoration-none">
+                                <strong>{{ prueba.produccion.lote }}</strong>
+                            </a>
+                        </dd>
+                        
+                        <dt class="col-sm-5">Producto:</dt>
+                        <dd class="col-sm-7">{{ prueba.produccion.catalogo_producto.nombre }}</dd>
+                        
+                        <dt class="col-sm-5">Fecha Prueba:</dt>
+                        <dd class="col-sm-7">{{ prueba.fecha_prueba|date:"d/m/Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-5">Fecha Vencimiento:</dt>
+                        <dd class="col-sm-7">
+                            {% if prueba.fecha_vencimiento %}
+                                {{ prueba.fecha_vencimiento|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">No especificado</span>
+                            {% endif %}
+                        </dd>
+                        
+                        {% if prueba.evaluado_por %}
+                        <dt class="col-sm-5">Evaluado por:</dt>
+                        <dd class="col-sm-7">{{ prueba.evaluado_por.get_full_name|default:prueba.evaluado_por.username }}</dd>
+                        
+                        <dt class="col-sm-5">Fecha Evaluación:</dt>
+                        <dd class="col-sm-7">{{ prueba.fecha_evaluacion|date:"d/m/Y H:i" }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Panel de Acciones -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i> Acciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if prueba.estado == 'pendiente' %}
+                        <a href="{% url 'cambiar_estado_prueba' prueba.id 'en_proceso' %}" class="btn btn-info">
+                            <i class="fas fa-play-circle me-2"></i> Iniciar Prueba
+                        </a>
+                        {% endif %}
+                        
+                        {% if prueba.estado == 'en_proceso' %}
+                        <a href="{% url 'cambiar_estado_prueba' prueba.id 'completada' %}" class="btn btn-primary">
+                            <i class="fas fa-check-double me-2"></i> Marcar como Completada
+                        </a>
+                        {% endif %}
+                        
+                        {% if prueba.puede_concluir %}
+                        <a href="{% url 'concluir_prueba_quimica' prueba.id %}" class="btn btn-success">
+                            <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
+                        </a>
+                        {% endif %}
+                        
+                        {% if prueba.estado in 'pendiente,en_proceso,completada' %}
+                        <a href="{% url 'cambiar_estado_prueba' prueba.id 'cancelada' %}" class="btn btn-danger">
+                            <i class="fas fa-ban me-2"></i> Cancelar Prueba
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'editar_prueba_quimica' prueba.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i> Editar Prueba
+                        </a>
+                        
+                        {% if prueba.archivo_resultado %}
+                        <a href="{{ prueba.archivo_resultado.url }}" class="btn btn-outline-info" target="_blank">
+                            <i class="fas fa-file-download me-2"></i> Descargar Resultado
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultado Final -->
+            {% if prueba.resultado_final %}
+            <div class="card border-{{ 'success' if prueba.aprobado else 'danger' }}">
+                <div class="card-header bg-{{ 'success' if prueba.aprobado else 'danger' }} text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-{{ 'thumbs-up' if prueba.aprobado else 'thumbs-down' }} me-2"></i>
+                        Resultado Final: {{ 'APROBADO' if prueba.aprobado else 'RECHAZADO' }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Conclusión:</strong></p>
+                    <p class="mb-0">{{ prueba.resultado_final|linebreaks }}</p>
+                    
+                    {% if prueba.observaciones %}
+                    <hr>
+                    <p class="mb-2"><strong>Observaciones:</strong></p>
+                    <p class="mb-0 text-muted">{{ prueba.observaciones|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Columna derecha: Parámetros -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list-check me-2"></i> Parámetros Evaluados
+                    </h5>
+                    <span class="badge bg-primary">Total: {{ total_parametros }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="25%">Parámetro</th>
+                                    <th width="15%">Valor Medido</th>
+                                    <th width="15%">Esperado/Rango</th>
+                                    <th width="10%">Unidad</th>
+                                    <th width="10%">Desviación</th>
+                                    <th width="10%">Estado</th>
+                                    <th width="10%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for parametro in parametros %}
+                                <tr class="{% if parametro.dentro_especificacion %}table-success{% else %}table-danger{% endif %}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ parametro.parametro.nombre }}</strong>
+                                        {% if parametro.observaciones %}
+                                        <br>
+                                        <small class="text-muted">{{ parametro.observaciones|truncatechars:50 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ parametro.valor_medido }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if parametro.parametro.valor_minimo and parametro.parametro.valor_maximo %}
+                                        {{ parametro.parametro.valor_minimo }} - {{ parametro.parametro.valor_maximo }}
+                                        {% elif parametro.parametro.valor_referencia %}
+                                        {{ parametro.parametro.valor_referencia }}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ parametro.parametro.unidad_medida|default:"-" }}</td>
+                                    <td>
+                                        {% if parametro.desviacion %}
+                                        <span class="badge {% if parametro.dentro_especificacion %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ parametro.desviacion }}
+                                        </span>
+                                        {% if parametro.porcentaje_desviacion %}
+                                        <br>
+                                        <small>{{ parametro.porcentaje_desviacion }}%</small>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if parametro.dentro_especificacion %}bg-success{% else %}bg-danger{% endif %}">
+                                            <i class="fas fa-{% if parametro.dentro_especificacion %}check{% else %}times{% endif %} me-1"></i>
+                                            {{ 'OK' if parametro.dentro_especificacion else 'Falla' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modalParametro{{ parametro.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="{% url 'editar_parametro_prueba' parametro.id %}" 
+                                               class="btn btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Modal para ver detalles del parámetro -->
+                                <div class="modal fade" id="modalParametro{{ parametro.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-vial me-2"></i>
+                                                    {{ parametro.parametro.nombre }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Valor Medido:</dt>
+                                                    <dd class="col-sm-8">{{ parametro.valor_medido }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Valor Esperado:</dt>
+                                                    <dd class="col-sm-8">{{ parametro.valor_esperado|default:"-" }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Rango Permitido:</dt>
+                                                    <dd class="col-sm-8">
+                                                        {% if parametro.parametro.valor_minimo and parametro.parametro.valor_maximo %}
+                                                        {{ parametro.parametro.valor_minimo }} - {{ parametro.parametro.valor_maximo }}
+                                                        {% else %}
+                                                        <span class="text-muted">No especificado</span>
+                                                        {% endif %}
+                                                    </dd>
+                                                    
+                                                    <dt class="col-sm-4">Unidad:</dt>
+                                                    <dd class="col-sm-8">{{ parametro.parametro.unidad_medida|default:"-" }}</dd>
+                                                    
+                                                    <dt class="col-sm-4">Estado:</dt>
+                                                    <dd class="col-sm-8">
+                                                        <span class="badge {% if parametro.dentro_especificacion %}bg-success{% else %}bg-danger{% endif %}">
+                                                            {{ 'Dentro de especificación' if parametro.dentro_especificacion else 'Fuera de especificación' }}
+                                                        </span>
+                                                    </dd>
+                                                    
+                                                    {% if parametro.observaciones %}
+                                                    <dt class="col-sm-4">Observaciones:</dt>
+                                                    <dd class="col-sm-8">{{ parametro.observaciones|linebreaks }}</dd>
+                                                    {% endif %}
+                                                </dl>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-flask fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No hay parámetros registrados</h5>
+                                        <p class="text-muted mb-0">Agregue parámetros para evaluar esta prueba</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ parametros_aprobados }} de {{ total_parametros }} parámetros aprobados
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <a href="{% url 'agregar_parametro_prueba' prueba.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus me-1"></i> Agregar Parámetro
+                            </a>
+                            <a href="{% url 'importar_parametros_prueba' prueba.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-file-import me-1"></i> Importar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gráfico de Resultados -->
+            {% if total_parametros > 0 %}
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i> Resumen Gráfico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="graficoPrueba" height="100"></canvas>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    {% if total_parametros > 0 %}
+    // Gráfico de resultados
+    const ctx = document.getElementById('graficoPrueba').getContext('2d');
+    const grafico = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Aprobados', 'Rechazados'],
+            datasets: [{
+                data: [{{ parametros_aprobados }}, {{ parametros_rechazados }}],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(40, 167, 69)',
+                    'rgb(220, 53, 69)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            const value = context.raw;
+                            const total = {{ total_parametros }};
+                            const percentage = Math.round((value / total) * 100);
+                            label += value + ' (' + percentage + '%)';
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Confirmación para acciones críticas
+    $('.btn-danger').on('click', function(e) {
+        if (!confirm('¿Está seguro de realizar esta acción? Esta operación no se puede deshacer.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+<style>
+.card-hover:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+}
+</style>
+{% endblock %}

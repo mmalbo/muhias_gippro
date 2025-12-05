@@ -1,0 +1,113 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">Editar vale de {{vale.tipo}}</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            {% if form.errors %}
+                                {% for field in form %}
+                                    {% if field.errors %}
+                                        <div class="alert alert-danger">
+                                            <div>{{ field.label }}: {{ field.errors }}</div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                            {% endif %}
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="form-row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.tipo.label_tag }}
+                                        {{ form.tipo }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.consecutivo.label_tag }}
+                                        {{ form.consecutivo }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.almacen.label_tag }}
+                                        {{ form.almacen }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.suministrador.label_tag }}
+                                        {{ form.suministrador }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.transportista.label_tag }}
+                                        {{ form.transportista }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.chapa.label_tag }}
+                                        {{ form.chapa }}
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success"> Actualizar </button>
+                                    <a href="{% url 'movimiento_list' %}" class="btn btn-danger">Cancelar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>U. de Medida</th>
+                            <th>Cantidad</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for activo in activos %}
+                            <tr>
+                                {% if tipo == 'materias primas' %}
+                                  <td>{{ activo.materia_prima.codigo }}</td>
+                                  <td>{{ activo.materia_prima.nombre }}</td>
+                                  <td>{{ activo.materia_prima.unidad_medida }}</td>
+                                  <td>{{ activo.cantidad }}</td>
+                                {% elif tipo == 'envases y embalajes' %}
+                                  <td>{{ activo.envase_embalaje.codigo_envase }}</td>
+                                  <td>{{ activo.envase_embalaje.tipo_envase_embalaje }}</td>
+                                  <td>{{ activo.envase_embalaje.formato }}</td>
+                                  <td>{{ activo.cantidad }}</td>
+                                {% elif tipo == 'insumos' %}
+                                  <td>{{ activo.insumo.codigo }}</td>
+                                  <td>{{ activo.insumo.nombre }}</td>
+                                  <td></td>
+                                  <td>{{ activo.cantidad }}</td>
+                                {% elif tipo == 'productos' %}
+                                  <td>{{ activo.producto.codigo_producto }}</td>
+                                  <td>{{ activo.producto.nombre_comercial }}</td>
+                                  <td>{{ activo.producto.formato }}</td>
+                                  <td>{{ activo.cantidad }}</td>
+                                {% elif tipo == 'Solicitud' %}
+                                  <td>{{ activo.inv_materia_prima.codigo }}</td>
+                                  <td>{{ activo.inv_materia_prima.nombre }}</td>
+                                  <td>{{ activo.inv_materia_prima.unidad_medida }}</td>
+                                  <td>{{ activo.cantidad_materia_prima }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>U. de Medida</th>
+                            <th>Cantidad</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

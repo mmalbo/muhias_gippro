@@ -100,10 +100,7 @@ def notificar_responsables_almacen(produccion, materias_primas_info):
                 #nivel='warning',  # Warning porque requiere acción
                 #titulo=f'📦 Producción Requiere Materiales - Lote {produccion.lote}',
                 message=mensaje_almacen,
-<<<<<<< Updated upstream
-=======
                 link = f'/movimientos/salida_produccion/{produccion.id}/'
->>>>>>> Stashed changes
                #relacion_contenido_type=contenido_type,
                 #relacion_contenido_id=produccion.id
             )

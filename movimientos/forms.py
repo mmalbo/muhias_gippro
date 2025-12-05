@@ -1,6 +1,7 @@
 from django import forms
 from materia_prima.models import MateriaPrima
 from adquisiciones.models import Adquisicion
+from .models import Vale_Movimiento_Almacen
 
 class RecepcionMateriaPrimaForm(forms.Form):
     producto = forms.ModelChoiceField(
@@ -26,3 +27,24 @@ class RecepcionMateriaPrimaForm(forms.Form):
         
         # Opcional: ordenar por nombre completo
         self.fields['seller'].label_from_instance = lambda obj: f"{obj.get_full_name()} ({obj.username})" """
+
+class MovimientoFormUpdate(forms.ModelForm):
+
+    class Meta:
+        model = Vale_Movimiento_Almacen
+        fields = [ 'tipo', 'consecutivo', 'almacen',
+                  'suministrador', 'transportista', 'chapa']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-control'}),
+            'consecutivo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'almacen': forms.Select(attrs={'class': 'form-control'}),
+            'suministrador': forms.TextInput(attrs={'class': 'form-control'}),
+            'transportista': forms.TextInput(attrs={'class': 'form-control-file'}),
+            'chapa': forms.TextInput(attrs={'class': 'form-control-file'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(f'self.instance{self.instance.tipo}')
+        self.fields['tipo'].initial = self.instance.tipo 
+   

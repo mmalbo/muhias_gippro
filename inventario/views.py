@@ -44,8 +44,15 @@ def ajuste_inv_mp(request, inv_mp):
                 }
                 return render(request, 'inventario/actualizar_inv_mp.html', context) 
             print('A guardar la form')
-            form.save()
             vale.save()
+            mov_mp = Movimiento_MP(
+                materia_prima = inv_mat_prima.materia_prima,
+                vale = vale,
+                cantidad = nuevo_cant - viejo_cant
+            )
+            mov_mp.save()
+            print(mov_mp)
+            print(mov_mp.vale)
             messages.success(request, f'Inventario de {inv_mat_prima.materia_prima.nombre} actualizado correctamente')
             return redirect('materia_prima:materia_prima_list')
         else:

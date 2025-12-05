@@ -1,0 +1,100 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>GIPPro - MUHIA</title>
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'gestion/images/logo.png' %}"/>
+
+    <script>
+    // Polyfill para evitar errores tempranos
+    if (!window.jQuery) {
+        document.write('<script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>');
+    }
+    </script>
+    <!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>-->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome desde CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Otros estilos-->
+    <link rel="stylesheet" href="{% static 'gestion/vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion/vendor/remixicon/fonts/remixicon.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion/css/backend-plugin.min.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion/css/backend.css' %}">
+    
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/toastr.min.css' %}">
+    
+    <!--Revisar-->
+    <!--
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion/vendor/tui-calendar/tui-calendar/dist/tui-calendar.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion/vendor/tui-calendar/tui-date-picker/dist/tui-date-picker.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-datetimepicker.min.css' %}">
+    -->
+
+</head>
+
+<body>
+<!-- loader Start -->
+<div id="loading">
+    <div id="loading-center">
+    </div>
+</div>
+<!-- loader END -->
+<!-- Wrapper Start -->
+<div class="wrapper">
+    {% include 'base/componentes/sidebar.html' %}
+    {% include 'base/componentes/nav_bar.html' %}
+    {% block contenido %}
+        {% include 'base/componentes/header.html' %}
+    {% endblock %}
+</div>
+
+{% include 'base/componentes/footer.html' %}
+
+<!-- Backend Bundle JavaScript 
+<script src="{% static 'gestion/js/backend-bundle.min.js' %}"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+
+<script src="{% static 'js/toastr.min.js' %}"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="{% static 'gestion/vendor/moment.min.js' %}"></script>
+
+<!-- Table Treeview JavaScript 
+<script src="{% static 'gestion/js/table-treeview.js' %}"></script>-->
+
+<!-- Chart Custom JavaScript 
+<script src="{% static 'gestion/js/customizer.js' %}"></script>-->
+
+<!-- Chart Custom JavaScript 
+<script async src="{% static 'gestion/js/chart-custom.js' %}"></script>-->
+<!-- Chart Custom JavaScript
+<script async src="{% static 'gestion/js/slider.js' %}"></script> -->
+<!-- app JavaScript 
+<script src="{% static 'gestion/js/app.js' %}"></script>
+<script src="{% static 'gestion/js/cdnjs.cloudflare.com/ajaxlibsbootstrap/5.3.0/bootstrap.min.js' %}"></script>-->
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js"></script>
+
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>-->
+
+</body>
+</html>

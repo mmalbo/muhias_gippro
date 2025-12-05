@@ -6,17 +6,12 @@ from bases.bases.models import ModeloBase
 from nomencladores.planta.models import Planta
 from produccion.choices import CHOICE_ESTADO_PROD, CHOICE_ESTADO_SOL, TIPOS_PARAMETRO, ESTADOS_PRUEBA
 from inventario.models import Inv_Mat_Prima
-<<<<<<< Updated upstream
-from producto.models import Producto
-
-=======
 from movimientos.models import Vale_Movimiento_Almacen
 from producto.models import Producto
 from materia_prima.models import MateriaPrima
 from nomencladores.almacen.models import Almacen
 from usuario.models import CustomUser
 import uuid
->>>>>>> Stashed changes
 
 def generate_unique_filename(instance, filename):
     now = datetime.now()
@@ -45,11 +40,7 @@ class Produccion(ModeloBase):
 
     cantidad_real = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Cantidad real",)
 
-<<<<<<< Updated upstream
-    pruebas_quimicas = models.FileField(upload_to=generate_unique_filename, null=True, blank=True, verbose_name="Pruebas químicas",
-=======
     pruebas_quimicas_ext = models.FileField(upload_to=generate_unique_filename, null=True, blank=True, verbose_name="Pruebas químicas",
->>>>>>> Stashed changes
         validators=[FileExtensionValidator(allowed_extensions=['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'])])
 
     prod_conform = models.BooleanField(null=True, blank=True, default=False, verbose_name="Producto Conforme",)
@@ -58,11 +49,7 @@ class Produccion(ModeloBase):
 
     planta = models.ForeignKey(Planta, on_delete=models.DO_NOTHING, null=False, verbose_name="Planta")
 
-<<<<<<< Updated upstream
-    estado = models.CharField(verbose_name='Estado', max_length=50, choices=CHOICE_ESTADO, blank=False, null=False )
-=======
     estado = models.CharField(verbose_name='Estado', max_length=50, choices=CHOICE_ESTADO_PROD, blank=False, null=False )
->>>>>>> Stashed changes
 
     observaciones_cancelacion = models.TextField(
         blank=True,
@@ -179,7 +166,7 @@ class PruebaQuimica(models.Model):
     resultado_final = models.BooleanField(null=True, blank=True)  # True=Aprobado, False=Rechazado
     fecha_aprobacion = models.DateTimeField(auto_now_add=True)
     #aprobado_por = models.ForeignKey( 'CustomUser', on_delete=models.SET_NULL, null=True, blank=True, 
-     #                                related_name='pruebas_aprobadas' )
+                                     #related_name='pruebas_aprobadas' )
     
     class Meta:
         #db_table = 'prueba_quimica'
@@ -214,7 +201,7 @@ class PruebaQuimica(models.Model):
         self.estado = 'aprobada'
         self.resultado_final = True
         self.fecha_aprobacion = timezone.now()
-        self.aprobado_por = usuario
+        #self.aprobado_por = usuario
         self.save()
     
     def rechazar(self, usuario):
@@ -222,7 +209,7 @@ class PruebaQuimica(models.Model):
         self.estado = 'rechazada'
         self.resultado_final = False
         self.fecha_aprobacion = timezone.now()
-        #self.aprobado_por = usuario
+        self.aprobado_por = usuario
         self.save()
 
 class DetallePruebaQuimica(models.Model):

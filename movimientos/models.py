@@ -28,16 +28,16 @@ class Transportista(ModeloBase):
 # Esta es la clase que registra los movimientos de almacén y guarda todos los datos para generar el vale correspondiente
 class Vale_Movimiento_Almacen(ModeloBase):
     
-    VALE_TYPES = (('entrega','Entrega'),
-                      ('transferencia','Transferencia'),
-                      ('ajuste','Ajuste de inventario'),
-                      ('recepcion','Recepción'),
+    VALE_TYPES = (('Entrega','Entrega'),
+                      ('Transferencia','Transferencia'),
+                      ('Ajuste','Ajuste de inventario'),
+                      ('Recepción','Recepción'),
                       ('devolucion','Vale de devolución'),
-                      ('solicitud','Solicitud'),
-                      ('produccion','Producción terminada'),
-                      ('conduce','Conduce'),
+                      ('Solicitud','Solicitud'),
+                      ('Producción','Producción terminada'),
+                      ('Conduce','Conduce'),
     )
-    tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='Recepción', verbose_name = "Tipo de movimiento")
+    tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='recepcion', verbose_name = "Tipo de movimiento")
     consecutivo = models.IntegerField(null=False, verbose_name="Código del vale")
     # Revisar aquí hay una inconsistencia, si se borra el almacén esteatributo dice que no hace nada, pero no puede ser nulo.
     almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen_origen", null=True, blank=False,)
@@ -114,7 +114,10 @@ class Movimiento_MP(ModeloBase):
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale.entrada else 'Salida '
-        return f'{entrada} de {self.materia_prima.nombre} en {self.vale.almacen.nombre}'
+        if self.materia_prima:
+            return f'{entrada} de {self.materia_prima.nombre} en {self.vale.almacen.nombre}'
+        else:
+            return 'No hay materia prima en este movimiento'
 
 #Relación mucho a mucho de vale con envase y embalaje 
 class Movimiento_EE(ModeloBase):
@@ -159,9 +162,5 @@ class Movimiento_Ins(ModeloBase):
     #entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
 
     def __str__(self):
-<<<<<<< Updated upstream
-        entrada = 'Entrada ' if self.vale_i.entrada else 'Salida '
-=======
         entrada = 'Entrada ' if self.vale_e.entrada else 'Salida '
->>>>>>> Stashed changes
         return f'{entrada} de {self.insumo.nombre} en {self.vale_e.almacen.nombre}'
