@@ -6,7 +6,8 @@ from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionVi
                     iniciar_produccion, concluir_produccion, subir_pruebas_quimicas, descargar_pruebas_quimicas,
                     eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion, agita_produccion, 
                     lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica,
-                    detalle_prueba_quimica)
+                    detalle_prueba_quimica, agregar_parametros_prueba, editar_parametro_prueba, eliminar_parametro_prueba,
+                    calcular_resultados_prueba, )
 
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
@@ -30,6 +31,23 @@ urlpatterns = [
     #Crear pruebas
     path('<uuid:pk>/reg_prueba/', crear_prueba_quimica, name='crear_prueba_quimica'),
     path('<uuid:pk>/det_prueba/', detalle_prueba_quimica, name='detalle_prueba_quimica'),
+
+    # Gestión de parámetros de una prueba
+    path('prueba-quimica/<uuid:prueba_id>/agregar-parametros/', agregar_parametros_prueba, 
+         name='agregar_parametros_prueba'),
+    
+    path('parametro-prueba/<uuid:pk>/editar/', editar_parametro_prueba, 
+         name='editar_parametro_prueba'),
+    
+    path('parametro-prueba/<uuid:pk>/eliminar/', eliminar_parametro_prueba, 
+         name='eliminar_parametro_prueba'),
+    
+    path('prueba-quimica/<uuid:pk>/calcular-resultados/', calcular_resultados_prueba, 
+         name='calcular_resultados_prueba'),
+    
+    #path('prueba-quimica/<uuid:pk>/concluir/', concluir_prueba_quimica, name='concluir_prueba_quimica'),
+    
+    #path('prueba-quimica/<uuid:pk>/estado/<str:estado>/', cambiar_estado_prueba, name='cambiar_estado_prueba'),
     
     #Subir pruebas
     path('produccion/<uuid:pk>/pruebas/', subir_pruebas_quimicas, name='subir_pruebas'),

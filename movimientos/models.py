@@ -30,26 +30,30 @@ class Vale_Movimiento_Almacen(ModeloBase):
     
     VALE_TYPES = (('Entrega','Entrega'),
                       ('Transferencia','Transferencia'),
-                      ('Ajuste','Ajuste de inventario'),
+                      ('Ajuste de inventario','Ajuste de inventario'),
                       ('Recepción','Recepción'),
-                      ('devolucion','Vale de devolución'),
+                      ('Vale de devolución','Vale de devolución'),
                       ('Solicitud','Solicitud'),
-                      ('Producción','Producción terminada'),
+                      ('Producción terminada','Producción terminada'),
                       ('Conduce','Conduce'),
     )
-    tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='recepcion', verbose_name = "Tipo de movimiento")
+    tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='Recepción', verbose_name = "Tipo de movimiento")
     consecutivo = models.IntegerField(null=False, verbose_name="Código del vale")
     # Revisar aquí hay una inconsistencia, si se borra el almacén esteatributo dice que no hace nada, pero no puede ser nulo.
-    almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen_origen", null=True, blank=False,)
+    almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen que registra", null=True, blank=False,)
     fecha_movimiento = models.DateField(auto_now=True, null=False,verbose_name="Fecha de solicitud")
     suministrador = models.ForeignKey(CustomUser, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Suministrador")
     orden_No = models.IntegerField(blank=True, null=True, verbose_name="Número de orden")
     lote_No = models.IntegerField(blank=True, null=True, verbose_name="Número de lote")
-    transportista = models.ForeignKey(Transportista, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Transportista")
+    transportista = models.CharField(blank=True, null=True, default='', max_length=150, verbose_name="Transportista")
+    transportista_cI = models.CharField(blank=True, null=True, default='', max_length=11, verbose_name="Carnet de identidad")
+    origen = models.CharField(blank=True, null=True, max_length=150, verbose_name="Origen del movimiento")
+    destino = models.CharField(blank=True, null=True, max_length=150, verbose_name="Destino del  movimiento")
     chapa = models.CharField(blank=True, null=True, max_length=150, verbose_name="Chapa del vehículo")
     despachado_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Almacenero que despacha")
     recibido_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Quien recibe")
     autorizado_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Autoriza")
+    descripcion = models.CharField(blank=True, null=True, max_length=250, verbose_name="Descripción del movimiento")
     entrada = models.BooleanField(default=True, verbose_name="Verdadero: alta en el almacén")
     despachado = models.BooleanField(default=False, verbose_name="Verdadero: Cuando se haga efectivo el movimiento")
 
@@ -60,6 +64,59 @@ class Vale_Movimiento_Almacen(ModeloBase):
         count = Vale_Movimiento_Almacen.objects.all().count()
         self.consecutivo = count +1
         super(Vale_Movimiento_Almacen, self).save(*args, **kwargs)
+
+    @property
+    def tipo_inventario(self):
+        from produccion.models import Prod_Inv_MP
+        print('tipo inventario')
+        if Movimiento_MP.objects.filter(vale=self).exists():
+            print('Materias primas')
+            return 'Materias primas'
+        if Movimiento_EE.objects.filter(vale_e=self).exists():
+            return 'Envases y embalajes'
+        if Movimiento_Ins.objects.filter(vale_e=self).exists():
+            return 'Insumos'
+        if Movimiento_Prod.objects.filter(vale_e=self).exists():
+            return 'Productos'
+        if Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).exists():
+            return 'Salida a producción'
+        if Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).exists():
+            return 'Salida a envasado'
+        if Prod_Inv_MP.objects.filter(vale=self).exists():
+            print('Solicitud de produccion')
+            return 'Solicitud desde producción'
+        print("No encontre nada")
+
+    @property
+    def cant_elementos(self):
+        from produccion.models import Prod_Inv_MP
+        print("cantidad de elementos")
+        if Movimiento_MP.objects.filter(vale=self).exists():
+            return Movimiento_MP.objects.filter(vale=self).count()
+        if Movimiento_EE.objects.filter(vale_e=self).exists():
+            return Movimiento_EE.objects.filter(vale_e=self).count()
+        if Movimiento_Ins.objects.filter(vale_e=self).exists():
+            return Movimiento_Ins.objects.filter(vale_e=self).count()
+        if Movimiento_Prod.objects.filter(vale_e=self).exists():
+            return Movimiento_Prod.objects.filter(vale_e=self).count()
+        if Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).exists():
+            return Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).count()
+        if Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).exists():
+            return Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).count()
+        if Prod_Inv_MP.objects.filter(vale=self).exists():
+            print('Solicitud de produccion')
+            return Prod_Inv_MP.objects.filter(vale=self).count()
+        print('0')
+
+    @property
+    def produccion_asociada(self):
+        from produccion.models import Prod_Inv_MP
+        if Prod_Inv_MP.objects.filter(vale=self).exists():
+            mp = Prod_Inv_MP.objects.filter(vale=self).first()
+            return mp.lote_prod.id
+        if Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).exists():
+            mp = Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).first()
+            return mp.solicitud_produccion.id
         
 #Relación mucho a mucho de movimiento con Produccion
 class Vale_Salida_Almacen_Produccion(ModeloBase):
@@ -77,7 +134,8 @@ class Vale_Salida_Almacen_Produccion(ModeloBase):
 
     vale_movimiento = models.ForeignKey(
         Vale_Movimiento_Almacen, on_delete=models.DO_NOTHING,
-        null=True, blank=True,
+        null=True, blank=True, 
+        related_name='salidas_produccion',
         verbose_name="Movimiento"
     )
 

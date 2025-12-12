@@ -3,7 +3,13 @@ from .models import Inv_Mat_Prima
 from nomencladores.models import Almacen
 
 class AjusteInvMPForm(forms.ModelForm):
-
+    causa = forms.CharField(
+        max_length=100,
+        required = False,
+        label="Causa del ajuste",
+        widget=forms.TextInput(attrs={'class':'form-control'})
+    )
+    
     class Meta:
         model = Inv_Mat_Prima
         fields = ['cantidad', 'almacen', 'materia_prima']
@@ -33,3 +39,9 @@ class AjusteInvMPForm(forms.ModelForm):
                     self.fields['almacen'].disabled = True
                 else:
                     self.fields['almacen'].queryset = Almacen.objects.none()
+
+    def clean_causa(self):
+        causa = self.cleaned_data.get('causa')
+        if causa == '':
+            raise forms.ValidationError("Debe especificar una causa del ajuste")
+        return causa

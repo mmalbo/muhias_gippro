@@ -43,13 +43,14 @@ def export_vale(request, id_movimiento):
          data['almacen'] = vale.almacen
       data['fecha'] = vale.fecha_movimiento
       data['suministrador'] = vale.suministrador
+      data['origen'] = vale.origen
+      data['destino'] = vale.destino 
       data['orden'] = vale.orden_No
       data['lote'] = vale.lote_No
-      data['tipoi'] = vale.tipo
+      data['tipoi'] = vale.tipo.upper()
       if vale.transportista:
-         data['nombre_transportista'] = vale.transportista.nombre
-         data['ci_transportista'] = vale.transportista.cI
-         data['cargo_transportista'] = vale.transportista.cargo
+         data['nombre_transportista'] = vale.transportista
+         data['ci_transportista'] = vale.transportista_cI
       else:
          data['nombre_transportista'] = ''
          data['ci_transportista'] = ''

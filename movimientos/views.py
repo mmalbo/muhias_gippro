@@ -25,6 +25,8 @@ def salida_produccion(request, prod_id):
             almacen = mp_prod[0].almacen
             vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
+                origen = almacen.nombre,
+                destino = Produccion.planta.nombre,
                 entrada = False,
                 tipo = 'Entrega'
             )
@@ -68,6 +70,8 @@ def recepcion_materia_prima(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
+                origen = 'Adquisición',
+                destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Recepción'
             )
@@ -128,6 +132,8 @@ def recepcion_envase(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
+                origen = 'Adquisición',
+                destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Recepción'
             )
@@ -188,6 +194,8 @@ def recepcion_insumo(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
+                origen = 'Adquisición',
+                destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Recepción'
             )
@@ -246,6 +254,7 @@ def movimiento_list(request):
 def recepciones_pendientes_list(request):
     rec_pendientes = Adquisicion.objects.filter(registrada=False).all()
     almacen = request.user
+    print(rec_pendientes)
     print(f'almacen{almacen}')
     return render(request, 'movimientos/recepciones_list.html', {
         'rec_pendientes': rec_pendientes
@@ -302,7 +311,7 @@ def vale_detalle(request, pk):
                     activos = vale.movimientos_i.all()
                     if activos:
                         tipo = 'insumos'
-    elif vale.tipo.lower() == 'entrega' or vale.tipo == 'Conduce':
+    elif vale.tipo == 'Entrega' or vale.tipo == 'Conduce':
         activos = vale.movimientos.all()
         if activos:
             tipo = 'materias primas'
