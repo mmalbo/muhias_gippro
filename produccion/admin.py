@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from produccion.models import Produccion
+from produccion.models import Produccion, PruebaQuimica, ParametroPrueba, DetallePruebaQuimica
 #, Sol_Mat_Primas, Sol_Prod_Base
 
 
@@ -8,14 +8,17 @@ from produccion.models import Produccion
 @admin.register(Produccion)
 class ProduccionAdmin(admin.ModelAdmin):
     pass
-""" 
 
-@admin.register(Sol_Mat_Primas)
-class Sol_Mat_PrimasAdmin(admin.ModelAdmin):
+@admin.register(ParametroPrueba)
+class ParametroPruebaAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(PruebaQuimica)
+class PruebaQuimicaAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(DetallePruebaQuimica)
+class DetallePruebaQuimicaAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Sol_Prod_Base)
-class Sol_Prod_BaseAdmin(admin.ModelAdmin):
-    pass
- """

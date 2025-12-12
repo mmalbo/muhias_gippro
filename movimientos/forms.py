@@ -32,19 +32,29 @@ class MovimientoFormUpdate(forms.ModelForm):
 
     class Meta:
         model = Vale_Movimiento_Almacen
-        fields = [ 'tipo', 'consecutivo', 'almacen',
-                  'suministrador', 'transportista', 'chapa']
+        fields = [ 'tipo', 'consecutivo', 'almacen', 'origen', 'destino', 'descripcion',
+                  'transportista', 'transportista_cI', 'chapa']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-control'}),
             'consecutivo': forms.NumberInput(attrs={'class': 'form-control'}),
             'almacen': forms.Select(attrs={'class': 'form-control'}),
-            'suministrador': forms.TextInput(attrs={'class': 'form-control'}),
-            'transportista': forms.TextInput(attrs={'class': 'form-control-file'}),
+            'origen': forms.TextInput(attrs={'class': 'form-control'}),
+            'destino': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.TextInput(attrs={'class': 'form-control'}),
+            'transportista': forms.TextInput(attrs={'class': 'form-control'}),
+            'transportista_cI': forms.TextInput(attrs={'class': 'form-control-file'}),
             'chapa': forms.TextInput(attrs={'class': 'form-control-file'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         print(f'self.instance{self.instance.tipo}')
-        self.fields['tipo'].initial = self.instance.tipo 
+        self.fields['tipo'].initial = self.instance.tipo
+        self.fields['tipo'].disabled = True
+        self.fields['almacen'].disabled = True
+        self.fields['consecutivo'].disabled = True
+        if self.instance.tipo != 'Conduce':
+            self.fields['transportista'].disabled = True
+            self.fields['transportista_cI'].disabled = True
+            self.fields['chapa'].disabled = True
    

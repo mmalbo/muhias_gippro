@@ -6,12 +6,14 @@ from django.views.generic import View, ListView, CreateView, UpdateView, DeleteV
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, FileResponse
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.db.models import Q
+from django.db import transaction
 from decimal import Decimal, InvalidOperation
 import datetime
 import json
@@ -26,7 +28,7 @@ from nomencladores.almacen.models import Almacen
 from movimientos.models import Vale_Movimiento_Almacen
 from .forms import (ProduccionForm, MateriaPrimaForm, 
     SubirPruebasQuimicasForm, CancelarProduccionForm, PruebaQuimicaForm, 
-    DetallePruebaFormSet, AprobarPruebaForm, ParametroPruebaForm, BuscarParametroForm)
+    DetallePruebaForm, AprobarPruebaForm, ParametroPruebaForm, BuscarParametroForm)
 
 class ProduccionListView(ListView):
     model = Produccion
@@ -186,9 +188,12 @@ class CrearProduccionView(View):
 
             #generar un vale de almacen tipo solicitud
             print('Voy a crear vale')
+            id_almacen = materias_primas[0]['almacen']
+            print(id_almacen.id)
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Solicitud',
-                entrada = False
+                entrada = False,
+                almacen = id_almacen
             )
             print(vale.tipo)
 
@@ -266,7 +271,7 @@ def iniciar_produccion(request, pk):
     produccion = get_object_or_404(Produccion, pk=pk)
     
     if produccion.estado == 'Planificada':
-        produccion.estado = 'Iniciando mezcla'
+        produccion.estado = 'En proceso: Iniciando mezcla'
         produccion.save()
         messages.success(request, f'✅ Producción {produccion.lote} iniciada correctamente')
     else:
@@ -277,7 +282,7 @@ def iniciar_produccion(request, pk):
 def agita_produccion(request, pk):
     produccion_p = get_object_or_404(Produccion, pk=pk)
         
-    if produccion_p.estado == 'Iniciando mezcla':
+    if produccion_p.estado == 'En proceso: Iniciando mezcla':
         produccion_p.estado = 'En proceso: Agitado'
         produccion_p.save()
             
@@ -432,11 +437,10 @@ def detalle_cancelacion(request, pk):
     })
 
 ###---Registro de pruebas químicas---###
-
 def crear_prueba_quimica(request, pk):
     produccion = get_object_or_404(Produccion, pk=pk)
     parametros_existentes = ParametroPrueba.objects.filter(activo=True)
-    
+
     if request.method == 'POST':
         # Capturar datos del formulario principal
         fecha_prueba = request.POST.get('fecha_prueba')
@@ -445,83 +449,158 @@ def crear_prueba_quimica(request, pk):
         
         # Validar fecha de prueba
         if not fecha_prueba:
-            return render(request, 'produccion/crear_prueba_quimica.html', {
+            messages.error(request, 'La fecha de prueba es obligatoria')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
                 'produccion': produccion,
                 'parametros_existentes': parametros_existentes,
-                'error': 'La fecha de prueba es obligatoria'
             })
         
-        # Crear la prueba química
-        prueba = PruebaQuimica.objects.create(
-            produccion=produccion,
-            fecha_prueba=fecha_prueba,
-            fecha_vencimiento=fecha_vencimiento,
-            observaciones=observaciones,
-            #usuario=request.user
-        )
-        
-        # Procesar parámetros dinámicos
-        contador = 1
-        while True:
-            parametro_id = request.POST.get(f'parametro_{contador}')
-            valor_medido = request.POST.get(f'valor_medido_{contador}')
-            
-            if not parametro_id or not valor_medido:
+        # Validar que haya al menos un parámetro
+        tiene_parametros = False
+        for key in request.POST.keys():
+            if key.startswith('parametro_'):
+                tiene_parametros = True
                 break
-            
-            try:
-                parametro = ParametroPrueba.objects.get(id=parametro_id)
-                
-                # Validar valor según tipo
-                try:
-                    valor_decimal = Decimal(valor_medido)
-
-                    # Validar rangos si existen
-                    if parametro.valor_minimo and valor_decimal < parametro.valor_minimo:
-                        # Podrías registrar esto como advertencia
-                        pass
-                        
-                    if parametro.valor_maximo and valor_decimal > parametro.valor_maximo:
-                        # Podrías registrar esto como advertencia
-                        pass
-                            
-                except (InvalidOperation, ValueError):
-                    # Valor no es decimal válido
-                    pass
-                
-                # Crear parámetro de prueba
-                observacion_param = request.POST.get(f'observacion_param_{contador}', '')
-                
-                DetallePruebaQuimica.objects.create(
-                    prueba=prueba,
-                    parametro=parametro,
-                    valor_medido=valor_medido,
-                    observaciones=observacion_param,                    
+        
+        if not tiene_parametros:
+            messages.error(request, 'Debe agregar al menos un parámetro para la prueba')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
+        
+        try:
+            # Usar transacción para asegurar consistencia
+            with transaction.atomic():
+                # Crear la prueba química
+                prueba = PruebaQuimica.objects.create(
+                    nomenclador_prueba=f"{produccion.lote}-{produccion.catalogo_producto.nombre_comercial}",
+                    produccion=produccion,
+                    fecha_prueba=fecha_prueba,
+                    fecha_vencimiento=fecha_vencimiento,
+                    observaciones=observaciones,
+                    estado="En Proceso",  # Establecer estado aquí
+                    # usuario=request.user
                 )
                 
-                prueba.estado="En Proceso"
+                # Contador de parámetros procesados
+                parametros_procesados = 0
+                errores_validacion = []
                 
-            except ParametroPrueba.DoesNotExist:
-                pass
+                # Procesar parámetros dinámicos - MÉTODO CORRECTO
+                for key in request.POST.keys():
+                    if key.startswith('parametro_id'):
+                        # Extraer el índice del nombre del campo
+                        try:
+                            index = key.split('_')[1]
+                        except IndexError:
+                            continue
+                        
+                        # Obtener valores usando el índice
+                        parametro_id = request.POST.get(f'parametro_{index}')
+                        print(parametro_id)
+                        valor_medido = request.POST.get(f'valor_{index}')
+                        #observacion_param = request.POST.get(f'observacion_{index}', '')
+                        print(valor_medido)
+                        #print(observacion_param)
+                        # Validar que tenga valores
+                        if not parametro_id or not valor_medido:
+                            errores_validacion.append(f'Parámetro {index}: Faltan datos')
+                            continue
+                        else:
+                            print("OK")
+                        print(parametro_id)
+                        parametro = ParametroPrueba.objects.filter(id=parametro_id).first()
+                        print(parametro)
+                        print(parametro.nombre)
+                        try:
+                            parametro = ParametroPrueba.objects.get(id=parametro_id)
+                            print(parametro.nombre)
+                        except ParametroPrueba.DoesNotExist:
+                            errores_validacion.append(f'Parámetro {index}: No existe o está inactivo')
+                            continue
+
+                        print(parametro.tipo)
+                        # Validar valor según tipo si es numérico
+                        if parametro.tipo == 'numerico':
+                            try:
+                                valor_decimal = Decimal(str(valor_medido).replace(',', '.'))
+                                
+                                # Validar rangos si existen
+                                if parametro.valor_minimo is not None and valor_decimal < parametro.valor_minimo:
+                                    mensaje = f'Parámetro {parametro.nombre}: Valor {valor_medido} debajo del mínimo ({parametro.valor_minimo})'
+                                    errores_validacion.append(mensaje)
+                                    # Puedes decidir si continuar o no
+                                
+                                if parametro.valor_maximo is not None and valor_decimal > parametro.valor_maximo:
+                                    mensaje = f'Parámetro {parametro.nombre}: Valor {valor_medido} sobre el máximo ({parametro.valor_maximo})'
+                                    errores_validacion.append(mensaje)
+                                    # Puedes decidir si continuar o no
+                                    
+                            except (InvalidOperation, ValueError):
+                                errores_validacion.append(f'Parámetro {parametro.nombre}: Valor "{valor_medido}" no es numérico válido')
+                                continue
+                        
+                        # Crear detalle de prueba química
+                        DetallePruebaQuimica.objects.create(
+                            prueba=prueba,
+                            parametro=parametro,
+                            valor_medido=valor_medido,
+                            observaciones=observacion_param,
+                            # Puedes calcular automáticamente si cumple
+                            cumplimiento=parametro.validar_valor(valor_medido) if hasattr(parametro, 'validar_valor') else True
+                        )
+                        
+                        parametros_procesados += 1
+                
+                # Verificar que se procesaron parámetros
+                if parametros_procesados == 0:
+                    raise ValueError('No se pudieron procesar parámetros. Verifique los datos.')
+                
+                # Mostrar errores de validación como advertencias
+                if errores_validacion:
+                    for error in errores_validacion:
+                        messages.warning(request, error)
+                
+                # Mensaje de éxito
+                messages.success(request, f'Prueba química creada exitosamente con {parametros_procesados} parámetros')
+                
+                # Redirigir al detalle de la prueba o a la lista
+                return redirect('detalle_prueba_quimica', prueba_id=prueba.id)
+                # O si prefieres volver a la lista de producciones:
+                # return redirect('produccion_list')
+                
+        except Exception as e:
+            messages.error(request, f'Error al crear la prueba: {str(e)}')
+            # Log del error
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Error crear_prueba_quimica: {str(e)}', exc_info=True)
             
-            contador += 1
-        
-        return redirect('produccion_list')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
     
+    # GET request - mostrar formulario
     return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
         'produccion': produccion,
         'parametros_existentes': parametros_existentes,
     })
 
 @login_required
-def detalle_prueba_quimica(request, prueba_id):
+def detalle_prueba_quimica(request, pk):
     """Ver detalle de una prueba química"""
-    prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
+    produccion = get_object_or_404(Produccion, id=pk)
+
+    prueba = get_object_or_404(PruebaQuimica, produccion=produccion.id)
+
+    parametros_disponibles = ParametroPrueba.objects.all()
 
     # Calcular resumen automático
-    parametros = prueba.parametros.all()
+    parametros = DetallePruebaQuimica.objects.filter(prueba=prueba).all()
     total_parametros = parametros.count()
-    parametros_aprobados = parametros.filter(dentro_especificacion=True).count()
+    parametros_aprobados = parametros.filter(cumplimiento=True).count()
     parametros_rechazados = total_parametros - parametros_aprobados
     
     porcentaje_aprobacion = 0
@@ -535,6 +614,7 @@ def detalle_prueba_quimica(request, prueba_id):
         'parametros_aprobados': parametros_aprobados,
         'parametros_rechazados': parametros_rechazados,
         'porcentaje_aprobacion': porcentaje_aprobacion,
+        'parametros_disponibles': parametros_disponibles,
     }
     
     return render(request, 'produccion/prueba_quimica/detalle_prueba_quimica.html', context)
@@ -566,10 +646,8 @@ def aprobar_prueba_quimica(request, pk):
         'form': form
     })
 
-# views.py
-
 @login_required
-@permission_required('produccion.view_parametroprueba')
+#@permission_required('produccion.view_parametroprueba')
 def lista_parametros(request):
     """Lista y busca parámetros con filtros avanzados"""
     form = BuscarParametroForm(request.GET or None)
@@ -600,7 +678,7 @@ def lista_parametros(request):
     })
 
 @login_required
-@permission_required('produccion.add_parametroprueba')
+#@permission_required('produccion.add_parametroprueba')
 def crear_parametro(request):
     """Crear nuevo parámetro personalizado"""
     if request.method == 'POST':
@@ -615,7 +693,7 @@ def crear_parametro(request):
     return render(request, 'produccion/parametros/crear_parametro.html', {'form': form})
 
 @login_required
-@permission_required('produccion.change_parametroprueba')
+#@permission_required('produccion.change_parametroprueba')
 def editar_parametro(request, parametro_id):
     """Editar parámetro existente"""
     parametro = get_object_or_404(ParametroPrueba, id=parametro_id)
@@ -692,6 +770,7 @@ def crear_prueba_quimica_base(request, pk):
                 parametros_ids = request.POST.getlist('parametro')
                 valores = request.POST.getlist('valor_medido')
                 observaciones = request.POST.getlist('observaciones_parametro')
+                print(parametros_ids)
                 
                 # Validar que haya al menos un parámetro
                 if not parametros_ids or not any(parametros_ids):
@@ -709,12 +788,14 @@ def crear_prueba_quimica_base(request, pk):
                             parametro = ParametroPrueba.objects.get(id=parametros_ids[i])
                             
                             # Crear detalle de prueba
-                            DetallePruebaQuimica.objects.create(
+                            prueb_param=DetallePruebaQuimica.objects.create(
                                 prueba=prueba,
                                 parametro=parametro,
                                 valor_medido=valores[i] if i < len(valores) else '',
                                 observaciones=observaciones[i] if i < len(observaciones) else ''
                             )
+                            prueb_param = form.save(commit=False)
+
                         except ParametroPrueba.DoesNotExist:
                             messages.error(request, f'Parámetro con ID {parametros_ids[i]} no existe')
                             continue
@@ -736,3 +817,120 @@ def crear_prueba_quimica_base(request, pk):
         'form': form,
         'parametros_existentes': parametros_existentes
     })
+
+@login_required
+#@require_POST
+def agregar_parametros_prueba(request, prueba_id):
+    """Agregar múltiples parámetros a una prueba"""
+    prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
+    
+    try:
+        data = json.loads(request.POST.get('parametros', '[]'))
+        
+        for item in data:
+            parametro = get_object_or_404(ParametroPrueba, id=item['parametro_id'])
+            
+            # Crear nuevo parámetro de prueba
+            ParametroPrueba.objects.create(
+                prueba=prueba,
+                parametro=parametro,
+                valor_medido=item['valor_medido'],
+                observaciones=item.get('observaciones', '')
+            )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(data)} parámetros agregados correctamente'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+@login_required
+@require_POST
+def editar_parametro_prueba(request, parametro_id):
+    """Editar valor de un parámetro existente"""
+    parametro = get_object_or_404(ParametroPrueba, id=parametro_id)
+    
+    try:
+        nuevo_valor = request.POST.get('valor_medido', '').strip()
+        if not nuevo_valor:
+            return JsonResponse({
+                'success': False,
+                'message': 'El valor no puede estar vacío'
+            })
+        
+        parametro.valor_medido = nuevo_valor
+        parametro.save()
+        
+        # Calcular si está dentro de especificación
+        dentro_especificacion = parametro.verificar_especificacion()
+        
+        return JsonResponse({
+            'success': True,
+            'dentro_especificacion': dentro_especificacion,
+            'message': 'Valor actualizado correctamente'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+@login_required
+@require_POST
+def eliminar_parametro_prueba(request, parametro_id):
+    """Eliminar un parámetro de prueba"""
+    parametro = get_object_or_404(ParametroPrueba, id=parametro_id)
+    
+    try:
+        parametro.delete()
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+@login_required
+@require_POST
+def calcular_resultados_prueba(request, prueba_id):
+    """Recalcular resultados de todos los parámetros"""
+    prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
+    
+    try:
+        parametros = []
+        aprobados = 0
+        rechazados = 0
+        
+        for parametro in prueba.parametros.all():
+            # Recalcular especificación
+            dentro = parametro.verificar_especificacion()
+            
+            if dentro:
+                aprobados += 1
+            else:
+                rechazados += 1
+            
+            parametros.append({
+                'id': parametro.id,
+                'dentro_especificacion': dentro
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'aprobados': aprobados,
+            'rechazados': rechazados,
+            'parametros': parametros
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)

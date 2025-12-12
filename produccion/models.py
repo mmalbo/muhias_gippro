@@ -154,8 +154,9 @@ class PruebaQuimica(models.Model):
     """Registro completo de una prueba química realizada"""
         
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nomenclador_prueba = models.CharField(max_length=100, null=True, blank=True)
     produccion = models.ForeignKey('Produccion', on_delete=models.CASCADE, related_name='pruebas_quimicas')
-    fecha_prueba = models.DateTimeField(null=True, blank=True)
+    fecha_prueba = models.DateField(null=True, blank=True)
     fecha_vencimiento = models.DateField(null=True, blank=True)  # Para productos con fecha de vencimiento
     #responsable = models.ForeignKey('CustomUser', on_delete=models.PROTECT, related_name='pruebas_realizadas')
     estado = models.CharField(max_length=20, choices=ESTADOS_PRUEBA, default='en_proceso')

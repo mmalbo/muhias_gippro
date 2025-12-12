@@ -27,8 +27,10 @@ def ajuste_inv_mp(request, inv_mp):
         print(viejo_cant)
         form = AjusteInvMPForm(request.POST, instance=inv_mat_prima, user=request.user)
         if form.is_valid():
+            causa = form.cleaned_data.get('causa')
             vale = Vale_Movimiento_Almacen(
                 tipo = 'Ajuste de inventario',
+                descripcion=causa,
                 almacen = almacen
             )
             form.save()
