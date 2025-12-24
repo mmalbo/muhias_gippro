@@ -1,0 +1,813 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GIPPro - MUHIA</title>
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'gestion/images/logo.png' %}"/>
+    
+    <!-- ===================== -->
+    <!-- CDNs -->
+    <!-- ===================== -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <!-- ===================== -->
+    <!-- ESTILOS PERSONALIZADOS -->
+    <!-- ===================== -->
+    
+    <style>
+    /* ========== VARIABLES Y RESET ========== */
+    :root {
+        --sidebar-bg: #f8fafc;  /* Gris azulado muy claro */
+        --sidebar-text: #334155;
+        --sidebar-hover: #e2e8f0;
+        --sidebar-active: #3b82f6;
+        --sidebar-border: #e2e8f0;
+        --primary-color: #3b82f6;
+        --secondary-color: #64748b;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        --info-color: #06b6d4;
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #334155;
+        background-color: #ffffff; /* Fondo blanco */
+        height: 100vh;
+        overflow-x: hidden;
+    }
+    
+    /* ========== LOADER ========== */
+    #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #ffffff;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    #loading.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--sidebar-hover);
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* ========== WRAPPER ========== */
+    .wrapper {
+        display: flex;
+        min-height: 100vh;
+        background: #ffffff;
+    }
+    
+    /* ========== SIDEBAR ========== */
+    .sidebar {
+        width: 260px;
+        background: var(--sidebar-bg);
+        /*border-right: 1px solid var(--sidebar-border);*/
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        z-index: 100;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar.collapsed {
+        margin-left: -260px;
+    }
+    
+    /* Logo/Sidebar Header */
+    .sidebar-header {
+        padding: 20px;
+        /*border-bottom: 1px solid var(--sidebar-border);*/
+        text-align: center;
+        background: #f8fafc;
+    }
+    
+    .sidebar-header .logo {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .sidebar-header .logo i {
+        font-size: 1.8rem;
+    }
+    
+    /* Navegación */
+    .sidebar-nav {
+        padding: 20px 0;
+        flex: 1;
+    }
+    
+    .nav-title {
+        padding: 10px 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #94a3b8;
+        letter-spacing: 0.5px;
+        margin-top: 10px;
+    }
+    
+    /* Items del menú */
+    .nav-item {
+        position: relative;
+    }
+    
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: var(--sidebar-text);
+        text-decoration: none;
+        transition: all 0.2s;
+        border-left: 3px solid transparent;
+        font-weight: 500;
+    }
+    
+    .nav-link:hover {
+        background: var(--sidebar-hover);
+        color: var(--primary-color);
+        border-left-color: var(--primary-color);
+    }
+    
+    .nav-link.active {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-color);
+        border-left-color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .nav-link i {
+        width: 20px;
+        font-size: 1.1rem;
+        margin-right: 12px;
+        text-align: center;
+    }
+    
+    /* Flecha para submenús */
+    .nav-link .arrow {
+        margin-left: auto;
+        transition: transform 0.3s;
+        font-size: 0.8rem;
+    }
+    
+    .nav-link.collapsed .arrow {
+        transform: rotate(-90deg);
+    }
+    
+    /* Submenú */
+    .submenu {
+        background: rgba(255, 255, 255, 0.5);
+        border-left: 3px solid var(--sidebar-hover);
+        margin-left: 20px;
+        overflow: hidden;
+        transition: all 0.3s;
+        max-height: 0;
+    }
+    
+    .submenu.show {
+        max-height: 500px;
+    }
+    
+    .submenu .nav-link {
+        padding: 10px 20px 10px 45px;
+        font-size: 0.9rem;
+        border-left: none;
+    }
+    
+    .submenu .nav-link i {
+        font-size: 0.9rem;
+    }
+    
+    .submenu .nav-link:hover {
+        background: rgba(226, 232, 240, 0.5);
+    }
+    
+    .submenu .nav-link.active {
+        background: rgba(59, 130, 246, 0.08);
+    }
+    
+    /* ========== MAIN CONTENT ========== */
+    .main-content {
+        flex: 1;
+        margin-left: 260px;
+        transition: all 0.3s;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .main-content.expanded {
+        margin-left: 0;
+    }
+    
+    /* ========== NAVBAR ========== */
+    .navbar {
+        background: #ffffff !important;
+        border-bottom: 1px solid var(--sidebar-border);
+        padding: 0.8rem 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        position: sticky;
+        top: 0;
+        z-index: 99;
+    }
+    
+    .navbar .container-fluid {
+        padding: 0;
+    }
+    
+    /* Toggle button */
+    #sidebarToggle {
+        background: transparent;
+        border: 1px solid var(--sidebar-border);
+        color: var(--sidebar-text);
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    
+    #sidebarToggle:hover {
+        background: var(--sidebar-hover);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .breadcrumb-item a {
+        color: var(--secondary-color);
+        text-decoration: none;
+    }
+    
+    .breadcrumb-item.active {
+        color: var(--sidebar-text);
+        font-weight: 500;
+    }
+    
+    /* User dropdown */
+    .user-dropdown .dropdown-toggle {
+        background: transparent;
+        border: 1px solid var(--sidebar-border);
+        color: var(--sidebar-text);
+        padding: 8px 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    
+    .user-dropdown .dropdown-toggle:hover {
+        background: var(--sidebar-hover);
+        border-color: var(--primary-color);
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    
+    /* ========== CONTENIDO PRINCIPAL ========== */
+    .content-wrapper {
+        flex: 1;
+        padding: 1.5rem;
+        background: #ffffff;
+    }
+    
+    /* Page header */
+    .page-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--sidebar-border);
+    }
+    
+    .page-title {
+        color: var(--sidebar-text);
+        font-weight: 600;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+    
+    .page-subtitle {
+        color: var(--secondary-color);
+        font-size: 0.95rem;
+        margin: 5px 0 0 0;
+    }
+    
+    /* Cards */
+    .card {
+        border: 1px solid var(--sidebar-border);
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        background: #ffffff;
+    }
+    
+    .card-header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--sidebar-border);
+        padding: 1.25rem;
+        border-radius: 10px 10px 0 0 !important;
+        font-weight: 600;
+        color: var(--sidebar-text);
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    /* Tables */
+    .table {
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background: var(--sidebar-bg);
+        border-bottom: 2px solid var(--sidebar-border);
+        color: var(--sidebar-text);
+        font-weight: 600;
+        padding: 1rem;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .table tbody td {
+        padding: 1rem;
+        border-top: 1px solid var(--sidebar-border);
+        vertical-align: middle;
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(248, 250, 252, 0.5);
+    }
+    
+    /* Buttons */
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 8px 16px;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    /* Badges */
+    .badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+    
+    .badge-primary {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .badge-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+    
+    /* Alerts */
+    .alert {
+        border: none;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+    }
+    
+    .alert-primary {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-color);
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    /* ========== FOOTER ========== */
+    .footer {
+        background: var(--sidebar-bg);
+        border-top: 1px solid var(--sidebar-border);
+        padding: 1rem 1.5rem;
+        margin-top: auto;
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+    }
+    
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 992px) {
+        .sidebar {
+            margin-left: -260px;
+        }
+        
+        .sidebar.active {
+            margin-left: 0;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-content {
+            margin-left: 0;
+        }
+        
+        .main-content.shifted {
+            margin-left: 260px;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 99;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .content-wrapper {
+            padding: 1rem;
+        }
+        
+        .page-title {
+            font-size: 1.25rem;
+        }
+    }
+    
+    /* ========== UTILIDADES ========== */
+    .shadow-soft {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    .rounded-lg {
+        border-radius: 10px !important;
+    }
+    
+    .text-muted {
+        color: #94a3b8 !important;
+    }
+    
+    .bg-light {
+        background-color: var(--sidebar-bg) !important;
+    }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+<!-- ===================== -->
+<!-- LOADER -->
+<!-- ===================== -->
+<div id="loading">
+    <div class="spinner"></div>
+</div>
+
+<!-- ===================== -->
+<!-- OVERLAY PARA MOBILE -->
+<!-- ===================== -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ===================== -->
+<!-- ESTRUCTURA PRINCIPAL -->
+<!-- ===================== -->
+<div class="wrapper">
+    
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <a href="{% url 'principal' %}" class="logo">
+                <img src="{% static 'gestion/images/logo.png' %}" alt="A">
+                <span>GIPPro</span>
+            </a>
+        </div>
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar-nav">
+            {% include 'base/componentes/sidebar.html' %}
+        </nav>
+        
+        <!-- Sidebar Footer (opcional) -->
+        <div class="sidebar-footer p-3 border-top">
+            <div class="text-center text-muted small">
+                <div>© 2024 GIPPro</div>
+                <div class="mt-1">v1.0.0</div>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content" id="mainContent">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <!-- Sidebar Toggle -->
+                <button class="btn me-3" id="sidebarToggle">
+                    <i class="las la-bars"></i>
+                </button>
+                
+                <!-- User Menu -->
+                <div class="ms-auto">
+                    {% include 'base/componentes/nav_bar.html' %}
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Contenido Principal -->
+        <div class="content-wrapper">
+            <!-- Contenido Dinámico -->
+            {% block contenido %}
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    {% block page_title %}Informaciones generales{% endblock %}
+                </h1>
+                <div class="page-header mb-4" id="pageHeader">
+                    {% include 'base/componentes/header.html' %}
+                </div>
+            </div>
+            
+            
+            <!-- El contenido específico de cada página irá aquí -->
+            {% endblock %}
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container-fluid">
+                {% include 'base/componentes/footer.html' %}
+            </div>
+        </footer>
+    </main>
+</div>
+
+<!-- ===================== -->
+<!-- CDN JAVASCRIPT -->
+<!-- ===================== -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- ===================== -->
+<!-- INICIALIZACIÓN -->
+<!-- ===================== -->
+<script>
+// Configuración global
+window.GIPPro = {
+    config: {
+        debug: {% if debug %}true{% else %}false{% endif %},
+        user: {
+            id: {% if user.is_authenticated %}'{{ user.id }}'{% else %}null{% endif %},
+            name: '{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}'
+        }
+    }
+};
+
+// Inicialización cuando TODO esté cargado
+window.addEventListener('load', function() {
+    console.log('=== GIPPro Inicializando ===');
+    
+    // 1. Ocultar loader
+    setTimeout(function() {
+        document.getElementById('loading').classList.add('hidden');
+    }, 300);
+    
+    // 2. Configurar Moment.js en español
+    if (typeof moment !== 'undefined') {
+        moment.locale('es');
+    }
+    
+    // 3. Configurar Toastr
+    if (typeof toastr !== 'undefined') {
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 4000,
+            extendedTimeOut: 1000,
+            preventDuplicates: true
+        };
+    }
+    
+    // 4. Inicializar DataTables
+    if (typeof $.fn.DataTable !== 'undefined') {
+        $('table.datatable').each(function() {
+            try {
+                $(this).DataTable({
+                    responsive: true,
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                    },
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    dom: '<"row"<"col-md-6"l><"col-md-6"f>>' +
+                         '<"row"<"col-12"tr>>' +
+                         '<"row"<"col-md-5"i><"col-md-7"p>>'
+                });
+            } catch (error) {
+                console.error('Error inicializando DataTable:', error);
+            }
+        });
+    }
+    
+    // 5. Inicializar tooltips de Bootstrap
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+    
+    console.log('=== GIPPro Inicialización Completada ===');
+});
+
+// ========== SIDEBAR TOGGLE ==========
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const overlay = document.getElementById('overlay');
+    
+    // Toggle sidebar
+    if (sidebarToggle && sidebar && mainContent) {
+        sidebarToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (window.innerWidth <= 992) {
+                // Para mobile: mostrar/ocultar sidebar con overlay
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : 'auto';
+            } else {
+                // Para desktop: colapsar/expandir
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                
+                // Guardar preferencia
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            }
+        });
+        
+        // Cerrar sidebar en mobile al hacer clic en overlay
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+        }
+        
+        // Cargar estado guardado (solo desktop)
+        if (window.innerWidth > 992 && localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+        }
+    }
+    
+    // ========== SUBMENUS CON FLECHAS ==========
+    // Inicializar todos los submenús
+    const submenuToggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    
+    submenuToggles.forEach(function(toggle) {
+        toggle.addEventListener('click', function(e) {
+            if (this.getAttribute('href') === '#') {
+                e.preventDefault();
+            }
+            
+            const targetId = this.getAttribute('data-bs-target') || this.getAttribute('href');
+            const target = document.querySelector(targetId);
+            
+            if (target) {
+                // Toggle submenu
+                target.classList.toggle('show');
+                
+                // Rotar flecha
+                const arrow = this.querySelector('.arrow');
+                if (arrow) {
+                    arrow.classList.toggle('collapsed');
+                }
+                
+                // Toggle clase active en el padre
+                this.classList.toggle('active');
+            }
+        });
+    });
+});
+
+// Manejo de errores
+window.addEventListener('error', function(e) {
+    // Ignorar errores no críticos
+    if (e.message && (
+        e.message.includes('Failed to load resource') || 
+        e.message.includes('MIME') ||
+        e.message.includes('source map')
+    )) {
+        console.warn('Error no crítico ignorado:', e.message);
+        e.preventDefault();
+        return false;
+    }
+    return true;
+});
+</script>
+
+<!-- ===================== -->
+<!-- JAVASCRIPT ESPECÍFICO DE PÁGINA -->
+<!-- ===================== -->
+{% block javascript %}
+<!-- Scripts específicos de cada página -->
+{% endblock %}
+
+</body>
+</html>

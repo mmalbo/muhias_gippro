@@ -71,8 +71,8 @@ class Produccion(ModeloBase):
 
     def nombre_archivo_pruebas(self):
         """Retorna el nombre del archivo sin la ruta"""
-        if self.pruebas_quimicas:
-            return os.path.basename(self.pruebas_quimicas.name)
+        if self.pruebas_quimicas_ext:
+            return os.path.basename(self.pruebas_quimicas_ext.name)
         return None
     
     def extension_archivo(self):

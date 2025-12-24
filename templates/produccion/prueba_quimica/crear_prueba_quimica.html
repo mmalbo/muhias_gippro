@@ -16,7 +16,7 @@
             <!-- Información de producción -->
             <div class="alert alert-info">
                 <h5>Producción: {{ produccion.lote }}</h5>
-                <p class="mb-0">Producto: {{ produccion.catalogo_producto.nombre }}</p>
+                <p class="mb-0">Producto: {{ produccion.catalogo_producto.nombre_comercial }}</p>
             </div>
             
             <!-- Formulario -->
@@ -26,34 +26,42 @@
                 <!-- Fecha -->
                 <div class="mb-3">
                     <label for="fecha_prueba" class="form-label">Fecha de Prueba *</label>
-                    <input type="datetime-local" class="form-control" id="fecha_prueba" name="fecha_prueba" required>
+                    <input type="date" class="form-control" id="fecha_prueba" name="fecha_prueba" 
+                           value="{% now 'Y-m-d' %}" required>
+                </div>
+                
+                <!-- Fecha vencimiento (opcional) -->
+                <div class="mb-3">
+                    <label for="fecha_vencimiento" class="form-label">Fecha de Vencimiento (opcional)</label>
+                    <input type="date" class="form-control" id="fecha_vencimiento" name="fecha_vencimiento">
                 </div>
                 
                 <!-- Parámetros -->
                 <div class="card mb-4">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Parámetros de Prueba</h5>
-                    </div>
-                    <div class="card-body">
-                        <button type="button" class="btn btn-primary mb-3" id="btnAgregarParametro">
+                        <button type="button" class="btn btn-sm btn-primary" id="btnAgregarParametro">
                             <i class="fas fa-plus me-1"></i> Agregar Parámetro
                         </button>
-                        
+                    </div>
+                    <div class="card-body">
                         <div id="parametrosContainer">
                             <!-- Los parámetros aparecerán aquí -->
                         </div>
                         
                         <div id="sinParametros" class="text-center text-muted py-4">
                             <i class="fas fa-flask fa-3x mb-3"></i>
-                            <p>No hay parámetros agregados</p>
+                            <p class="mb-1">No hay parámetros agregados</p>
+                            <small>Haga clic en "Agregar Parámetro" para comenzar</small>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Observaciones -->
                 <div class="mb-3">
-                    <label for="observaciones" class="form-label">Observaciones</label>
-                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                    <label for="observaciones" class="form-label">Observaciones Generales</label>
+                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3" 
+                              placeholder="Observaciones sobre la prueba..."></textarea>
                 </div>
                 
                 <!-- Botones -->
@@ -70,25 +78,38 @@
     </div>
 </div>
 
-<!-- Template para parámetro -->
+<!-- Template para parámetro - CORREGIDO -->
 <template id="parametroTemplate">
     <div class="card mb-3 parametro-item">
         <div class="card-body">
             <div class="row">
-                <div class="col-md-5">
-                    <select class="form-control parametro-select" name="parametro_id[]" required>
-                        <option value="">Seleccionar parámetro...</option>
-                        {% for parametro in parametros_existentes %}
-                        <option value="{{ parametro.id }}">{{ parametro.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
                 <div class="col-md-4">
-                    <input type="text" class="form-control valor-input" name="valor[]" placeholder="Valor" required>
+                    <div class="mb-3">
+                        <label class="form-label">Parámetro *</label>
+                        <select class="form-control parametro-select" required>
+                            <option value="">Seleccionar parámetro...</option>
+                            {% for parametro in parametros_existentes %}
+                            <option value="{{ parametro.id }}" 
+                                    data-min="{{ parametro.valor_minimo|default:'' }}"
+                                    data-max="{{ parametro.valor_maximo|default:'' }}"
+                                    data-unidad="{{ parametro.unidad_medida|default:'' }}">
+                                {{ parametro.nombre }}
+                                {% if parametro.unidad_medida %}({{ parametro.unidad_medida }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Valor Medido *</label>
+                        <input type="text" class="form-control valor-input" placeholder="Valor" required>
+                        <small class="form-text text-muted unidad-text"></small>
+                    </div>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
                     <button type="button" class="btn btn-danger btn-eliminar">
-                        <i class="fas fa-trash"></i> Eliminar
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
@@ -99,67 +120,215 @@
 
 {% block javascript %}
 <script>
-// JavaScript SIMPLE y FUNCIONAL
+// JavaScript CORREGIDO con numeración automática
 
 $(document).ready(function() {
-    console.log('Documento listo - jQuery funciona');
+    console.log('✅ Documento listo - Inicializando...');
     
-    // Referencias
+    // Variables
+    let contadorParametros = 0;
     const $btnAgregar = $('#btnAgregarParametro');
     const $container = $('#parametrosContainer');
     const $sinParametros = $('#sinParametros');
-    
-    console.log('Botón encontrado:', $btnAgregar.length > 0);
+    const $form = $('#pruebaForm');
     
     // Evento para agregar parámetro
     $btnAgregar.on('click', function() {
-        console.log('Clic en agregar parámetro');
+        console.log('🔄 Agregando parámetro...');
         agregarParametro();
     });
     
     // Función para agregar parámetro
     function agregarParametro() {
-        const template = document.getElementById('parametroTemplate');
-        if (!template) {
-            alert('Error: Template no encontrado');
-            return;
+        try {
+            const template = document.getElementById('parametroTemplate');
+            if (!template) {
+                throw new Error('Template no encontrado');
+            }
+            
+            contadorParametros++;
+            console.log(`➕ Creando parámetro #${contadorParametros}`);
+            
+            // Clonar template
+            const clone = template.content.cloneNode(true);
+            const $parametroDiv = $(clone).find('.parametro-item');
+            
+            // Configurar nombres únicos para cada campo
+            configurarNombresCampos($parametroDiv, contadorParametros);
+            
+            // Configurar eventos
+            configurarEventosParametro($parametroDiv);
+            
+            // Agregar al contenedor
+            $container.append($parametroDiv);
+            
+            // Ocultar mensaje "sin parámetros"
+            $sinParametros.hide();
+            
+            console.log(`✅ Parámetro #${contadorParametros} agregado exitosamente`);
+            
+        } catch (error) {
+            console.error('❌ Error al agregar parámetro:', error);
+            alert('Error al agregar parámetro: ' + error.message);
         }
+    }
+    
+    // Configurar nombres únicos para los campos
+    function configurarNombresCampos($parametroDiv, index) {
+        // IMPORTANTE: Estos nombres deben coincidir con lo que busca la vista
+        $parametroDiv.find('.parametro-select').attr('name', `parametro_${index}`);
+        $parametroDiv.find('.valor-input').attr('name', `valor_medido_${index}`);
         
-        // Clonar template
-        const clone = template.content.cloneNode(true);
-        const $parametroDiv = $(clone).find('.parametro-item');
-        
-        // Configurar botón eliminar
+        // Agregar IDs únicos también
+        $parametroDiv.find('.parametro-select').attr('id', `parametro_${index}`);
+        $parametroDiv.find('.valor-input').attr('id', `valor_medido_${index}`);
+    }
+    
+    // Configurar eventos del parámetro
+    function configurarEventosParametro($parametroDiv) {
+        // Botón eliminar
         $parametroDiv.find('.btn-eliminar').on('click', function() {
-            $(this).closest('.parametro-item').remove();
+            const $item = $(this).closest('.parametro-item');
+            const index = $item.index() + 1;
+            console.log(`🗑️ Eliminando parámetro #${index}`);
+            $item.remove();
+            contadorParametros--;
+            renumerarParametros();
             verificarParametrosVacios();
         });
         
-        // Agregar al contenedor
-        $container.append($parametroDiv);
+        // Actualizar unidad cuando cambia el parámetro
+        $parametroDiv.find('.parametro-select').on('change', function() {
+            const unidad = $(this).find('option:selected').data('unidad') || '';
+            $(this).closest('.parametro-item').find('.unidad-text').text(unidad ? `Unidad: ${unidad}` : '');
+        });
+    }
+    
+    // Renumerar parámetros después de eliminar
+    function renumerarParametros() {
+        console.log('🔄 Renumerando parámetros...');
         
-        // Ocultar mensaje "sin parámetros"
-        $sinParametros.hide();
+        $container.find('.parametro-item').each(function(index) {
+            const nuevoIndex = index + 1;
+            configurarNombresCampos($(this), nuevoIndex);
+            
+            // Actualizar número visual si lo muestras
+            const $numero = $(this).find('.numero-parametro');
+            if ($numero.length) {
+                $numero.text(nuevoIndex);
+            }
+        });
         
-        console.log('Parámetro agregado exitosamente');
+        contadorParametros = $container.children().length;
+        console.log(`✅ Renumerado. Total: ${contadorParametros}`);
     }
     
     // Verificar si hay parámetros
     function verificarParametrosVacios() {
         if ($container.children().length === 0) {
             $sinParametros.show();
+            console.log('📭 No hay parámetros');
+        } else {
+            console.log(`📊 Parámetros actuales: ${contadorParametros}`);
         }
     }
     
+    // Validar formulario antes de enviar
+    $form.on('submit', function(e) {
+        console.log('📤 Validando formulario antes de enviar...');
+        
+        // Verificar que haya al menos un parámetro
+        if (contadorParametros === 0) {
+            e.preventDefault();
+            alert('❌ Debe agregar al menos un parámetro para la prueba.');
+            $btnAgregar.focus();
+            return false;
+        }
+        
+        // Verificar que todos los parámetros tengan valores
+        let parametrosCompletos = true;
+        let mensajesError = [];
+        
+        $container.find('.parametro-item').each(function(index) {
+            const $select = $(this).find('.parametro-select');
+            const $valor = $(this).find('.valor-input');
+            
+            if (!$select.val()) {
+                parametrosCompletos = false;
+                mensajesError.push(`Parámetro ${index + 1}: Seleccione un parámetro`);
+                $select.addClass('is-invalid');
+            }
+            
+            if (!$valor.val().trim()) {
+                parametrosCompletos = false;
+                mensajesError.push(`Parámetro ${index + 1}: Ingrese un valor`);
+                $valor.addClass('is-invalid');
+            }
+        });
+        
+        if (!parametrosCompletos) {
+            e.preventDefault();
+            alert('❌ Complete todos los campos requeridos:\n\n' + mensajesError.join('\n'));
+            return false;
+        }
+        
+        // Validar fecha de prueba
+        const fechaPrueba = $('#fecha_prueba').val();
+        if (!fechaPrueba) {
+            e.preventDefault();
+            alert('❌ Ingrese la fecha de la prueba.');
+            $('#fecha_prueba').focus();
+            return false;
+        }
+        
+        console.log('✅ Formulario válido, enviando...');
+        
+        // Mostrar datos que se enviarán (para debug)
+        console.log('📋 Datos a enviar:');
+        const formData = new FormData(this);
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+        
+        return true;
+    });
+    
+    // Eliminar clase de error al cambiar
+    $(document).on('change', '.parametro-select, .valor-input', function() {
+        $(this).removeClass('is-invalid');
+    });
+    
     // Agregar primer parámetro automáticamente
     setTimeout(function() {
+        console.log('🚀 Agregando primer parámetro automáticamente...');
         agregarParametro();
-    }, 300);
+    }, 500);
+    
+    console.log('🎉 Configuración completada');
 });
 
 // Manejo de errores global
 window.addEventListener('error', function(e) {
-    console.error('Error global:', e.message, 'en', e.filename, 'línea:', e.lineno);
+    console.error('❌ Error global:', e.message, 'en', e.filename, 'línea:', e.lineno);
 });
 </script>
+
+<style>
+.parametro-item {
+    border-left: 4px solid #0d6efd;
+    transition: all 0.3s;
+}
+
+.parametro-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-eliminar:hover {
+    transform: scale(1.1);
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+</style>
 {% endblock %}

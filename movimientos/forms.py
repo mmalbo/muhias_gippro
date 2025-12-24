@@ -48,7 +48,6 @@ class MovimientoFormUpdate(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print(f'self.instance{self.instance.tipo}')
         self.fields['tipo'].initial = self.instance.tipo
         self.fields['tipo'].disabled = True
         self.fields['almacen'].disabled = True

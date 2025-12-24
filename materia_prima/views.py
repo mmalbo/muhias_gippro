@@ -57,13 +57,11 @@ def listMateriasPrimas(request):
     
     almacen = None
     if request.user.groups.filter(name='Almaceneros').exists():
-        print('Almacenero')
         almacen = Almacen.objects.filter(responsable=request.user).first()
 
     materias_primas = Inv_Mat_Prima.objects.select_related('materia_prima', 'almacen')
     
-    if request.user.groups.filter(name='Presidencia-Admin').exists():
-        print('Presidencia')
+    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
             materias_primas = materias_primas.filter(almacen=almacen_id)
     else:
@@ -139,7 +137,6 @@ def get_materias_primas(request, pk):
 
         return JsonResponse(materias_primas_data, safe=False)
     except Almacen.DoesNotExist:
-        print(Almacen.objects.get(pk=pk))
         raise Http404("Materia prima no encontrado")
 
 class CreateImportView(CreateView):
@@ -397,7 +394,6 @@ def gestionar_tipos_MP(request):
         'categorias_dinamicas': categorias_dinamicas,
         'total_categorias': len(tipos_mp),
     }
-    print("ya casi")
     return render(request, 'materia_prima/gestionar_tipos.html', context)
 
 #@login_required

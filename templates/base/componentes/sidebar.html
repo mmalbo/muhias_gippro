@@ -1,347 +1,485 @@
 {% load static %}
 <style>
-    .iq-sidebar {
-        height: 100vh; /* Establece la altura de la barra lateral al 100% de la altura de la ventana */
-        overflow-y: auto; /* Habilita el scroll vertical */
-        overflow-x: auto; /* Habilita el scroll horizontal */
+    .sidebar {
+        width: 260px;
+        background: #f8fafc;  /* Gris azulado claro */
+        /*border-right: 1px solid #e2e8f0;*/
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        z-index: 100;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
     }
 
-    .navigation-option {
+    .sidebar.collapsed {
+        margin-left: -260px;
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+        padding: 20px;
+        /*border-bottom: 1px solid #e2e8f0;*/
+        text-align: center;
+        background: #ffffff;
+    }
+
+    .sidebar-header .logo {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: #3b82f6;
+        text-decoration: none;
         display: flex;
         align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
 
-    .navigation-option a {
-        flex-grow: 1;
+    .sidebar-header .logo img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .sidebar-header .logo h3 {
+        margin: 0;
+        color: #3b82f6;
+    }
+
+    /* Navegación */
+    .sidebar-nav {
+        padding: 20px 0;
+        flex: 1;
+    }
+
+    .nav-title {
+        padding: 10px 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #94a3b8;
+        letter-spacing: 0.5px;
+        margin-top: 10px;
+    }
+
+    /* Items del menú */
+    .nav-item {
+        position: relative;
+        list-style: none;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: #334155;
+        text-decoration: none;
+        transition: all 0.2s;
+        border-left: 3px solid transparent;
+        font-weight: 500;
+    }
+
+    .nav-link:hover {
+        background: #e2e8f0;
+        color: #3b82f6;
+        border-left-color: #3b82f6;
+    }
+
+    .nav-link.active {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border-left-color: #3b82f6;
+        font-weight: 600;
+    }
+
+    .nav-link i,
+    .nav-link svg {
+        width: 20px;
+        font-size: 1.1rem;
+        margin-right: 12px;
+        text-align: center;
+    }
+
+    /* Flecha para submenús */
+    .nav-link .arrow {
+        margin-left: auto;
+        transition: transform 0.3s;
+        font-size: 0.8rem;
+    }
+
+    .nav-link[aria-expanded="true"] .arrow {
+        transform: rotate(180deg);
+    }
+
+    /* Submenú */
+    .submenu {
+        background: rgba(255, 255, 255, 0.5);
+        border-left: 3px solid #e2e8f0;
+        margin-left: 20px;
         overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+        transition: all 0.3s;
+        max-height: 0;
     }
 
-    .svg-icon {
-        width: 20px; /* Ajusta el ancho del icono según tus necesidades */
+    .submenu.show {
+        max-height: 500px;
+    }
+
+    .submenu .nav-link {
+        padding: 10px 20px 10px 45px;
+        font-size: 0.9rem;
+        border-left: none;
+    }
+
+    .submenu .nav-link i,
+    .submenu .nav-link svg {
+        font-size: 0.9rem;
+    }
+
+    .submenu .nav-link:hover {
+        background: rgba(226, 232, 240, 0.5);
+    }
+
+    .submenu .nav-link.active {
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    /* Scroll personalizado */
+    .sidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
     }
 </style>
 
-<div class="iq-sidebar sidebar-default">
-    <div class="iq-sidebar-logo d-flex align-items-center">
-        <a href="{% url 'principal' %}" class="header-logo">
-            <img src="{% static 'gestion/images/logo.png' %}" alt="logo">
-            <h3 class="logo-title light-logo">GIPPro</h3>
+<div class="sidebar" id="sidebar">
+    <!-- Sidebar Header
+    <div class="sidebar-header">
+        <a href="{% url 'principal' %}" class="logo">
+            <img src="{% static 'gestion/images/logo/logo.jpeg' %}" alt="logo">
+            <h3>GIPPro</h3>
         </a>
-        <div class="iq-menu-bt-sidebar ml-0">
-            <i class="las la-bars wrapper-menu"></i>
+    </div> -->
+    
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar-nav">
+        <ul class="nav flex-column" id="sidebarMenu">
+            <!-- Inicio -->
+            <li class="nav-item">
+                <a href="{% url 'principal' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                    <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span class="ml-2">Inicio</span>
+                </a>
+            </li>
+            
+            <!-- Administración (solo superuser) -->
+            {% if user.is_superuser %}
+                <!--<div class="nav-title">ADMINISTRACIÓN</div>-->
+                <li class="nav-item">
+                    <a href="#submenuAdmin" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                        <span class="ml-2">Administración</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuAdmin">
+                        <a href="{% url 'customuser_list' %}" class="nav-link">
+                            <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Usuarios</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %}
+            
+            <!-- Clasificadores -->
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                <!--<div class="nav-title">CLASIFICADORES</div>-->
+                <li class="nav-item">
+                    <a href="#submenuClasificadores" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span class="ml-2">Clasificadores</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuClasificadores">
+                        <a href="{% url 'almacen_lista' %}" class="nav-link">
+                            <span>Almacén</span>
+                        </a>
+                        <a href="{% url 'planta_lista' %}" class="nav-link">
+                            <span>Planta de producción</span>
+                        </a>
+                        <a href="{% url 'formato:listar' %}" class="nav-link">
+                            <span>Formato de envases</span>
+                        </a>
+                        
+                        <!-- Sub-submenú para Tipos de embalajes -->
+                        <a href="#submenuEmbalajes" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                            <span>Tipos de embalajes</span>
+                            <i class="las la-angle-down arrow"></i>
+                        </a>
+                        <div class="submenu collapse" id="submenuEmbalajes">
+                            <a href="{% url 'caja:listar' %}" class="nav-link">
+                                <span>Caja</span>
+                            </a>
+                            <a href="{% url 'pomo:listar' %}" class="nav-link">
+                                <span>Pomo</span>
+                            </a>
+                            <a href="{% url 'tanque:listar' %}" class="nav-link">
+                                <span>Tanque</span>
+                            </a>
+                            <a href="{% url 'tapa:listar' %}" class="nav-link">
+                                <span>Tapa</span>
+                            </a>
+                            <a href="{% url 'tipo_envase_embalaje_list' %}" class="nav-link">
+                                <span>Listar todos</span>
+                            </a>
+                        </div>
+                        
+                        <a href="{% url 'parametros_lista' %}" class="nav-link">
+                            <span>Parámetros químicos</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %}
+            
+            <!-- Adquisiciones -->
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Comerciales' %}
+                <!--<div class="nav-title">ADQUISICIONES</div>-->
+                <li class="nav-item">
+                    <a href="#submenuAdquisiciones" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="ml-2">Adquisiciones</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuAdquisiciones">
+                        <a href="{% url 'compras_mp_list' %}" class="nav-link">
+                            <span>Materia prima</span>
+                        </a>
+                        <a href="{% url 'compras_env_list' %}" class="nav-link">
+                            <span>Envase o embalajes</span>
+                        </a>
+                        <a href="{% url 'compras_ins_list' %}" class="nav-link">
+                            <span>Insumos y otros</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %}
+            
+            <!-- Inventarios -->
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                <!--<div class="nav-title">INVENTARIOS</div>-->
+                <li class="nav-item">
+                    <a href="#submenuInventarios" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="ml-2">Inventarios</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuInventarios">
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                        <a href="{% url 'importar_tienda' %}" class="nav-link">
+                            <span>Sincronizar con tienda</span>
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'materia_prima:materia_prima_list' %}" class="nav-link">
+                            <span>Materia prima</span>
+                        </a>
+                        <a href="{% url 'envase_embalaje_lista' %}" class="nav-link">
+                            <span>Envase o embalaje</span>
+                        </a>
+                        <a href="{% url 'insumos_list' %}" class="nav-link">
+                            <span>Insumos y otros</span>
+                        </a>
+                        <a href="{% url 'producto_list' %}" class="nav-link">
+                            <span>Productos</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %}
+            
+            <!-- Movimientos -->
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                <!--<div class="nav-title">MOVIMIENTOS</div>-->
+                <li class="nav-item">
+                    <a href="#submenuMovimientos" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="ml-2">Movimientos</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuMovimientos">
+                        <a href="{% url 'rec_pend_list' %}" class="nav-link">
+                            <span>Recepciones pendientes</span>
+                        </a>
+                        <a href="{% url 'movimiento_list' %}" class="nav-link">
+                            <span>Movimientos</span>
+                        </a>
+                        <!-- <a href="{% url 'solicitudes_almacen' %}" class="nav-link">
+                            <span>Solicitudes a almacén</span>
+                        </a> -->
+                        <a href="{% url 'solicitudes_pendientes' %}" class="nav-link">
+                            <span>Solicitudes pendientes</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %}
+            
+            <!-- Producciones -->
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
+                <!--<div class="nav-title">PRODUCCIÓN</div>-->
+                <li class="nav-item">
+                    <a href="#submenuProducciones" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="ml-2">Producciones</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuProducciones">
+                        <a href="{% url 'crear_produccion' %}" class="nav-link">
+                            <span>Nueva producción</span>
+                        </a>
+                        <a href="{% url 'produccion_list' %}" class="nav-link">
+                            <span>Listar</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %}
+            
+            <!-- Envasado -->
+            <!-- {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
+                <li class="nav-item">
+                    <a href="#submenuEnvasado" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="ml-2">Envasado</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuEnvasado">
+                        <a href="#" class="nav-link">
+                            <span>Nuevo envasado</span>
+                        </a>
+                        <a href="{% url 'produccion_list' %}" class="nav-link">
+                            <span>Listar</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %} -->
+        </ul>
+    </nav>
+    
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer p-3 border-top">
+        <div class="text-center text-muted small">
+            <div>© 2024 GIPPro</div>
+            <div class="mt-1">v1.0.0</div>
         </div>
     </div>
-    <div class="scroll-content">
-        <nav class="iq-sidebar-menu">
-            <ul id="iq-sidebar-toggle" class="iq-menu">
-                <li class="active navigation-option">
-                    <a href="{% url 'principal' %}" class="svg-icon">
-                        <svg class="svg-icon" width="25" height="25" xmlns="http://www.w3.org/2000/svg"
-                             viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                             stroke-linejoin="round">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                        </svg>
-                        <span class="ml-2">Inicio</span>
-                    </a>
-                </li>
-                {% if user.is_superuser %}
-                    <li class=" ">
-                        <a href="#Administracion" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <svg class="svg-icon" id="p-dash19" width="20" height="20"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                            </svg>
-                            <span class="ml-2">Administración</span>
-                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                        </a>
-                        <ul id="Administracion" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                            <li class=" ">
-                                <a href="{% url 'customuser_list' %}" class="collapsed" aria-expanded="false">
-                                    <svg class="svg-icon" width="25" height="25" xmlns="http://www.w3.org/2000/svg"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                    <span class="ml-4">Usuarios</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                {% endif %}
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
-                    <li class=" ">
-                        <a href="#nomencladores" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <svg class="svg-icon" id="p-dash12" width="20" height="20"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                            </svg>
-                            <span class="ml-2">Clasificadores</span>
-                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                        </a>
-                        <ul id="nomencladores" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-
-                            <li class=" ">
-                                <a href="{% url 'almacen_lista' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-3">Almacén</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'planta_lista' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-3">Planta de producción</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'formato:listar' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-3">Formato de envases</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="#tipo_envase" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                                    <span class="ml-3">Tipos de embalajes</span>
-                                    <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                                    <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                                </a>
-                                <ul id="tipo_envase" class="iq-submenu collapse" data-parent="#tipo_envase">
-                                    <li class=" ">
-                                        <a href="{% url 'caja:listar' %}" class="collapsed" aria-expanded="false">
-                                            <span class="ml-4">Caja</span>
-                                        </a>
-                                    </li>
-                                    <li class=" ">
-                                        <a href="{% url 'pomo:listar' %}" class="collapsed" aria-expanded="false">
-                                            <span class="ml-4">Pomo</span>
-                                        </a>
-                                    </li>
-                                    <li class=" ">
-                                        <a href="{% url 'tanque:listar' %}" class="collapsed" aria-expanded="false">
-                                            <span class="ml-4">Tanque</span>
-                                        </a>
-                                    </li>
-                                    <li class=" ">
-                                        <a href="{% url 'tapa:listar' %}" class="collapsed" aria-expanded="false">
-                                            <span class="ml-4">Tapa</span>
-                                        </a>
-                                    </li>
-                                    <li class="">
-                                        <a href="{% url 'tipo_envase_embalaje_list' %}">
-                                            <i class="las"></i><span>Listar todos</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'parametros_lista' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-3">Parámetros químicos</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                {% endif %}
-
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Comerciales' %}
-                    <li class=" ">
-                        <a href="#adquisicionE" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <svg class="svg-icon" id="p-dash14" width="20" height="20"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            <span class="ml-2">Adquisiciones</span>
-                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                        </a>
-                        <ul id="adquisicionE" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                            
-                            <li class=" ">
-                                <a href="{% url 'compras_mp_list' %}"><span class="ml-2">Materia prima</span></a>                                    
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'compras_env_list' %}"><span class="ml-2">Envase o embalajes</span></a>                                
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'compras_ins_list' %}"> <span class="ml-2">Insumos y otros</span></a>
-                            </li>
-                        </ul>
-                    </li>
-                {% endif %}                
-
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
-                    <li class=" ">
-                        <a href="#registrar" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <svg class="svg-icon" id="p-dash14" width="20" height="20"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            <span class="ml-2">Inventarios</span>
-                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                        </a>
-                        <ul id="registrar" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
-                            <li class=" ">
-                                <a href="{% url 'importar_tienda' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Sincronizar con tienda</span>
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li class=" ">
-                                <a href="{% url 'materia_prima:materia_prima_list' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Materia prima</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'envase_embalaje_lista' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Envase o embalaje</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'insumos_list' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Insumos y otros</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'producto_list' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Productos</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                {% endif %}
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
-                    <li class=" ">
-                        <a href="#mov" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <svg class="svg-icon" id="p-dash14" width="20" height="20"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            <span class="ml-2">Movimientos</span>
-                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                        </a>
-                        <ul id="mov" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">                            
-                            <li class=" ">
-                                <a href="{% url 'rec_pend_list' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Recepciones pendientes</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'movimiento_list' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Movimientos</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'solicitudes_almacen' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Solicitudes a almacén</span>
-                                </a>
-                            </li>
-                            <li class=" ">
-                                <a href="{% url 'solicitudes_pendientes' %}" class="collapsed" aria-expanded="false">
-                                    <span class="ml-2">Solicitudes pendientes</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                {% endif %}
-
-
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
-                    <li class=" ">
-                        <a href="#producciones" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <svg class="svg-icon" id="p-dash14" width="20" height="20"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            <span class="ml-2">Producciones</span>
-                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                        </a>
-                        <ul id="producciones" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                            <li class=" ">
-                                <a href="{% url 'crear_produccion' %}">
-                                    <i class="las la-minus"></i><span>Nueva producción</span>
-                                </a>
-                            </li>
-                            <li class="">
-                                <a href="{% url 'produccion_list' %}">
-                                    <i class="las la-minus"></i><span>Listar</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                {% endif %}
-
-                {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
-                    <li class=" ">
-                        <a href="#envasado" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <svg class="svg-icon" id="p-dash14" width="20" height="20"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            <span class="ml-2">Envasado</span>
-                            <i class="las la-angle-right iq-arrow-right arrow-active"></i>
-                            <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
-                        </a>
-                        <ul id="envasado" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                            <li class=" ">
-                                <a href="#">
-                                    <i class="las la-minus"></i><span>Nuevo envasado</span>
-                                </a>
-                            </li>
-                            <li class="">
-                                <a href="{% url 'produccion_list' %}">
-                                    <i class="las la-minus"></i><span>Listar</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li></li>
-                {% endif %}
-                <li class=" ">
-                    <a href="{% url 'producto_list' %}" class="collapsed" data-toggle="collapse" aria-expanded="false"></a>
-                </li>
-
-
-            </ul>
-        </nav>
-        {#        <div class="pt-5 pb-2"></div>#}
-    </div>
 </div>
+
+<!-- JavaScript para manejar submenús -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar submenús con flechas
+    const submenuToggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    
+    submenuToggles.forEach(function(toggle) {
+        toggle.addEventListener('click', function(e) {
+            const targetId = this.getAttribute('href') || this.getAttribute('data-bs-target');
+            if (targetId && targetId.startsWith('#')) {
+                e.preventDefault();
+                
+                const target = document.querySelector(targetId);
+                if (target) {
+                    // Cerrar otros submenús del mismo nivel
+                    const parent = this.closest('.submenu') || document.getElementById('sidebarMenu');
+                    const siblings = parent.querySelectorAll('.submenu.show');
+                    siblings.forEach(function(sibling) {
+                        if (sibling !== target) {
+                            sibling.classList.remove('show');
+                        }
+                    });
+                    
+                    // Toggle el submenú actual
+                    target.classList.toggle('show');
+                    
+                    // Rotar flecha
+                    const arrow = this.querySelector('.arrow');
+                    if (arrow) {
+                        arrow.style.transform = target.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+                    }
+                }
+            }
+        });
+    });
+    
+    // Marcar como activo según la URL actual
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-link[href]');
+    
+    navLinks.forEach(function(link) {
+        const href = link.getAttribute('href');
+        if (href && href !== '#' && currentPath.includes(href)) {
+            link.classList.add('active');
+            
+            // Abrir el submenú padre si existe
+            let parentMenu = link.closest('.submenu');
+            while (parentMenu) {
+                parentMenu.classList.add('show');
+                const toggle = document.querySelector('[href="#' + parentMenu.id + '"], [data-bs-target="#' + parentMenu.id + '"]');
+                if (toggle) {
+                    toggle.classList.add('active');
+                    const arrow = toggle.querySelector('.arrow');
+                    if (arrow) {
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                }
+                parentMenu = parentMenu.parentElement.closest('.submenu');
+            }
+        }
+    });
+});
+</script>

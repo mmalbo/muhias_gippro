@@ -19,39 +19,36 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de solicitud</th>
-                            <th>Cantidad de productos<th>
+                            <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for rp in sol_pendientes %}
                             <tr>
-                                <td>{{ rp.fecha_compra }}</td>
-                                <td>{{ rp.tipo_adquisicion }}</td>
-                                {% if tipo_adquisicion == mp %}
-                                <td>{{ rp.cantidad_mprimas }}</td>
-                                {% elif tipo_adquisicion == env %}
-                                <td>{{ rp.cantidad_envases }}</td>
-                                {% else %}
-                                <td>{{ rp.cantidad_insumos }}</td>
-                                {% endif %}
+                                <td>{{ rp.fecha_movimiento }}</td>
+                                <td>{{ rp.tipo_inventario }}</td>
+                                <td>{{rp.cant_elementos}}</td>
                                 <td>
-                                    
+
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'movimiento_update' rp.id %}" class="btn btn-success">Detalles</a>                                    
+                                        <a href="{% url 'salida_prod' rp.produccion_asociada %}" class="btn btn-success">Entregar</a>
+                                    </div>
                                 </td>
                             </tr>
-
                         {% endfor %}
                         </tbody>
                         <tfoot>
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de adquisición</th>
-                            <th>Cantidad de productos<th>
+                            <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

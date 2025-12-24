@@ -19,12 +19,12 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de recepción</th>
-                            <th>Cantidad de productos<th>
+                            <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -33,19 +33,21 @@
                             <tr>
                                 <td>{{ rp.fecha_compra }}</td>
                                 <td>{{ rp.tipo_adquisicion }}</td>
-                                {% if tipo_adquisicion == mp %}
-                                <td>{{ rp.cantidad_mprimas }}</td>
-                                {% elif tipo_adquisicion == env %}
-                                <td>{{ rp.cantidad_envases }}</td>
-                                {% else %}
-                                <td>{{ rp.cantidad_insumos }}</td>
-                                {% endif %}
                                 <td>
-                                    {% if tipo_adquisicion == mp %}
+                                    {% if rp.tipo_adquisicion == mp %}
+                                        {{ rp.cantidad_mprimas }}
+                                    {% elif rp.tipo_adquisicion == env %}
+                                        {{ rp.cantidad_envases }}
+                                    {% else %}
+                                        {{ rp.cantidad_insumos }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if rp.tipo_adquisicion == mp %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'recepcion_mp' rp.id %}" class="btn btn-success">Recepcionar</a>
                                     </div>
-                                    {% elif tipo_adquisicion == env %}
+                                    {% elif rp.tipo_adquisicion == env %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'recepcion_env' rp.id %}" class="btn btn-success">Recepcionar</a>
                                     </div>
@@ -63,7 +65,7 @@
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de adquisición</th>
-                            <th>Cantidad de productos<th>
+                            <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

@@ -7,7 +7,7 @@
         <div class="container-fluid">
             <div class="container mt-4">
                 <form method="post">
-                    {% csrf_token %}                    
+                    {% csrf_token %}    
                     <table class="table">
                         <thead>
                             <tr>
@@ -20,14 +20,14 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <form method="post">
-                                {% csrf_token %}
                                 <td>{{ form.materia_prima }}</td>
                                 {% if request.user.groups.all.0.name == 'Almaceneros'%}
                                     <td>{{ inv_mat_prima.almacen.nombre }}
                                         <input type="hidden" name="almacen" value="{{inv_mat_prima.almacen.id}">
                                     </td>
                                 {% elif request.user.groups.all.0.name == 'Presidencia-Admin' %}
+                                    <td>{{ form.almacen }}</td>
+                                {% else %}
                                     <td>{{ form.almacen }}</td>
                                 {% endif %}
                                 <td>{{ inv_mat_prima.cantidad }}</td>
@@ -40,8 +40,12 @@
                                         <i class="fas fa-save"></i> Guardar Ajuste
                                     </button>
                                 </td>
-                                </form>
                             </tr>
+                            <tr>
+                                 {{form.causa.label}}
+                                {{form.causa}}
+                            </tr>
+							</tr>
                         </tbody>
                     </table>
                     

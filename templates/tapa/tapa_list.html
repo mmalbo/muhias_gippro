@@ -7,14 +7,14 @@
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de tapas</h4>
                                         
-                    <form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
+                    <!--<form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
                     {% csrf_token %}
                         <div> 
                             <h6 style="display: inline-block;"> Buscar por: </h6> 
                             {{ filter.form }}                
                             <button type="submit" class="btn btn-primary" style="display: inline-block;"> <i class="fas fa-search mr-0"> </i> Filtrar</button>
                         </div>   
-                    </form>
+                    </form>-->
 
                     {% if messages %}
                         <script>
@@ -29,13 +29,13 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Color</th>
-                            <th colspan="2">Descripción</th>
+                            <th>Descripción</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -45,8 +45,7 @@
                                 <td>{{ tapa.codigo }}</td>
                                 <td>{{ tapa.nombre }}</td>
                                 <td>{{ tapa.color }}</td>
-                                <td colspan="2">{{ tapa.descripcion }}</td>
-                                <td>{{ tapa.material }}</td>
+                                <td>{{ tapa.descripcion }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'tapa:actualizar' tapa.pk %}"
@@ -64,7 +63,7 @@
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Color</th>
-                            <th colspan="2">Descripción</th>
+                            <th>Descripción</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

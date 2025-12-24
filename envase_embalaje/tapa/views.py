@@ -122,13 +122,12 @@ def importarTapa(request):
             messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
             return redirect('tapa:importarTapa')
 
-        #try:
-        with transaction.atomic():
+        try:
+            with transaction.atomic():
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
 
                 for data in imported_data:
-
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Col_Nombre
                     Col_Color = str(data[2]).strip() if data[2] is not None else None  # Col_Color
                     descripcion = str(data[3]).strip() if data[3] is not None else None  # Col_descripcion
@@ -146,9 +145,9 @@ def importarTapa(request):
                         codigo = generar_codigo(codigo_base,ultimo)
                     
                     # Validaciones de los datos
-                    if not nombre or not codigo or not descripcion or not Col_Color:
+                    if not nombre or not descripcion or not Col_Color:
                         messages.error(request,
-                                       f"Fila {No_fila + 1}: Los campos 'Código','Nombre', 'Descripción' y 'Color' son "
+                                       f"Fila {No_fila + 1}: Los campos 'Nombre', 'Descripción' y 'Color' son "
                                        f"obligatorios.")
                         return redirect('tapa:importarTapa')
                     
@@ -197,8 +196,8 @@ def importarTapa(request):
 
                 return redirect('tapa:listar')
 
-        #except Exception as e:
-        #    messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
-        #    return redirect('tapa:listar')
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
+            return redirect('tapa:listar')
 
     return render(request, 'tapa/import_form.html')

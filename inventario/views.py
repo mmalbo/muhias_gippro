@@ -13,7 +13,7 @@ def ajuste_inv_mp(request, inv_mp):
     inv_mat_prima = get_object_or_404(Inv_Mat_Prima, id=inv_mp)
     
     almacen = Almacen.objects.first()
-    if request.user.groups.first().name == 'Almaceneros':
+    if request.user.groups.first() and request.user.groups.first().name == 'Almaceneros':
         almacen = Almacen.objects.filter(responsable=request.user).first()
         if not almacen or inv_mat_prima.almacen != almacen:
             messages.error(request,'No tienes permisos para ajustar este inventario')
@@ -31,6 +31,8 @@ def ajuste_inv_mp(request, inv_mp):
             vale = Vale_Movimiento_Almacen(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
+                origen=almacen,
+                destino=almacen,
                 almacen = almacen
             )
             form.save()
