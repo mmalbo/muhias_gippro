@@ -1,4 +1,5 @@
 from .models import Vale_Movimiento_Almacen, Transportista, Movimiento_EE, Movimiento_Ins, Movimiento_MP
+from inventario.models import Inv_Mat_Prima
 from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 from django.http import HttpResponseRedirect, HttpResponse, Http404, JsonResponse
@@ -13,7 +14,9 @@ def export_vale(request, id_movimiento):
    #Diccionario de vale
    current_vale = {}        
    vale = Vale_Movimiento_Almacen.objects.filter(consecutivo=id_movimiento)[0]
-   inventarios = vale.movimientos.all()
+   print(vale.tipo)
+   inventarios = Movimiento_MP.objects.filter(vale=vale.id) #vale.movimientos.all()
+   print(inventarios)
    if inventarios:
       tipo = 'materias primas'
    else:

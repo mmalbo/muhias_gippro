@@ -21,15 +21,15 @@
                         </p>
                     </div>
 
-                    {% if produccion.archivo_pruebas %}
+                    {% if produccion.pruebas_quimicas_ext %}
                     <div class="alert alert-info">
                         <h6><i class="fas fa-file"></i> Archivo Actual:</h6>
                         <p>
                             <strong>{{ produccion.nombre_archivo_pruebas }}</strong>
                             <br>
                             <small class="text-muted">
-                                {% if produccion.archivo_pruebas.size %}
-                                    Tamaño: {{ produccion.archivo_pruebas.size|filesizeformat }}
+                                {% if produccion.pruebas_quimicas_ext.size %}
+                                    Tamaño: {{ produccion.pruebas_quimicas_ext.size|filesizeformat }}
                                 {% endif %}
                             </small>
                         </p>
@@ -52,18 +52,18 @@
                         
                         <div class="mb-3">
                             <label for="{{ form.pruebas_quimicas.id_for_label }}" class="form-label">
-                                {{ form.pruebas_quimicas.label }}
+                                {{ form.pruebas_quimicas_ext.label }}
                             </label>
-                            {{ form.pruebas_quimicas }}
-                            {% if form.pruebas_quimicas.errors %}
-                            <div class="text-danger small">{{ form.pruebas_quimicas.errors }}</div>
+                            {{ form.pruebas_quimicas_ext }}
+                            {% if form.pruebas_quimicas_ext.errors %}
+                            <div class="text-danger small">{{ form.pruebas_quimicas_ext.errors }}</div>
                             {% endif %}
                             <div class="form-text">
                                 Formatos permitidos: PDF, Word, Excel, imágenes, texto. Máximo 5MB.
                             </div>
                         </div>
 
-                        <div class="mb-3">
+                        <!--<div class="mb-3">
                             <label for="{{ form.archivo_pruebas.id_for_label }}" class="form-label">
                                 {{ form.archivo_pruebas.label }}
                             </label>
@@ -74,7 +74,7 @@
                             <div class="form-text">
                                 Confirmación de conformidad del producto acorde al resultado de las pruebas químicas realizadas.
                             </div>
-                        </div>
+                        </div>-->
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="{% url 'produccion_list' %}" class="btn btn-secondary me-md-2">

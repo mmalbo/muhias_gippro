@@ -1,110 +1,427 @@
 {% load static %}
-
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>GIPPro - Inicio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GIPPro - Sistema de Gestión</title>
 
     <!-- Favicon -->
-    <link href="{% static 'gestion/images/logo.png' %}" rel="icon">
-    <link rel="stylesheet" href="{% static 'gestion/css/backend-plugin.min.css' %}">
-    <link rel="stylesheet" href="{% static 'gestion/css/backend.css' %}">
-    <link rel="stylesheet" href="{% static 'gestion/vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'gestion/vendor/remixicon/fonts/remixicon.css' %}">
+    <link rel="shortcut icon" href="{% static 'gestion/images/logo.png' %}">
 
-    <link rel="stylesheet" href="{% static 'gestion/vendor/tui-calendar/tui-calendar/dist/tui-calendar.css' %}">
-    <link rel="stylesheet" href="{% static 'gestion/vendor/tui-calendar/tui-date-picker/dist/tui-date-picker.css' %}">
-    <link rel="stylesheet" href="{% static 'gestion/vendor/tui-calendar/tui-time-picker/dist/tui-time-picker.css' %}">
+    <!-- CDNs mínimos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Estilos minimalistas -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #1abc9c;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --gray-light: #e9ecef;
+            --gray-medium: #6c757d;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 40px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            /*background: rgba(52, 152, 219, 0.3);linear-gradient(135deg, var(--secondary-color), var(--accent-color));*/
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .logo img {
+            width: 50px;
+            height: 50px;
+            filter: brightness(0) invert(1);
+        }
+
+        .brand-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 1rem;
+            color: var(--gray-medium);
+            margin-bottom: 10px;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 45px 14px 16px;
+            border: 2px solid var(--gray-light);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #f8fafc;
+            color: var(--primary-color);
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            outline: none;
+            background: var(--white);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-medium);
+            pointer-events: none;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .alert-danger {
+            background: #fee;
+            color: #dc3545;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1c5a87 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-light);
+            color: var(--gray-medium);
+            font-size: 0.9rem;
+        }
+
+        .login-footer a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .copyright {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #adb5bd;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 25px;
+                max-width: 100%;
+            }
+
+            .brand-title {
+                font-size: 1.8rem;
+            }
+
+            .login-title {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Efectos para inputs con error */
+        .is-invalid {
+            border-color: #dc3545 !important;
+            background: #fff5f5 !important;
+        }
+
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: block;
+        }
+    </style>
 </head>
-<body class=" ">
-<!-- loader Start -->
-<div id="loading">
-    <div id="loading-center">
-    </div>
-</div>
-<!-- loader END -->
+<body>
+    <div class="login-card">
+        <!-- Logo y Nombre -->
+        <div class="logo-container">
+            <div class="logo">
+                <img src="{% static 'img\logos\logo.png' %}" alt="logo">
+            </div>
+            <h1 class="brand-title">GIPPro</h1>
+            <p class="brand-subtitle">Gestión Integral de Producción</p>
+        </div>
 
-<div class="wrapper">
-    <section class="login-content">
-        <div class="container">
-            <div class="row align-items-center justify-content-center height-self-center">
-                <div class="col-lg-8">
-                    <div class="card auth-card">
-                        <div class="card-body p-0">
+        <!-- Título del formulario -->
+        <h2 class="login-title">Iniciar Sesión</h2>
 
-                            <div class="d-flex align-items-center auth-content">
+        <!-- Mensajes de error/éxito -->
+        {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>{{ error_message }}
+            </div>
+        {% endif %}
 
-                                <div class="col-lg-6 bg-primary content-left">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-                                    <div class="p-3">
-                                        <h2 class="mb-2 text-white">Gestión de Inventarios y Producción</h2>
-                                        <p>Ingrese su usuario y contraseña.</p>
-                                        {% if error_message %}
-                                                    <div class="alert alert-danger" role="alert">
-                                                        {{ error_message }}
-                                                    </div>
-                                                {% endif %}
-                                        <form class="needs-validation" novalidate action="{% url 'loginPage' %}"
-                                              method="post">
-                                            {% csrf_token %}
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <div class="floating-label form-group">
-                                                        <input class="floating-input form-control" type="text"
-                                                               name="username" required placeholder=" ">
-                                                        <label >Usuario</label>
-                                                    </div>
-                                                    <!-- <div class="invalid-feedback">
-                                                        Por favor, inserte el carnet de identidad.
-                                                    </div> -->
-                                                </div>
-                                                <div class="col-lg-12">
-                                                    <div class="floating-label form-group">
-                                                        <input class="floating-input form-control" type="password"
-                                                               name="password" required placeholder=" ">
-                                                        <label >Contraseña</label>
-                                                    </div>
-                                                    <!-- <div class="invalid-feedback">
-                                                        Por favor, inserte el carnet de identidad.
-                                                    </div> -->
-                                                </div>
-                                            </div>
-                                            <button type="submit" class="btn btn-white">Iniciar sesión</button>
-                                        </form>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 content-right">
-                                    <img src="{% static 'gestion/images/login/01.png' %}" class="img-fluid image-right"
-                                         alt="">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Formulario -->
+        <form method="post" action="{% url 'loginPage' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="username">
+                    <i class="fas fa-user me-2"></i>Usuario
+                </label>
+                <div class="input-group">
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           class="form-control" 
+                           placeholder="Ingresa tu usuario" 
+                           required 
+                           autofocus
+                           {% if request.POST.username %}value="{{ request.POST.username }}"{% endif %}>
+                    <span class="input-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </span>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">
+                    <i class="fas fa-lock me-2"></i>Contraseña
+                </label>
+                <div class="input-group">
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="form-control" 
+                           placeholder="Ingresa tu contraseña" 
+                           required>
+                    <span class="input-icon" id="togglePassword" style="cursor: pointer;">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Acceder al Sistema</span>
+            </button>
+        </form>
+
+        <!-- Pie de página -->
+        <div class="login-footer">
+            <p>
+                ¿Problemas para acceder? 
+                <a href="#" onclick="alert('Contacta al administrador del sistema: admin@gippro.com'); return false;">
+                    Contactar soporte
+                </a>
+            </p>
+            <div class="copyright">
+                <p>© 2024 GIPPro v2.0.0</p>
+                <p style="font-size: 0.75rem; margin-top: 5px;">
+                    Último acceso: {% now "d/m/Y H:i" %}
+                </p>
+            </div>
         </div>
-    </section>
-</div>
+    </div>
 
-<!-- Backend Bundle JavaScript -->
-<script src="{% static 'gestion/js/backend-bundle.min.js' %}"></script>
+    <!-- Scripts mínimos -->
+    <script>
+        // Mostrar/ocultar contraseña
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
 
-<!-- Table Treeview JavaScript -->
-<script src="{% static 'gestion/js/table-treeview.js' %}"></script>
+        // Validación del formulario
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos requeridos.');
+                return false;
+            }
+            
+            // Mostrar estado de carga
+            const submitBtn = this.querySelector('.btn-login');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Verificando...</span>';
+            submitBtn.disabled = true;
+            
+            // Re-habilitar después de 5 segundos por si hay error
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 5000);
+        });
 
-<!-- Chart Custom JavaScript -->
-<script src="{% static 'gestion/js/customizer.js' %}"></script>
+        // Auto-focus en el primer campo
+        document.getElementById('username').focus();
 
-<!-- Chart Custom JavaScript -->
-<script async src="{% static 'gestion/js/chart-custom.js' %}"></script>
-<!-- Chart Custom JavaScript -->
-<script async src="{% static 'gestion/js/slider.js' %}"></script>
+        // Auto-ocultar mensajes después de 5 segundos
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
 
-<!-- app JavaScript -->
-<script src="{% static 'gestion/js/app.js' %}"></script>
-
-<script src="{% static 'gestion/vendor/moment.min.js' %}"></script>
+        // Efecto de validación en inputs
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    this.classList.add('is-valid');
+                    this.classList.remove('is-invalid');
+                } else {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                }
+            });
+            
+            input.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -16,7 +16,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="datatable" class="table data-table table-striped">
+                                    <table id="datatable" class="table datatable table-striped">
                                         <thead>
                                         <tr class="ligth">
                                             <th>Nombre</th>
@@ -51,11 +51,11 @@
                                                     <td>
                                                         <div class="button-container" style="display: flex; gap: 10px;">
                                                             <a href="{% url 'customuser_update' usuario.pk %}"
-                                                               title="Editar usuario" class="btn far fa-edit"></a>
+                                                               title="Editar usuario" class="btn fas fa-edit"></a>
                                                             {% if usuario.username != request.user.username %}
                                                                 <a href="{% url 'customuser_delete' usuario.pk %}"
                                                                    title="Desactivar usuario"
-                                                                   class="btn far fa-trash-alt"
+                                                                   class="btn fas fa-trash-alt"
                                                                    style="color: #ed1010;"></a>
                                                             {% endif %}
                                                         </div>

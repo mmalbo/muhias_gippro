@@ -6,7 +6,7 @@
                     <h4 class="card-title">Listado de producciones</h4>
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr>
                             <th>Lote</th>
@@ -28,9 +28,9 @@
                                 <td>{{ produccion.planta }}</td>
                                 <td><span class="badge
                                     {% if produccion.estado == 'Planificada' %}bg-warning
-                                    {% elif produccion.estado == 'Iniciando mezcla' %}bg-primary
-                                    {% elif produccion.estado == 'En proceso: Agitado' %}bg-primary
-                                    {% elif produccion.estado == 'En proceso: Validación' %}bg-success
+                                    {% elif produccion.estado == 'En proceso: Iniciando mezcla' %}bg-info
+                                    {% elif produccion.estado == 'En proceso: Agitado' %}bg-info
+                                    {% elif produccion.estado == 'En proceso: Validación' %}bg-warning
                                     {% elif produccion.estado == 'Concluida' %}bg-success
                                     {% elif produccion.estado == 'Cancelada' %}bg-danger
                                     {% else %}bg-secondary{% endif %}">
@@ -41,52 +41,55 @@
                                         <!--Iniciar producción--> <!-- bi bi-play-btnacciónfast-forward de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->
                                         {% if produccion.estado == 'Planificada' %}
                                             <a href="{% url 'iniciar_produccion' produccion.id %}"
-                                                title="Iniciar producción" class="btn fas fa-play" fill="currentColor">
-                                                
+                                                title="Iniciar mezclado" class="btn btn-light btn-sm" fill="currentColor">
+                                                <i class="fas fa-play"></i>                                                
                                             </a>
                                         {% endif %}
-                                        {% if produccion.estado == 'Iniciando mezcla' %}
+                                        {% if produccion.estado == 'En proceso: Iniciando mezcla' %}
                                             <a href="{% url 'agita_produccion' produccion.id %}"
-                                                title="Iniciar mezclado" class="btn fas fa-industry" fill="currentColor">
-                                                
+                                                title="Iniciar agitado" class="btn btn-light btn-sm" fill="currentColor">
+                                                <i class="fas fa-industry"></i>
                                             </a>
                                         {% endif %}
                                         <!--Terminada producción--> <!--formulario confirmando fas fa-sign-in-alt la cantidad del productobi bi-check2-square-->
                                         {% if produccion.estado == 'En proceso: Agitado' %}    
                                             <a href="{% url 'concluir_produccion' produccion.id %}" 
-                                                title="Iniciar agitado" class="btn fas fa-blender"></a>
+                                                title="Concluir elaboración" class="btn btn-light btn-sm">
+                                                <i class="fas fa-blender"></i>
+                                            </a>
                                         {% endif %}
                                         <!--Registrar pruebas químicas--> 
                                         {% if produccion.estado == 'En proceso: Validación' %}    
                                             <a href="{% url 'crear_prueba_quimica' produccion.id %}"
-                                                title="Evaluar producción" class="btn fas fa-flask-vial"></a>
-                                            <!--{% if produccion.pruebas_quimicas.estado == 'En Proceso' %}
-                                            <a href="{% url 'detalle_prueba_quimica' produccion.id %}"
+                                                title="Evaluar producción" class="btn btn-warning btn-success">
+                                                <i class="fas fa-flask-vial"></i>
+                                            </a>
+                                            <!--<a href="{% url 'detalle_prueba_quimica' produccion.id %}"
                                                 title="Concluir pruebas químicas" class="btn fas fa-clipboard-check"></a>
-                                            {% endif %}-->
+                                            {% if produccion.pruebas_quimicas.estado == 'En Proceso' %}{% endif %}-->
                                         {% endif %}
                                         <!--formulario para subir doc de PQ y se cambia 
                                         el estado a disponible para la venta o indicar ajuste de inventario-->
-                                        {% if produccion.estado == 'Concluida' %}
-                                            {% if produccion.pruebas_quimicas == '' %}    
-                                                <a href="{% url 'descargar_pruebas' produccion.id %}"
-                                                    class="btn btn-info btn-sm"
-                                                    title="Gestionar pruebas químicas">
-                                                    <i class="fas fa-vial"></i>
-                                                    Ver Pruebas
-                                                </a>
-                                            {% else %}
+                                        {% if produccion.estado == 'En proceso: Validación' %}
+                                            {% if produccion.pruebas_quimicas_ext == '' %}    
                                                 <a href="{% url 'subir_pruebas' produccion.id %}"
                                                     class="btn btn-info btn-sm"
                                                     title="Gestionar pruebas químicas">
                                                     <i class="fas fa-vial"></i>
                                                     Subir Pruebas
                                                 </a>
+                                            {% else %}
+                                                <a href="{% url 'descargar_pruebas' produccion.id %}"
+                                                    class="btn btn-info btn-sm"
+                                                    title="Gestionar pruebas químicas">
+                                                    <i class="fas fa-vial"></i>
+                                                    Ver Pruebas
+                                                </a>
                                             {% endif %}
                                         {% endif %}
                                         <!--Cancelar producción--> <!--formulario para indicar la causa ¿Pregunta que
                                          hago con la materia prima o el semiproducto?|split -->
-                                        {% if produccion.estado == 'Planificada' or produccion.estado == 'Iniciando mezcla'%}
+                                        {% if produccion.estado == 'Planificada' or produccion.estado == 'En proceso: Iniciando mezcla'%}
                                             <a href="{% url 'cancelar_produccion' produccion.id %}" 
                                                 class="btn btn-danger btn-sm"
                                                 title="Cancelar producción">

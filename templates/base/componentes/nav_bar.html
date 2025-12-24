@@ -1,238 +1,593 @@
 {% load static %}
 
-<div class="iq-top-navbar">
-    <div class="iq-navbar-custom">
-        <nav class="navbar navbar-expand-lg navbar-light p-0">
-            <div class="iq-navbar-logo d-flex align-items-center justify-content-between">
-                <i class="ri-menu-line wrapper-menu"></i>
-                <a href="{% url 'principal' %}" class="header-logo">
-                    <h4 class="logo-title text-uppercase">GIPPro</h4>
+<style>
+    /* ========== NAVBAR STYLES ========== */
+    .navbar-custom {
+        background: #f8fafc;
+        /*border-bottom: 1px solid #e2e8f0;*/
+        padding: 0rem 0rem; /* 0.8rem 1.5rem;*/
+        /*box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        position: sticky;*/
+        top: 0;
+        z-index: 99;
+        /*margin-left: 260px;  Same as sidebar width */
+        transition: all 0.3s ease;
+    }
 
-                </a>
+    .navbar-custom.expanded {
+        margin-left: 0;
+    }
+
+    /* Sidebar toggle button */
+    .sidebar-toggle {
+        background: transparent;
+        /*border: 1px solid #e2e8f0;*/
+        color: #334155;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        margin-right: 15px;
+    }
+
+    .sidebar-toggle:hover {
+        background: #e2e8f0;
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    /* Breadcrumb/welcome message */
+    .welcome-message {
+        font-size: 1rem;
+        color: #334155;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .welcome-message span {
+        color: #3b82f6;
+        font-weight: 600;
+    }
+
+    /* User dropdown */
+    .user-dropdown {
+        margin-left: auto;
+    }
+
+    .user-dropdown .dropdown-toggle {
+        background: transparent;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        padding: 8px 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .user-dropdown .dropdown-toggle:hover {
+        background: #e2e8f0;
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+    }
+
+    .user-avatar.default {
+        background: #3b82f6;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .user-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #334155;
+    }
+
+    .user-role {
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+
+    /* Notifications */
+    .notifications-container {
+        position: relative;
+        margin-right: 15px;
+    }
+
+    .notifications-bell {
+        background: transparent;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .notifications-bell:hover {
+        background: #e2e8f0;
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    .notifications-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ef4444;
+        color: white;
+        font-size: 0.7rem;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+    }
+
+    .notifications-panel {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 350px;
+        max-height: 500px;
+        overflow-y: auto;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: none;
+        margin-top: 10px;
+    }
+
+    .notifications-panel.show {
+        display: block;
+    }
+
+    .notifications-header {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notifications-header h6 {
+        margin: 0;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .mark-all-read {
+        background: none;
+        border: none;
+        color: #3b82f6;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .mark-all-read:hover {
+        text-decoration: underline;
+    }
+
+    .notifications-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .notification-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: flex-start;
+        transition: background 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .notification-item:hover {
+        background: #f8fafc;
+    }
+
+    .notification-item.unread {
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .notification-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+        color: #3b82f6;
+    }
+
+    .notification-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .notification-message {
+        margin: 0 0 5px 0;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: #334155;
+    }
+
+    .notification-time {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    .notification-actions {
+        margin-left: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .mark-read-btn {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .mark-read-btn:hover {
+        background: #e2e8f0;
+        color: #3b82f6;
+    }
+
+    .empty-notifications {
+        padding: 30px 15px;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+    /* Dropdown menu */
+    .dropdown-menu-custom {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 8px 0;
+        min-width: 200px;
+    }
+
+    .dropdown-item-custom {
+        padding: 10px 20px;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .dropdown-item-custom:hover {
+        background: #f8fafc;
+        color: #3b82f6;
+    }
+
+    .dropdown-item-custom i {
+        width: 16px;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .navbar-custom {
+            margin-left: 0;
+        }
+        
+        .welcome-message {
+            font-size: 0.9rem;
+        }
+        
+        .user-name {
+            display: none;
+        }
+        
+        .user-info {
+            display: none;
+        }
+        
+        .notifications-panel {
+            position: fixed;
+            top: 60px;
+            right: 15px;
+            left: 15px;
+            width: auto;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .navbar-custom {
+            padding: 0.8rem 1rem;
+        }
+        
+        .welcome-message {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<!-- ===================== -->
+<!-- NAVBAR -->
+<!-- ===================== -->
+<nav class="navbar-custom navbar-expand-lg" id="navbarCustom">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center w-100">
+            <!-- Sidebar Toggle
+            <button class="sidebar-toggle" id="navbarSidebarToggle">
+                <i class="las la-bars"></i>
+            </button>
+             -->
+            <!-- Welcome Message -->
+            <div class="navbar-bread flex-grow-1">
+                <h6 class="welcome-message">
+                    Bienvenido, <span>{{ request.user.first_name }} {{ request.user.last_name }}</span>
+                    {% if request.user.groups.all.0 %}
+                        <small class="text-muted">({{ request.user.groups.all.0.name }})</small>
+                    {% endif %}
+                </h6>
             </div>
-            <div class="navbar-breadcrumb">
-                <h5>Bienvenido {{ request.user.first_name }} {{ request.user.last_name }} </h5>
-            </div>
-            <div class="d-flex align-items-center">
-                <button class="navbar-toggler" type="button" data-toggle="collapse"
-                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-label="Toggle navigation">
-                    <i class="ri-menu-3-line"></i>
+            
+            <!-- Notifications -->
+            <div class="notifications-container">
+                <button class="notifications-bell" id="notificationsBell">
+                    <i class="las la-bell"></i>
+                    {% if unread_count and unread_count > 0 %}
+                        <span class="notifications-badge" id="unreadCount">{{ unread_count }}</span>
+                    {% endif %}
                 </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ml-auto navbar-list align-items-center">
-                        <li class="nav-item nav-icon nav-item-icon dropdown">
-<!-- Notificación Bell bi bi-bell-->
-<div id="notifications-container" style="position: relative; display: inline-block;">
-    <button id="notifications-bell" class="btn btn-light">
-        <i class="fas fa-bell"></i>
-        <span id="unread-count" class="badge bg-danger">
-            {{ unread_count }}
-        </span>
-    </button>
-
-    <!-- Panel de notificaciones -->
-    <div id="notifications-panel" style="display: none; position: absolute; right: 0; width: 350px; max-height: 500px; overflow-y: auto; z-index: 1000; background: white; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        <div class="d-flex justify-content-between p-2 border-bottom">
-            <h6 class="m-0">Notificaciones</h6>
-            <button id="mark-all-read" class="btn btn-sm btn-link">Marcar todas como leídas</button>
-        </div>
-        <div id="notifications-list" class="list-group list-group-flush">
-            <!-- Las notificaciones se cargarán aquí dinámicamente -->
-        </div>
-    </div>
-</div>
-                            
-                            <div class="iq-sub-dropdown dropdown-menu"
-                                 aria-labelledby="dropdownMenuButton">
-                                <div class="card shadow-none m-0">
-                                    <div class="card-body p-0 ">
-                                        <div class="cust-title p-3">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <h5 class="mb-0">Notificaciones</h5>
-                                                <a class="badge badge-primary badge-card"
-                                                   href="#">
-{#                                                    {{ request.notificaciones.count }}#}
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="px-3 pt-0 pb-0 sub-card">
-{#                                            {% for notificacion in request.notificaciones %}#}
-{#                                                <a href="{% url 'listExpEnvdMinintNotificacion' notificacion.expediente.id %}"#}
-                                                        {# {% url 'listExpEnvdMinint' notificacion.expediente.id %} #}
-{#                                                   class="iq-sub-card">#}
-{#                                                    <div class="media align-items-center cust-card py-3 border-bottom">#}
-                                                        {#                                                        <div class="">#}
-                                                        {#                                                            <img class="avatar-50 rounded-small"#}
-                                                        {#                                                                 src="{% static 'images/user/01.jpg' %}" alt="01">#}
-                                                        {#                                                        </div>#}
-{#                                                        <div class="media-body ml-4">#}
-{#                                                            <div class="d-flex align-items-center justify-content-between">#}
-{#                                                                <h6 class="mb-0">{{ notificacion.tipo }}</h6>#}
-{#                                                                <small class="text-dark"><b>{{ notificacion.fecha_creacion|date:"H:i A" }}</b></small>#}
-{#                                                            </div>#}
-{#                                                            <small class="mb-0">Expediente: {{ notificacion.expediente.codigo }}</small>#}
-{#                                                            <br>#}
-{#                                                            <small class="mb-0">Fecha#}
-{#                                                                límite: {{ notificacion.fecha_limite }}</small>#}
-{#                                                        </div>#}
-{#                                                    </div>#}
-{#                                                </a>#}
-{#                                            {% empty %}#}
-{#                                                <p class="px-3 py-2">No hay notificaciones pendientes.</p>#}
-{#                                            {% endfor %}#}
-                                        </div>
-                                        {#                                        <a class="right-ic btn btn-primary btn-block position-relative p-2"#}
-                                        {#                                           href="{% url 'notifications' %}" role="button">#}
-                                        {#                                            Ver todos#}
-                                        {#                                        </a>#}
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="nav-item nav-icon dropdown caption-content">
-                            <a href="#" class="search-toggle dropdown-toggle  d-flex align-items-center"
-                               id="dropdownMenuButton4"
-                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {% if request.user.foto %}
-                                    <img src="{{ request.user.foto.url }}" class="img-fluid rounded-circle"
-                                         alt="user">
-                                {% else %}
-                                    <img src="{% static 'gestion/images/user/i1.jpg' %}"
-                                         class="img-fluid rounded-circle"
-                                         alt="user">
-                                {% endif %}
-
-                                <div class="caption ml-3">
-                                    <h6 class="mb-0 line-height">{{ request.user }}<i
-                                            class="las la-angle-down ml-2"></i></h6>
-                                </div>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-right border-none"
-                                aria-labelledby="dropdownMenuButton">
-{#                                <li class="dropdown-item  d-flex svg-icon">#}
-{#                                    <svg class="svg-icon mr-0 text-primary" id="h-05-p" width="20"#}
-{#                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"#}
-{#                                         stroke="currentColor">#}
-{#                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"#}
-{#                                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>#}
-{#                                    </svg>#}
-{#                                    <a href="{% url 'logoutUser' %}">Modificar contraseña</a>#}
-{#                                </li>#}
-                                <li class="dropdown-item  d-flex svg-icon">
-                                    <svg class="svg-icon mr-0 text-primary" id="h-05-p" width="20"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                    </svg>
-                                    <a href="{% url 'logoutUser' %}">
-                                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                        Cerrar sesión
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
+                
+                <!-- Notifications Panel -->
+                <div class="notifications-panel" id="notificationsPanel">
+                    <div class="notifications-header">
+                        <h6>Notificaciones</h6>
+                        <button class="mark-all-read" id="markAllRead">Marcar todas como leídas</button>
+                    </div>
+                    <div class="notifications-list" id="notificationsList">
+                        <!-- Las notificaciones se cargarán aquí dinámicamente -->
+                        <div class="empty-notifications">
+                            <i class="las la-bell-slash fa-2x mb-2"></i>
+                            <p class="mb-0">No hay notificaciones nuevas</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </nav>
+            
+            <!-- User Dropdown -->
+            <div class="user-dropdown dropdown">
+                <a href="#" class="dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if request.user.foto %}
+                        <img src="{{ request.user.foto.url }}" class="user-avatar" alt="{{ request.user.username }}">
+                    {% else %}
+                        <div class="user-avatar default">
+                            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                    <div class="user-info">
+                        <span class="user-name">{{ request.user.username }}</span>
+                        <span class="user-role">
+                            {% if request.user.groups.all.0 %}
+                                {{ request.user.groups.all.0.name }}
+                            {% else %}
+                                Usuario
+                            {% endif %}
+                        </span>
+                    </div>
+                    <i class="las la-angle-down"></i>
+                </a>
+                
+                <ul class="dropdown-menu dropdown-menu-custom" aria-labelledby="userDropdown">
+                    <li>
+                        <a href="{% url 'logoutUser' %}" class="dropdown-item-custom">
+                            <i class="las la-sign-out-alt"></i>
+                            <span>Cerrar sesión</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
-</div>
+</nav>
 
+<!-- ===================== -->
+<!-- JAVASCRIPT PARA NAVBAR -->
+<!-- ===================== -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const bell = document.getElementById('notifications-bell');
-        const panel = document.getElementById('notifications-panel');
-        const listContainer = document.getElementById('notifications-list');
-        const unreadCount = document.getElementById('unread-count');
-        const markAllBtn = document.getElementById('mark-all-read');
+document.addEventListener('DOMContentLoaded', function() {
+    // ========== SIDEBAR TOGGLE ==========
+    const navbarSidebarToggle = document.getElementById('navbarSidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const navbarCustom = document.getElementById('navbarCustom');
+    
+    if (navbarSidebarToggle && sidebar && navbarCustom) {
+        navbarSidebarToggle.addEventListener('click', function() {
+            // Toggle sidebar
+            sidebar.classList.toggle('collapsed');
+            
+            // Toggle navbar margin
+            if (window.innerWidth > 992) {
+                navbarCustom.classList.toggle('expanded');
+            }
+            
+            // Toggle main content margin
+            if (mainContent) {
+                mainContent.classList.toggle('expanded');
+            }
+            
+            // Save preference
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        });
         
-        // Alternar visibilidad del panel
-        bell.addEventListener('click', function(e) {
+        // Load saved preference
+        if (window.innerWidth > 992 && localStorage.getItem('sidebarCollapsed') === 'true') {
+            navbarCustom.classList.add('expanded');
+        }
+    }
+    
+    // ========== NOTIFICATIONS ==========
+    const notificationsBell = document.getElementById('notificationsBell');
+    const notificationsPanel = document.getElementById('notificationsPanel');
+    const notificationsList = document.getElementById('notificationsList');
+    const unreadCount = document.getElementById('unreadCount');
+    const markAllRead = document.getElementById('markAllRead');
+    
+    // Toggle notifications panel
+    if (notificationsBell && notificationsPanel) {
+        notificationsBell.addEventListener('click', function(e) {
             e.stopPropagation();
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-            if (panel.style.display === 'block') {
+            notificationsPanel.classList.toggle('show');
+            
+            if (notificationsPanel.classList.contains('show')) {
                 loadNotifications();
             }
         });
         
-        // Cerrar panel al hacer clic fuera
+        // Close panel when clicking outside
         document.addEventListener('click', function(e) {
-            if (!panel.contains(e.target) && e.target !== bell) {
-                panel.style.display = 'none';
+            if (!notificationsPanel.contains(e.target) && e.target !== notificationsBell) {
+                notificationsPanel.classList.remove('show');
             }
         });
-        
-        // Cargar notificaciones vía AJAX
-        function loadNotifications() {
-            fetch("{% url 'unread_notifications' %}")
-                .then(response => response.json())
-                .then(data => {
-                    unreadCount.textContent = data.length;
-                    listContainer.innerHTML = '';
-                    
-                    if (data.length === 0) {
-                        listContainer.innerHTML = `<div class="p-3 text-center text-muted">No hay notificaciones nuevas</div>`;
-                        return;
-                    }
-                    
-                    data.forEach(notif => {
-                        const notifElement = document.createElement('a');
-                        notifElement.href = notif.link || '#';
-                        notifElement.className = `list-group-item list-group-item-action ${notif.read ? '' : 'list-group-item-primary'}`;
-                        notifElement.dataset.id = notif.id;
-                        
-                        notifElement.innerHTML = `
-                            <div class="d-flex w-100 justify-content-between">
-                                <p class="mb-1">${notif.message}</p>
-                                <button class="btn btn-sm mark-read" data-id="${notif.id}">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                            </div>
-                            <small class="text-muted">${notif.created_at}</small>
-                        `;
-                        
-                        listContainer.appendChild(notifElement);
-                        
-                        // Evento para marcar como leído
-                        const markBtn = notifElement.querySelector('.mark-read');
-                        markBtn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            markAsRead(notif.id);
-                        });
-                    });
-                });
-        }
-        
-        // Función para marcar como leído
-        function markAsRead(notificationId) {
-            fetch(`/utils/read/${notificationId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                }
-            })
+    }
+    
+    // Load notifications via AJAX
+    function loadNotifications() {
+        fetch("{% url 'unread_notifications' %}")
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'success') {
-                    // Actualizar UI
-                    const notificationElement = document.querySelector(`.list-group-item[data-id="${notificationId}"]`);
-                    if (notificationElement) {
-                        notificationElement.classList.remove('list-group-item-primary');
-                    }
-                    
-                    // Actualizar contador
-                    const currentCount = parseInt(unreadCount.textContent);
-                    unreadCount.textContent = currentCount - 1;
+                if (data.length === 0) {
+                    notificationsList.innerHTML = `
+                        <div class="empty-notifications">
+                            <i class="las la-bell-slash fa-2x mb-2"></i>
+                            <p class="mb-0">No hay notificaciones nuevas</p>
+                        </div>
+                    `;
+                    return;
                 }
+                
+                let notificationsHTML = '';
+                data.forEach(notif => {
+                    notificationsHTML += `
+                        <a href="${notif.link || '#'}" class="notification-item ${notif.read ? '' : 'unread'}" data-id="${notif.id}">
+                            <div class="notification-icon">
+                                <i class="las la-bell"></i>
+                            </div>
+                            <div class="notification-content">
+                                <p class="notification-message">${notif.message}</p>
+                                <p class="notification-time">${notif.created_at}</p>
+                            </div>
+                            <div class="notification-actions">
+                                <button class="mark-read-btn" data-id="${notif.id}">
+                                    <i class="las la-check"></i>
+                                </button>
+                            </div>
+                        </a>
+                    `;
+                });
+                
+                notificationsList.innerHTML = notificationsHTML;
+                
+                // Add event listeners to mark-read buttons
+                document.querySelectorAll('.mark-read-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const notificationId = this.getAttribute('data-id');
+                        markAsRead(notificationId);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+                notificationsList.innerHTML = `
+                    <div class="empty-notifications">
+                        <i class="las la-exclamation-triangle fa-2x mb-2"></i>
+                        <p class="mb-0">Error cargando notificaciones</p>
+                    </div>
+                `;
             });
-        }
-        
-        // Marcar todas como leídas
-        markAllBtn.addEventListener('click', function() {
+    }
+    
+    // Mark notification as read
+    function markAsRead(notificationId) {
+        fetch(`/utils/read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update notification item
+                const notificationItem = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+                if (notificationItem) {
+                    notificationItem.classList.remove('unread');
+                }
+                
+                // Update counter
+                if (unreadCount) {
+                    const currentCount = parseInt(unreadCount.textContent);
+                    if (currentCount > 1) {
+                        unreadCount.textContent = currentCount - 1;
+                    } else {
+                        unreadCount.remove();
+                    }
+                }
+            }
+        });
+    }
+    
+    // Mark all as read
+    if (markAllRead) {
+        markAllRead.addEventListener('click', function() {
             fetch("{% url 'mark_all_read' %}", {
                 method: 'POST',
                 headers: {
@@ -243,13 +598,58 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Actualizar UI
-                    document.querySelectorAll('.list-group-item-primary').forEach(el => {
-                        el.classList.remove('list-group-item-primary');
+                    // Remove unread class from all notifications
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
                     });
-                    unreadCount.textContent = '0';
+                    
+                    // Remove counter badge
+                    if (unreadCount) {
+                        unreadCount.remove();
+                    }
+                    
+                    // Update panel message if empty
+                    const unreadItems = document.querySelectorAll('.notification-item.unread');
+                    if (unreadItems.length === 0) {
+                        notificationsList.innerHTML = `
+                            <div class="empty-notifications">
+                                <i class="las la-bell-slash fa-2x mb-2"></i>
+                                <p class="mb-0">No hay notificaciones nuevas</p>
+                            </div>
+                        `;
+                    }
                 }
             });
         });
+    }
+    
+    // ========== USER DROPDOWN ==========
+    // Bootstrap 5 handles this automatically
+    
+    // ========== ACTIVE MENU HIGHLIGHT ==========
+    // Highlight active menu item based on current URL
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.nav-link');
+    
+    navItems.forEach(item => {
+        if (item.getAttribute('href') === currentPath) {
+            item.classList.add('active');
+            
+            // Open parent submenu if exists
+            let parentMenu = item.closest('.submenu');
+            while (parentMenu) {
+                parentMenu.classList.add('show');
+                const toggle = document.querySelector(`[href="#${parentMenu.id}"], [data-bs-target="#${parentMenu.id}"]`);
+                if (toggle) {
+                    toggle.classList.add('active');
+                    const arrow = toggle.querySelector('.arrow');
+                    if (arrow) {
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                }
+                parentMenu = parentMenu.parentElement.closest('.submenu');
+            }
+        }
     });
-    </script>
+});
+</script>

@@ -29,7 +29,7 @@ class AjusteInvMPForm(forms.ModelForm):
         
         self.fields['materia_prima'].disabled = True
         if self.user:
-            if self.user.groups.filter(name='Presidencia-Admin').exists():
+            if self.user.groups.filter(name='Presidencia-Admin').exists() or self.user.is_staff:
                 self.fields['almacen'].queryset = Almacen.objects.all()
             else:
                 almacen = Almacen.objects.filter(responsable=self.user).first()

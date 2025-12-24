@@ -76,13 +76,13 @@
                 <td colspan="4" style="text-align: left;" class="first-td">Suministrador <br></td>
             </tr>
             <tr>
-                <td rowspan="2" class="first-td"><strong>DESTINO./ PROCED.</strong><br> {% if data.tipop == 'Solicitud' %} De Producción {% endif %}</td>
-                <td >Orden No.</td>
+                <td rowspan="2" class="first-td"><strong>DESTINO./ PROCED.</strong></td>
+                <td ><strong>Origen:</strong>  {{ data.origen }}</td>
                 <td >Centro de Costo</td>
                 <td >Código</td>
             </tr>
             <tr>
-                <td >Lote No. </td>
+                <td ><strong>Destino:</strong>  {{ data.destino }}</td>
                 <td >Producto </td>
                 <td >Otros </td>
             </tr>
@@ -123,7 +123,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {{ item.cantidad }} </td>
             </tr>
             {% elif data.tipop == 'envase o embalaje' %}
             <tr>

@@ -35,7 +35,13 @@ urlpatterns = [
     # Gestión de parámetros de una prueba
     path('prueba-quimica/<uuid:prueba_id>/agregar-parametros/', agregar_parametros_prueba, 
          name='agregar_parametros_prueba'),
+
+     # Para editar DETALLE de prueba química (valor medido)
+    #path('detalle-prueba-quimica/<uuid:detalle_id>/editar/', views.editar_detalle_prueba_quimica, name='editar_detalle_prueba_quimica'),
     
+    # Para eliminar DETALLE de prueba química
+    #path('detalle-prueba-quimica/<uuid:detalle_id>/eliminar/', views.eliminar_detalle_prueba_quimica, name='eliminar_detalle_prueba_quimica'),
+
     path('parametro-prueba/<uuid:pk>/editar/', editar_parametro_prueba, 
          name='editar_parametro_prueba'),
     

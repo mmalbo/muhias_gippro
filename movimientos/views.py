@@ -1,7 +1,7 @@
 from django.forms import formset_factory
 from .forms import RecepcionMateriaPrimaForm, MovimientoFormUpdate
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
-from .models import Movimiento_MP, Vale_Movimiento_Almacen, Movimiento_EE, Movimiento_Ins
+from .models import Movimiento_MP, Vale_Movimiento_Almacen, Movimiento_EE, Movimiento_Ins, Movimiento_Prod
 from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo
 from inventario.models import Inv_Mat_Prima, Inv_Insumos, Inv_Envase 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -271,19 +271,15 @@ def generar_vale(request, cons):
     return export_vale(request, cons)
 
 def vale_detalle(request, pk):
-    print(pk)
     vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     tipo = vale.tipo
-    print(f'tipo: {tipo}')
     if request.method == 'POST':
         form = MovimientoFormUpdate(request.POST, instance=vale) 
         if form.is_valid():
             form.save()
-            print('Actualizado correctamente')
             messages.success(request, 'Actualizado correctamente')
             return redirect('materia_prima:materia_prima_list') 
         else:
-            print(f'Error en la form: {form.errors}')
             messages.error(request, f'Error en la form: {form.errors}')
             return redirect('materia_prima:materia_prima_list')
     form = MovimientoFormUpdate(instance=vale)
@@ -291,12 +287,9 @@ def vale_detalle(request, pk):
         activos = vale.mp_produccion.all()
         if activos:
             tipo = 'Solicitud'
-        else:
-            print('No se encontró solicitudes de este vale')
     elif vale.tipo == 'Recepción':
-        print('En recepcion')
         activos = vale.movimientos.all()
-        print(activos)
+        activos = Movimiento_MP.objects.filter(vale=vale)
         if activos:
             tipo = 'materias primas'
         else:
@@ -305,6 +298,7 @@ def vale_detalle(request, pk):
                 tipo = 'envase o embalaje'
             else:
                 activos = vale.movimientos_prod.all()
+                activos = Movimiento_Prod.objects.filter(vale_e=vale)
                 if activos:
                     tipo = 'productos'
                 else:
@@ -349,8 +343,6 @@ def vale_detalle(request, pk):
         'vale':vale,
         'form':form,
     }
-
-    print(f'context:{context}')
 
     return render(request, 'movimientos/movimiento_update.html', context)
 

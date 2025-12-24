@@ -53,13 +53,19 @@
                     </form>
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>U. de Medida</th>
-                            <th>Concentración</th>
+                            <th>Almacén</th>
                             <th>Tipo</th>
                             <th>Cantidad</th>
                             <th>Costo</th>
@@ -72,9 +78,9 @@
                                 <td>{{ materia_prima.materia_prima.codigo }}</td>
                                 <td>{{ materia_prima.materia_prima.nombre }}</td>
                                 <td>{{ materia_prima.materia_prima.unidad_medida }}</td>
-                                <td>{{ materia_prima.materia_prima.concentracion }}</td>
+                                <td>{{ materia_prima.almacen }}</td>
                                 <td>{{ materia_prima.materia_prima.tipo_materia_prima}}</td>
-                                <td>{{ materia_prima.materia_prima.cantidad_total }}</td>
+                                <td>{{ materia_prima.cantidad }}</td>
                                 <td>{{ materia_prima.materia_prima.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -111,6 +117,8 @@
                     </table>
                     {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
                     <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
                     <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                 </div>
