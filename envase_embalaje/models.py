@@ -21,8 +21,6 @@ class EnvaseEmbalaje(ModeloBase):
     ]
     estado = models.CharField(choices=ESTADOS, max_length=255, blank=False, null=False, default='comprado', verbose_name='Estado')
 
-    cantidad = models.IntegerField(null=True, default=0, verbose_name="Cantidad en almacen")
-
     costo = models.FloatField(null=True, blank=False, default=0, verbose_name="Costo")
 
     #almacen = models.ForeignKey(Almacen, on_delete=models.SET_NULL, null=True, verbose_name='Almacen')

@@ -5,7 +5,20 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
-                    <h4 class="card-title">Listado de envases o embalajes</h4>
+                    <h4 class="card-title">Listado de envases o embalajes {% if es_almacenero and almacen %}
+                        - {{almacen.nombre}} {% endif %}
+                    </h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
                     <a href="{% url 'nueva_compra_envase' %}" class="btn btn-success">Nueva recepción en almacen</a>

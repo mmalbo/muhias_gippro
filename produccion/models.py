@@ -117,7 +117,7 @@ class Prod_Inv_MP(ModeloBase):
 class ParametroPrueba(models.Model):
     """Catálogo de parámetros que se miden en las pruebas químicas"""
     UNIDADES_MEDIDA = [
-        ('pH', 'pH'),
+        ('PH', 'pH'),
         ('%', 'Porcentaje'),
         ('g/L', 'Gramos por Litro'),
         ('mg/L', 'Miligramos por Litro'),
@@ -128,12 +128,13 @@ class ParametroPrueba(models.Model):
         ('mm', 'Milímetros'),
         ('segundos', 'Segundos'),
         ('minutos', 'Minutos'),
+        ('Ninguna', 'Ninguna'),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=100)
     tipo = models.CharField(max_length=20, choices=TIPOS_PARAMETRO)
-    unidad_medida = models.CharField(max_length=20, choices=UNIDADES_MEDIDA)
+    unidad_medida = models.CharField(max_length=20, choices=UNIDADES_MEDIDA, default='Ninguna')
     descripcion = models.TextField(blank=True)
     metodo_ensayo = models.CharField(max_length=200, blank=True)  # Norma o método usado
     valor_minimo = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
@@ -149,6 +150,14 @@ class ParametroPrueba(models.Model):
     
     def __str__(self):
         return f"{self.nombre} ({self.unidad_medida})"
+
+    def es_organoleptico(self):
+        """Determina si el parámetro requiere evaluación manual"""
+        return self.tipo in ['organoleptico']
+    
+    def es_numerico(self):
+        """Determina si el parámetro es numérico"""
+        return self.tipo in ['fisico', 'quimico', 'microbiologico']
 
 class PruebaQuimica(models.Model):
     """Registro completo de una prueba química realizada"""
@@ -218,7 +227,7 @@ class DetallePruebaQuimica(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     prueba = models.ForeignKey('PruebaQuimica', on_delete=models.CASCADE, related_name='detalles')
     parametro = models.ForeignKey('ParametroPrueba', on_delete=models.PROTECT)
-    valor_medido = models.DecimalField(max_digits=10, decimal_places=3)
+    valor_medido = models.CharField(max_length=100)  #DecimalField(max_digits=10, decimal_places=3)
     cumplimiento = models.BooleanField()  # Calculado automáticamente
     observaciones = models.TextField(blank=True)
     
@@ -227,20 +236,21 @@ class DetallePruebaQuimica(models.Model):
         verbose_name = 'Detalle de Prueba Química'
         verbose_name_plural = 'Detalles de Pruebas Químicas'
         unique_together = ['prueba', 'parametro']
-    
+
     def __str__(self):
         return f"{self.parametro.nombre}: {self.valor_medido}"
-    
+   
     @property
     def cumple_especificacion(self):
         """Calcula si el valor medido cumple con las especificaciones"""
-        if self.parametro.valor_minimo is not None and self.valor_medido < self.parametro.valor_minimo:
+        if self.parametro.valor_minimo is not None and self.valor_medido <= self.parametro.valor_minimo:
             return False
-        if self.parametro.valor_maximo is not None and self.valor_medido > self.parametro.valor_maximo:
+        if self.parametro.valor_maximo is not None and self.valor_medido >= self.parametro.valor_maximo:
             return False
         return True
     
     def save(self, *args, **kwargs):
         # Calcular cumplimiento automáticamente antes de guardar
-        self.cumplimiento = self.cumple_especificacion
+        if self.parametro != "organoleptico":
+            self.cumplimiento = self.cumple_especificacion
         super().save(*args, **kwargs)

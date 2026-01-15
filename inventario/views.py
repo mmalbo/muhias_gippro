@@ -3,8 +3,8 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from .models import Inv_Envase, Inv_Insumos, Inv_Mat_Prima, Inv_Producto
 from django.contrib import messages
 from django.urls import reverse_lazy
-from .forms import AjusteInvMPForm
-from movimientos.models import Vale_Movimiento_Almacen, Movimiento_MP
+from .forms import AjusteInvMPForm, AjusteInvEEForm, AjusteInvInsForm
+from movimientos.models import Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_EE, Movimiento_Ins
 from nomencladores.models import Almacen
 import decimal
 
@@ -74,3 +74,135 @@ def ajuste_inv_mp(request, inv_mp):
     }
 
     return render(request, 'inventario/actualizar_inv_mp.html', context)
+
+def ajuste_inv_env(request, inv_ee):
+    inv_env = get_object_or_404(Inv_Envase, id=inv_ee)
+    
+    almacen = Almacen.objects.first()
+    if request.user.groups.first() and request.user.groups.first().name == 'Almaceneros':
+        almacen = Almacen.objects.filter(responsable=request.user).first()
+        if not almacen or inv_env.almacen != almacen:
+            messages.error(request,'No tienes permisos para ajustar este inventario')
+            return redirect('envase_embalaje:envase_embalaje_list')
+
+    if request.method == 'POST':
+        print('En POST')
+        nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
+        viejo_cant = inv_env.cantidad
+        print(nuevo_cant)
+        print(viejo_cant)
+        form = AjusteInvEEForm(request.POST, instance=inv_env, user=request.user)
+        if form.is_valid():
+            causa = form.cleaned_data.get('causa')
+            vale = Vale_Movimiento_Almacen(
+                tipo = 'Ajuste de inventario',
+                descripcion=causa,
+                origen=almacen,
+                destino=almacen,
+                almacen = almacen
+            )
+            form.save()
+            if nuevo_cant < viejo_cant:
+                vale.entrada = False
+            elif nuevo_cant > viejo_cant:
+                vale.entrada = True
+            else:
+                messages.success(request, f'No se ha modificado la cantidad en inventario')   
+                context = {
+                    'form': form,
+                    'inv': inv_env,
+                }
+                return render(request, 'inventario/actualizar_inv_env.html', context) 
+            print('A guardar la form')
+            vale.save()
+            mov_ee = Movimiento_EE(
+                envase_embalaje = inv_env.envase,
+                vale_e = vale,
+                cantidad = nuevo_cant - viejo_cant
+            )
+            mov_ee.save()
+            print(mov_ee)
+            print(mov_ee.vale_e)
+            messages.success(request, f'Inventario de {inv_env.envase.codigo_envase} actualizado correctamente')
+            return redirect('materia_prima:materia_prima_list')
+        else:
+            print('La form no es valida')
+            messages.success(request, f'Error en la form {form.errors}')
+            return redirect('materia_prima:materia_prima_list')
+    else:
+        form = AjusteInvMPForm(instance=inv_env, user=request.user)
+
+    context = {
+        'form':form,
+        'inv_env': inv_env,
+        'es_admin': request.user.groups.filter(name='Presidencia-Admin').exists(),
+        'es_almacenero': request.user.groups.filter(name='Almaceneros').exists(),
+    }
+
+    return render(request, 'inventario/actualizar_inv_ee.html', context)
+
+def ajuste_inv_ins(request, inv_ins):
+    inv_insT = get_object_or_404(Inv_Insumos, id=inv_ins)
+    
+    almacen = Almacen.objects.first()
+    if request.user.groups.first() and request.user.groups.first().name == 'Almaceneros':
+        almacen = Almacen.objects.filter(responsable=request.user).first()
+        if not almacen or inv_ins.almacen != almacen:
+            messages.error(request,'No tienes permisos para ajustar este inventario')
+            return redirect('InsumosOtros:insumos_list')
+
+    if request.method == 'POST':
+        print('En POST')
+        nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
+        viejo_cant = inv_insT.cantidad
+        print(nuevo_cant)
+        print(viejo_cant)
+        form = AjusteInvInsForm(request.POST, instance=inv_insT, user=request.user)
+        if form.is_valid():
+            causa = form.cleaned_data.get('causa')
+            vale = Vale_Movimiento_Almacen(
+                tipo = 'Ajuste de inventario',
+                descripcion=causa,
+                origen=almacen,
+                destino=almacen,
+                almacen = almacen
+            )
+            form.save()
+            if nuevo_cant < viejo_cant:
+                vale.entrada = False
+            elif nuevo_cant > viejo_cant:
+                vale.entrada = True
+            else:
+                messages.success(request, f'No se ha modificado la cantidad en inventario')   
+                context = {
+                    'form': form,
+                    'inv': inv_insT,
+                }
+                return render(request, 'inventario/actualizar_inv_ins.html', context) 
+            print('A guardar la form')
+            vale.save()
+            mov_ins = Movimiento_Ins(
+                insumo = inv_insT.insumos,
+                vale_e = vale,
+                cantidad = nuevo_cant - viejo_cant
+            )
+            mov_ins.save()
+            print(mov_ins)
+            print(mov_ins.vale_e)
+            messages.success(request, f'Inventario de {inv_insT.insumos} actualizado correctamente')
+            return redirect('insumos_list')
+        else:
+            print('La form no es valida')
+            messages.success(request, f'Error en la form {form.errors}')
+            return redirect('insumos_list')
+    else:
+        form = AjusteInvMPForm(instance=inv_insT.insumos, user=request.user)
+
+    context = {
+        'form':form,
+        'inv_ins': inv_insT,
+        'es_admin': request.user.groups.filter(name='Presidencia-Admin').exists(),
+        'es_almacenero': request.user.groups.filter(name='Almaceneros').exists(),
+    }
+
+    return render(request, 'inventario/actualizar_inv_ins.html', context)

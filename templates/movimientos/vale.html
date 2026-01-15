@@ -73,7 +73,13 @@
     <table border="1" style="border-collapse: collapse;">
         <tbody>
             <tr>
-                <td colspan="4" style="text-align: left;" class="first-td">Suministrador <br></td>
+                {% if data.tipoi == 'AJUSTE DE INVENTARIO' %}
+                    <td colspan="4" style="text-align: left;" class="first-td">Causa <br>
+                        {{data.descripcion}}
+                    </td>
+                {% else %}
+                    <td colspan="4" style="text-align: left;" class="first-td">Suministrador <br></td>
+                {% endif %}
             </tr>
             <tr>
                 <td rowspan="2" class="first-td"><strong>DESTINO./ PROCED.</strong></td>
@@ -153,8 +159,8 @@
             </tr>
             {% elif data.tipop == 'insumos' %}
             <tr>
-                <td> {{ item..insumo.codigo }} </td>
-                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item..insumo.nombre }} </td>
+                <td> {{ item.insumo.codigo }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.insumo.nombre }} </td>
                 <td>  </td>
                 <td> {{ item.cantidad }} </td>
                 <td> </td>

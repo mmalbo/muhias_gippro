@@ -1,17 +1,12 @@
 # urls.py
 from django.urls import path
-from .views import (
-    insumos_list,
-    insumos_create,
-    insumos_update,
-    insumos_delete,
-    insumos_detail
-)
+from .views import *
 
 urlpatterns = [
-    path('', insumos_list, name='insumos_list'),
-    path('create/', insumos_create, name='insumos_create'),
-    path('update/<uuid:pk>/', insumos_update, name='insumos_update'),
-    path('delete/<uuid:pk>/', insumos_delete, name='insumos_delete'),
-    path('detail/<uuid:pk>/', insumos_detail, name='insumos_detail'),  # Ruta para ver detalles
+    path('listar/', listInsumos, name='insumos_list'),
+    path('crear/', InsumoCreateView.as_view, name='insumo_crear'),
+    path('eliminar/<uuid:pk>/', DeleteInsumoView.as_view, name='insumo_eliminar'),
+    path('insumo/<uuid:pk>/', get_insumo, name='get_insumo'),
+    path('importar/', CreateImportView.as_view, name='importar_insumos'),  # Ruta para ver detalles
+    path('actualizar/<uuid:pk>/', UpdateInsumosView.as_view, name='insumos_editar'),  # Ruta para ver detalles
 ]

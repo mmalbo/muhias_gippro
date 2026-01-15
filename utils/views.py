@@ -10,6 +10,8 @@ from nomencladores.models import Almacen
 from movimientos.models import Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_Prod
 from inventario.models import Inv_Mat_Prima, Inv_Producto
 from envase_embalaje.models import Formato 
+from django.contrib import messages
+from django.shortcuts import redirect
 
 import decimal
 
@@ -28,7 +30,6 @@ def importar_productos_desde_api(request):
         contador_nuevos = 1
 
         almacen = Almacen.objects.first() 
-        print(almacen)
 
         for producto_data in productos_data:
             # Verificar si el producto ya existe por SKU
@@ -36,10 +37,8 @@ def importar_productos_desde_api(request):
             #print(producto_data.get('sku', ''))
             created = False
             codigon = producto_data.get('sku', '')
-            print(producto_data)
             categorias = producto_data.get('categories', '')
             categoria = categorias[0].get('name', '')
-            print(categoria)
             if is_feedstock:
                 materia_prima, created_mp = MateriaPrima.objects.update_or_create(                    
                     nombre=producto_data.get('gname', ''),
@@ -55,9 +54,7 @@ def importar_productos_desde_api(request):
                     almacen = almacen,
                     entrada = True
                 )
-                print('Creado el vale')
                 cantidad = decimal.Decimal(producto_data.get('count', '0'))
-                print(f'Cantidad: {cantidad}')
                 if cantidad != 0:
                     try:
                         mov = Movimiento_MP.objects.create(
@@ -65,19 +62,19 @@ def importar_productos_desde_api(request):
                             vale=vale,  # Ejemplo: atributo fijo
                             cantidad=cantidad                        
                         )
-                        if mov:
+                        """ if mov:
                             print('existe Movimiento_MP')
                         else:
                             print('Eres comemierda')
-                        print('creado movimiento')
+                        print('creado movimiento') """
                         inventario_mp, created_inv = Inv_Mat_Prima.objects.get_or_create(
                             materia_prima=materia_prima, almacen=almacen)
-                        if created_inv:
+                        """ if created_inv:
                             print('Creado inventario')
                             print(inventario_mp.almacen)
                         else:
                             print('No fue ceado el inventario')
-                            print(inventario_mp.almacen)
+                            print(inventario_mp.almacen) """
                         if cantidad > inventario_mp.cantidad:
                             vale.entrada = True 
                             mov.cantidad = cantidad - inventario_mp.cantidad
@@ -88,43 +85,33 @@ def importar_productos_desde_api(request):
                         mov.save()
                         inventario_mp.cantidad = cantidad
                         inventario_mp.save()
-                        print('Guardado inventario')
                     except Exception as e: #(ValueError, TypeError):
-                        print(f"Error...{e}")
                         pass
-                else:
-                    print("No encontro cantidad")
+                """ else:
+                    print("No encontro cantidad") """
                 if created_mp:
                     contador_nuevas += 1
-                    print(contador_nuevas)
-                else:
-                    print("No se creo nueva")
+                """ else:
+                    print("No se creo nueva") """
                 codigon = ''
             else:
                 cant_vieja = 0
                 formato_str = producto_data.get('presentation', '').lower()
                 cap_str = ''
-                print(formato_str)
                 for i in formato_str:
                     try:
                         if int(i) or i == '0':
-                            print(i)
                             cap_str = cap_str + i
                         else:
-                            print('else')
                             break
                     except:
-                        print('except')
                         break
                 if cap_str == '':
                     capacidad = 0
                 else:
                     capacidad = int(cap_str)
-                    print(cap_str)
-                    print(capacidad)
                 if 'kg' in formato_str:
                     um = 'Kg'
-                    print('kg en cadena formato')
                 elif 'ml' in formato_str:
                     um = 'ml'
                 elif 'granel' in formato_str:
@@ -132,38 +119,30 @@ def importar_productos_desde_api(request):
                     um = 'L'
                 else:
                     um = 'L'
-                print(f'um: {um}, cap: {capacidad}')
                 formato = Formato.objects.filter(unidad_medida=um, capacidad=capacidad).first()
                 if not formato:
-                    print('No encontro formato')
                     formato = Formato.objects.create(unidad_medida=um, capacidad=capacidad)
-                else:
-                    print('Ya encontro formato')
+                """ else:
+                    print('Ya encontro formato') """
                 nomb_prod = producto_data.get('gname', '')
-                print(nomb_prod)
                 producto = Producto.objects.filter(                    
                     nombre_comercial= nomb_prod, formato = formato
                 ).first()
                 if not producto:
-                    print('no hay producto')
                     try:
                         producto = Producto.objects.create(nombre_comercial = nomb_prod, formato = formato, costo=0.00)
                         created_prod = True
                     except Exception as e:
-                        print(f"Error al crear nuevo producto: {str(e)}")
                         continue
                 else:
-                    print('encontro producto')
                     producto.formato = formato
                     created_prod = False
-                    cant_vieja = producto.count
+                    cant_vieja = producto.cantidad_total
                 vale = Vale_Movimiento_Almacen.objects.create(
                     almacen = almacen,
                     entrada = True
                 )
-                print('Creado el vale')
                 cantidad = decimal.Decimal(producto_data.get('count', '0'))
-                print(f'Cantidad: {cantidad}')
                 if cantidad != 0:
                     try:
                         mov = Movimiento_Prod.objects.create(
@@ -171,19 +150,19 @@ def importar_productos_desde_api(request):
                             vale_e=vale,  # Ejemplo: atributo fijo
                             cantidad=cantidad                        
                         )
-                        if mov:
+                        """ if mov:
                             print('existe Movimiento_Prod')
                         else:
                             print('Eres comemierda')
-                        print('creado movimiento')
+                        print('creado movimiento') """
                         inventario_prod, created_inv = Inv_Producto.objects.get_or_create(
                             producto=producto, almacen=almacen)
-                        if created_inv:
+                        """ if created_inv:
                             print('Creado inventario')
                             print(inventario_prod.almacen)
                         else:
                             print('No fue ceado el inventario')
-                            print(inventario_prod.almacen)
+                            print(inventario_prod.almacen) """
                         if cantidad > inventario_prod.cantidad:
                             vale.entrada = True 
                             mov.cantidad = cantidad - inventario_prod.cantidad
@@ -194,19 +173,17 @@ def importar_productos_desde_api(request):
                         mov.save()
                         inventario_prod.cantidad = cantidad
                         inventario_prod.save()
-                        print('Guardado inventario')
                     except Exception as e: #(ValueError, TypeError):
-                        print(f"Error...{e}")
                         pass
-                else:
-                    print("No encontro cantidad")
+                """ else:
+                    print("No encontro cantidad") """
                 if created_prod:
                     contador_nuevos += 1
-                    print(contador_nuevos)
-                else:
-                    print("No se creo nueva")
+                """ else:
+                    print("No se creo nueva") """
                 codigon = ''
-        print(f'status: success, message: Se importaron {contador_nuevos} productos nuevos. Total procesados: {len(productos_data)}')
+        messages.info(request, f"Se importaron {contador_nuevos} productos nuevos. Total procesados: {len(productos_data)}")
+        return redirect('materia_prima:materia_prima_list')
 
     except requests.exceptions.RequestException as e:
         raise ValidationError(f"Error al conectar con la API: {str(e)}")

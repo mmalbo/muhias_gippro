@@ -64,26 +64,22 @@
                                                 title="Evaluar producción" class="btn btn-warning btn-success">
                                                 <i class="fas fa-flask-vial"></i>
                                             </a>
-                                            <!--<a href="{% url 'detalle_prueba_quimica' produccion.id %}"
-                                                title="Concluir pruebas químicas" class="btn fas fa-clipboard-check"></a>
-                                            {% if produccion.pruebas_quimicas.estado == 'En Proceso' %}{% endif %}-->
                                         {% endif %}
-                                        <!--formulario para subir doc de PQ y se cambia 
+                                        <!--formulario para subir doc de PQ y se cambia  //
                                         el estado a disponible para la venta o indicar ajuste de inventario-->
                                         {% if produccion.estado == 'En proceso: Validación' %}
                                             {% if produccion.pruebas_quimicas_ext == '' %}    
                                                 <a href="{% url 'subir_pruebas' produccion.id %}"
                                                     class="btn btn-info btn-sm"
                                                     title="Gestionar pruebas químicas">
-                                                    <i class="fas fa-vial"></i>
-                                                    Subir Pruebas
+                                                    <i class="fas fa-atom"><i class="fas fa-file-upload"></i></i>
                                                 </a>
                                             {% else %}
                                                 <a href="{% url 'descargar_pruebas' produccion.id %}"
                                                     class="btn btn-info btn-sm"
                                                     title="Gestionar pruebas químicas">
-                                                    <i class="fas fa-vial"></i>
-                                                    Ver Pruebas
+                                                    <!--<i class="fas fa-prescription-bottle-alt"></i>-->
+                                                    <i class="fas fa-clipboard-check"></i>
                                                 </a>
                                             {% endif %}
                                         {% endif %}

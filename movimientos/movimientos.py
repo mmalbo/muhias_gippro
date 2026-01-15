@@ -16,7 +16,6 @@ def export_vale(request, id_movimiento):
    vale = Vale_Movimiento_Almacen.objects.filter(consecutivo=id_movimiento)[0]
    print(vale.tipo)
    inventarios = Movimiento_MP.objects.filter(vale=vale.id) #vale.movimientos.all()
-   print(inventarios)
    if inventarios:
       tipo = 'materias primas'
    else:
@@ -44,6 +43,7 @@ def export_vale(request, id_movimiento):
          data['almacen'] = vale.mp_produccion.first().almacen
       else:
          data['almacen'] = vale.almacen
+      #data['RestoAlmacen'] = vale.almacen.get_inv_mp()
       data['fecha'] = vale.fecha_movimiento
       data['suministrador'] = vale.suministrador
       data['origen'] = vale.origen
@@ -51,6 +51,7 @@ def export_vale(request, id_movimiento):
       data['orden'] = vale.orden_No
       data['lote'] = vale.lote_No
       data['tipoi'] = vale.tipo.upper()
+      data['descripcion'] = vale.descripcion
       if vale.transportista:
          data['nombre_transportista'] = vale.transportista
          data['ci_transportista'] = vale.transportista_cI

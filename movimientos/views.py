@@ -312,7 +312,7 @@ def vale_detalle(request, pk):
         else:
             activos = vale.movimientos_e.all()
             if activos:
-                tipo = 'envases y embalajes'
+                tipo = 'envase o embalaje'
             else:
                 activos = vale.movimientos_prod.all()
                 if activos:
@@ -328,7 +328,7 @@ def vale_detalle(request, pk):
         else:
             activos = vale.movimientos_e.all()
             if activos:
-                tipo = 'envase y embalajes'
+                tipo = 'envase o embalaje'
             else:
                 activos = vale.movimientos_prod.all()
                 if activos:
