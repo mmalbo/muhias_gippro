@@ -15,8 +15,8 @@
                             <th>Nombre</th>
                             <th>Tipo</th>
                             <th>Unidad medida</th>
-                            <th>Valor mínimo</th>
-                            <th>Valor máximo</th>
+                            <!--<th>Valor mínimo</th>
+                            <th>Valor máximo</th>-->
                             <th>Activo</th>
                             <th>Acciones</th>
                         </tr>
@@ -27,19 +27,19 @@
                                 <td>{{ parametro.nombre }}</td>
                                 <td>{{ parametro.tipo }}</td>
                                 <td>{{ parametro.unidad_medida }}</td>
-                                <td>{{ parametro.valor_minimo }}</td>
-                                <td>{{ parametro.valor_maximo }}</td>
+                                <!--<td>{{ parametro.valor_minimo }}</td>
+                                <td>{{ parametro.valor_maximo }}</td>-->
                                 <td>
                                     {% if parametro.activo %} Si {% else %} No {% endif %} </td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'editar_parametro' parametro.id %}"
-                                                title="Cierre de producción" class="btn fas fa-check"> Editar </a>
+                                                title="Editar parámetro" class="btn far fa-edit"></a>
                                         
                                         <a href="{% url 'detalle_parametro' parametro.id %}"
                                                 class="btn btn-outline-danger btn-sm"
                                                 title="Ver detalles de cancelación">
-                                                <i class="fas fa-info-circle"></i> Detalle
+                                                <i class="fas fa-info-circle"></i> 
                                             </a>
                                     </div>
                                 </td>
@@ -51,8 +51,8 @@
                             <th>Nombre</th>
                             <th>Tipo</th>
                             <th>Unidad medida</th>
-                            <th>Valor mínimo</th>
-                            <th>Valor máximo</th>
+                            <!--<th>Valor mínimo</th>
+                            <th>Valor máximo</th>-->
                             <th>Activo</th>
                             <th>Acciones</th>
                         </tr>

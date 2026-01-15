@@ -17,15 +17,114 @@
                         </script>
                     {% endif %}
                 </div>
+                <div class="card-body">
+                    <form method="get" id="filtroForm">
+                        <div class="row">
+                            {% if es_admin %}
+                            <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="almacen"><i class="fas fawarehouse"></i> Almacén </label>
+                                <select name="almacen" id="almacen" class="form-control" onchange="this.form.submit()">
+                                    <option value="todos">Todos los almacenes</option>
+                                    {% for almacen in almacenes %}
+                                    <option value="{{almacen.id}}" 
+                                        {% if almacen_id == almacen.id|stringformat:"i" %}selected{% endif %}>
+                                        {{almacen.nombre}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            </div>
+                            {% else %}
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="almacen"><i class="fas fa-warehouse"></i>
+                                        Almacén
+                                    </label> 
+                                    <input type="text" class="form-control" value="{{ almacen.nombre|default:'No asignado'}}"
+                                    disabled>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
                 <div class="col-sm-12 col-lg-12">
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                    <table id="datatable" class="table datatable table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Almacén</th>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for ins in insumos %}
+                            <tr>
+                                <td>{{ ins.insumos.codigo }}</td>
+                                <td>{{ ins.insumos.nombre }}</td>
+                                <td>{{ ins.almacen }}</td>
+                                <td>{{ ins.insumos.descripcion}}</td>
+                                <td>{{ ins.cantidad }}</td>
+                                <td>{{ ins.insumos.costo }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
+                                        <a href="{% url 'insumos_editar' ins.insumos.pk %}"
+                                           title="Editar insumo" class="btn far fa-edit"></a>
+                                        <a href="{% url 'ajuste_inv_ins' ins.pk %}"
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
+                                        {% endif %}
+                                        {% if request.user.groups.all.0.name == 'Almaceneros'%}
+                                        <a href="{% url 'ajuste_inv_ins' ins.pk %}"
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
+                                        {% endif %}
+                                        <a href="{% url 'get_insumo' ins.pk %}"
+                                            title="Ver detalles" class="btn far fa-trash-alt"></a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Almacén</th>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'importar_insumos' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                </div>
+                <!-- <div class="col-sm-12 col-lg-12">
                     <a href="{% url 'nueva_compra_insumo' %}" class="btn btn-success">Nueva recepción en almacen</a>
                     <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
-                            <th>Estado</th>
                             <th>Nombre</th>
                             <th>Descripción</th>
+                            <th>Almacén</th>
                             <th>Cantidad</th>
                             <th>Costo</th>
                             <th>Acciones</th>
@@ -34,25 +133,27 @@
                         <tbody>
                         {% for insumo in insumos %}
                             <tr>
-                                <td>{{ insumo.codigo }}</td>
-                                <td>{{ insumo.estado }}</td>
-                                <td>{{ insumo.nombre }}</td>
-                                <td>{{ insumo.descripcion }}</td>
-                                <td>{{ insumo.cantidad_total }}</td>
-                                <td>{{ insumo.costo }}</td>
+                                <td>{{ insumo.insumo.codigo }}</td>
+                                <td>{{ insumo.insumo.nombre }}</td>
+                                <td>{{ insumo.insumo.descripcion }}</td>
+                                <td>{{ insumo.almacen }}</td>
+                                <td>{{ insumo.cantidad }}</td>
+                                <td>{{ insumo.insumo.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-                                        <a href="{% url 'insumos_detail' insumo.pk %}"
-                                           title="Ver detalles">
-                                            <i class="fas fa-eye"></i> <!-- Ícono de ojo -->
-                                        </a>
-                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
-                                        <a href="{% url 'insumos_update' insumo.pk %}"
-                                           class="btn far fa-edit" title="Editar insumo"></a>
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
+                                        <a href="{% url 'insumos_editar' insumo.pk %}"
+                                           title="Editar insumo" class="btn far fa-edit"></a>
+                                        <a href="{% url 'ajuste_inv_ins' insumo.pk %}"
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
-                                        <!--<a href="{% url 'insumos_delete' insumo.pk %}"
-                                           title="Eliminar insumo"
-                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>-->
+                                        {% if request.user.groups.all.0.name == 'Almaceneros'%}
+                                        <a href="{% url 'ajuste_inv_ins' insumo.pk %}"
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
+                                        {% endif %}
+                                        <a href="{% url 'get_insumo' insumo.pk %}"
+                                            title="Ver detalles" class="btn far fa-trash-alt"></a>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -69,9 +170,8 @@
                         </tr>
                         </tfoot>
                     </table>
-
                     <a href="{% url 'nueva_compra_insumo' %}" class="btn btn-success">Nueva recepción en almacen</a>
-                </div>
+                </div> -->
             </div>
 
         </div>

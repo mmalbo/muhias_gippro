@@ -35,23 +35,16 @@ urlpatterns = [
     # Gestión de parámetros de una prueba
     path('prueba-quimica/<uuid:prueba_id>/agregar-parametros/', agregar_parametros_prueba, 
          name='agregar_parametros_prueba'),
-
-     # Para editar DETALLE de prueba química (valor medido)
-    #path('detalle-prueba-quimica/<uuid:detalle_id>/editar/', views.editar_detalle_prueba_quimica, name='editar_detalle_prueba_quimica'),
-    
-    # Para eliminar DETALLE de prueba química
-    #path('detalle-prueba-quimica/<uuid:detalle_id>/eliminar/', views.eliminar_detalle_prueba_quimica, name='eliminar_detalle_prueba_quimica'),
-
+    # Para editar DETALLE de prueba química (valor medido)
     path('parametro-prueba/<uuid:pk>/editar/', editar_parametro_prueba, 
          name='editar_parametro_prueba'),
-    
+    # Para eliminar DETALLE de prueba química
     path('parametro-prueba/<uuid:pk>/eliminar/', eliminar_parametro_prueba, 
          name='eliminar_parametro_prueba'),
     
-    path('prueba-quimica/<uuid:pk>/calcular-resultados/', calcular_resultados_prueba, 
-         name='calcular_resultados_prueba'),
+    #path('prueba-quimica/<uuid:pk>/calcular-resultados/', calcular_resultados_prueba, name='calcular_resultados_prueba'),
     
-    #path('prueba-quimica/<uuid:pk>/concluir/', concluir_prueba_quimica, name='concluir_prueba_quimica'),
+    path('prueba-quimica/<uuid:pk>/concluir/', concluir_prueba_quimica, name='concluir_prueba_quimica'),
     
     #path('prueba-quimica/<uuid:pk>/estado/<str:estado>/', cambiar_estado_prueba, name='cambiar_estado_prueba'),
     
@@ -60,7 +53,7 @@ urlpatterns = [
     path('produccion/<uuid:pk>/pruebas/descargar/', descargar_pruebas_quimicas, name='descargar_pruebas'),
     path('produccion/<uuid:pk>/pruebas/eliminar/', eliminar_pruebas_quimicas, name='eliminar_pruebas'),
 
-    #Gestionar pruebas químicas
+    #Gestionar parametros
     path('parametros/', lista_parametros, name='parametros_lista'),
     path('parametros/crear/', crear_parametro, name='crear_parametro'),
     path('parametros/<uuid:parametro_id>/editar/', editar_parametro, name='editar_parametro'),

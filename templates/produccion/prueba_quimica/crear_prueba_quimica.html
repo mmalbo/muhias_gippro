@@ -107,6 +107,16 @@
                         <small class="form-text text-muted unidad-text"></small>
                     </div>
                 </div>
+                <!-- Campo de cumplimiento para organolépticos (oculto inicialmente) -->
+                <div class="col-md-3 cumplimiento-container" style="display: none;">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input cumplimiento-check" 
+                               id="cumplimiento_{{ forloop.counter }}">
+                        <label class="form-check-label" for="cumplimiento_{{ forloop.counter }}">
+                            <small>Cumple</small>
+                        </label>
+                    </div>
+                </div>
                 <div class="col-md-1 d-flex align-items-end">
                     <button type="button" class="btn btn-danger btn-eliminar">
                         <i class="fas fa-trash"></i>
@@ -152,6 +162,7 @@ $(document).ready(function() {
             // Clonar template
             const clone = template.content.cloneNode(true);
             const $parametroDiv = $(clone).find('.parametro-item');
+            const $cumplimientoCheck = $(clone).find('.cumplimiento-check');
             
             // Configurar nombres únicos para cada campo
             configurarNombresCampos($parametroDiv, contadorParametros);

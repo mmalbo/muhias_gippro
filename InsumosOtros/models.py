@@ -37,24 +37,12 @@ class InsumosOtros(ModeloBase):
         null=False, blank=False,
     )
 
-    cantidad_almacen = models.IntegerField(
-        null=True, blank=False,
-        default=0,
-        verbose_name="Cantidad",
-    )
-
     costo = models.FloatField(
         null=True,
         blank=False,
         default=0,
         verbose_name="Costo",
     )
-
-    """ almacen = models.ForeignKey(
-        Almacen, on_delete=models.SET_NULL,
-        null=True,
-        verbose_name='Almacen ubicación'
-    ) """
 
     @property
     def cantidad_total(self):

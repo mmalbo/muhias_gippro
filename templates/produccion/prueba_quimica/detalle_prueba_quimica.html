@@ -85,12 +85,13 @@
                         
                         <!-- Botón para concluir prueba (si está pendiente) -->
                         {% if prueba.estado != 'APROBADA' and prueba.estado != 'RECHAZADA' and prueba.estado != 'CANCELADA' %}
-                        <button type="button" class="btn btn-success" id="btnConcluirPrueba">
+                        <a href="{% url 'calcular_resultados_prueba' prueba.id %}" class="btn btn-success">
                             <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
-                        </button>
+                        </a>
                         {% endif %}
                         
-                        <!-- Botón para cambiar estado 
+                        <!-- <button type="button" class="btn btn-success" id="btnConcluirPrueba"></button>
+                                Botón para cambiar estado 
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-info dropdown-toggle" 
                                     data-bs-toggle="dropdown" aria-expanded="false">
@@ -116,29 +117,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
-
-            <!-- Resultado Final -->
-            {% if prueba.resultado_final %}
-            <div class="card border-{% if prueba.aprobado %}success{% else %}danger{% endif %}">
-                <div class="card-header bg-{% if prueba.aprobado %}success{% else %}danger{% endif %} text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-{% if prueba.aprobado %}thumbs-up{% else %}thumbs-down{% endif %} me-2"></i>
-                        Resultado Final: {% if prueba.aprobado %} 'APROBADA' {% else %} 'RECHAZADA' {% endif %}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2"><strong>Conclusión:</strong></p>
-                    <p class="mb-0">{{ prueba.resultado_final|linebreaks }}</p>
-                    
-                    {% if prueba.observaciones %}
-                    <hr>
-                    <p class="mb-2"><strong>Observaciones:</strong></p>
-                    <p class="mb-0 text-muted">{{ prueba.observaciones|linebreaks }}</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
+            </div>            
         </div>
 
         <!-- Columna derecha: Parámetros -->
@@ -215,9 +194,9 @@
                                     </td>
                                     <td>{{ parametro.parametro.unidad_medida|default:"-" }}</td>
                                     <td>
-                                        <span class="badge {% if parametro.parametro.cumplimiento %}bg-success{% else %}bg-danger{% endif %} estado-badge">
-                                            <i class="fas fa-{% if parametro.parametro.cumplimiento %}check{% else %}times{% endif %} me-1"></i>
-                                            {% if parametro.parametro.cumplimiento %}OK{% else %}Falla{% endif %}
+                                        <span class="badge {% if parametro.cumplimiento %}bg-success{% else %}bg-danger{% endif %} estado-badge">
+                                            <i class="fas fa-{% if parametro.cumplimiento %}check{% else %}times{% endif %} me-1"></i>
+                                            {% if parametro.cumplimiento %}OK{% else %}Falla{% endif %}
                                         </span>
                                     </td>
                                     <td>
@@ -252,7 +231,7 @@
                                                     data-min="{{ parametro.parametro.valor_minimo|default:'' }}"
                                                     data-max="{{ parametro.parametro.valor_maximo|default:'' }}"
                                                     data-unidad="{{ parametro.parametro.unidad_medida|default:'' }}"
-                                                    data-estado="{% if parametro.dentro_especificacion %}OK{% else %}Falla{% endif %}"
+                                                    data-estado="{% if parametro.cumplimiento %}OK{% else %}Falla{% endif %}"
                                                     data-observaciones="{{ parametro.observaciones|default:'' }}"
                                                     data-bs-toggle="tooltip" title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
@@ -290,94 +269,7 @@
                                 <span id="contadorTotalFooter">{{ total_parametros }}</span> parámetros aprobados
                             </small>
                         </div>
-                        <div class="col-md-6 text-end">
-                            {% if prueba.estado != 'APROBADA' and prueba.estado != 'RECHAZADA' %}
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnCalcularResultados">
-                                <i class="fas fa-calculator me-1"></i> Calcular Resultados
-                            </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Gráfico de Resultados -->
-            {% if total_parametros > 0 %}
-            <div class="card mt-4">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i> Resumen Gráfico
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="graficoPrueba" height="100"></canvas>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Tarjetas de Resumen -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="card card-hover border-primary">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="text-muted fw-normal mt-0 mb-2">Total Parámetros</h5>
-                            <h3 class="my-2" id="totalParametros">{{ total_parametros }}</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-list-check text-primary fs-1"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6">
-            <div class="card card-hover border-success">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="text-muted fw-normal mt-0 mb-2">Aprobados</h5>
-                            <h3 class="my-2 text-success" id="parametrosAprobados">{{ parametros_aprobados }}</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-check-circle text-success fs-1"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6">
-            <div class="card card-hover border-danger">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="text-muted fw-normal mt-0 mb-2">Rechazados</h5>
-                            <h3 class="my-2 text-danger" id="parametrosRechazados">{{ parametros_rechazados }}</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-times-circle text-danger fs-1"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6">
-            <div class="card card-hover border-info text-white" style="background-color: #17a2b8;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="fw-normal mt-0 mb-2">% Aprobación</h5>
-                            <h2 class="my-2" id="porcentajeAprobacion">{{ porcentaje_aprobacion }}%</h2>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-chart-pie fs-1"></i>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -531,519 +423,287 @@
 {% endblock %}
 
 {% block javascript %}
+
 <script>
-$(document).ready(function() {
-    // ============================================
-    // FUNCIÓN PARA CONSTRUIR URLs CON UUIDs
-    // ============================================
+
+function getCSRFToken() {
+    return '{{ csrf_token }}';  // Esto funciona si estás en un template
+}
+
+    // Guardar cambios (con UUID) - VERSIÓN CORREGIDA
+$(document).on('click', '.btn-guardar', function() {
+    const $btn = $(this);
+    const parametroId = $btn.data('id');  // UUID del parámetro
+    const $fila = $(`#parametro-${parametroId}`);
+    const nuevoValor = $fila.find('.valor-edit').val().trim();
     
-    // URLs directas usando las variables de template
-    const URLS = {
-        agregarParametros: '{% url "agregar_parametros_prueba" prueba.id %}',
-        calcularResultados: '{% url "calcular_resultados_prueba" prueba.id %}',
-        
-        // Para los parámetros, construiremos dinámicamente
-    };
-    
-    // Función para construir URL de edición con UUID
-    function getEditarUrl(parametroId) {
-        // Si ya tienes la URL en el template, úsala así:
-        return `/produccion/parametro-prueba/${parametroId}/editar/`;
+    // Validación básica
+    if (!nuevoValor) {
+        mostrarMensaje('warning', 'Ingrese un valor para el parámetro');
+        $fila.find('.valor-edit').focus();
+        return;
     }
     
-    function getEliminarUrl(parametroId) {
-        return `/produccion/parametro-prueba/${parametroId}/eliminar/`;
+    // Validar si es un número (para parámetros numéricos)
+    const valorNumerico = parseFloat(nuevoValor);
+    if (isNaN(valorNumerico) && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nuevoValor)) {
+        mostrarMensaje('warning', 'Ingrese un valor válido (numérico o texto)');
+        $fila.find('.valor-edit').focus();
+        return;
     }
     
-    function getEstadoUrl(estado) {
-        return `/produccion/prueba-quimica/{{ prueba.id }}/estado/${estado}/`;
-    }
+    // Preparar datos para enviar
+    const formData = new FormData();
+    formData.append('valor_medido', nuevoValor);
+    formData.append('csrfmiddlewaretoken', getCSRFToken());
     
-    // ============================================
-    // 1. CONFIGURACIÓN INICIAL
-    // ============================================
+    // Cambiar estado del botón
+    $btn.prop('disabled', true)
+        .html('<i class="fas fa-spinner fa-spin me-1"></i>');
     
-    // Variables globales
-    let contadorParametros = {{ total_parametros }};
-    let contadorAprobados = {{ parametros_aprobados }};
-    let contadorRechazados = {{ parametros_rechazados }};
+    console.log('Enviando edición para parámetro ID:', parametroId);
+    console.log('Nuevo valor:', nuevoValor);
+    console.log('URL:', `/produccion/parametro-prueba/${parametroId}/editar/`);
     
-    // Obtener token CSRF de forma segura
-    function getCSRFToken() {
-        const token = document.querySelector('[name=csrfmiddlewaretoken]');
-        return token ? token.value : '';
-    }
-    
-    // ============================================
-    // 2. FUNCIONALIDAD PARA EDITAR PARÁMETROS
-    // ============================================
-    
-    // Editar parámetro
-    $(document).on('click', '.btn-editar', function() {
-        const parametroId = $(this).data('id');  // Este es un UUID
-        const $fila = $(`#parametro-${parametroId}`);
-        
-        // Cambiar a modo edición
-        $fila.find('.valor-actual').addClass('d-none');
-        $fila.find('.valor-edit').removeClass('d-none');
-        $(this).addClass('d-none');
-        $fila.find('.btn-guardar, .btn-cancelar').removeClass('d-none');
-    });
-    
-    // Cancelar edición
-    $(document).on('click', '.btn-cancelar', function() {
-        const parametroId = $(this).data('id');
-        const $fila = $(`#parametro-${parametroId}`);
-        
-        // Cancelar edición
-        $fila.find('.valor-edit').addClass('d-none');
-        $fila.find('.valor-actual').removeClass('d-none');
-        $fila.find('.btn-editar').removeClass('d-none');
-        $fila.find('.btn-guardar, .btn-cancelar').addClass('d-none');
-    });
-    
-    // Guardar cambios (con UUID)
-    $(document).on('click', '.btn-guardar', function() {
-        const $btn = $(this);
-        const parametroId = $btn.data('id');  // UUID del parámetro
-        const $fila = $(`#parametro-${parametroId}`);
-        const nuevoValor = $fila.find('.valor-edit').val().trim();
-        
-        if (!nuevoValor) {
-            mostrarMensaje('warning', 'Ingrese un valor para el parámetro');
-            return;
-        }
-        
-        // 1. Usar jQuery.ajax que maneja mejor CSRF
-    $.ajax({
-        url: `/produccion/parametro-prueba/${parametroId}/editar/`,
+    // Usar fetch en lugar de jQuery.ajax para mayor control
+    fetch(`/produccion/parametro-prueba/${parametroId}/editar/`, {
         method: 'POST',
-        dataType: 'json',
-        data: {
-            'valor_medido': nuevoValor,
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'X-Requested-With': 'XMLHttpRequest'
         },
-        beforeSend: function(xhr) {
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-            console.log('Enviando a:', this.url);
-        },
-        success: function(data) {
-            console.log('Respuesta:', data);
+        body: formData
+    })
+    .then(response => {
+        console.log('Respuesta HTTP recibida, status:', response.status);
+        
+        // Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta del servidor no es JSON');
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        console.log('Respuesta JSON parseada:', data);
+        
+        if (data.success) {
+            // 1. Actualizar valor en la tabla
+            $fila.find('.valor-actual').text(nuevoValor);
             
-            if (data.success) {
-                $fila.find('.valor-actual').text(nuevoValor);
-                $fila.find('.valor-actual').removeClass('d-none');
-                $fila.find('.valor-edit').addClass('d-none');
+            // 2. Cambiar estilos según cumplimiento
+            const esAprobado = data.dentro_especificacion;
+            
+            if (esAprobado) {
+                $fila.removeClass('table-danger').addClass('table-success');
+                $fila.find('.estado-badge')
+                    .removeClass('bg-danger')
+                    .addClass('bg-success')
+                    .html('<i class="fas fa-check me-1"></i> OK');
                 
-                if (data.dentro_especificacion) {
-                    $fila.removeClass('table-danger').addClass('table-success');
-                    $fila.find('.estado-badge')
-                        .removeClass('bg-danger')
-                        .addClass('bg-success')
-                        .html('<i class="fas fa-check me-1"></i> OK');
-                } else {
-                    $fila.removeClass('table-success').addClass('table-danger');
-                    $fila.find('.estado-badge')
-                        .removeClass('bg-success')
-                        .addClass('bg-danger')
-                        .html('<i class="fas fa-times me-1"></i> Falla');
-                }
-                
-                alert('¡Actualizado correctamente!');
-            } else {
-                alert('Error: ' + data.message);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('AJAX Error:', status, error);
-            console.error('Response:', xhr.responseText);
-            alert(`Error ${xhr.status}: ${error}\n\nDetalles en consola.`);
-        },
-  
-
-      complete: function() {
-            $fila.find('.btn-editar').removeClass('d-none');
-            $fila.find('.btn-guardar, .btn-cancelar').addClass('d-none');
-            $btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
-        }
-    });
-});
-
-    // ============================================
-    // 3. ELIMINAR PARÁMETROS (con UUID)
-    // ============================================
-    
-    $(document).on('click', '.btn-eliminar', function() {
-        const $btn = $(this);
-        const parametroId = $btn.data('id');  // UUID del parámetro
-        const nombreParametro = $btn.data('nombre');
-        
-        // Confirmación
-        if (!confirm(`¿Está seguro de eliminar el parámetro "${nombreParametro}"?`)) {
-            return;
-        }
-        
-        $btn.prop('disabled', true);
-        
-        // Configurar datos para enviar
-        const formData = new FormData();
-        formData.append('csrfmiddlewaretoken', getCSRFToken());
-        
-        // Hacer petición AJAX con UUID
-        fetch(getEliminarUrl(parametroId), {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Determinar estado para ajustar contadores
-                const $fila = $(`#parametro-${parametroId}`);
-                const eraAprobado = $fila.hasClass('table-success');
-                
-                // Ajustar contadores
-                if (eraAprobado) {
-                    contadorAprobados = Math.max(0, contadorAprobados - 1);
-                } else {
+                // Actualizar contadores (si cambiaba de rechazado a aprobado)
+                if ($fila.hasClass('table-danger')) {
+                    contadorAprobados++;
                     contadorRechazados = Math.max(0, contadorRechazados - 1);
                 }
-                contadorParametros = Math.max(0, contadorParametros - 1);
+            } else {
+                $fila.removeClass('table-success').addClass('table-danger');
+                $fila.find('.estado-badge')
+                    .removeClass('bg-success')
+                    .addClass('bg-danger')
+                    .html('<i class="fas fa-times me-1"></i> Falla');
                 
-                // Eliminar fila
-                $fila.remove();
-                
-                // Actualizar contadores en la UI
-                actualizarContadores();
-                
-                // Mostrar mensaje
-                mostrarMensaje('success', 'Parámetro eliminado correctamente');
-                
-                // Si no quedan parámetros, mostrar mensaje
-                if ($('#tablaParametros tr').not('#sinParametros').length === 0) {
-                    if (!$('#sinParametros').length) {
-                        $('#tablaParametros').append(`
-                            <tr id="sinParametros">
-                                <td colspan="7" class="text-center py-4">
-                                    <i class="fas fa-flask fa-3x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No hay parámetros registrados</h5>
-                                    <p class="text-muted mb-0">Agregue parámetros para evaluar esta prueba</p>
-                                </td>
-                            </tr>
-                        `);
-                    }
-                    $('#sinParametros').show();
+                // Actualizar contadores (si cambiaba de aprobado a rechazado)
+                if ($fila.hasClass('table-success')) {
+                    contadorRechazados++;
+                    contadorAprobados = Math.max(0, contadorAprobados - 1);
                 }
-            } else {
-                mostrarMensaje('error', 'Error: ' + (data.message || 'Error desconocido'));
-            }
-        })
-        .catch(error => {
-            console.error('Error en la petición:', error);
-            mostrarMensaje('error', 'Error al eliminar el parámetro');
-        })
-        .finally(() => {
-            $btn.prop('disabled', false);
-        });
-    });
-    
-    // ============================================
-    // 4. AGREGAR NUEVOS PARÁMETROS (con UUID de prueba)
-    // ============================================
-    
-    $('#btnAgregarParametro, #btnAgregarParametroModal').on('click', function() {
-        $('#nuevosParametrosContainer').toggle();
-        if ($('#nuevosParametrosContainer').is(':visible')) {
-            agregarCampoParametro();
-        }
-    });
-    
-    function agregarCampoParametro() {
-        const template = document.getElementById('templateParametroDinamico');
-        const clone = template.content.cloneNode(true);
-        
-        const $clone = $(clone);
-        
-        // Configurar eventos
-        $clone.find('.parametro-select').on('change', function() {
-            const unidad = $(this).find('option:selected').data('unidad') || '';
-            $(this).closest('.parametro-dinamico').find('.unidad-text').text('Unidad: ' + unidad);
-        });
-        
-        $clone.find('.btn-eliminar-dinamico').on('click', function() {
-            $(this).closest('.parametro-dinamico').remove();
-        });
-        
-        $('#parametrosDinamicos').append($clone);
-    }
-    
-    $('#btnAgregarMas').on('click', agregarCampoParametro);
-    
-    // Guardar nuevos parámetros
-    $('#formAgregarParametros').on('submit', function(e) {
-        e.preventDefault();
-        
-        const parametrosData = [];
-        let valido = true;
-        
-        // Validar y recopilar datos
-        $('.parametro-dinamico').each(function() {
-            const $select = $(this).find('.parametro-select');
-            const $valor = $(this).find('.valor-input');
-            const $observacion = $(this).find('.observacion-input');
-            
-            if (!$select.val() || !$valor.val().trim()) {
-                valido = false;
-                $(this).addClass('border-danger');
-                return false;
             }
             
-            $(this).removeClass('border-danger');
+            // 3. Actualizar contadores globales
+            actualizarContadores();
             
-            parametrosData.push({
-                parametro_id: $select.val(),
-                valor_medido: $valor.val().trim(),
-                observaciones: $observacion.val().trim(),
-                parametro_nombre: $select.find('option:selected').text()
-            });
-        });
-        
-        if (!valido) {
-            mostrarMensaje('warning', 'Complete todos los campos requeridos (marcados en rojo)');
-            return;
-        }
-        
-        if (parametrosData.length === 0) {
-            mostrarMensaje('warning', 'Agregue al menos un parámetro');
-            return;
-        }
-        
-        // Configurar botón de envío
-        const $submitBtn = $('#formAgregarParametros button[type="submit"]');
-        $submitBtn.prop('disabled', true)
-            .html('<i class="fas fa-spinner fa-spin me-1"></i> Guardando...');
-        
-        // Enviar datos al servidor
-        fetch(URLS.agregarParametros, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                parametros: parametrosData,
-                csrfmiddlewaretoken: getCSRFToken()
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarMensaje('success', data.message || 'Parámetros agregados correctamente');
-                
-                // Recargar la página después de un breve retraso
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                mostrarMensaje('error', data.message || 'Error al guardar los parámetros');
-                $submitBtn.prop('disabled', false)
-                    .html('<i class="fas fa-save me-1"></i> Guardar Todos');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('error', 'Error de conexión al servidor');
-            $submitBtn.prop('disabled', false)
-                .html('<i class="fas fa-save me-1"></i> Guardar Todos');
-        });
-    });
-    
-    // ============================================
-    // 5. CALCULAR RESULTADOS
-    // ============================================
-    
-    $('#btnCalcularResultados').on('click', function() {
-        const $btn = $(this);
-        $btn.prop('disabled', true)
-            .html('<i class="fas fa-spinner fa-spin me-1"></i> Calculando...');
-        
-        fetch(URLS.calcularResultados, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({
-                'csrfmiddlewaretoken': getCSRFToken()
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Actualizar contadores globales
-                contadorAprobados = data.aprobados;
-                contadorRechazados = data.rechazados;
-                actualizarContadores();
-                
-                // Actualizar cada parámetro en la tabla
-                data.parametros.forEach(parametro => {
-                    const $fila = $(`#parametro-${parametro.id}`);
-                    if ($fila.length) {
-                        if (parametro.dentro_especificacion) {
-                            $fila.removeClass('table-danger').addClass('table-success');
-                            $fila.find('.estado-badge')
-                                .removeClass('bg-danger')
-                                .addClass('bg-success')
-                                .html('<i class="fas fa-check me-1"></i> OK');
-                        } else {
-                            $fila.removeClass('table-success').addClass('table-danger');
-                            $fila.find('.estado-badge')
-                                .removeClass('bg-success')
-                                .addClass('bg-danger')
-                                .html('<i class="fas fa-times me-1"></i> Falla');
-                        }
-                    }
-                });
-                
-                mostrarMensaje('success', 'Resultados calculados correctamente');
-            } else {
-                mostrarMensaje('error', data.message || 'Error al calcular resultados');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('error', 'Error de conexión al servidor');
-        })
-        .finally(() => {
+            // 4. Mostrar mensaje de éxito
+            mostrarMensaje('success', '¡Valor actualizado correctamente!');
+            
+            // 5. Restaurar modo visualización
+            $fila.find('.valor-actual').removeClass('d-none');
+            $fila.find('.valor-edit').addClass('d-none');
+            $fila.find('.btn-editar').removeClass('d-none');
+            $fila.find('.btn-guardar, .btn-cancelar').addClass('d-none');
+            
+        } else {
+            // Mostrar error del servidor
+            mostrarMensaje('error', data.message || 'Error al actualizar el parámetro');
+            
+            // Mantener en modo edición
             $btn.prop('disabled', false)
-                .html('<i class="fas fa-calculator me-1"></i> Calcular Resultados');
-        });
-    });
-    
-    // ============================================
-    // 6. FUNCIONES AUXILIARES
-    // ============================================
-    
-    function actualizarContadores() {
-        const total = contadorParametros;
-        const aprobados = contadorAprobados;
-        const rechazados = contadorRechazados;
-        const porcentaje = total > 0 ? Math.round((aprobados / total) * 100) : 0;
-        
-        // Actualizar tarjetas de resumen
-        $('#totalParametros').text(total);
-        $('#parametrosAprobados').text(aprobados);
-        $('#parametrosRechazados').text(rechazados);
-        $('#porcentajeAprobacion').text(porcentaje + '%');
-        
-        // Actualizar contadores en la tabla
-        $('#contadorTotal').text(total);
-        $('#contadorAprobados').text(aprobados);
-        $('#contadorTotalFooter').text(total);
-        
-        // Actualizar modal de conclusión
-        $('#modalTotalParametros').text(total);
-        $('#modalAprobados').text(aprobados);
-        $('#modalPorcentaje').text(porcentaje + '%');
-        
-        // Actualizar gráfico si existe
-        if (window.graficoPrueba && window.graficoPrueba.data) {
-            window.graficoPrueba.data.datasets[0].data = [aprobados, rechazados];
-            window.graficoPrueba.update();
+                .html('<i class="fas fa-save"></i>');
         }
-    }
-    
-    function mostrarMensaje(tipo, mensaje) {
-        // Eliminar mensajes anteriores
-        $('.alert-flotante').remove();
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
         
-        const iconos = {
-            'success': 'check-circle',
-            'error': 'exclamation-circle',
-            'warning': 'exclamation-triangle',
-            'info': 'info-circle'
-        };
-        
-        const $alert = $(`
-            <div class="alert alert-${tipo} alert-dismissible fade show alert-flotante" 
-                 style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                <i class="fas fa-${iconos[tipo] || 'info-circle'} me-2"></i>
-                ${mensaje}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `);
-        
-        $('body').append($alert);
-        
-        // Auto-eliminar después de 5 segundos
-        setTimeout(() => {
-            $alert.alert('close');
-        }, 5000);
-    }
-    
-    // ============================================
-    // 7. INICIALIZACIÓN DE GRÁFICO
-    // ============================================
-    
-    {% if total_parametros > 0 %}
-    const ctx = document.getElementById('graficoPrueba').getContext('2d');
-    window.graficoPrueba = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Aprobados', 'Rechazados'],
-            datasets: [{
-                data: [{{ parametros_aprobados }}, {{ parametros_rechazados }}],
-                backgroundColor: [
-                    'rgba(40, 167, 69, 0.8)',
-                    'rgba(220, 53, 69, 0.8)'
-                ],
-                borderColor: [
-                    'rgb(40, 167, 69)',
-                    'rgb(220, 53, 69)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            const value = context.raw;
-                            const total = {{ total_parametros }};
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}${value} (${percentage}%)`;
-                        }
-                    }
-                }
-            }
+        // Mostrar error detallado
+        let mensajeError = 'Error de conexión con el servidor';
+        if (error.message.includes('JSON')) {
+            mensajeError = 'El servidor respondió con un formato no válido. Revise la consola.';
         }
-    });
-    {% endif %}
-    
-    // Inicializar tooltips de Bootstrap
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+        
+        mostrarMensaje('error', mensajeError);
+        
+        // Restaurar botón
+        $btn.prop('disabled', false)
+            .html('<i class="fas fa-save"></i>');
+            
+        // Mostrar error en consola para depuración
+        console.error('Detalles del error:', error);
     });
 });
+
+// También mejora la función para cancelar edición:
+$(document).on('click', '.btn-cancelar', function() {
+    const parametroId = $(this).data('id');
+    const $fila = $(`#parametro-${parametroId}`);
+    
+    // Restaurar valor original
+    const valorOriginal = $fila.find('.valor-actual').text();
+    $fila.find('.valor-edit').val(valorOriginal);
+    
+    // Cambiar a modo visualización
+    $fila.find('.valor-edit').addClass('d-none');
+    $fila.find('.valor-actual').removeClass('d-none');
+    $fila.find('.btn-editar').removeClass('d-none');
+    $fila.find('.btn-guardar, .btn-cancelar').addClass('d-none');
+});
+
+// Y mejora la función de edición para guardar el valor original:
+$(document).on('click', '.btn-editar', function() {
+    const parametroId = $(this).data('id');
+    const $fila = $(`#parametro-${parametroId}`);
+    const valorActual = $fila.find('.valor-actual').text().trim();
+    
+    // Configurar campo de edición con el valor actual
+    $fila.find('.valor-edit').val(valorActual);
+    
+    // Cambiar a modo edición
+    $fila.find('.valor-actual').addClass('d-none');
+    $fila.find('.valor-edit').removeClass('d-none').focus();
+    $(this).addClass('d-none');
+    $fila.find('.btn-guardar, .btn-cancelar').removeClass('d-none');
+});
+
+// ============================================
+// 4. AGREGAR NUEVOS PARÁMETROS (con UUID de prueba)
+// ============================================
+$('#btnAgregarParametro, #btnAgregarParametroModal').on('click', function() {
+    $('#nuevosParametrosContainer').toggle();
+    if ($('#nuevosParametrosContainer').is(':visible')) {
+        agregarCampoParametro();
+    }
+});
+    
+function agregarCampoParametro() {
+    const template = document.getElementById('templateParametroDinamico');
+    const clone = template.content.cloneNode(true);
+        
+    const $clone = $(clone);
+        
+    // Configurar eventos
+    $clone.find('.parametro-select').on('change', function() {
+        const unidad = $(this).find('option:selected').data('unidad') || '';
+        $(this).closest('.parametro-dinamico').find('.unidad-text').text('Unidad: ' + unidad);
+    });
+        
+    $clone.find('.btn-eliminar-dinamico').on('click', function() {
+        $(this).closest('.parametro-dinamico').remove();
+    });
+        
+    $('#parametrosDinamicos').append($clone);
+}
+    
+$('#btnAgregarMas').on('click', agregarCampoParametro);
+    
+// Guardar nuevos parámetros
+$('#formAgregarParametros').on('submit', function(e) {
+    e.preventDefault();
+        
+    const parametrosData = [];
+    let valido = true;
+        
+    // Validar y recopilar datos
+    $('.parametro-dinamico').each(function() {
+        const $select = $(this).find('.parametro-select');
+        const $valor = $(this).find('.valor-input');
+        const $observacion = $(this).find('.observacion-input');
+        
+        if (!$select.val() || !$valor.val().trim()) {
+            valido = false;
+            $(this).addClass('border-danger');
+            return false;
+        }
+            
+        $(this).removeClass('border-danger');
+            
+        parametrosData.push({
+            parametro_id: $select.val(),
+            valor_medido: $valor.val().trim(),
+            observaciones: $observacion.val().trim(),
+            parametro_nombre: $select.find('option:selected').text()
+        });
+    });
+        
+    if (!valido) {
+        mostrarMensaje('warning', 'Complete todos los campos requeridos (marcados en rojo)');
+        return;
+    }
+        
+    if (parametrosData.length === 0) {
+        mostrarMensaje('warning', 'Agregue al menos un parámetro');
+        return;
+    }
+        
+    // Configurar botón de envío
+    const $submitBtn = $('#formAgregarParametros button[type="submit"]');
+    $submitBtn.prop('disabled', true)
+        .html('<i class="fas fa-spinner fa-spin me-1"></i> Guardando...');
+       
+    // Enviar datos al servidor
+    fetch(URLS.agregarParametros, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            parametros: parametrosData,
+            csrfmiddlewaretoken: getCSRFToken()
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarMensaje('success', data.message || 'Parámetros agregados correctamente');
+              
+            // Recargar la página después de un breve retraso
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            mostrarMensaje('error', data.message || 'Error al guardar los parámetros');
+            $submitBtn.prop('disabled', false)
+            .html('<i class="fas fa-save me-1"></i> Guardar Todos');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('error', 'Error de conexión al servidor');
+        $submitBtn.prop('disabled', false)
+            .html('<i class="fas fa-save me-1"></i> Guardar Todos');
+    });
+});
+
 </script>
 {% endblock %}

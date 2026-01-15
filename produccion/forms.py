@@ -281,12 +281,15 @@ class PruebaQuimicaForm(forms.ModelForm):
 class DetallePruebaForm(forms.ModelForm):
     class Meta:
         model = DetallePruebaQuimica
-        fields = ['parametro', 'valor_medido', 'observaciones']
+        fields = ['parametro', 'valor_medido', 'cumplimiento', 'observaciones']
         widgets = {
             'parametro': forms.Select(attrs={'class': 'form-control'}),
             'valor_medido': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.001'
+            }),
+            'cumplimiento': forms.CheckboxInput(attrs={
+                'class': 'form-check-input cumplimiento-check'
             }),
             'observaciones': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -298,6 +301,10 @@ class DetallePruebaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Filtrar parámetros activos
         self.fields['parametro'].queryset = ParametroPrueba.objects.filter(activo=True)
+
+        # Ocultar campo cumplimiento inicialmente (se mostrará dinámicamente)
+        self.fields['cumplimiento'].required = False
+        self.fields['cumplimiento'].widget.attrs['style'] = 'display: none;'
 
 class AprobarPruebaForm(forms.Form):
     observaciones_aprobacion = forms.CharField(

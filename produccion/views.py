@@ -265,7 +265,7 @@ def get_materias_primas_data(request):
     )
     return JsonResponse(list(materias_primas), safe=False)
 
-#Este es el que está en uso
+#Flujo básico de la producción
 def iniciar_produccion(request, pk):
     """View para iniciar una producción específica"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -321,6 +321,54 @@ def concluir_produccion(request, pk):
     
     return render(request, 'produccion/concluir_produccion.html', { 'produccion': produccion })
 
+def cancelar_produccion(request, pk):
+    """View para cancelar una producción con observaciones"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    # Verificar si puede ser cancelada
+    if not produccion.puede_ser_cancelada():
+        messages.error(request, f'❌ No se puede cancelar la producción {produccion.lote} porque ya está {produccion.get_estado_display().lower()}')
+        return redirect('produccion_list')
+    
+    if request.method == 'POST':
+        form = CancelarProduccionForm(request.POST, produccion=produccion)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'✅ Producción {produccion.lote} cancelada correctamente')
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'mensaje': 'Producción cancelada correctamente',
+                    'nuevo_estado': produccion.estado
+                })
+            
+            return redirect('produccion_list')
+        else:
+            messages.error(request, '❌ Error al cancelar la producción')
+    else:
+        form = CancelarProduccionForm(produccion=produccion)
+    
+    return render(request, 'produccion/cancelar_produccion.html', {
+        'produccion': produccion,
+        'form': form
+    })
+
+# View para ver detalles de cancelación
+def detalle_cancelacion(request, pk):
+    """View para ver los detalles de una producción cancelada"""
+    produccion = get_object_or_404(Produccion, pk=pk)
+    
+    if produccion.estado != 'Cancelada':
+        messages.warning(request, 'Esta producción no está cancelada')
+        return redirect('produccion_list')
+    
+    return render(request, 'produccion/detalle_cancelacion.html', {
+        'produccion': produccion
+    })
+
+#funcionalidades para insertar pruebas químicas externas, emitidas por archivo.
 def subir_pruebas_quimicas(request, pk):
     """View para subir archivo de pruebas químicas"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -389,58 +437,16 @@ def eliminar_pruebas_quimicas(request, pk):
     
     return redirect('produccion_list')
 
-def cancelar_produccion(request, pk):
-    """View para cancelar una producción con observaciones"""
-    produccion = get_object_or_404(Produccion, pk=pk)
-    
-    # Verificar si puede ser cancelada
-    if not produccion.puede_ser_cancelada():
-        messages.error(request, f'❌ No se puede cancelar la producción {produccion.lote} porque ya está {produccion.get_estado_display().lower()}')
-        return redirect('produccion_list')
-    
-    if request.method == 'POST':
-        form = CancelarProduccionForm(request.POST, produccion=produccion)
-        
-        if form.is_valid():
-            form.save()
-            messages.success(request, f'✅ Producción {produccion.lote} cancelada correctamente')
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'mensaje': 'Producción cancelada correctamente',
-                    'nuevo_estado': produccion.estado
-                })
-            
-            return redirect('produccion_list')
-        else:
-            messages.error(request, '❌ Error al cancelar la producción')
-    else:
-        form = CancelarProduccionForm(produccion=produccion)
-    
-    return render(request, 'produccion/cancelar_produccion.html', {
-        'produccion': produccion,
-        'form': form
-    })
-
-# View para ver detalles de cancelación
-def detalle_cancelacion(request, pk):
-    """View para ver los detalles de una producción cancelada"""
-    produccion = get_object_or_404(Produccion, pk=pk)
-    
-    if produccion.estado != 'Cancelada':
-        messages.warning(request, 'Esta producción no está cancelada')
-        return redirect('produccion_list')
-    
-    return render(request, 'produccion/detalle_cancelacion.html', {
-        'produccion': produccion
-    })
-
 ###---Registro de pruebas químicas---###
 def crear_prueba_quimica(request, pk):
     produccion = get_object_or_404(Produccion, pk=pk)
     parametros_existentes = ParametroPrueba.objects.filter(activo=True)
 
+    if produccion.pruebas_quimicas.exists():
+        return redirect('detalle_prueba_quimica', pk=pk)
+    else:
+        print("No existe")
+    
     if request.method == 'POST':
         # Capturar datos del formulario principal
         fecha_prueba = request.POST.get('fecha_prueba')
@@ -613,9 +619,11 @@ def detalle_prueba_quimica(request, pk):
     total_parametros = parametros.count()
     parametros_aprobados = parametros.filter(cumplimiento=True).count()
     parametros_rechazados = total_parametros - parametros_aprobados
+    print(parametros_aprobados)
     
     porcentaje_aprobacion = 0
     if total_parametros > 0:
+        print(f"{total_parametros}")
         porcentaje_aprobacion = round((parametros_aprobados / total_parametros) * 100, 2)
     
     context = {
@@ -631,7 +639,6 @@ def detalle_prueba_quimica(request, pk):
     return render(request, 'produccion/prueba_quimica/detalle_prueba_quimica.html', context)
 
 @login_required
-#@permission_required('produccion.change_pruebaquimica')
 def aprobar_prueba_quimica(request, pk):
     """Aprobar o rechazar una prueba química"""    
     prueba = get_object_or_404(PruebaQuimica, pk=pk)
@@ -657,8 +664,8 @@ def aprobar_prueba_quimica(request, pk):
         'form': form
     })
 
+#Gestión de parámetros como nomencladores
 @login_required
-#@permission_required('produccion.view_parametroprueba')
 def lista_parametros(request):
     """Lista y busca parámetros con filtros avanzados"""
     form = BuscarParametroForm(request.GET or None)
@@ -689,7 +696,6 @@ def lista_parametros(request):
     })
 
 @login_required
-#@permission_required('produccion.add_parametroprueba')
 def crear_parametro(request):
     """Crear nuevo parámetro personalizado"""
     if request.method == 'POST':
@@ -704,7 +710,6 @@ def crear_parametro(request):
     return render(request, 'produccion/parametros/crear_parametro.html', {'form': form})
 
 @login_required
-#@permission_required('produccion.change_parametroprueba')
 def editar_parametro(request, parametro_id):
     """Editar parámetro existente"""
     parametro = get_object_or_404(ParametroPrueba, id=parametro_id)
@@ -735,8 +740,8 @@ def detalle_parametro(request, parametro_id):
         'parametro': parametro,
     })
 
+#Gestión parámetros de una prueba química
 @login_required
-#@require_POST
 def agregar_parametros_prueba(request, prueba_id):
     """Agregar múltiples parámetros a una prueba"""
     prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
@@ -748,12 +753,21 @@ def agregar_parametros_prueba(request, prueba_id):
             parametro = get_object_or_404(ParametroPrueba, id=item['parametro_id'])
             
             # Crear nuevo parámetro de prueba
-            ParametroPrueba.objects.create(
-                prueba=prueba,
-                parametro=parametro,
-                valor_medido=item['valor_medido'],
-                observaciones=item.get('observaciones', '')
-            )
+            if parametro.es_numerico:
+                DetallePruebaQuimica.objects.create(
+                    prueba=prueba, 
+                    parametro=parametro, 
+                    valor_medido=item['valor_medido'],
+                    observaciones=item.get('observaciones', '')
+                )
+            else:
+                DetallePruebaQuimica.objects.create(
+                    prueba=prueba, 
+                    parametro=parametro, 
+                    valor_medido=item['valor_medido'],
+                    cumplimiento=item['cumplimiento'],
+                    observaciones=item.get('observaciones', '')
+                )                
         
         return JsonResponse({
             'success': True,
@@ -767,11 +781,9 @@ def agregar_parametros_prueba(request, prueba_id):
         }, status=400)
 
 @login_required
-@require_POST
-def editar_parametro_prueba(request, parametro_id):
+def editar_parametro_prueba(request, pk):
     """Editar valor de un parámetro existente"""
-    parametro_prueba = get_object_or_404(DetallePruebaQuimica, id=parametro_id)
-    print(parametro_prueba)
+    parametro_prueba = get_object_or_404(DetallePruebaQuimica, id=pk)
     try:
         nuevo_valor = request.POST.get('valor_medido', '').strip()
         if not nuevo_valor:
@@ -779,9 +791,13 @@ def editar_parametro_prueba(request, parametro_id):
                 'success': False,
                 'message': 'El valor no puede estar vacío'
             })
-        
-        parametro_prueba.valor_medido = Decimal(nuevo_valor)
+
+        parametro_prueba.valor_medido = Decimal(nuevo_valor.replace(',','.'))
+
         parametro_prueba.save()
+        print(parametro_prueba.valor_medido)
+        print(parametro_prueba.parametro.valor_minimo)
+        print(parametro_prueba.parametro.valor_maximo)
         
         # Calcular si está dentro de especificación
         #dentro_especificacion = parametro.verificar_especificacion()
@@ -799,7 +815,6 @@ def editar_parametro_prueba(request, parametro_id):
         }, status=400)
 
 @login_required
-@require_POST
 def eliminar_parametro_prueba(request, parametro_id):
     """Eliminar un parámetro de prueba"""
     parametro = get_object_or_404(ParametroPrueba, id=parametro_id)
@@ -815,17 +830,17 @@ def eliminar_parametro_prueba(request, parametro_id):
         }, status=400)
 
 @login_required
-#@require_POST
 def calcular_resultados_prueba(request, prueba_id):
     """Recalcular resultados de todos los parámetros"""
     prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
-    
+    detal_prueba = DetallePruebaQuimica.objects.filter(prueba=prueba).all()
+    print(detal_prueba)
     try:
         parametros = []
         aprobados = 0
         rechazados = 0
         
-        for parametro in prueba.parametros.all():
+        for parametro in detal_prueba:
             # Recalcular especificación
             dentro = parametro.verificar_especificacion()
             

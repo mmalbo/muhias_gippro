@@ -66,6 +66,34 @@
                                             </div>                            
                                         </div>
 
+                                        <!-- Campos para Organolepticos -->
+                                        <div id="camposOrganolepticos" class="campos-condicionales" style="display: none;">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="alert alert-info mb-3">
+                                                        <i class="fas fa-info-circle"></i>
+                                                        Los parámetros organolépticos se evalúan cualitativamente.
+                                                        No requieren valores numéricos mínimos, máximos u objetivo.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Campos para Opciones/Cualitativo -->
+<div id="camposOpciones" class="campos-condicionales" style="display: none;">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="mb-3">
+                {{ form.opciones_predefinidas.label_tag }}
+                {{ form.opciones_predefinidas }}
+                <small class="form-text text-muted">
+                    Ingrese las opciones separadas por comas (ej: "Aceptable, No Aceptable")
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
                                         <!-- Campos generales -->
                                         <div class="row">
                                             <div class="col-md-6">
@@ -91,7 +119,7 @@
                                             </a>
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="fas fa-save"></i> 
-                                                {% if parametro %}Actualizar{% else %}Crear{% endif %} Parámetro
+                                                {% if parametro %} Actualizar {% else %} Crear {% endif %} Parámetro
                                             </button>
                                         </div>
                                     </form>
@@ -104,30 +132,202 @@
         </div>
     </div>
 
-<script>
+<!-- <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoValorSelect = document.getElementById('id_tipo_valor');
+    const tipoValorSelect = document.getElementById('id_tipo');
     const camposNumericos = document.getElementById('camposNumericos');
+    const camposOrganolepticos = document.getElementById('camposOrganolepticos');
     const camposOpciones = document.getElementById('camposOpciones');
     
+// Referencias a campos individuales para marcarlos como requeridos/opcionales
+    const unidadMedidaInput = document.querySelector('[name="unidad_medida"]');
+    const valorMinimoInput = document.querySelector('[name="valor_minimo"]');
+    const valorMaximoInput = document.querySelector('[name="valor_maximo"]');
+    const valorObjetivoInput = document.querySelector('[name="valor_objetivo"]');
+
     function toggleCampos() {
-        const tipoValor = tipoValorSelect.value;
+        const tipoValor = tipoValorSelect.value ? tipoSelect.value.toLowerCase() : '';
+        const esOrganoleptico = tipoValor.includes('organoleptico') || 
+                                tipoValor.includes('organoléptico') ||
+                                tipoValor === 'organolepticos' ||
+                                tipoValor === 'organolépticos';
         
-        // Ocultar todos los campos condicionales
+        // Resetear display de todos los campos condicionales
         camposNumericos.style.display = 'none';
+        camposOrganolepticos.style.display = 'none';
         camposOpciones.style.display = 'none';
         
         // Mostrar campos según el tipo
-        if (tipoValor === 'numerico') {
+       /* if (tipoValor === 'numerico') {
             camposNumericos.style.display = 'block';
         } else if (tipoValor === 'opciones') {
             camposOpciones.style.display = 'block';
+        }*/
+
+        if (esOrganoleptico) {
+            // Ocultar campos numéricos y mostrar panel informativo
+            camposOrganolepticos.style.display = 'block';
+            camposNumericos.style.display = none;
+
+            // Opcional: Hacer campos numéricos no requeridos
+            if (unidadMedidaInput) unidadMedidaInput.required = false;
+            if (valorMinimoInput) valorMinimoInput.required = false;
+            if (valorMaximoInput) valorMaximoInput.required = false;
+            if (valorObjetivoInput) valorObjetivoInput.required = false;
+            
+            // Opcional: Limpiar valores
+            if (valorMinimoInput) valorMinimoInput.value = '';
+            if (valorMaximoInput) valorMaximoInput.value = '';
+            if (valorObjetivoInput) valorObjetivoInput.value = '';
+            
+        } else if (tipoValor === 'opciones' || tipoValor === 'cualitativo') {
+            // Mostrar campo de opciones predefinidas
+            camposOpciones.style.display = 'block';
+            camposNumericos.style.display = 'none';
+            
+        } else {
+            // Para otros tipos (físico, químico, microbiológico), mostrar campos numéricos
+            camposNumericos.style.display = 'block';
+            
+            // Hacer campos requeridos si es necesario
+            if (unidadMedidaInput) unidadMedidaInput.required = true;
+            if (valorMinimoInput) valorMinimoInput.required = true;
+            if (valorMaximoInput) valorMaximoInput.required = true;
         }
     }
     
+
+    // Validación antes de enviar el formulario
+    document.getElementById('parametroForm').addEventListener('submit', function(e) {
+        const tipoValor = tipoSelect.value ? tipoSelect.value.toLowerCase() : '';
+        const esOrganoleptico = tipoValor.includes('organoleptico') || 
+                                tipoValor.includes('organoléptico') ||
+                                tipoValor === 'organolepticos' ||
+                                tipoValor === 'organolépticos';
+        
+        if (!esOrganoleptico) {
+            // Para tipos no organolépticos, validar campos numéricos
+            if (valorMinimoInput && valorMaximoInput) {
+                const min = parseFloat(valorMinimoInput.value);
+                const max = parseFloat(valorMaximoInput.value);
+                
+                if (!isNaN(min) && !isNaN(max) && min > max) {
+                    e.preventDefault();
+                    alert('El valor mínimo no puede ser mayor que el valor máximo.');
+                    valorMinimoInput.focus();
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    });
+    
     // Ejecutar al cargar y cuando cambie el select
     toggleCampos();
-    tipoValorSelect.addEventListener('change', toggleCampos);
+    tipoSelect.addEventListener('change', toggleCampos);
+
+    // También ejecutar cuando se cargue la página (para edición)
+    setTimeout(toggleCampos, 100);
+});
+</script> -->
+
+<script> 
+    document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('id_tipo'); // Cambié el nombre aquí
+    const camposNumericos = document.getElementById('camposNumericos');
+    const camposOrganolepticos = document.getElementById('camposOrganolepticos');
+    const camposOpciones = document.getElementById('camposOpciones');
+    
+    // Referencias a campos individuales para marcarlos como requeridos/opcionales
+    const unidadMedidaInput = document.querySelector('[name="unidad_medida"]');
+    const valorMinimoInput = document.querySelector('[name="valor_minimo"]');
+    const valorMaximoInput = document.querySelector('[name="valor_maximo"]');
+    const valorObjetivoInput = document.querySelector('[name="valor_objetivo"]');
+
+    function toggleCampos() {
+        const tipoValor = tipoSelect.value ? tipoSelect.value.toLowerCase() : '';
+        const esOrganoleptico = tipoValor.includes('organoleptico') || 
+                                tipoValor.includes('organoléptico') ||
+                                tipoValor === 'organolepticos' ||
+                                tipoValor === 'organolépticos';
+        
+        console.log('Tipo seleccionado:', tipoValor, 'Es organoléptico:', esOrganoleptico); // Para depurar
+        
+        // Resetear display de todos los campos condicionales
+        if (camposNumericos) camposNumericos.style.display = 'none';
+        if (camposOrganolepticos) camposOrganolepticos.style.display = 'none';
+        if (camposOpciones) camposOpciones.style.display = 'none';
+        
+        // Mostrar campos según el tipo
+        if (esOrganoleptico) {
+            // Ocultar campos numéricos y mostrar panel informativo
+            if (camposOrganolepticos) camposOrganolepticos.style.display = 'block';
+            if (camposNumericos) camposNumericos.style.display = 'none';
+
+            // Hacer campos numéricos no requeridos
+            if (unidadMedidaInput) unidadMedidaInput.required = false;
+            if (valorMinimoInput) valorMinimoInput.required = false;
+            if (valorMaximoInput) valorMaximoInput.required = false;
+            if (valorObjetivoInput) valorObjetivoInput.required = false;
+            
+            // Limpiar valores
+            if (valorMinimoInput) valorMinimoInput.value = '';
+            if (valorMaximoInput) valorMaximoInput.value = '';
+            if (valorObjetivoInput) valorObjetivoInput.value = '';
+            
+        } else if (tipoValor === 'opciones' || tipoValor === 'cualitativo') {
+            // Mostrar campo de opciones predefinidas
+            if (camposOpciones) camposOpciones.style.display = 'block';
+            if (camposNumericos) camposNumericos.style.display = 'none';
+            
+        } else {
+            // Para otros tipos (físico, químico, microbiológico), mostrar campos numéricos
+            if (camposNumericos) camposNumericos.style.display = 'block';
+            
+            // Hacer campos requeridos si es necesario
+            if (unidadMedidaInput) unidadMedidaInput.required = true;
+            if (valorMinimoInput) valorMinimoInput.required = true;
+            if (valorMaximoInput) valorMaximoInput.required = true;
+            if (valorObjetivoInput) valorObjetivoInput.required = true;
+        }
+    }
+    
+
+    // Validación antes de enviar el formulario
+    document.getElementById('parametroForm').addEventListener('submit', function(e) {
+        const tipoValor = tipoSelect.value ? tipoSelect.value.toLowerCase() : '';
+        const esOrganoleptico = tipoValor.includes('organoleptico') || 
+                                tipoValor.includes('organoléptico') ||
+                                tipoValor === 'organolepticos' ||
+                                tipoValor === 'organolépticos';
+        
+        if (!esOrganoleptico && tipoValor !== 'opciones' && tipoValor !== 'cualitativo') {
+            // Para tipos numéricos, validar campos numéricos
+            if (valorMinimoInput && valorMaximoInput) {
+                const min = parseFloat(valorMinimoInput.value);
+                const max = parseFloat(valorMaximoInput.value);
+                
+                if (!isNaN(min) && !isNaN(max) && min > max) {
+                    e.preventDefault();
+                    alert('El valor mínimo no puede ser mayor que el valor máximo.');
+                    valorMinimoInput.focus();
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    });
+    
+    // Ejecutar al cargar y cuando cambie el select
+    if (tipoSelect) {
+        toggleCampos();
+        tipoSelect.addEventListener('change', toggleCampos);
+    }
+
+    // También ejecutar cuando se cargue la página (para edición)
+    setTimeout(toggleCampos, 100);
 });
 </script>
 
