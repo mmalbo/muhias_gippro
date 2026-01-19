@@ -31,8 +31,8 @@
                                     {% elif produccion.estado == 'En proceso: Iniciando mezcla' %}bg-info
                                     {% elif produccion.estado == 'En proceso: Agitado' %}bg-info
                                     {% elif produccion.estado == 'En proceso: Validación' %}bg-warning
-                                    {% elif produccion.estado == 'Concluida' %}bg-success
-                                    {% elif produccion.estado == 'Cancelada' %}bg-danger
+                                    {% elif produccion.estado == 'Concluida-Satisfactoria' %}bg-success
+                                    {% elif produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' %}bg-danger
                                     {% else %}bg-secondary{% endif %}">
                                     {{ produccion.estado }}
                                 </span></td>

@@ -3,7 +3,8 @@ CHOICE_ESTADO_PROD = (
     ('En proceso: Iniciando mezcla', 'En proceso: Iniciando mezcla'),
     ('En proceso: Agitado', 'En proceso: Agitado'),
     ('En proceso: Validación', 'En proceso: Validación'),
-    ('Concluida', 'Concluida'),
+    ('Concluida-Satisfactoria', 'Concluida-Satisfactoria'),
+    ('Concluida-Rechazada', 'Concluida-Rechazada'),
     ('Cancelada', 'Cancelada')
 )
 

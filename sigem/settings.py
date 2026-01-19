@@ -73,7 +73,7 @@ INSTALLED_APPS = [
     'principal.apps.PrincipalConfig',
     'produccion.apps.ProduccionConfig',
     'producto.apps.ProductoConfig',
-    'registro_perdida_almacen.apps.RegistroPerdidaAlmacenConfig',
+    #'registro_perdida_almacen.apps.RegistroPerdidaAlmacenConfig',
     'usuario.apps.UsuarioConfig',
     'adquisiciones.apps.AdquisicionesConfig',
     'utils.apps.UtilsConfig',

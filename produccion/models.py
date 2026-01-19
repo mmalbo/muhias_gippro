@@ -153,11 +153,17 @@ class ParametroPrueba(models.Model):
 
     def es_organoleptico(self):
         """Determina si el parámetro requiere evaluación manual"""
-        return self.tipo in ['organoleptico']
+        if self.tipo in ['organoleptico']:
+            return True
+        else:
+            return False
     
     def es_numerico(self):
         """Determina si el parámetro es numérico"""
-        return self.tipo in ['fisico', 'quimico', 'microbiologico']
+        if self.tipo in ['fisico', 'quimico', 'microbiologico']:
+            return True
+        else:
+            return False
 
 class PruebaQuimica(models.Model):
     """Registro completo de una prueba química realizada"""
@@ -174,12 +180,12 @@ class PruebaQuimica(models.Model):
                                          verbose_name="Archivo de Resultados" )
     # Resultado general
     resultado_final = models.BooleanField(null=True, blank=True)  # True=Aprobado, False=Rechazado
-    fecha_aprobacion = models.DateTimeField(auto_now_add=True)
+    fecha_aprobacion = models.DateField(auto_now_add=True)
     #aprobado_por = models.ForeignKey( 'CustomUser', on_delete=models.SET_NULL, null=True, blank=True, 
                                      #related_name='pruebas_aprobadas' )
     
     class Meta:
-        #db_table = 'prueba_quimica'
+        #db_table = 'prueba_quimica'- {self.fecha_prueba.date()}
         verbose_name = 'Prueba Química'
         verbose_name_plural = 'Pruebas Químicas'
         ordering = ['-fecha_prueba']
@@ -251,6 +257,6 @@ class DetallePruebaQuimica(models.Model):
     
     def save(self, *args, **kwargs):
         # Calcular cumplimiento automáticamente antes de guardar
-        if self.parametro != "organoleptico":
+        if self.parametro.tipo != "organoleptico":
             self.cumplimiento = self.cumple_especificacion
         super().save(*args, **kwargs)
