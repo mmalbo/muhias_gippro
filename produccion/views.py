@@ -539,8 +539,9 @@ def crear_prueba_quimica(request, pk):
                             continue
 
                         print(parametro.tipo)
-                        # Validar valor según tipo si es numérico
-                        if parametro.tipo == 'numerico':
+                        # Validar valor según tipo si es numérico.tipo in ['fisico', 'quimico', 'microbiologico']
+                        if parametro.tipo in ['fisico', 'quimico', 'microbiologico']:
+                            print(f"✓ Parametro no Organoléptico")
                             try:
                                 valor_decimal = Decimal(str(valor_medido).replace(',', '.'))
                                 
@@ -558,15 +559,22 @@ def crear_prueba_quimica(request, pk):
                             except (InvalidOperation, ValueError):
                                 errores_validacion.append(f'Parámetro {parametro.nombre}: Valor "{valor_medido}" no es numérico válido')
                                 continue
-                        
+                        else:
+                            print(f"No entró al if porque es Organole...")
                         # Crear detalle de prueba química
-                        DetallePruebaQuimica.objects.create(
-                            prueba=prueba,
-                            parametro=parametro,
-                            valor_medido=Decimal(valor_medido),
-                            # Puedes calcular automáticamente si cumple
-                            cumplimiento=parametro.validar_valor(valor_medido) if hasattr(parametro, 'validar_valor') else True
-                        )
+                        if parametro.tipo in ['fisico', 'quimico', 'microbiologico']:
+                            DetallePruebaQuimica.objects.create( 
+                                                                prueba=prueba, 
+                                                                parametro=parametro, 
+                                                                valor_medido=Decimal(valor_medido), 
+                                                                )
+                        else:
+                            DetallePruebaQuimica.objects.create( 
+                                                                prueba=prueba,
+                                                                parametro=parametro, 
+                                                                valor_medido=valor_medido, 
+                                                                cumplimiento=False,  
+                                                                )
                         
                         parametros_procesados += 1
                 
@@ -619,11 +627,9 @@ def detalle_prueba_quimica(request, pk):
     total_parametros = parametros.count()
     parametros_aprobados = parametros.filter(cumplimiento=True).count()
     parametros_rechazados = total_parametros - parametros_aprobados
-    print(parametros_aprobados)
     
     porcentaje_aprobacion = 0
     if total_parametros > 0:
-        print(f"{total_parametros}")
         porcentaje_aprobacion = round((parametros_aprobados / total_parametros) * 100, 2)
     
     context = {
@@ -742,16 +748,47 @@ def detalle_parametro(request, parametro_id):
 
 #Gestión parámetros de una prueba química
 @login_required
-def agregar_parametros_prueba(request, prueba_id):
-    """Agregar múltiples parámetros a una prueba"""
-    prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
-    
+def agregar_parametros_prueba_ant(request, prueba_id):
     try:
-        data = json.loads(request.POST.get('parametros', '[]'))
+        """Agregar múltiples parámetros a una prueba"""
+        prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
+        print("-----")
+        print(f"✓ Prueba: {prueba.nomenclador_prueba}")
+        print("--XXX--")
+
+        parametros_data = request.POST.get('parametros')
+        #data = json.loads(request.POST.get('parametros', '[]'))
+        # DEBUG: Ver qué está llegando
+        print("=== DEBUG RECEPCIÓN DE DATOS ===")
+        print(f"Request method: {request.method}")
+        print(f"Request POST: {request.POST}")
+        print(f"Request body: {request.body}")
+        print(f"parametros_data: {parametros_data}")
+        print("================================")
+
+        if not parametros_data:
+            return JsonResponse({
+                'success': False,
+                'message': 'No se recibieron datos de parámetros'
+            })
         
-        for item in data:
+        # Parsear JSON
+        try:
+            print("Estoy aqui dentro")
+            parametros = json.loads(parametros_data)
+        except json.JSONDecodeError as e:
+            print("fallo")
+            return JsonResponse({
+                'success': False,
+                'message': f'Error en formato JSON: {str(e)}'
+            })
+        print("--XXX--")
+        print(parametros)
+        print("--XXX--")
+        for item in parametros:
             parametro = get_object_or_404(ParametroPrueba, id=item['parametro_id'])
-            
+            print(f"✓ Parametro: {parametro.nombre}")
+            print(f"✓ Parametro: {parametro.tipo}")
             # Crear nuevo parámetro de prueba
             if parametro.es_numerico:
                 DetallePruebaQuimica.objects.create(
@@ -779,6 +816,135 @@ def agregar_parametros_prueba(request, prueba_id):
             'success': False,
             'message': str(e)
         }, status=400)
+
+@login_required
+@require_POST
+def agregar_parametros_prueba(request, prueba_id):
+    """
+    View para agregar múltiples parámetros a una prueba química
+    """
+    # Obtener la prueba
+    try:
+        prueba = get_object_or_404(PruebaQuimica, id=prueba_id)
+        
+    except PruebaQuimica.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': f'La prueba con ID {prueba_id} no existe'
+        }, status=404)
+    
+    try:
+        # Obtener datos JSON del body
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+                parametros = data.get('parametros', [])
+                
+            except json.JSONDecodeError as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Error en formato JSON: {str(e)}'
+                }, status=400)
+        else:
+            # Intentar obtener de POST también
+            parametros_data = request.POST.get('parametros')
+            if parametros_data:
+                try:
+                    parametros = json.loads(parametros_data)
+                    
+                except:
+                    parametros = []
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Formato de datos no soportado. Use JSON.'
+                }, status=400)
+        
+        # Validar que hay parámetros
+        if not parametros or len(parametros) == 0:
+            return JsonResponse({
+                'success': False,
+                'message': 'No se recibieron datos de parámetros'
+            }, status=400)
+        
+        # Validar estructura de cada parámetro
+        for i, param in enumerate(parametros):
+            if 'parametro_id' not in param or 'valor_medido' not in param:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Parámetro {i+1} incompleto. Faltan campos requeridos.'
+                }, status=400)
+        
+        # Crear parámetros
+        parametros_creados = []
+        errores = []
+        
+        for i, param in enumerate(parametros):
+            try:
+                parametro_id = param['parametro_id']
+                valor_medido = param['valor_medido']
+                observaciones = param.get('observaciones', '')
+
+                # Obtener el objeto Parametro
+                try:
+                    parametro_obj = ParametroPrueba.objects.get(id=parametro_id)
+                    
+                except ParametroPrueba.DoesNotExist:
+                    errores.append(f"Parámetro ID {parametro_id} no existe")
+                    continue
+               
+                # Crear ParametroPruebaQuimica
+                if parametro_obj.tipo in ['fisico', 'quimico', 'microbiologico']:
+                    param_prueba = DetallePruebaQuimica.objects.create(
+                        prueba=prueba, 
+                        parametro=parametro_obj, 
+                        valor_medido=Decimal(valor_medido),
+                        observaciones=observaciones
+                    )
+                else:
+                    param_prueba = DetallePruebaQuimica.objects.create(
+                        prueba=prueba, 
+                        parametro=parametro_obj, 
+                        valor_medido=valor_medido,
+                        cumplimiento=False,
+                        observaciones=observaciones
+                    )
+                
+                parametros_creados.append({
+                    'id': param_prueba.id,
+                    'nombre': parametro_obj.nombre,
+                    'valor': valor_medido,
+                    'unidad': parametro_obj.unidad_medida or ''
+                })
+                
+            except Exception as e:
+                error_msg = f"Error en parámetro {i+1}: {str(e)}"
+                errores.append(error_msg)
+                
+        if errores:
+            return JsonResponse({
+                'success': False,
+                'message': 'Algunos parámetros no pudieron crearse',
+                'errores': errores,
+                'creados': parametros_creados
+            })
+        
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Se agregaron {len(parametros_creados)} parámetros correctamente',
+            'parametros': parametros_creados,
+            #'total_parametros': prueba.parametros_creados.count()
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Error inesperado: {str(e)}'
+        }, status=500)
 
 @login_required
 def editar_parametro_prueba(request, pk):
@@ -828,6 +994,78 @@ def eliminar_parametro_prueba(request, parametro_id):
             'success': False,
             'message': str(e)
         }, status=400)
+
+@login_required
+@require_POST
+def concluir_prueba(request, pk):
+    prueba = get_object_or_404(PruebaQuimica, id=pk)
+                
+    if prueba.estado in ['APROBADA', 'RECHAZADA', 'CANCELADA']:
+        messages.error(request, 'Esta prueba ya ha sido concluida anteriormente.')
+        return render(request, 'produccion/prueba_quimica/detalle_prueba_quimica.html', {
+            'prueba': prueba,
+            'parametros': prueba.detalles.all(),
+            'error': True
+        })
+    
+    # Obtener datos del formulario
+    decision_final = request.POST.get('decision_final')
+    observaciones_generales = request.POST.get('observaciones_generales', '')
+
+    # Validaciones
+    if not decision_final:
+        messages.error(request, 'Debe seleccionar una decisión final.')
+        return render(request, 'produccion/detalle_prueba_quimica.html', {
+            'prueba': prueba,
+            'parametros': prueba.detalles.all(),
+            'error': True
+        })
+    
+    try:
+        # Actualizar prueba
+        prueba.estado = decision_final
+        if prueba.estado == 'Aprobada':
+            prueba.resultado_final = True
+            prueba.produccion.estado = 'Concluida-Satisfactoria'
+            prueba.produccion.save()
+        elif prueba.estado == 'Rechazada':
+            prueba.resultado_final = False
+            prueba.produccion.estado = 'Concluida-Rechazada'
+            prueba.produccion.save() 
+        prueba.observaciones = observaciones_generales
+        #prueba.evaluado_por = request.user
+        prueba.fecha_aprobacion = timezone.now()
+        
+        # Si hay parámetros específicos con observaciones
+        for key, value in request.POST.items():
+            if key.startswith('observaciones_'):
+                detalle_id = key.replace('observaciones_', '')
+                if detalle_id != 'generales':
+                    try:
+                        detalle = DetallePruebaQuimica.objects.get(id=detalle_id, prueba=prueba)
+                        detalle.observaciones = value
+                        detalle.save()
+                    except DetallePruebaQuimica.DoesNotExist:
+                        continue
+
+        prueba.save()       
+        # Mensaje de éxito
+        #messages.success(request, f'Prueba {decision_final.lower()} correctamente.')
+        # Redirigir a la página de detalle //redirect('detalle_prueba_quimica', pk=prueba.produccion.id)
+        #return redirect('produccion_list')
+        return JsonResponse({
+            'success': True,
+            'message': f'Prueba {prueba.estado.lower()} correctamente.',
+            'redirect_url': reverse('detalle_prueba_quimica', args=[prueba.produccion.id])
+        })    
+        
+    except Exception as e:
+        messages.error(request, f'Error al concluir la prueba: {str(e)}')
+        return render(request, 'produccion/prueba_quimica/detalle_prueba_quimica.html', {
+            'prueba': prueba,
+            'parametros': prueba.detalles.all(),
+            'error': True
+        })
 
 @login_required
 def calcular_resultados_prueba(request, prueba_id):

@@ -84,15 +84,17 @@
                         </button> -->
                         
                         <!-- Botón para concluir prueba (si está pendiente) -->
-                        {% if prueba.estado != 'APROBADA' and prueba.estado != 'RECHAZADA' and prueba.estado != 'CANCELADA' %}
-                        <a href="{% url 'calcular_resultados_prueba' prueba.id %}" class="btn btn-success">
-                            <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
-                        </a>
+                        {% if prueba.estado != 'Aprobada' and prueba.estado != 'Rechazada' and prueba.estado != 'Cancelada' %}
+                            <button type="button" class="btn btn-success" id="btnConcluirPrueba">
+                                <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
+                            </button>
                         {% endif %}
                         
-                        <!-- <button type="button" class="btn btn-success" id="btnConcluirPrueba"></button>
+                        <!--<a href="{% url 'calcular_resultados_prueba' prueba.id %}" class="btn btn-success">
+                            <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
+                        </a>
                                 Botón para cambiar estado 
-                        <div class="btn-group" role="group">
+                            <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-info dropdown-toggle" 
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-sync-alt me-2"></i> Cambiar Estado
@@ -284,13 +286,14 @@
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
                     <i class="fas fa-flag-checkered me-2"></i>
-                    Concluir Prueba Química
+                    Concluir Prueba Química - Evaluación Final
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="#" id="formConcluirPrueba">
+            <form method="post" action="{% url 'concluir_prueba_quimica' prueba.pk %}" id="formConcluirPrueba">
                 {% csrf_token %}
                 <div class="modal-body">
+                    <!-- Resumen Estadístico -->
                     <div class="alert alert-info">
                         <h6><i class="fas fa-chart-pie me-2"></i> Resumen de Resultados</h6>
                         <div class="row mt-2">
@@ -308,38 +311,147 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="resultadoFinal" class="form-label">Resultado Final</label>
-                        <textarea class="form-control" id="resultadoFinal" name="resultado_final" 
-                                  rows="4" placeholder="Describa el resultado final de la prueba..."></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="observacionesFinal" class="form-label">Observaciones</label>
-                        <textarea class="form-control" id="observacionesFinal" name="observaciones" 
-                                  rows="3" placeholder="Observaciones adicionales..."></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Decisión Final</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="aprobado" id="aprobadoSi" value="true">
-                            <label class="form-check-label text-success" for="aprobadoSi">
-                                <i class="fas fa-thumbs-up me-2"></i> Aprobar Prueba
-                            </label>
+
+                    <!-- Tabla de todos los parámetros evaluados -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list-check me-2"></i>
+                                Resumen de Parámetros Evaluados
+                                <small class="text-muted ms-2">({{ total_parametros }} registros)</small>
+                            </h6>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="aprobado" id="aprobadoNo" value="false">
-                            <label class="form-check-label text-danger" for="aprobadoNo">
-                                <i class="fas fa-thumbs-down me-2"></i> Rechazar Prueba
-                            </label>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th width="5%">#</th>
+                                            <th width="25%">Parámetro</th>
+                                            <th width="15%">Valor Medido</th>
+                                            <th width="10%">Estado</th>
+                                            <th width="30%">Observaciones/Justificación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detalle in parametros %}
+                                        <tr class="{% if detalle.cumplimiento %}table-success{% else %}table-danger{% endif %}">
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>
+                                                <strong>{{ detalle.parametro.nombre }}</strong>                                                
+                                            </td>
+                                            <td>
+                                                {{ detalle.valor_medido }}
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if detalle.cumplimiento %}bg-success{% else %}bg-danger{% endif %}">
+                                                    <i class="fas fa-{% if detalle.cumplimiento %}check{% else %}times{% endif %} me-1"></i>
+                                                    {% if detalle.cumplimiento %}OK{% else %}Falla{% endif %}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <textarea class="form-control form-control-sm observacion-final" 
+                                                          name="observaciones_{{ detalle.id }}"
+                                                          rows="2" placeholder="Observaciones para este parámetro..."
+                                                          {% if detalle.observaciones %}value="{{ detalle.observaciones }}"{% endif %}></textarea>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Decisión Final -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-clipboard-check me-2"></i>
+                                        Decisión Final Manual
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="decision_final" id="decisionAprobar" value="Aprobada" required>
+                                        <label class="form-check-label text-success" for="decisionAprobar">
+                                            <i class="fas fa-thumbs-up fa-2x me-2"></i>
+                                            <div>
+                                                <strong>APROBAR PRUEBA</strong><br>
+                                                <small class="text-muted">La prueba cumple con los requisitos de calidad</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="decision_final" id="decisionRechazar" value="Rechazada">
+                                        <label class="form-check-label text-danger" for="decisionRechazar">
+                                            <i class="fas fa-thumbs-down fa-2x me-2"></i>
+                                            <div>
+                                                <strong>RECHAZAR PRUEBA</strong><br>
+                                                <small class="text-muted">La prueba NO cumple con los requisitos de calidad</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <!--<div class="form-check">
+                                        <input class="form-check-input" type="radio" name="decision_final" id="decisionCondicional" value="APROBADA_CONDICIONAL">
+                                        <label class="form-check-label text-warning" for="decisionCondicional">
+                                            <i class="fas fa-exclamation-triangle fa-2x me-2"></i>
+                                            <div>
+                                                <strong>APROBAR CON OBSERVACIONES</strong><br>
+                                                <small class="text-muted">Aprobar con condiciones específicas</small>
+                                            </div>
+                                        </label>
+                                    </div>-->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-file-signature me-2"></i>
+                                        Documentación Final
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="observacionesFinal" class="form-label">
+                                            <i class="fas fa-sticky-note me-1"></i> Observaciones Generales
+                                        </label>
+                                        <textarea class="form-control" id="observacionesFinal" name="observaciones_generales" 
+                                                  rows="3" placeholder="Observaciones adicionales sobre la prueba..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Validación de firma -->
+                <div class="alert alert-warning mt-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmacionResponsable" required>
+                        <label class="form-check-label" for="confirmacionResponsable">
+                            <i class="fas fa-signature me-2"></i>
+                            <strong>CONFIRMACIÓN DEL RESPONSABLE</strong><br>
+                                Yo, <strong>{{ user.get_full_name|default:user.username }}</strong>, confirmo que he revisado todos los parámetros 
+                                y tomo la decisión final sobre el resultado de esta prueba química. Esta acción registrará 
+                                mi nombre como responsable de la evaluación y no podrá ser revertida.
+                        </label>
+                    </div>
+                </div>
+
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Confirmar Conclusión</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary"id="btnConfirmarConclusion">
+                        <i class="fas fa-check-double me-1"></i>Confirmar Conclusión
+                    </button>
                 </div>
             </form>
         </div>
@@ -425,6 +537,77 @@
 {% block javascript %}
 
 <script>
+// Función para mostrar mensajes toast/alert
+function mostrarMensaje(tipo, mensaje, duracion = 3000) {
+    // Tipos: 'success', 'error', 'warning', 'info'
+    
+    // Si ya existe una librería de notificaciones, úsala
+    // De lo contrario, crea una notificación simple
+    
+    // Opción 1: Usar Bootstrap Toast (si estás usando Bootstrap 5)
+    if (typeof bootstrap !== 'undefined') {
+        // Crear elemento toast
+        const toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            // Crear contenedor si no existe
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '1050';
+            document.body.appendChild(container);
+        }
+        
+        // Crear toast
+        const toastId = 'toast-' + Date.now();
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-bg-${tipo === 'error' ? 'danger' : tipo} border-0`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        toastEl.id = toastId;
+        
+        // Contenido del toast
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${getIconoPorTipo(tipo)} me-2"></i>
+                    ${mensaje}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                        data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        document.getElementById('toastContainer').appendChild(toastEl);
+        
+        // Mostrar toast
+        const toast = new bootstrap.Toast(toastEl, {
+            delay: duracion,
+            autohide: true
+        });
+        toast.show();
+        
+        // Remover después de ocultar
+        toastEl.addEventListener('hidden.bs.toast', function() {
+            toastEl.remove();
+        });
+        
+    } else {
+        // Opción 2: Alert simple (como fallback)
+        alert(`${tipo.toUpperCase()}: ${mensaje}`);
+    }
+}
+
+// Función auxiliar para obtener icono según tipo
+function getIconoPorTipo(tipo) {
+    const iconos = {
+        'success': 'check-circle',
+        'error': 'exclamation-circle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+    };
+    return iconos[tipo] || 'info-circle';
+}
 
 function getCSRFToken() {
     return '{{ csrf_token }}';  // Esto funciona si estás en un template
@@ -522,7 +705,7 @@ $(document).on('click', '.btn-guardar', function() {
             }
             
             // 3. Actualizar contadores globales
-            actualizarContadores();
+            //actualizarContadores();
             
             // 4. Mostrar mensaje de éxito
             mostrarMensaje('success', '¡Valor actualizado correctamente!');
@@ -628,38 +811,68 @@ $('#btnAgregarMas').on('click', agregarCampoParametro);
 // Guardar nuevos parámetros
 $('#formAgregarParametros').on('submit', function(e) {
     e.preventDefault();
-        
-    const parametrosData = [];
+
+    console.log('=== INICIANDO ENVÍO DE PARÁMETROS ===');
+
+    const parametros = [];
     let valido = true;
+    let contador = 0;
         
     // Validar y recopilar datos
     $('.parametro-dinamico').each(function() {
+        contador++;
         const $select = $(this).find('.parametro-select');
         const $valor = $(this).find('.valor-input');
         const $observacion = $(this).find('.observacion-input');
         
-        if (!$select.val() || !$valor.val().trim()) {
+        /*if (!$select.val() || !$valor.val().trim()) {
             valido = false;
             $(this).addClass('border-danger');
-            return false;
+            return false; =>True
+        }*/
+
+        const parametroId = $select.val();
+        const valorMedido = $valor.val().trim();
+
+        console.log(`Parámetro:`, {
+            parametro_id: parametroId,
+            valor_medido: valorMedido,
+            select_val: $select.val(),
+            valor_val: $valor.val()
+        });
+        
+        if (!parametroId || !valorMedido) {
+            valido = false;
+            $(this).addClass('border-danger');
+            console.log(`❌ Parámetro ${index + 1} incompleto`);
+            return true; // Continuar con el siguiente
         }
             
         $(this).removeClass('border-danger');
             
-        parametrosData.push({
-            parametro_id: $select.val(),
+        parametros.push({
+            parametro_id: parametroId,
+            valor_medido: valorMedido,
+            observaciones: $observacion.val().trim() || ''
+            /*parametro_id: $select.val(),
             valor_medido: $valor.val().trim(),
             observaciones: $observacion.val().trim(),
-            parametro_nombre: $select.find('option:selected').text()
+            parametro_nombre: $select.find('option:selected').text()*/
         });
+
+        console.log(`✅ Parámetro válido`);
+
     });
-        
+    
+    console.log('Total parámetros válidos:', parametros.length);
+    console.log('Parámetros a enviar:', parametros);
+
     if (!valido) {
         mostrarMensaje('warning', 'Complete todos los campos requeridos (marcados en rojo)');
         return;
     }
         
-    if (parametrosData.length === 0) {
+    if (parametros.length === 0) {
         mostrarMensaje('warning', 'Agregue al menos un parámetro');
         return;
     }
@@ -668,25 +881,108 @@ $('#formAgregarParametros').on('submit', function(e) {
     const $submitBtn = $('#formAgregarParametros button[type="submit"]');
     $submitBtn.prop('disabled', true)
         .html('<i class="fas fa-spinner fa-spin me-1"></i> Guardando...');
-       
+    
+    const pruebaId = "{{ prueba.id }}";
+    const url = `/produccion/prueba-quimica/${pruebaId}/agregar-parametros/`;
+
+    // **DEBUG: Mostrar datos que se enviarán**
+    console.log('=== DATOS A ENVIAR ===');
+    console.log('URL:', url);
+    console.log('Prueba ID:', pruebaId);
+    console.log('Parámetros:', parametros);
+    console.log('CSRF Token:', getCSRFToken());
+
+    // Crear FormData para enviar como multipart/form-data
+    /*const formData = new FormData();
+    formData.append('parametros', JSON.stringify(parametros));*/
+
+    // **OPCIÓN 1: Enviar como JSON puro (RECOMENDADO)**
+    const dataToSend = {
+        parametros: parametros,
+        prueba_id: pruebaId
+    };
+
+    console.log('Datos a enviar (JSON):', JSON.stringify(dataToSend));
+
+    // **IMPORTANTE: Agregar el CSRF token al FormData**
+    // Django busca 'csrfmiddlewaretoken' en POST data, no solo en headers
+    const csrfToken = getCSRFToken();
+    //formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    /*console.log('FormData entries:');
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }*/
+
     // Enviar datos al servidor
-    fetch(URLS.agregarParametros, {
+    fetch(`/produccion/prueba-quimica/${pruebaId}/agregar-parametros/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken(),
+            'X-CSRFToken': csrfToken,  // Para Django's CSRF protection via headers //getCSRFToken(),
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
-            parametros: parametrosData,
+            parametros: parametros,
+            })
+        //formData
+        /*JSON.stringify({
+            parametros: parametros,
             csrfmiddlewaretoken: getCSRFToken()
-        })
+        })*/
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Respuesta HTTP recibida. Status:', response.status);
+        
+        if (!response.ok) {
+            console.error('Error HTTP:', response.status, response.statusText);
+            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return response.json();
+    })
+    //response.json())
+    /*.then(response => {
+         No uses 'Content-Type' header cuando uses FormData
+        //const contentType = response.headers.get('content-type');
+        // Verificar si la respuesta es JSON
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        }
+        throw new Error('Respuesta no es JSON');
+        
+        console.log('Respuesta recibida. Status:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            // Si es error 400, obtener más detalles
+            if (response.status === 400) {
+                return response.text().then(text => {
+                    console.error('Error 400 - Detalles:', text);
+                    throw new Error(`Error 400: ${text}`);
+                });
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        }
+        return response.text().then(text => {
+            console.warn('Respuesta no es JSON:', text);
+            throw new Error('Respuesta no es JSON');
+        });
+    })*/
     .then(data => {
+        console.log('Datos recibidos del servidor:', data);
+
         if (data.success) {
-            mostrarMensaje('success', data.message || 'Parámetros agregados correctamente');
-              
+            mostrarMensaje('success', data.message || 'Parámetros agregados correctamente'); 
+            
+            // Ocultar formulario de nuevos parámetros
+            $('#nuevosParametrosContainer').hide();
+            $('#parametrosDinamicos').empty();
+
             // Recargar la página después de un breve retraso
             setTimeout(() => {
                 location.reload();
@@ -703,6 +999,335 @@ $('#formAgregarParametros').on('submit', function(e) {
         $submitBtn.prop('disabled', false)
             .html('<i class="fas fa-save me-1"></i> Guardar Todos');
     });
+});
+
+
+// ============================================
+// 2. MANEJO DEL MODAL DE CONCLUSIÓN
+// ============================================
+// URL de la vista
+const URL_CONCLUIR = "{% url 'concluir_prueba_quimica' prueba.id %}";
+
+$('#btnConcluirPrueba').on('click', function() {
+    // Verificar que haya parámetros registrados
+    if ({{ total_parametros }} == 0) {
+        Swal.fire({
+            title: 'Prueba sin parámetros',
+            text: 'Debe registrar al menos un parámetro antes de concluir la prueba.',
+            icon: 'warning',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalConcluirPrueba'));
+    modal.show();
+});
+
+$('#formConcluirPrueba').on('submit', function(e) {
+    e.preventDefault(); // Prevenir envío normal
+    
+    console.log('=== FORMULARIO ENVIADO ===');
+    
+    // Validaciones básicas
+    const decisionSeleccionada = $('input[name="decision_final"]:checked').val();
+    if (!decisionSeleccionada) {
+        mostrarMensaje('warning', 'Debe seleccionar una decisión final');
+        return false;
+    }
+    
+    /*const resultadoFinal = $('#resultadoFinal').val().trim();
+    if (!resultadoFinal) {
+        mostrarMensaje('warning', 'Debe ingresar un resultado final');
+        $('#resultadoFinal').focus();
+        return false;
+    }*/
+    
+    if (!$('#confirmacionResponsable').is(':checked')) {
+        mostrarMensaje('warning', 'Debe confirmar que es el responsable');
+        return false;
+    }
+    
+    // Preparar datos
+    const formData = new FormData(this);
+    
+    // Agregar CSRF token manualmente
+    const csrfToken = $('input[name="csrfmiddlewaretoken"]', this).val();
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    // Mostrar datos en consola para depuración
+    console.log('Datos a enviar:');
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+    
+    // Mostrar confirmación
+    const decisionTexto = decisionSeleccionada === 'Aprobada' ? 'APROBAR' : 'RECHAZAR';
+    
+    Swal.fire({
+        title: `¿${decisionTexto} la prueba?`,
+        html: `
+            <div class="text-start">
+                <p><strong>Resumen:</strong></p>
+                <ul>
+                    <li><strong>Total Parámetros:</strong> {{ total_parametros }}</li>
+                    <li><strong>Decisión:</strong> ${decisionTexto}</li>
+                    <li><strong>Responsable:</strong> {{ user.get_full_name|default:user.username }}</li>
+                </ul>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Deshabilitar botón
+            const $btn = $('#btnConfirmarConclusion');
+            $btn.prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin me-1"></i> Procesando...');
+            
+            // Enviar datos
+            fetch(URL_CONCLUIR, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                console.log('Status:', response.status);
+                console.log('Response:', response);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Respuesta:', data);
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: 'Continuar'
+                    }).then(() => {
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Entendido'
+                    });
+                    $btn.prop('disabled', false)
+                        .html('<i class="fas fa-check-double me-1"></i> Confirmar');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor',
+                    icon: 'error',
+                    confirmButtonText: 'Entendido'
+                });
+                $btn.prop('disabled', false)
+                    .html('<i class="fas fa-check-double me-1"></i> Confirmar');
+            });
+        }
+    });
+    
+    return false;
+});
+
+// Función para recolectar observaciones de parámetros
+/*function recolectarObservacionesParametros() {
+    const observaciones = {};
+    
+    $('.observacion-parametro').each(function() {
+        const textarea = $(this);
+        const name = textarea.attr('name');
+        const value = textarea.val().trim();
+        
+        if (name && value) {
+            observaciones[name] = value;
+        }
+    });
+    
+    return observaciones;
+}
+*/
+// Función para validar formulario de conclusión
+/*function validarFormularioConcluir() {
+    // Verificar que se haya seleccionado una decisión
+    const decisionSeleccionada = $('input[name="decision_final"]:checked').val();
+    if (!decisionSeleccionada) {
+        mostrarMensaje('warning', 'Debe seleccionar una decisión final');
+        return false;
+    }
+    
+    // Verificar confirmación del responsable
+    if (!$('#confirmacionResponsable').is(':checked')) {
+        mostrarMensaje('warning', 'Debe confirmar que es el responsable de la evaluación');
+        return false;
+    }
+    
+    // Verificar resultado final
+    const resultadoFinal = $('#resultadoFinal').val().trim();
+    if (!resultadoFinal) {
+        mostrarMensaje('warning', 'Debe ingresar un resultado final');
+        $('#resultadoFinal').focus();
+        return false;
+    }
+    
+    return true;
+}
+
+// Manejar el clic en el botón Confirmar
+$('#btnConfirmarConclusion').on('click', function() {
+    console.log('=== INICIANDO CONCLUSIÓN ===');
+    console.log('Botón Confirmar clickeado');
+    
+    // Verificar que estamos en el contexto correcto
+    console.log('Elementos .observacion-parametro:', $('.observacion-parametro').length);
+    console.log('Formulario existe:', $('#formConcluirPrueba').length);
+    console.log('Modal visible:', $('#modalConcluirPrueba').is(':visible'));
+    
+    // Validar formulario
+    if (!validarFormularioConcluir()) {
+        console.log('Validación fallida');
+        return;
+    }
+    
+    // Recolectar datos del formulario
+    const formData = new FormData(document.getElementById('formConcluirPrueba'));
+    
+    // Agregar observaciones de parámetros
+    console.log('Recolectando observaciones de parámetros...');
+    const observacionesParametros = recolectarObservacionesParametros();
+    console.log('Observaciones recolectadas:', observacionesParametros);
+    
+    Object.entries(observacionesParametros).forEach(([key, value]) => {
+        formData.append(key, value);
+        console.log('Agregando al formData:', key, '=', value);
+    });
+    
+    // Verificar datos antes de enviar
+    console.log('Datos a enviar:');
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+    
+    // Mostrar confirmación final
+    const decisionSeleccionada = $('input[name="decision_final"]:checked').val();
+    const decisionTexto = {
+        'APROBADA': 'APROBAR',
+        'RECHAZADA': 'RECHAZAR',
+        'APROBADA_CONDICIONAL': 'APROBAR CON OBSERVACIONES'
+    }[decisionSeleccionada] || 'DESCONOCIDA';
+
+    console.log('Mostrando confirmación con decisión:', decisionTexto);
+    
+    Swal.fire({
+        title: `¿${decisionTexto} la prueba?`,
+        html: `
+            <div class="text-start">
+                <p><strong>Resumen de la prueba:</strong></p>
+                <ul>
+                    <li><strong>Total Parámetros:</strong> {{ total_parametros }}</li>
+                    <li><strong>Aprobados automáticamente:</strong> {{ parametros_aprobados_auto }}</li>
+                    <li><strong>% Aprobación automática:</strong> {{ porcentaje_aprobacion_auto }}%</li>
+                    <li><strong>Decisión final:</strong> ${decisionTexto}</li>
+                    <li><strong>Responsable:</strong> {{ user.get_full_name|default:user.username }}</li>
+                </ul>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i> Esta acción no se puede deshacer.</p>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar',
+        width: 600
+    }).then((result) => {
+        if (result.isConfirmed) {
+            console.log('Usuario confirmó, enviando datos...');
+            
+            // Deshabilitar botón y mostrar loading
+            const $btn = $('#btnConfirmarConclusion');
+            $btn.prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin me-1"></i> Procesando...');
+            
+            // Enviar datos al servidor usando fetch
+            fetch(URLS.concluirPrueba, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                console.log('Respuesta del servidor:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Datos recibidos:', data);
+                
+                if (data.success) {
+                    // Mostrar mensaje de éxito
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: 'Continuar'
+                    }).then(() => {
+                        // Redirigir a la página de detalle
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            // Recargar la página
+                            location.reload();
+                        }
+                    });
+                } else {
+                    // Mostrar error
+                    mostrarMensaje('error', data.message || 'Error al concluir la prueba');
+                    
+                    // Rehabilitar botón
+                    $btn.prop('disabled', false)
+                        .html('<i class="fas fa-check-double me-1"></i> Confirmar Conclusión');
+                }
+            })
+            .catch(error => {
+                console.error('Error en la petición:', error);
+                mostrarMensaje('error', 'Error de conexión con el servidor');
+                
+                // Rehabilitar botón
+                $btn.prop('disabled', false)
+                    .html('<i class="fas fa-check-double me-1"></i> Confirmar Conclusión');
+            });
+        }
+    });
+});
+*/
+// También permitir envío con Enter en los textareas
+$('#formConcluirPrueba textarea').on('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+        $('#btnConfirmarConclusion').click();
+    }
 });
 
 </script>
