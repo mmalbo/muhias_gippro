@@ -13,14 +13,15 @@ def notificar_produccion_creada(sender, instance, created, **kwargs):
     
     """Signal para notificar cuando se crea una nueva producción"""
     if created:
+        pass
        # Obtener las materias primas involucradas (si ya están guardadas)
-        materias_primas_info = obtener_materias_primas_de_produccion(instance)
+        #materias_primas_info = obtener_materias_primas_de_produccion(instance)
         
         # 1. NOTIFICACIÓN PARA RESPONSABLES DE ALMACÉN
-        notificar_responsables_almacen(instance, materias_primas_info)
+        #notificar_responsables_almacen(instance, materias_primas_info)
         
         # 2. NOTIFICACIÓN PARA GRUPO ADMINISTRATIVO
-        notificar_grupo_administrativo(instance, materias_primas_info)
+        #notificar_grupo_administrativo(instance, materias_primas_info)
 
 def obtener_materias_primas_de_produccion(produccion):
     """Obtener información de materias primas a través de Prod_Inv_MP"""

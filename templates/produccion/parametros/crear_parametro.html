@@ -233,101 +233,237 @@ document.addEventListener('DOMContentLoaded', function() {
 </script> -->
 
 <script> 
-    document.addEventListener('DOMContentLoaded', function() {
-    const tipoSelect = document.getElementById('id_tipo'); // Cambié el nombre aquí
-    const camposNumericos = document.getElementById('camposNumericos');
-    const camposOrganolepticos = document.getElementById('camposOrganolepticos');
-    const camposOpciones = document.getElementById('camposOpciones');
+$(document).ready(function() {
+    console.log('✅ Documento listo - Inicializando...');
     
-    // Referencias a campos individuales para marcarlos como requeridos/opcionales
-    const unidadMedidaInput = document.querySelector('[name="unidad_medida"]');
-    const valorMinimoInput = document.querySelector('[name="valor_minimo"]');
-    const valorMaximoInput = document.querySelector('[name="valor_maximo"]');
-    const valorObjetivoInput = document.querySelector('[name="valor_objetivo"]');
-
-    function toggleCampos() {
-        const tipoValor = tipoSelect.value ? tipoSelect.value.toLowerCase() : '';
-        const esOrganoleptico = tipoValor.includes('organoleptico') || 
-                                tipoValor.includes('organoléptico') ||
-                                tipoValor === 'organolepticos' ||
-                                tipoValor === 'organolépticos';
+    // Variables
+    let contadorParametros = 0;
+    const $btnAgregar = $('#btnAgregarParametro');
+    const $container = $('#parametrosContainer');
+    const $sinParametros = $('#sinParametros');
+    const $form = $('#pruebaForm');
+    
+    // Función para mostrar/ocultar campos según el tipo de parámetro
+    function actualizarCamposSegunTipo($parametroDiv) {
+        const $select = $parametroDiv.find('.parametro-select');
+        const tipo = $select.find('option:selected').data('tipo');
+        const $valorContainer = $parametroDiv.find('.col-md-3').first();
+        const $cumplimientoContainer = $parametroDiv.find('.cumplimiento-container');
+        const $valorLabel = $parametroDiv.find('.valor-label');
+        const $valorInput = $parametroDiv.find('.valor-input');
+        const $cumplimientoCheck = $parametroDiv.find('.cumplimiento-check');
+        const $cumplimientoHidden = $parametroDiv.find('.cumplimiento-hidden');
         
-        console.log('Tipo seleccionado:', tipoValor, 'Es organoléptico:', esOrganoleptico); // Para depurar
-        
-        // Resetear display de todos los campos condicionales
-        if (camposNumericos) camposNumericos.style.display = 'none';
-        if (camposOrganolepticos) camposOrganolepticos.style.display = 'none';
-        if (camposOpciones) camposOpciones.style.display = 'none';
-        
-        // Mostrar campos según el tipo
-        if (esOrganoleptico) {
-            // Ocultar campos numéricos y mostrar panel informativo
-            if (camposOrganolepticos) camposOrganolepticos.style.display = 'block';
-            if (camposNumericos) camposNumericos.style.display = 'none';
-
-            // Hacer campos numéricos no requeridos
-            if (unidadMedidaInput) unidadMedidaInput.required = false;
-            if (valorMinimoInput) valorMinimoInput.required = false;
-            if (valorMaximoInput) valorMaximoInput.required = false;
-            if (valorObjetivoInput) valorObjetivoInput.required = false;
-            
-            // Limpiar valores
-            if (valorMinimoInput) valorMinimoInput.value = '';
-            if (valorMaximoInput) valorMaximoInput.value = '';
-            if (valorObjetivoInput) valorObjetivoInput.value = '';
-            
-        } else if (tipoValor === 'opciones' || tipoValor === 'cualitativo') {
-            // Mostrar campo de opciones predefinidas
-            if (camposOpciones) camposOpciones.style.display = 'block';
-            if (camposNumericos) camposNumericos.style.display = 'none';
-            
+        if (tipo === 'organoleptico') {
+            // Para organolépticos: mostrar checkbox, ocultar valor medido
+            $cumplimientoContainer.show();
+            $valorContainer.hide();
+            $valorInput.removeAttr('required');
+            $valorInput.val('N/A'); // Valor por defecto para organolépticos
+            $cumplimientoHidden.val('false'); // Resetear a falso
+            $cumplimientoCheck.prop('checked', false);
         } else {
-            // Para otros tipos (físico, químico, microbiológico), mostrar campos numéricos
-            if (camposNumericos) camposNumericos.style.display = 'block';
-            
-            // Hacer campos requeridos si es necesario
-            if (unidadMedidaInput) unidadMedidaInput.required = true;
-            if (valorMinimoInput) valorMinimoInput.required = true;
-            if (valorMaximoInput) valorMaximoInput.required = true;
-            if (valorObjetivoInput) valorObjetivoInput.required = true;
+            // Para otros tipos: mostrar valor medido, ocultar checkbox
+            $cumplimientoContainer.hide();
+            $valorContainer.show();
+            $valorInput.attr('required', 'required');
+            $valorLabel.text('Valor Medido *');
+            $valorInput.val(''); // Limpiar valor
         }
     }
     
-
-    // Validación antes de enviar el formulario
-    document.getElementById('parametroForm').addEventListener('submit', function(e) {
-        const tipoValor = tipoSelect.value ? tipoSelect.value.toLowerCase() : '';
-        const esOrganoleptico = tipoValor.includes('organoleptico') || 
-                                tipoValor.includes('organoléptico') ||
-                                tipoValor === 'organolepticos' ||
-                                tipoValor === 'organolépticos';
+    // Evento para agregar parámetro
+    $btnAgregar.on('click', function() {
+        console.log('🔄 Agregando parámetro...');
+        agregarParametro();
+    });
+    
+    // Función para agregar parámetro
+    function agregarParametro() {
+        try {
+            const template = document.getElementById('parametroTemplate');
+            if (!template) {
+                throw new Error('Template no encontrado');
+            }
+            
+            contadorParametros++;
+            console.log(`➕ Creando parámetro #${contadorParametros}`);
+            
+            // Clonar template
+            const clone = template.content.cloneNode(true);
+            const $parametroDiv = $(clone).find('.parametro-item');
+            
+            // Configurar nombres únicos para cada campo
+            configurarNombresCampos($parametroDiv, contadorParametros);
+            
+            // Configurar eventos
+            configurarEventosParametro($parametroDiv);
+            
+            // Agregar al contenedor
+            $container.append($parametroDiv);
+            
+            // Ocultar mensaje "sin parámetros"
+            $sinParametros.hide();
+            
+            console.log(`✅ Parámetro #${contadorParametros} agregado exitosamente`);
+            
+        } catch (error) {
+            console.error('❌ Error al agregar parámetro:', error);
+            alert('Error al agregar parámetro: ' + error.message);
+        }
+    }
+    
+    // Configurar nombres únicos para los campos
+    function configurarNombresCampos($parametroDiv, index) {
+        // IMPORTANTE: Estos nombres deben coincidir con lo que busca la vista
+        $parametroDiv.find('.parametro-select').attr('name', `parametro_${index}`);
+        $parametroDiv.find('.valor-input').attr('name', `valor_medido_${index}`);
+        // NO necesitas campo separado para cumplimiento, se manejará en el valor_medido
+    }
+    
+    // Configurar eventos del parámetro
+    function configurarEventosParametro($parametroDiv) {
+        // Botón eliminar
+        $parametroDiv.find('.btn-eliminar').on('click', function() {
+            const $item = $(this).closest('.parametro-item');
+            const index = $item.index() + 1;
+            console.log(`🗑️ Eliminando parámetro #${index}`);
+            $item.remove();
+            contadorParametros--;
+            renumerarParametros();
+            verificarParametrosVacios();
+        });
         
-        if (!esOrganoleptico && tipoValor !== 'opciones' && tipoValor !== 'cualitativo') {
-            // Para tipos numéricos, validar campos numéricos
-            if (valorMinimoInput && valorMaximoInput) {
-                const min = parseFloat(valorMinimoInput.value);
-                const max = parseFloat(valorMaximoInput.value);
-                
-                if (!isNaN(min) && !isNaN(max) && min > max) {
-                    e.preventDefault();
-                    alert('El valor mínimo no puede ser mayor que el valor máximo.');
-                    valorMinimoInput.focus();
-                    return false;
+        // Actualizar cuando cambia el parámetro seleccionado
+        $parametroDiv.find('.parametro-select').on('change', function() {
+            // Actualizar unidad de medida
+            const unidad = $(this).find('option:selected').data('unidad') || '';
+            $(this).closest('.parametro-item').find('.unidad-text').text(unidad ? `Unidad: ${unidad}` : '');
+            
+            // Actualizar campos según tipo
+            actualizarCamposSegunTipo($(this).closest('.parametro-item'));
+        });
+        
+        // Manejar cambios en el checkbox de cumplimiento
+        $parametroDiv.find('.cumplimiento-check').on('change', function() {
+            const isChecked = $(this).is(':checked');
+            // Actualizar el campo de valor medido con el valor booleano
+            const $valorInput = $(this).closest('.parametro-item').find('.valor-input');
+            $valorInput.val(isChecked ? 'true' : 'false');
+            console.log(`Cumplimiento actualizado: ${isChecked ? 'true' : 'false'}`);
+        });
+    }
+    
+    // Renumerar parámetros después de eliminar
+    function renumerarParametros() {
+        console.log('🔄 Renumerando parámetros...');
+        
+        $container.find('.parametro-item').each(function(index) {
+            const nuevoIndex = index + 1;
+            configurarNombresCampos($(this), nuevoIndex);
+        });
+        
+        contadorParametros = $container.children().length;
+        console.log(`✅ Renumerado. Total: ${contadorParametros}`);
+    }
+    
+    // Verificar si hay parámetros
+    function verificarParametrosVacios() {
+        if ($container.children().length === 0) {
+            $sinParametros.show();
+            console.log('📭 No hay parámetros');
+        } else {
+            console.log(`📊 Parámetros actuales: ${contadorParametros}`);
+        }
+    }
+    
+    // Validar formulario antes de enviar
+    $form.on('submit', function(e) {
+        console.log('📤 Validando formulario antes de enviar...');
+        
+        // Verificar que haya al menos un parámetro
+        if (contadorParametros === 0) {
+            e.preventDefault();
+            alert('❌ Debe agregar al menos un parámetro para la prueba.');
+            $btnAgregar.focus();
+            return false;
+        }
+        
+        // Verificar que todos los parámetros tengan valores válidos
+        let parametrosCompletos = true;
+        let mensajesError = [];
+        
+        $container.find('.parametro-item').each(function(index) {
+            const $select = $(this).find('.parametro-select');
+            const $valor = $(this).find('.valor-input');
+            const $cumplimientoContainer = $(this).find('.cumplimiento-container');
+            const tipo = $select.find('option:selected').data('tipo');
+            
+            // Validar selección de parámetro
+            if (!$select.val()) {
+                parametrosCompletos = false;
+                mensajesError.push(`Parámetro ${index + 1}: Seleccione un parámetro`);
+                $select.addClass('is-invalid');
+            } else {
+                // Validar según el tipo de parámetro
+                if (tipo === 'organoleptico') {
+                    // Para organolépticos, el valor será 'true' o 'false'
+                    const valorActual = $valor.val();
+                    if (valorActual !== 'true' && valorActual !== 'false') {
+                        parametrosCompletos = false;
+                        mensajesError.push(`Parámetro ${index + 1} (organoléptico): Marque si cumple o no`);
+                        $valor.addClass('is-invalid');
+                    }
+                } else {
+                    // Para otros tipos, verificar valor medido
+                    if (!$valor.val().trim()) {
+                        parametrosCompletos = false;
+                        mensajesError.push(`Parámetro ${index + 1}: Ingrese un valor medido`);
+                        $valor.addClass('is-invalid');
+                    }
                 }
             }
+        });
+        
+        if (!parametrosCompletos) {
+            e.preventDefault();
+            alert('❌ Complete todos los campos requeridos:\n\n' + mensajesError.join('\n'));
+            return false;
+        }
+        
+        // Validar fecha de prueba
+        const fechaPrueba = $('#fecha_prueba').val();
+        if (!fechaPrueba) {
+            e.preventDefault();
+            alert('❌ Ingrese la fecha de la prueba.');
+            $('#fecha_prueba').focus();
+            return false;
+        }
+        
+        console.log('✅ Formulario válido, enviando...');
+        
+        // Mostrar datos que se enviarán (para debug)
+        console.log('📋 Datos a enviar:');
+        const formData = new FormData(this);
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
         }
         
         return true;
     });
     
-    // Ejecutar al cargar y cuando cambie el select
-    if (tipoSelect) {
-        toggleCampos();
-        tipoSelect.addEventListener('change', toggleCampos);
-    }
-
-    // También ejecutar cuando se cargue la página (para edición)
-    setTimeout(toggleCampos, 100);
+    // Eliminar clase de error al cambiar
+    $(document).on('change', '.parametro-select, .valor-input, .cumplimiento-check', function() {
+        $(this).removeClass('is-invalid');
+    });
+    
+    // Agregar primer parámetro automáticamente
+    setTimeout(function() {
+        console.log('🚀 Agregando primer parámetro automáticamente...');
+        agregarParametro();
+    }, 500);
+    
+    console.log('🎉 Configuración completada');
 });
 </script>
 

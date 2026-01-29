@@ -47,13 +47,13 @@ class ProduccionForm(forms.ModelForm):
         help_text="Si el producto no existe en el catálogo, ingrese el nombre aquí"
     )
     
-    class Meta:
+    class Meta: #'lote', 'costo', 
         model = Produccion
-        fields = ['lote', 'cantidad_estimada', 'costo', 'planta', 'prod_result']
+        fields = [ 'cantidad_estimada', 'planta', 'prod_result']
         widgets = {
-            'lote': forms.TextInput(attrs={'class': 'form-control'}),
+            #'lote': forms.TextInput(attrs={'class': 'form-control'}),
             'cantidad_estimada': forms.NumberInput(attrs={'class': 'form-control'}),
-            'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            #'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'prod_result': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             #'planta': forms.Select(attrs={'class': 'form-control'}),
         }

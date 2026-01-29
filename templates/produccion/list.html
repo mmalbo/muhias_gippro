@@ -26,16 +26,34 @@
                                 <td>{{ produccion.cantidad_estimada }}</td>
                                 <td>{{ produccion.costo }}</td>
                                 <td>{{ produccion.planta }}</td>
-                                <td><span class="badge
-                                    {% if produccion.estado == 'Planificada' %}bg-warning
-                                    {% elif produccion.estado == 'En proceso: Iniciando mezcla' %}bg-info
-                                    {% elif produccion.estado == 'En proceso: Agitado' %}bg-info
-                                    {% elif produccion.estado == 'En proceso: Validación' %}bg-warning
-                                    {% elif produccion.estado == 'Concluida-Satisfactoria' %}bg-success
-                                    {% elif produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' %}bg-danger
-                                    {% else %}bg-secondary{% endif %}">
-                                    {{ produccion.estado }}
-                                </span></td>
+                                <td>
+                                    {% if produccion.estado == 'Planificada' or produccion.estado == 'Concluida-Satisfactoria' or produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' %}
+                                        <!-- Estados sin progreso porcentual -->
+                                        <span class="badge
+                                            {% if produccion.estado == 'Planificada' %}bg-warning
+                                            {% elif produccion.estado == 'Concluida-Satisfactoria' %}bg-success
+                                            {% elif produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' %}bg-danger
+                                            {% endif %}">
+                                            {{ produccion.estado }}
+                                        </span>
+                                    {% else %} 
+                                        <!-- Estados con progreso porcentual -->
+                                        {% if produccion.estado == 'En proceso: Iniciando mezcla' %}
+                                            <span class="badge bg-info" style="width: 10%; min-width: 40px; font-size: 0.85em;">
+                                                10%
+                                            </span>
+                                        {% elif produccion.estado == 'En proceso: Agitado' %}
+                                            <span class="badge bg-info" style="width: 50%; min-width: 60px; font-size: 0.9em;">
+                                                40%
+                                            </span>
+                                        {% elif produccion.estado == 'En proceso: Validación' %}
+                                            <span class="badge bg-info" style="width: 80%; min-width: 80px; font-size: 0.95em;">
+                                                80%
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <!--Iniciar producción--> <!-- bi bi-play-btnacciónfast-forward de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->

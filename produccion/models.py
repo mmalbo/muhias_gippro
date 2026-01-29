@@ -1,7 +1,9 @@
+from decimal import Decimal
+import re
 from django.core.validators import FileExtensionValidator
 from django.db import models
 import os
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from bases.bases.models import ModeloBase
 from nomencladores.planta.models import Planta
 from produccion.choices import CHOICE_ESTADO_PROD, CHOICE_ESTADO_SOL, TIPOS_PARAMETRO, ESTADOS_PRUEBA
@@ -65,6 +67,56 @@ class Produccion(ModeloBase):
     def total_materias_primas(self):
         return self.inventarios_prod.count()
 
+    @staticmethod
+    def generar_lote(catalogo_producto, planta, cantidad_estimada=None):
+        """
+        Genera lote con formato: YYMMDD-XXX-XXXX-AG
+        Donde:
+        - YYMMDD: Año (2 dígitos), Mes (2 dígitos), Día (2 dígitos)
+        - XXX: 3 letras del producto (extraídas del nombre comercial)
+        - XXXX: 4 dígitos para litros de volumen (ej: 0020)
+        - AG: Sufijo fijo para 'A Granel'
+        """
+        # 1. Obtener fecha en formato YYMMDD
+        fecha_actual = datetime.now()
+        fecha_codigo = fecha_actual.strftime('%y%m%d')  # YYMMDD
+        
+        # 2. Obtener 3 letras del producto
+        if catalogo_producto.nombre_comercial:
+            # Tomar las primeras 3 letras mayúsculas, eliminar espacios y caracteres especiales
+            nombre = catalogo_producto.nombre_comercial.upper()
+            # Filtrar solo letras
+            letras = re.sub(r'[^A-Z]', '', nombre)
+            
+            if len(letras) >= 3:
+                codigo_producto = letras[:3]
+            elif len(letras) > 0:
+                # Si tiene menos de 3 letras, completar con X
+                codigo_producto = letras + 'X' * (3 - len(letras))
+            else:
+                # Si no tiene letras, usar XXX
+                codigo_producto = 'XXX'
+        else:
+            codigo_producto = 'XXX'
+        
+        # 3. Obtener 4 dígitos para litros de volumen
+        if cantidad_estimada is not None:
+            try:
+                # Convertir a entero y formatear a 4 dígitos
+                litros = int(float(cantidad_estimada))
+                codigo_litros = f"{litros:04d}"
+            except (ValueError, TypeError):
+                codigo_litros = "0000"
+        else:
+            codigo_litros = "0000"
+        
+        # 4. Sufijo fijo
+        sufijo = "AG"  # A Granel
+        
+        # 5. Construir lote completo
+        lote = f"{fecha_codigo}-{codigo_producto}-{codigo_litros}-{sufijo}"
+        return lote
+    
     def puede_ser_cancelada(self):
         """Determina si la producción puede ser cancelada"""
         return self.estado in ['Planificada', 'Iniciando mezcla']
@@ -119,7 +171,7 @@ class ParametroPrueba(models.Model):
     UNIDADES_MEDIDA = [
         ('PH', 'pH'),
         ('%', 'Porcentaje'),
-        ('g/L', 'Gramos por Litro'),
+        ('Kg/L', 'Kilogramos por Litro'),
         ('mg/L', 'Miligramos por Litro'),
         ('cps', 'Centipoise'),
         ('g/cm3', 'Gramos por cm³'),
@@ -234,7 +286,7 @@ class DetallePruebaQuimica(models.Model):
     prueba = models.ForeignKey('PruebaQuimica', on_delete=models.CASCADE, related_name='detalles')
     parametro = models.ForeignKey('ParametroPrueba', on_delete=models.PROTECT)
     valor_medido = models.CharField(max_length=100)  #DecimalField(max_digits=10, decimal_places=3)
-    cumplimiento = models.BooleanField()  # Calculado automáticamente
+    cumplimiento = models.BooleanField()  # Calculado automáticamente o puesto en el caso de los roganolepticos
     observaciones = models.TextField(blank=True)
     
     class Meta:
@@ -249,14 +301,15 @@ class DetallePruebaQuimica(models.Model):
     @property
     def cumple_especificacion(self):
         """Calcula si el valor medido cumple con las especificaciones"""
-        if self.parametro.valor_minimo is not None and self.valor_medido <= self.parametro.valor_minimo:
+        print("En cumple especificacion")
+        if self.parametro.valor_minimo is not None and Decimal(self.valor_medido) <= self.parametro.valor_minimo:
             return False
-        if self.parametro.valor_maximo is not None and self.valor_medido >= self.parametro.valor_maximo:
+        if self.parametro.valor_maximo is not None and Decimal(self.valor_medido) >= self.parametro.valor_maximo:
             return False
         return True
     
     def save(self, *args, **kwargs):
         # Calcular cumplimiento automáticamente antes de guardar
-        if self.parametro.tipo != "organoleptico":
+        if self.parametro.es_numerico(): #tipo != "organoleptico":
             self.cumplimiento = self.cumple_especificacion
         super().save(*args, **kwargs)
