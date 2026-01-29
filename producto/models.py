@@ -11,6 +11,8 @@ class Producto(ModeloBase):
         blank=True, unique=True  # Asegura que el código del producto sea único
     )
 
+    #lote_prod = models.ForeignKey()
+
     nombre_comercial = models.CharField( max_length=255, verbose_name="Nombre comercial", null=False,
         blank=False  # Asegura que este campo no esté vacío
     )

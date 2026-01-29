@@ -30,6 +30,7 @@
                 </div>
                 {#                <h1></h1>#}
                 <div class="col-sm-12 col-lg-12">
+                    <a href="{% url 'planta_crear' %}" class="btn btn-success">Crear nueva planta</a>
                     <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
@@ -70,9 +71,11 @@
                     </table>
 
                     <a href="{% url 'planta_crear' %}" class="btn btn-success">Crear nueva planta</a>
+                    {% if user.is_superuser %}
                     <a href="{% url 'importarPlantas' %}" class="btn btn-success">
                         Importar plantas desde archivo
                     </a>
+                    {% endif %}
 
                 </div>
 

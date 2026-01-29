@@ -29,6 +29,7 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
+                    <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
                     <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
@@ -72,9 +73,11 @@
                         </tfoot>
                     </table>
                     <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+                    {% if user.is_superuser %}
                     <a href="{% url 'importarAlmacenes' %}" class="btn btn-success">
                         Importar almacén desde archivo
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

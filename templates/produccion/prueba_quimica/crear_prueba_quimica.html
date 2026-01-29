@@ -78,9 +78,9 @@
     </div>
 </div>
 
-<!-- Template para parámetro - CORREGIDO -->
+<!-- Template para parámetro - VERSIÓN SIMPLIFICADA -->
 <template id="parametroTemplate">
-    <div class="card mb-3 parametro-item">
+    <div class="card mb-3 parametro-item" data-index="0">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
@@ -92,7 +92,8 @@
                             <option value="{{ parametro.id }}" 
                                     data-min="{{ parametro.valor_minimo|default:'' }}"
                                     data-max="{{ parametro.valor_maximo|default:'' }}"
-                                    data-unidad="{{ parametro.unidad_medida|default:'' }}">
+                                    data-unidad="{{ parametro.unidad_medida|default:'' }}"
+                                    data-tipo="{{ parametro.tipo }}">
                                 {{ parametro.nombre }}
                                 {% if parametro.unidad_medida %}({{ parametro.unidad_medida }}){% endif %}
                             </option>
@@ -100,26 +101,28 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 valor-container">
                     <div class="mb-3">
-                        <label class="form-label">Valor Medido *</label>
+                        <label class="form-label valor-label">Valor Medido *</label>
                         <input type="text" class="form-control valor-input" placeholder="Valor" required>
                         <small class="form-text text-muted unidad-text"></small>
                     </div>
                 </div>
-                <!-- Campo de cumplimiento para organolépticos (oculto inicialmente) -->
+                <!-- Campo de cumplimiento para organolépticos -->
                 <div class="col-md-3 cumplimiento-container" style="display: none;">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input cumplimiento-check" 
-                               id="cumplimiento_{{ forloop.counter }}">
-                        <label class="form-check-label" for="cumplimiento_{{ forloop.counter }}">
-                            <small>Cumple</small>
-                        </label>
+                    <div class="mb-3">
+                        <label class="form-label">Cumplimiento</label>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input cumplimiento-check" value="true">
+                            <label class="form-check-label">
+                                Cumple con el parámetro
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger btn-eliminar">
-                        <i class="fas fa-trash"></i>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm btn-eliminar">
+                        <i class="fas fa-trash"></i> Eliminar
                     </button>
                 </div>
             </div>
@@ -130,28 +133,59 @@
 
 {% block javascript %}
 <script>
-// JavaScript CORREGIDO con numeración automática
+// JavaScript SIMPLIFICADO y CORREGIDO
 
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Documento listo - Inicializando...');
     
     // Variables
     let contadorParametros = 0;
-    const $btnAgregar = $('#btnAgregarParametro');
-    const $container = $('#parametrosContainer');
-    const $sinParametros = $('#sinParametros');
-    const $form = $('#pruebaForm');
+    const btnAgregar = document.getElementById('btnAgregarParametro');
+    const container = document.getElementById('parametrosContainer');
+    const sinParametros = document.getElementById('sinParametros');
+    const form = document.getElementById('pruebaForm');
+    const template = document.getElementById('parametroTemplate');
     
-    // Evento para agregar parámetro
-    $btnAgregar.on('click', function() {
-        console.log('🔄 Agregando parámetro...');
-        agregarParametro();
-    });
+    // Función para mostrar/ocultar campos según el tipo de parámetro
+    function actualizarCamposSegunTipo(parametroItem) {
+        const select = parametroItem.querySelector('.parametro-select');
+        const selectedOption = select.options[select.selectedIndex];
+        const tipo = selectedOption ? selectedOption.getAttribute('data-tipo') : null;
+        
+        const valorContainer = parametroItem.querySelector('.valor-container');
+        const cumplimientoContainer = parametroItem.querySelector('.cumplimiento-container');
+        const valorInput = parametroItem.querySelector('.valor-input');
+        const unidadText = parametroItem.querySelector('.unidad-text');
+        const cumplimientoCheck = parametroItem.querySelector('.cumplimiento-check');
+        
+        // Obtener unidad de medida
+        const unidad = selectedOption ? selectedOption.getAttribute('data-unidad') : '';
+        if (unidadText) {
+            unidadText.textContent = unidad ? `Unidad: ${unidad}` : '';
+        }
+        
+        if (tipo === 'organoleptico') {
+            // Para organolépticos: mostrar checkbox, ocultar valor medido
+            if (valorContainer) valorContainer.style.display = 'none';
+            if (cumplimientoContainer) cumplimientoContainer.style.display = 'block';
+            if (valorInput) {
+                valorInput.removeAttribute('required');
+                valorInput.value = cumplimientoCheck && cumplimientoCheck.checked ? 'true' : 'false';
+            }
+        } else {
+            // Para otros tipos: mostrar valor medido, ocultar checkbox
+            if (valorContainer) valorContainer.style.display = 'block';
+            if (cumplimientoContainer) cumplimientoContainer.style.display = 'none';
+            if (valorInput) {
+                valorInput.setAttribute('required', 'required');
+                valorInput.value = '';
+            }
+        }
+    }
     
     // Función para agregar parámetro
     function agregarParametro() {
         try {
-            const template = document.getElementById('parametroTemplate');
             if (!template) {
                 throw new Error('Template no encontrado');
             }
@@ -160,21 +194,20 @@ $(document).ready(function() {
             console.log(`➕ Creando parámetro #${contadorParametros}`);
             
             // Clonar template
-            const clone = template.content.cloneNode(true);
-            const $parametroDiv = $(clone).find('.parametro-item');
-            const $cumplimientoCheck = $(clone).find('.cumplimiento-check');
+            const clone = document.importNode(template.content, true);
+            const parametroItem = clone.querySelector('.parametro-item');
             
             // Configurar nombres únicos para cada campo
-            configurarNombresCampos($parametroDiv, contadorParametros);
+            configurarNombresCampos(parametroItem, contadorParametros);
             
             // Configurar eventos
-            configurarEventosParametro($parametroDiv);
+            configurarEventosParametro(parametroItem);
             
             // Agregar al contenedor
-            $container.append($parametroDiv);
+            container.appendChild(parametroItem);
             
             // Ocultar mensaje "sin parámetros"
-            $sinParametros.hide();
+            sinParametros.style.display = 'none';
             
             console.log(`✅ Parámetro #${contadorParametros} agregado exitosamente`);
             
@@ -185,59 +218,73 @@ $(document).ready(function() {
     }
     
     // Configurar nombres únicos para los campos
-    function configurarNombresCampos($parametroDiv, index) {
-        // IMPORTANTE: Estos nombres deben coincidir con lo que busca la vista
-        $parametroDiv.find('.parametro-select').attr('name', `parametro_${index}`);
-        $parametroDiv.find('.valor-input').attr('name', `valor_medido_${index}`);
+    function configurarNombresCampos(parametroItem, index) {
+        const select = parametroItem.querySelector('.parametro-select');
+        const valorInput = parametroItem.querySelector('.valor-input');
         
-        // Agregar IDs únicos también
-        $parametroDiv.find('.parametro-select').attr('id', `parametro_${index}`);
-        $parametroDiv.find('.valor-input').attr('id', `valor_medido_${index}`);
+        if (select) {
+            select.setAttribute('name', `parametro_${index}`);
+            select.setAttribute('id', `parametro_${index}`);
+        }
+        
+        if (valorInput) {
+            valorInput.setAttribute('name', `valor_medido_${index}`);
+            valorInput.setAttribute('id', `valor_medido_${index}`);
+        }
     }
     
     // Configurar eventos del parámetro
-    function configurarEventosParametro($parametroDiv) {
+    function configurarEventosParametro(parametroItem) {
         // Botón eliminar
-        $parametroDiv.find('.btn-eliminar').on('click', function() {
-            const $item = $(this).closest('.parametro-item');
-            const index = $item.index() + 1;
-            console.log(`🗑️ Eliminando parámetro #${index}`);
-            $item.remove();
-            contadorParametros--;
-            renumerarParametros();
-            verificarParametrosVacios();
-        });
+        const btnEliminar = parametroItem.querySelector('.btn-eliminar');
+        if (btnEliminar) {
+            btnEliminar.addEventListener('click', function() {
+                console.log(`🗑️ Eliminando parámetro`);
+                parametroItem.remove();
+                contadorParametros--;
+                renumerarParametros();
+                verificarParametrosVacios();
+            });
+        }
         
-        // Actualizar unidad cuando cambia el parámetro
-        $parametroDiv.find('.parametro-select').on('change', function() {
-            const unidad = $(this).find('option:selected').data('unidad') || '';
-            $(this).closest('.parametro-item').find('.unidad-text').text(unidad ? `Unidad: ${unidad}` : '');
-        });
+        // Cambio en el select de parámetro
+        const select = parametroItem.querySelector('.parametro-select');
+        if (select) {
+            select.addEventListener('change', function() {
+                actualizarCamposSegunTipo(parametroItem);
+            });
+        }
+        
+        // Cambio en el checkbox de cumplimiento
+        const checkbox = parametroItem.querySelector('.cumplimiento-check');
+        if (checkbox) {
+            checkbox.addEventListener('change', function() {
+                const valorInput = parametroItem.querySelector('.valor-input');
+                if (valorInput) {
+                    valorInput.value = this.checked ? 'true' : 'false';
+                }
+            });
+        }
     }
     
     // Renumerar parámetros después de eliminar
     function renumerarParametros() {
         console.log('🔄 Renumerando parámetros...');
         
-        $container.find('.parametro-item').each(function(index) {
+        const items = container.querySelectorAll('.parametro-item');
+        items.forEach(function(item, index) {
             const nuevoIndex = index + 1;
-            configurarNombresCampos($(this), nuevoIndex);
-            
-            // Actualizar número visual si lo muestras
-            const $numero = $(this).find('.numero-parametro');
-            if ($numero.length) {
-                $numero.text(nuevoIndex);
-            }
+            configurarNombresCampos(item, nuevoIndex);
         });
         
-        contadorParametros = $container.children().length;
+        contadorParametros = items.length;
         console.log(`✅ Renumerado. Total: ${contadorParametros}`);
     }
     
     // Verificar si hay parámetros
     function verificarParametrosVacios() {
-        if ($container.children().length === 0) {
-            $sinParametros.show();
+        if (container.children.length === 0) {
+            sinParametros.style.display = 'block';
             console.log('📭 No hay parámetros');
         } else {
             console.log(`📊 Parámetros actuales: ${contadorParametros}`);
@@ -245,68 +292,70 @@ $(document).ready(function() {
     }
     
     // Validar formulario antes de enviar
-    $form.on('submit', function(e) {
-        console.log('📤 Validando formulario antes de enviar...');
-        
-        // Verificar que haya al menos un parámetro
-        if (contadorParametros === 0) {
-            e.preventDefault();
-            alert('❌ Debe agregar al menos un parámetro para la prueba.');
-            $btnAgregar.focus();
-            return false;
-        }
-        
-        // Verificar que todos los parámetros tengan valores
-        let parametrosCompletos = true;
-        let mensajesError = [];
-        
-        $container.find('.parametro-item').each(function(index) {
-            const $select = $(this).find('.parametro-select');
-            const $valor = $(this).find('.valor-input');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('📤 Validando formulario antes de enviar...');
             
-            if (!$select.val()) {
-                parametrosCompletos = false;
-                mensajesError.push(`Parámetro ${index + 1}: Seleccione un parámetro`);
-                $select.addClass('is-invalid');
+            // Verificar que haya al menos un parámetro
+            if (contadorParametros === 0) {
+                e.preventDefault();
+                alert('❌ Debe agregar al menos un parámetro para la prueba.');
+                if (btnAgregar) btnAgregar.focus();
+                return false;
             }
             
-            if (!$valor.val().trim()) {
-                parametrosCompletos = false;
-                mensajesError.push(`Parámetro ${index + 1}: Ingrese un valor`);
-                $valor.addClass('is-invalid');
+            // Verificar que todos los parámetros tengan valores válidos
+            let parametrosCompletos = true;
+            let mensajesError = [];
+            
+            const parametrosItems = container.querySelectorAll('.parametro-item');
+            
+            parametrosItems.forEach(function(item, index) {
+                const select = item.querySelector('.parametro-select');
+                const valorInput = item.querySelector('.valor-input');
+                
+                if (!select || !select.value) {
+                    parametrosCompletos = false;
+                    mensajesError.push(`Parámetro ${index + 1}: Seleccione un parámetro`);
+                    if (select) select.classList.add('is-invalid');
+                } else if (!valorInput || !valorInput.value.trim()) {
+                    parametrosCompletos = false;
+                    mensajesError.push(`Parámetro ${index + 1}: Ingrese un valor`);
+                    if (valorInput) valorInput.classList.add('is-invalid');
+                }
+            });
+            
+            if (!parametrosCompletos) {
+                e.preventDefault();
+                alert('❌ Complete todos los campos requeridos:\n\n' + mensajesError.join('\n'));
+                return false;
             }
+            
+            // Validar fecha de prueba
+            const fechaPrueba = document.getElementById('fecha_prueba');
+            if (!fechaPrueba || !fechaPrueba.value) {
+                e.preventDefault();
+                alert('❌ Ingrese la fecha de la prueba.');
+                if (fechaPrueba) fechaPrueba.focus();
+                return false;
+            }
+            
+            console.log('✅ Formulario válido, enviando...');
+            return true;
         });
-        
-        if (!parametrosCompletos) {
-            e.preventDefault();
-            alert('❌ Complete todos los campos requeridos:\n\n' + mensajesError.join('\n'));
-            return false;
-        }
-        
-        // Validar fecha de prueba
-        const fechaPrueba = $('#fecha_prueba').val();
-        if (!fechaPrueba) {
-            e.preventDefault();
-            alert('❌ Ingrese la fecha de la prueba.');
-            $('#fecha_prueba').focus();
-            return false;
-        }
-        
-        console.log('✅ Formulario válido, enviando...');
-        
-        // Mostrar datos que se enviarán (para debug)
-        console.log('📋 Datos a enviar:');
-        const formData = new FormData(this);
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
-        
-        return true;
-    });
+    }
+    
+    // Evento para agregar parámetro
+    if (btnAgregar) {
+        btnAgregar.addEventListener('click', agregarParametro);
+    }
     
     // Eliminar clase de error al cambiar
-    $(document).on('change', '.parametro-select, .valor-input', function() {
-        $(this).removeClass('is-invalid');
+    container.addEventListener('change', function(e) {
+        if (e.target.classList.contains('parametro-select') || 
+            e.target.classList.contains('valor-input')) {
+            e.target.classList.remove('is-invalid');
+        }
     });
     
     // Agregar primer parámetro automáticamente
@@ -316,11 +365,6 @@ $(document).ready(function() {
     }, 500);
     
     console.log('🎉 Configuración completada');
-});
-
-// Manejo de errores global
-window.addEventListener('error', function(e) {
-    console.error('❌ Error global:', e.message, 'en', e.filename, 'línea:', e.lineno);
 });
 </script>
 
@@ -340,6 +384,11 @@ window.addEventListener('error', function(e) {
 
 .is-invalid {
     border-color: #dc3545 !important;
+}
+
+.cumplimiento-check:checked {
+    background-color: #198754;
+    border-color: #198754;
 }
 </style>
 {% endblock %}

@@ -22,6 +22,9 @@ class Inv_Mat_Prima(ModeloBase):
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=0)
 
+    """ class Meta:
+        unique_together = ['materia_prima', 'almacen'] """
+
     def __str__(self):
         return f'{self.materia_prima.nombre} en {self.almacen.nombre}'
 
