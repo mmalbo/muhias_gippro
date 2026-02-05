@@ -11,8 +11,10 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Materia prima</th>
+                                <th>Producto</th>
                                 <th>Almacen</th>
+                                <th>Lote</th>
+                                <th>Ajustar lote</th>
                                 <th>Cantidad</th>
                                 <th>Nueva Cantidad</th>
                                 <th>Actualizar</th>
@@ -20,12 +22,13 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>{{ form.materia_prima }}</td>
-                                    <td>{{ inv_mat_prima.almacen.nombre }}
-                                        <input type="hidden" name="almacen" value="{{inv_mat_prima.almacen.id}}">
+                                <td>{{ inv_prod.producto.nombre_comercial }}</td>
+                                    <td>{{ inv_prod.almacen.nombre }}
+                                        <input type="hidden" name="almacen" value="{{inv_prod.almacen.id}}">
                                     </td>
-                                <td>{{ inv_mat_prima.cantidad }}</td>
-                                
+                                <td>{{ inv_prod.lote }}</td>
+                                <td>{{ form.lote }}</td>
+                                <td>{{ inv_prod.cantidad }}</td>
                                 <td>          
                                     {{ form.cantidad }}
                                 </td>

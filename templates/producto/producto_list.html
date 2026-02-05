@@ -5,7 +5,7 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
-                    <h4 class="card-title">Listado de Materias Primas {% if es_almacenero and almacen %}
+                    <h4 class="card-title">Listado de Productos {% if es_almacenero and almacen %}
                         - {{almacen.nombre}} {% endif %}
                     </h4>
                     {% if messages %}
@@ -64,38 +64,38 @@
                         <tr class="ligth">
                             <th>Código</th>
                             <th>Nombre</th>
-                            <th>U. de Medida</th>
+                            <th>Formato</th>
+                            <th>Lote</th>
                             <th>Almacén</th>
-                            <th>Tipo</th>
                             <th>Cantidad</th>
                             <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {% for materia_prima in materias_primas %}
+                        {% for producto in inv_productos %}
                             <tr>
-                                <td>{{ materia_prima.materia_prima.codigo }}</td>
-                                <td>{{ materia_prima.materia_prima.nombre }}</td>
-                                <td>{{ materia_prima.materia_prima.unidad_medida }}</td>
-                                <td>{{ materia_prima.almacen }}</td>
-                                <td>{{ materia_prima.materia_prima.tipo_materia_prima}}</td>
-                                <td>{{ materia_prima.cantidad }}</td>
-                                <td>{{ materia_prima.materia_prima.costo }}</td>
+                                <td>{{ producto.producto.codigo_producto }}</td>
+                                <td>{{ producto.producto.nombre_comercial }} - {{producto.producto.codigo_3l}}</td>
+                                <td>{{ producto.producto.formato }}</td>
+                                <td>{{ producto.lote }}</td>
+                                <td>{{ producto.almacen }}</td>
+                                <td>{{ producto.cantidad }}</td>
+                                <td>{{ producto.producto.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
-                                        <a href="{% url 'materia_prima:materia_prima_actualizar' materia_prima.materia_prima.pk %}"
-                                           title="Editar materia prima" class="btn far fa-edit"></a>
-                                        <a href="{% url 'ajuste_inv_mp' materia_prima.pk %}"
+                                        <a href="{% url 'actualizar_producto' producto.producto.pk %}"
+                                           title="Editar producto" class="btn far fa-edit"></a>
+                                        <a href="{% url 'ajuste_inv_prod' producto.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
                                         {% if request.user.groups.all.0.name == 'Almaceneros'%}
-                                        <a href="{% url 'ajuste_inv_mp' materia_prima.pk %}"
+                                        <a href="{% url 'ajuste_inv_prod' producto.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
-                                        <a href="{% url 'materia_prima:get_materias_primas' materia_prima.materia_prima.pk %}"
-                                            title="Ver detalles" class="btn fas fa-eye"></a>
+                                        <a href="{% url 'get_productos' producto.producto.pk %}"
+                                            title="Ver detalles" class="btn far fa-trash-alt"></a>
                                     </div>
                                 </td>
                             </tr>
@@ -106,9 +106,9 @@
                         <tr>
                             <th>Código</th>
                             <th>Nombre</th>
-                            <th>U. de Medida</th>
+                            <th>Formato</th>
+                            <th>Lote</th>
                             <th>Concentración</th>
-                            <th>Tipo</th>
                             <th>Cantidad</th>
                             <th>Costo</th>
                             <th>Acciones</th>
@@ -119,7 +119,7 @@
                     <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
                     {% endif %}
                     {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
-                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    <a href="{% url 'importarProducto' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                 </div>
             </div>

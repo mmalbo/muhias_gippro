@@ -12,6 +12,7 @@ from inventario.models import Inv_Mat_Prima, Inv_Producto
 from envase_embalaje.models import Formato 
 from django.contrib import messages
 from django.shortcuts import redirect
+from datetime import date, datetime, timezone
 
 import decimal
 
@@ -29,7 +30,7 @@ def importar_productos_desde_api(request):
         contador_nuevas = 1
         contador_nuevos = 1
 
-        almacen = Almacen.objects.first() 
+        almacen = Almacen.objects.filter(nombre='Planta').first()
 
         for producto_data in productos_data:
             # Verificar si el producto ya existe por SKU
@@ -50,18 +51,18 @@ def importar_productos_desde_api(request):
                 
                 materia_prima.save()
                 
-                vale = Vale_Movimiento_Almacen.objects.create(
+                """ vale = Vale_Movimiento_Almacen.objects.create(
                     almacen = almacen,
                     entrada = True
-                )
+                ) """
                 cantidad = decimal.Decimal(producto_data.get('count', '0'))
                 if cantidad != 0:
                     try:
-                        mov = Movimiento_MP.objects.create(
+                        """  mov = Movimiento_MP.objects.create(
                             materia_prima=materia_prima,
                             vale=vale,  # Ejemplo: atributo fijo
                             cantidad=cantidad                        
-                        )
+                        ) """
                         """ if mov:
                             print('existe Movimiento_MP')
                         else:
@@ -75,14 +76,14 @@ def importar_productos_desde_api(request):
                         else:
                             print('No fue ceado el inventario')
                             print(inventario_mp.almacen) """
-                        if cantidad > inventario_mp.cantidad:
+                        """ if cantidad > inventario_mp.cantidad:
                             vale.entrada = True 
                             mov.cantidad = cantidad - inventario_mp.cantidad
                         else:
                             vale.entrada = False
                             mov.cantidad = inventario_mp.cantidad - cantidad
                         vale.save()
-                        mov.save()
+                        mov.save() """
                         inventario_mp.cantidad = cantidad
                         inventario_mp.save()
                     except Exception as e: #(ValueError, TypeError):
@@ -138,18 +139,14 @@ def importar_productos_desde_api(request):
                     producto.formato = formato
                     created_prod = False
                     cant_vieja = producto.cantidad_total
-                vale = Vale_Movimiento_Almacen.objects.create(
-                    almacen = almacen,
-                    entrada = True
-                )
                 cantidad = decimal.Decimal(producto_data.get('count', '0'))
                 if cantidad != 0:
                     try:
-                        mov = Movimiento_Prod.objects.create(
+                        """ mov = Movimiento_Prod.objects.create(
                             producto=producto,
                             vale_e=vale,  # Ejemplo: atributo fijo
                             cantidad=cantidad                        
-                        )
+                        ) """
                         """ if mov:
                             print('existe Movimiento_Prod')
                         else:
@@ -157,20 +154,24 @@ def importar_productos_desde_api(request):
                         print('creado movimiento') """
                         inventario_prod, created_inv = Inv_Producto.objects.get_or_create(
                             producto=producto, almacen=almacen)
-                        """ if created_inv:
+                        if created_inv:
                             print('Creado inventario')
                             print(inventario_prod.almacen)
+                            fecha_actual = datetime.now()
+                            fecha_codigo = fecha_actual.strftime('%y%m%d')
+                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
+                            inventario_prod.lote = lote
                         else:
                             print('No fue ceado el inventario')
-                            print(inventario_prod.almacen) """
-                        if cantidad > inventario_prod.cantidad:
+                            print(inventario_prod.almacen)
+                        """ if cantidad > inventario_prod.cantidad:
                             vale.entrada = True 
                             mov.cantidad = cantidad - inventario_prod.cantidad
                         else:
                             vale.entrada = False
                             mov.cantidad = inventario_prod.cantidad - cantidad
                         vale.save()
-                        mov.save()
+                        mov.save() """
                         inventario_prod.cantidad = cantidad
                         inventario_prod.save()
                     except Exception as e: #(ValueError, TypeError):

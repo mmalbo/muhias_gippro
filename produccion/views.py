@@ -22,7 +22,7 @@ from collections import OrderedDict
 from .models import Planta
 from .models import Produccion, Prod_Inv_MP, PruebaQuimica, ParametroPrueba, DetallePruebaQuimica
 from materia_prima.models import MateriaPrima
-from inventario.models import Inv_Mat_Prima
+from inventario.models import Inv_Mat_Prima, Inv_Producto
 from producto.models import Producto
 from envase_embalaje.models import Formato
 from nomencladores.almacen.models import Almacen
@@ -156,7 +156,6 @@ class CrearProduccionView(View):
         
         # Procesar materias primas
         materias_primas = self.procesar_materias_primas(request.POST)
-        
         if not materias_primas:
             return JsonResponse({'success': False, 'errors': 'Debe agregar al menos una materia prima'})
         
@@ -164,7 +163,6 @@ class CrearProduccionView(View):
             # Obtener la instancia de Planta
             planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
             catalogo_producto_instance = Producto.objects.get(id=produccion_data['catalogo_producto_id'])
-            
             # GENERAR LOTE CON EL NUEVO FORMATO
             cantidad_estimada = float(produccion_data['cantidad_estimada'])
             lote_generado = Produccion.generar_lote(
@@ -186,10 +184,10 @@ class CrearProduccionView(View):
                 intentos += 1
                 # Si por alguna rareza existe, añadir un sufijo
                 lote_final = f"{lote_generado}-{intentos:02d}"
-
+            
             costo_prod = 0
             for mp_data in materias_primas:
-                costo_prod += mp_data['costo']
+                costo_prod += Decimal(mp_data['costo'])
             
             # Guardar producción
             produccion = Produccion.objects.create(
@@ -201,7 +199,7 @@ class CrearProduccionView(View):
                 planta=planta_instance,
                 estado='Planificada'
             )
-            #produccion.save()
+            #produccion.save()costo_mp = mp_data['costo']
             #generar un vale de almacen tipo solicitud
             id_almacen = materias_primas[0]['almacen']
             almacen_obj = Almacen.objects.get(id=id_almacen)
@@ -237,8 +235,8 @@ class CrearProduccionView(View):
                 'redirect_url': reverse('produccion_list')  # Ajusta esta URL
             })
             
-        except Planta.DoesNotExist:
-            return JsonResponse({'success': False, 'errors': 'La planta seleccionada no existe'})
+        #except Planta.DoesNotExist:
+            #return JsonResponse({'success': False, 'errors': 'La planta seleccionada no existe'})
         except Exception as e:
             return JsonResponse({'success': False, 'errors': f'Error al guardar: {str(e)}'})
 
@@ -264,9 +262,13 @@ class CrearProduccionView(View):
                     almacen_obj = Almacen.objects.get(id=almacen_id)
 
                     costo_mp = Decimal(materia_prima_obj.costo)*cantidad
-        
-                    # Luego buscar en el inventario .almacen == almacen_obj
-                    invent_mp = Inv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj)
+
+                    try:
+                        # Luego buscar en el inventario .almacen == almacen_obj
+                        invent_mp = Inv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj)
+                    except (Inv_Mat_Prima.DoesNotExist, ):
+                        return JsonResponse({'success': False, 'errors': 'No hay existencia de esa materia prima en almacen,'})
+
                     if invent_mp:
                         if cantidad < invent_mp.cantidad:
                             materias_primas.append({
@@ -1207,7 +1209,18 @@ def concluir_prueba(request, pk):
                     except DetallePruebaQuimica.DoesNotExist:
                         continue
 
-        prueba.save()       
+        prueba.save() 
+        """ if prueba.resultado_final == False:
+
+            prod_proceso = Produccion.objects.create(
+                lote=lote_final,
+                catalogo_producto=catalogo_producto_instance,
+                prod_result=product,
+                cantidad_estimada=Decimal(produccion_data['cantidad_estimada']),
+                costo=prueba.produccion.costo,#Decimal(produccion_data['costo']),                
+                planta=prueba.produccion.planta,
+                estado='Planificada'
+            ) """
         # Mensaje de éxito
         #messages.success(request, f'Prueba {decision_final.lower()} correctamente.')
         # Redirigir a la página de detalle //redirect('detalle_prueba_quimica', pk=prueba.produccion.id)
