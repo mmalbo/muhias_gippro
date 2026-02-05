@@ -32,22 +32,30 @@
                         {% for rp in rec_pendientes %}
                             <tr>
                                 <td>{{ rp.fecha_compra }}</td>
-                                <td>{{ rp.tipo_adquisicion }}</td>
                                 <td>
-                                    {% if rp.tipo_adquisicion == mp %}
+                                    {% if rp.tipo_adquisicion == 'mp' %}
+                                      Materias primas
+                                    {% elif rp.tipo_adquisicion == 'env' %}
+                                      Envases y embalajes
+                                    {% else %}
+                                        Insumos y otros
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if rp.tipo_adquisicion == 'mp' %}
                                         {{ rp.cantidad_mprimas }}
-                                    {% elif rp.tipo_adquisicion == env %}
+                                    {% elif rp.tipo_adquisicion == 'env' %}
                                         {{ rp.cantidad_envases }}
                                     {% else %}
                                         {{ rp.cantidad_insumos }}
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if rp.tipo_adquisicion == mp %}
+                                    {% if rp.tipo_adquisicion == 'mp' %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'recepcion_mp' rp.id %}" class="btn btn-success">Recepcionar</a>
                                     </div>
-                                    {% elif rp.tipo_adquisicion == env %}
+                                    {% elif rp.tipo_adquisicion == 'env' %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'recepcion_env' rp.id %}" class="btn btn-success">Recepcionar</a>
                                     </div>

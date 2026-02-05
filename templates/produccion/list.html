@@ -27,14 +27,18 @@
                                 <td>{{ produccion.costo }}</td>
                                 <td>{{ produccion.planta }}</td>
                                 <td>
-                                    {% if produccion.estado == 'Planificada' or produccion.estado == 'Concluida-Satisfactoria' or produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' %}
+                                    {% if produccion.estado == 'Planificada' or produccion.estado == 'Concluida-Satisfactoria' or produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' or produccion.estado == 'Concluida-Rechazada-R' %}
                                         <!-- Estados sin progreso porcentual -->
                                         <span class="badge
                                             {% if produccion.estado == 'Planificada' %}bg-warning
                                             {% elif produccion.estado == 'Concluida-Satisfactoria' %}bg-success
-                                            {% elif produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' %}bg-danger
+                                            {% elif produccion.estado == 'Cancelada' or produccion.estado == 'Concluida-Rechazada' or produccion.estado == 'Concluida-Rechazada-R' %}bg-danger
                                             {% endif %}">
-                                            {{ produccion.estado }}
+                                            {% if produccion.estado == 'Concluida-Rechazada-R' %}
+                                                Concluida-Rechazada
+                                            {% else %}
+                                                {{ produccion.estado }}
+                                            {% endif %}
                                         </span>
                                     {% else %} 
                                         <!-- Estados con progreso porcentual -->
@@ -77,15 +81,20 @@
                                             </a>
                                         {% endif %}
                                         <!--Registrar pruebas químicas--> 
-                                        {% if produccion.estado == 'En proceso: Validación' %}    
+                                        {% if produccion.estado == 'En proceso: Validación' and not produccion.pruebas_quimicas.exists %}    
                                             <a href="{% url 'crear_prueba_quimica' produccion.id %}"
                                                 title="Evaluar producción" class="btn btn-warning btn-success">
                                                 <i class="fas fa-flask-vial"></i>
                                             </a>
+                                        {% elif produccion.estado == 'En proceso: Validación' and produccion.pruebas_quimicas.exists %}
+                                            <a href="{% url 'crear_prueba_quimica' produccion.id %}"
+                                                title="Evaluar producción" class="btn btn-warning btn-success">
+                                                <i class="fas fa-file-contract"></i>
+                                            </a>
                                         {% endif %}
                                         <!--formulario para subir doc de PQ y se cambia  //
                                         el estado a disponible para la venta o indicar ajuste de inventario-->
-                                        {% if produccion.estado == 'En proceso: Validación' %}
+                                        {% if produccion.estado == 'En proceso: Validación' or  produccion.estado == 'Concluida-Satisfactoria' %}
                                             {% if produccion.pruebas_quimicas_ext == '' %}    
                                                 <a href="{% url 'subir_pruebas' produccion.id %}"
                                                     class="btn btn-info btn-sm"
@@ -114,6 +123,20 @@
                                                 class="btn btn-outline-danger btn-sm"
                                                 title="Ver detalles de cancelación">
                                                 <i class="fas fa-info-circle"></i> Ver Cancelación
+                                            </a>
+                                        {% endif %}
+                                        {% if produccion.estado == 'Concluida-Satisfactoria' %}
+                                            <a href="{% url 'detalle_cancelacion' produccion.id %}"
+                                                class="btn btn-sm"
+                                                title="Ver detalles de cancelación">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if produccion.estado == 'Concluida-Rechazada' %}
+                                            <a href="{% url 'detalle_cancelacion' produccion.id %}"
+                                                class="btn btn-outline-danger btn-sm"
+                                                title="Ver detalles de cancelación">
+                                                <i class="fas fa-industry"></i> Renovar proceso
                                             </a>
                                         {% endif %}
                                     </div>

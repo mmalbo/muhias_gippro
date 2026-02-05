@@ -28,10 +28,8 @@ def obtener_materias_primas_de_produccion(produccion):
     try:
         # Navegar: Produccion -> Prod_Inv_MP -> Inv_Mat_Prima
         relaciones_mp = Prod_Inv_MP.objects.filter(lote_prod=produccion)
-        print(produccion)
         materias_primas_info = []
         for relacion in relaciones_mp:
-            print(relacion.inv_materia_prima)
             inv_mp = relacion.inv_materia_prima  # Esto es un objeto Inv_Mat_Prima
             
             materias_primas_info.append({

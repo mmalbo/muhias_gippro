@@ -1,0 +1,818 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load widget_tweaks %}  <!-- Opcional, para mejorar la apariencia de los campos -->
+
+<style>
+/* Prevenir selección accidental de botones */
+.btn {
+    user-select: none;
+}
+
+/* Estilo para botones en formularios */
+button:not([type="submit"]) {
+    cursor: pointer;
+}
+
+/* Mejorar la usabilidad del modal */
+#cantidadModal .modal-dialog {
+    max-width: 400px;
+}
+
+/* Estilos para el carrito */
+#tabla-resumen {
+    font-size: 0.9rem;
+}
+
+#tabla-resumen th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+/* Feedback visual para botones */
+.btn-agregar:hover,
+.btn-eliminar-item:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+</style>
+
+{% block contenido %}
+<div class="container mt-4">
+    <h2><i class="bi bi-box-arrow-up"></i> Crear Salida de Almacén</h2>
+    
+    <form method="post" id="salida-form" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Información de la salida -->
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-info-circle"></i> Información de la Salida
+                    </div>
+                    <div class="card-body">
+                        <!-- Campo Almacén con mejor visualización -->
+                        <div class="mb-3">
+                            <label for="id_almacen" class="form-label">
+                                <i class="bi bi-building"></i> Almacén Origen *
+                            </label>
+                            <select name="almacen" class="form-select" id="id_almacen" required>
+                                <option value="">--------- Seleccione un almacén ---------</option>
+                                {% for almacen in almacenes %}
+                                <option value="{{ almacen.id }}" 
+                                        {% if form.almacen.value == almacen.id %}selected{% endif %}>
+                                    {{ almacen.nombre }} 
+                                    {% if almacen.codigo %}({{ almacen.codigo }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Seleccione un almacén origen.
+                            </div>
+                        </div>
+                        
+                        <!-- Campo Tipo de Salida -->
+                        <div class="mb-3">
+                            <label for="id_tipo" class="form-label">
+                                <i class="bi bi-tag"></i> Tipo de Salida *
+                            </label>
+                            <select name="tipo" class="form-select" id="id_tipo" required>
+                                <option value="">--------- Seleccione tipo ---------</option>
+                                {% for codigo, nombre in tipos_salida %}
+                                <option value="{{ codigo }}" 
+                                        {% if form.tipo.value == codigo %}selected{% endif %}>
+                                    {{ nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.tipo.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.tipo.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Campo Destino (almacén) -->
+                        <div class="mb-3">
+                            <label for="id_destino" class="form-label">
+                                <i class="bi bi-geo-alt"></i> Destino
+                            </label>
+                            <select name="destino" class="form-select" id="id_destino">
+                                <option value="">--------- Seleccione destino (opcional) ---------</option>
+                                {% for almacen in almacenes %}
+                                <option value="{{ almacen.id }}" 
+                                        {% if form.destino.value == almacen.id %}selected{% endif %}>
+                                    {{ almacen.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Campo Descripción -->
+                        <div class="mb-3">
+                            <label for="id_descripcion" class="form-label">
+                                <i class="bi bi-chat-text"></i> Descripción
+                            </label>
+                            <textarea name="descripcion" class="form-control" id="id_descripcion" 
+                                      rows="2" placeholder="Motivo de la salida...">{{ form.descripcion.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transporte -->
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-truck"></i> Información de Transporte
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_transportista" class="form-label">
+                                    Transportista
+                                </label>
+                                <input type="text" name="transportista" class="form-control" 
+                                       id="id_transportista" 
+                                       value="{{ form.transportista.value|default:'' }}"
+                                       placeholder="Nombre del transportista">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_transportista_cI" class="form-label">
+                                    Carnet Identidad
+                                </label>
+                                <input type="text" name="transportista_cI" class="form-control" 
+                                       id="id_transportista_cI" 
+                                       value="{{ form.transportista_cI.value|default:'' }}"
+                                       placeholder="CI del transportista">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="chapa" class="form-label">
+                                Chapa del Vehículo
+                            </label>
+                            <input type="text" class="form-control" id="chapa" name="chapa"
+                                   placeholder="Número de placa del vehículo">
+                        </div>
+                        
+                        <!-- Campos ocultos para otros datos -->
+                        <input type="hidden" name="entrada" value="false">
+                        <input type="hidden" name="despachado_por" value="{{ user.id }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Selector de Items -->
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-cart-plus"></i> Agregar Items a la Salida
+                <span class="float-end">
+                    <small id="almacen-seleccionado" class="badge bg-light text-dark">
+                        {% if form.almacen.value %}
+                        Almacén: {{ form.almacen.value }}
+                        {% else %}
+                        Seleccione un almacén primero
+                        {% endif %}
+                    </small>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo de Item</label>
+                        <select class="form-select" id="tipo-item">
+                            <option value="">Todos los tipos</option>
+                            <option value="materia_prima">Materia Prima</option>
+                            <option value="producto">Producto Terminado</option>
+                            <option value="envase">Envase/Embalaje</option>
+                            <option value="insumo">Insumos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Buscar Item</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="buscar-item" 
+                                   placeholder="Nombre o código del item..."
+                                   {% if not form.almacen.value %}disabled{% endif %}>
+                            <button class="btn btn-outline-secondary" type="button" id="btn-buscar"
+                                    {% if not form.almacen.value %}disabled{% endif %}>
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                        </div>
+                        <small class="form-text text-muted">
+                            {% if not form.almacen.value %}
+                            Primero seleccione un almacén origen
+                            {% else %}
+                            Busque items disponibles en el almacén seleccionado
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-outline-secondary w-100" id="btn-limpiar-busqueda">
+                            <i class="bi bi-arrow-clockwise"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Resultados de búsqueda -->
+                <div class="mb-3">
+                    <div id="resultados-items" class="border rounded p-2" 
+                         style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
+                        <div id="mensaje-inicial" class="text-center my-3">
+                            {% if form.almacen.value %}
+                            <p class="text-muted">Seleccione un tipo y busque items disponibles</p>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Primero seleccione un almacén origen para buscar items disponibles
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Carrito de Items -->
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+                <i class="bi bi-cart-check"></i> Items Seleccionados 
+                <span class="badge bg-primary" id="contador-carrito">0</span>
+            </div>
+            <div class="card-body">
+                <div id="carrito-items">
+                    <p class="text-muted text-center my-3">No hay items seleccionados</p>
+                </div>
+                
+                <!-- Tabla resumen del carrito -->
+                <table class="table table-sm d-none" id="tabla-resumen">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Item</th>
+                            <th>Cantidad</th>
+                            <th>Lote</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-carrito">
+                        <!-- Items se insertarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Campo oculto para los datos del carrito -->
+        <input type="hidden" name="carrito_data" id="carrito-data-input" value="">
+        
+        <!-- Validación de formulario -->
+        <div class="alert alert-info d-none" id="validacion-formulario">
+            <i class="bi bi-info-circle"></i>
+            <span id="mensaje-validacion"></span>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'movimiento_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-success" id="btn-guardar">
+                <i class="bi bi-check-circle"></i> Guardar Salida
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal para especificar cantidad -->
+<div class="modal fade" id="cantidadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Especificar Cantidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <strong id="item-nombre"></strong>
+                </div>
+                <div class="mb-2 text-muted small">
+                    <span id="item-tipo"></span> | 
+                    Disponible: <span id="disponible-texto"></span>
+                    <span id="item-lote" class="badge bg-secondary"></span>
+                </div>
+                <div class="mb-3">
+                    <label for="input-cantidad" class="form-label">Cantidad a sacar:</label>
+                    <input type="number" class="form-control" id="input-cantidad" 
+                           step="0.001" min="0.001" required>
+                    <div class="invalid-feedback" id="error-cantidad"></div>
+                    <small class="form-text text-muted">
+                        Máximo disponible: <span id="max-disponible"></span>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-agregar-carrito">Agregar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+// Variables globales
+let itemSeleccionado = null;
+let carrito = [];
+let itemsResultados = []; // Variable para almacenar resultados de búsqueda
+
+// Función para actualizar la interfaz según el almacén seleccionado
+function actualizarInterfazAlmacen() {
+    const almacenId = $('#id_almacen').val();
+    const $buscarItem = $('#buscar-item');
+    const $btnBuscar = $('#btn-buscar');
+    const $mensajeInicial = $('#mensaje-inicial');
+    const $almacenSeleccionado = $('#almacen-seleccionado');
+    
+    if (almacenId) {
+        // Habilitar búsqueda
+        $buscarItem.prop('disabled', false);
+        $btnBuscar.prop('disabled', false);
+        
+        // Actualizar badge
+        const almacenNombre = $('#id_almacen option:selected').text();
+        $almacenSeleccionado.text(`Almacén: ${almacenNombre.split('(')[0].trim()}`);
+        
+        // Actualizar mensaje
+        $mensajeInicial.html('<p class="text-muted">Seleccione un tipo y busque items disponibles</p>');
+        
+        // Limpiar resultados previos
+        $('#resultados-items').html($mensajeInicial);
+    } else {
+        // Deshabilitar búsqueda
+        $buscarItem.prop('disabled', true);
+        $btnBuscar.prop('disabled', true);
+        
+        // Restaurar mensaje inicial
+        $almacenSeleccionado.text('Seleccione un almacén primero');
+        
+        // Mostrar advertencia
+        const warningHtml = `
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Primero seleccione un almacén origen para buscar items disponibles
+            </div>
+        `;
+        $('#resultados-items').html(warningHtml);
+    }
+}
+
+// Al cambiar el almacén
+$('#id_almacen').change(function() {
+    actualizarInterfazAlmacen();
+    
+    // Limpiar carrito si cambia el almacén
+    if (carrito.length > 0) {
+        if (confirm('Cambiar de almacén limpiará los items seleccionados. ¿Continuar?')) {
+            carrito = [];
+            actualizarCarrito();
+        } else {
+            // Revertir selección
+            $(this).val($(this).data('prev-value') || '');
+            return;
+        }
+    }
+    
+    $(this).data('prev-value', $(this).val());
+});
+
+// **IMPORTANTE**: Prevenir el comportamiento por defecto del botón buscar
+$('#btn-buscar').click(function(e) {
+    e.preventDefault(); // Prevenir cualquier comportamiento por defecto
+    e.stopPropagation(); // Detener propagación
+    buscarItems();
+});
+
+// **IMPORTANTE**: Tipo button para el botón de limpiar
+$('#btn-limpiar-busqueda').click(function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#buscar-item').val('');
+    $('#tipo-item').val('');
+    buscarItems();
+});
+
+// Buscar con Enter
+$('#buscar-item').keypress(function(e) {
+    if(e.which == 13) {
+        e.preventDefault();
+        buscarItems();
+    }
+});
+
+// Función para buscar items
+function buscarItems() {
+    const almacenId = $('#id_almacen').val();
+    const tipo = $('#tipo-item').val();
+    const term = $('#buscar-item').val();
+    
+    if (!almacenId) {
+        mostrarValidacion('error', 'Por favor, seleccione un almacén origen primero');
+        return;
+    }
+    
+    // Mostrar loading
+    $('#resultados-items').html(`
+        <div class="text-center my-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Buscando...</span>
+            </div>
+            <p class="mt-2">Buscando items disponibles...</p>
+        </div>
+    `);
+    
+    // Hacer la petición AJAX
+    $.ajax({
+        url: '{% url "buscar_items" %}',
+        method: 'GET',
+        data: {
+            almacen_id: almacenId,
+            tipo: tipo,
+            q: term
+        },
+        success: function(data) {
+            itemsResultados = data.items; // Guardar resultados globalmente
+            mostrarResultados(data.items);
+        },
+        error: function(xhr, status, error) {
+            $('#resultados-items').html(`
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-octagon"></i>
+                    Error al buscar items: ${error}
+                </div>
+            `);
+        }
+    });
+}
+
+// **CORREGIDO**: Usar event delegation para botones dinámicos
+function asignarEventosResultados() {
+    // Eliminar cualquier manejador previo
+    $('#resultados-items').off('click', '.btn-agregar');
+    
+    // Usar event delegation para botones dinámicos
+    $('#resultados-items').on('click', '.btn-agregar', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const index = $(this).data('index');
+        if (itemsResultados && itemsResultados[index]) {
+            mostrarModalCantidad(itemsResultados[index]);
+        }
+    });
+}
+
+// Función para mostrar resultados
+function mostrarResultados(items) {
+    const container = $('#resultados-items');
+    
+    if (items.length === 0) {
+        container.html(`
+            <div class="text-center my-3">
+                <i class="bi bi-search" style="font-size: 2rem; color: #6c757d;"></i>
+                <p class="mt-2 text-muted">No se encontraron items con los criterios de búsqueda</p>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '<div class="row g-2">';
+    
+    items.forEach(function(item, index) {
+        html += `
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="flex: 1;">
+                                <h6 class="mb-0">${item.nombre}</h6>
+                                <small class="text-muted d-block">
+                                    <span class="badge bg-secondary">${item.tipo}</span>
+                                    ${item.codigo ? `| Código: ${item.codigo}` : ''}
+                                    ${item.lote ? `| Lote: ${item.lote}` : ''}
+                                </small>
+                                <small class="text-success">
+                                    <i class="bi bi-box"></i> Disponible: ${item.cantidad_disponible} ${item.unidad}
+                                </small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary btn-agregar" 
+                                    type="button" 
+                                    data-index="${index}"
+                                    title="Agregar al carrito">
+                                <i class="bi bi-plus-circle"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.html(html);
+    
+    // Asignar eventos usando delegation
+    asignarEventosResultados();
+}
+
+// Función para mostrar el modal de cantidad
+function mostrarModalCantidad(item) {
+    itemSeleccionado = item;
+    
+    $('#item-nombre').text(item.nombre);
+    $('#item-tipo').text(item.tipo.charAt(0).toUpperCase() + item.tipo.slice(1));
+    $('#disponible-texto').text(`${item.cantidad_disponible} ${item.unidad}`);
+    $('#max-disponible').text(`${item.cantidad_disponible} ${item.unidad}`);
+    
+    if (item.lote) {
+        $('#item-lote').text(`Lote: ${item.lote}`).show();
+    } else {
+        $('#item-lote').hide();
+    }
+    
+    // Configurar input de cantidad
+    const $inputCantidad = $('#input-cantidad');
+    $inputCantidad.val('');
+    $inputCantidad.attr('max', item.cantidad_disponible);
+    $inputCantidad.removeClass('is-invalid');
+    $('#error-cantidad').text('');
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('cantidadModal'));
+    modal.show();
+    
+    // Enfocar en el input
+    setTimeout(() => {
+        $inputCantidad.focus();
+    }, 500);
+}
+
+// **CORREGIDO**: Agregar al carrito
+$('#btn-agregar-carrito').click(function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const cantidad = parseFloat($('#input-cantidad').val());
+    const max = parseFloat($('#input-cantidad').attr('max'));
+    
+    if (!cantidad || cantidad <= 0 || isNaN(cantidad)) {
+        mostrarError('Ingrese una cantidad válida');
+        return;
+    }
+    
+    if (cantidad > max) {
+        mostrarError(`La cantidad no puede exceder ${max}`);
+        return;
+    }
+    
+    // Verificar si ya existe en el carrito
+    const existeIndex = carrito.findIndex(item => 
+        item.item_id === itemSeleccionado.id && 
+        item.tipo === itemSeleccionado.tipo &&
+        item.lote === (itemSeleccionado.lote || '')
+    );
+    
+    if (existeIndex !== -1) {
+        if (confirm('Este item ya está en el carrito. ¿Desea actualizar la cantidad?')) {
+            carrito[existeIndex].cantidad = cantidad;
+            actualizarCarrito();
+            bootstrap.Modal.getInstance(document.getElementById('cantidadModal')).hide();
+        }
+        return;
+    }
+    
+    // Agregar al carrito
+    const itemCarrito = {
+        tipo: itemSeleccionado.tipo,
+        item_id: itemSeleccionado.id,
+        nombre: itemSeleccionado.nombre,
+        cantidad: cantidad,
+        cantidad_disponible: itemSeleccionado.cantidad_disponible,
+        unidad: itemSeleccionado.unidad || '',
+        lote: itemSeleccionado.lote || '',
+        codigo: itemSeleccionado.codigo || ''
+    };
+    
+    carrito.push(itemCarrito);
+    actualizarCarrito();
+    
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('cantidadModal'));
+    if (modal) {
+        modal.hide();
+    }
+});
+
+// Mostrar error en el modal
+function mostrarError(mensaje) {
+    $('#error-cantidad').text(mensaje);
+    $('#input-cantidad').addClass('is-invalid');
+}
+
+// **CORREGIDO**: Asignar eventos a botones de eliminar con delegation
+function asignarEventosEliminar() {
+    // Eliminar cualquier manejador previo
+    $('#carrito-items').off('click', '.btn-eliminar-item');
+    
+    // Usar event delegation
+    $('#carrito-items').on('click', '.btn-eliminar-item', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const index = $(this).data('index');
+        if (confirm('¿Está seguro de eliminar este item del carrito?')) {
+            carrito.splice(index, 1);
+            actualizarCarrito();
+        }
+    });
+}
+
+// Actualizar visualización del carrito
+function actualizarCarrito() {
+    const $carritoContainer = $('#carrito-items');
+    const $contador = $('#contador-carrito');
+    const $tablaResumen = $('#tabla-resumen');
+    const $tbody = $('#tbody-carrito');
+    
+    $contador.text(carrito.length);
+    
+    if (carrito.length === 0) {
+        $carritoContainer.html('<p class="text-muted text-center my-3">No hay items seleccionados</p>');
+        $tablaResumen.addClass('d-none');
+        return;
+    }
+    
+    // Mostrar tabla
+    $tablaResumen.removeClass('d-none');
+    
+    // Construir tabla
+    let html = '';
+    let totalCantidad = 0;
+    
+    carrito.forEach((item, index) => {
+        totalCantidad += parseFloat(item.cantidad);
+        
+        html += `
+            <tr data-index="${index}">
+                <td>
+                    <span class="badge bg-secondary">${item.tipo}</span>
+                </td>
+                <td>
+                    <small>${item.nombre}</small>
+                    ${item.codigo ? `<br><small class="text-muted">${item.codigo}</small>` : ''}
+                </td>
+                <td>
+                    ${item.cantidad} ${item.unidad}
+                </td>
+                <td>
+                    ${item.lote ? `<span class="badge bg-info">${item.lote}</span>` : '-'}
+                </td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar-item" 
+                            type="button"
+                            data-index="${index}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    // Agregar fila de total
+    html += `
+        <tr class="table-light">
+            <td colspan="2"><strong>Total</strong></td>
+            <td><strong>${totalCantidad.toFixed(3)}</strong></td>
+            <td colspan="2"></td>
+        </tr>
+    `;
+    
+    $tbody.html(html);
+    $carritoContainer.html($tablaResumen);
+    
+    // Asignar eventos usando delegation
+    asignarEventosEliminar();
+    
+    // Guardar carrito en sessionStorage
+    sessionStorage.setItem('carrito_salida', JSON.stringify(carrito));
+}
+
+// **CORREGIDO**: Manejo del formulario principal
+$('#salida-form').submit(function(e) {
+    // Primero validar si el submit viene del botón de guardar
+    const submitter = e.originalEvent?.submitter;
+    
+    // Si no es el botón de guardar, prevenir el envío
+    if (!submitter || submitter.id !== 'btn-guardar') {
+        e.preventDefault();
+        return false;
+    }
+    
+    // Validar almacén
+    if (!$('#id_almacen').val()) {
+        e.preventDefault();
+        mostrarValidacion('error', 'Debe seleccionar un almacén origen');
+        $('#id_almacen').focus();
+        return false;
+    }
+    
+    // Validar tipo
+    if (!$('#id_tipo').val()) {
+        e.preventDefault();
+        mostrarValidacion('error', 'Debe seleccionar un tipo de salida');
+        $('#id_tipo').focus();
+        return false;
+    }
+    
+    // Validar que haya items en el carrito
+    if (carrito.length === 0) {
+        e.preventDefault();
+        mostrarValidacion('error', 'Debe agregar al menos un item a la salida');
+        return false;
+    }
+    
+    // Agregar items al formulario como campo oculto
+    if ($('#carrito-data').length) {
+        $('#carrito-data').remove();
+    }
+    
+    $('<input>').attr({
+        type: 'hidden',
+        id: 'carrito-data',
+        name: 'carrito_data',
+        value: JSON.stringify(carrito)
+    }).appendTo('#salida-form');
+    
+    // Permitir el envío normal
+    return true;
+});
+
+// **NUEVO**: Manejar el click del botón guardar explícitamente
+$('#btn-guardar').click(function(e) {
+    // Esto asegura que el botón sea el submitter
+    $(this).attr('type', 'submit');
+});
+
+// Mostrar mensaje de validación
+function mostrarValidacion(tipo, mensaje) {
+    const $validacion = $('#validacion-formulario');
+    $validacion.removeClass('alert-info alert-danger alert-success d-none');
+    
+    if (tipo === 'error') {
+        $validacion.addClass('alert-danger');
+        $('#mensaje-validacion').html(`<strong>Error:</strong> ${mensaje}`);
+    } else {
+        $validacion.addClass('alert-success');
+        $('#mensaje-validacion').html(mensaje);
+    }
+    
+    $validacion.removeClass('d-none');
+    
+    // Auto-ocultar después de 5 segundos
+    setTimeout(() => {
+        $validacion.addClass('d-none');
+    }, 5000);
+}
+
+// Cargar carrito desde sessionStorage al cargar la página
+$(document).ready(function() {
+    // Inicializar interfaz según almacén seleccionado
+    actualizarInterfazAlmacen();
+    
+    // Cargar carrito desde sessionStorage
+    const carritoGuardado = sessionStorage.getItem('carrito_salida');
+    if (carritoGuardado) {
+        try {
+            carrito = JSON.parse(carritoGuardado);
+            actualizarCarrito();
+        } catch (e) {
+            console.error('Error al cargar carrito:', e);
+        }
+    }
+    
+    // Limpiar sessionStorage al salir de la página
+    $(window).on('beforeunload', function() {
+        sessionStorage.removeItem('carrito_salida');
+    });
+    
+    // Prevenir comportamiento por defecto de todos los botones que no sean submit
+    $('button[type!="submit"]').click(function(e) {
+        e.preventDefault();
+    });
+});
+</script>
+{% endblock %}

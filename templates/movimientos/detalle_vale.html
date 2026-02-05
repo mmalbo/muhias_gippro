@@ -1,0 +1,362 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <!-- Header del vale -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-file-text"></i> Vale de Movimiento #{{ vale.consecutivo }}
+            </h2>
+            <div class="d-flex gap-2 mt-2">
+                <span class="badge {% if vale.entrada %}bg-success{% else %}bg-warning{% endif %}">
+                    {% if vale.entrada %}ENTRADA{% else %}SALIDA{% endif %}
+                </span>
+                <span class="badge 
+                    {% if vale.estado == 'borrador' %}bg-secondary
+                    {% elif vale.estado == 'confirmado' %}bg-primary
+                    {% elif vale.estado == 'despachado' %}bg-success
+                    {% else %}bg-danger{% endif %}">
+                    {{ vale.estado|upper }}
+                </span>
+                <span class="badge bg-info">{{ vale.tipo }}</span>
+            </div>
+        </div>
+        
+        <div class="text-end">
+            <small class="text-muted d-block">Fecha: {{ vale.fecha_movimiento|date:"d/m/Y" }}</small>
+            <small class="text-muted">Creado: {{ vale.created_at|date:"d/m/Y H:i" }}</small>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Información principal -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <i class="bi bi-info-circle"></i> Información General
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Almacén:</th>
+                            <td>
+                                {% if vale.almacen %}
+                                {{ vale.almacen.nombre }}
+                                {% if vale.almacen.codigo %}({{ vale.almacen.codigo }}){% endif %}
+                                {% else %}
+                                <span class="text-muted">No especificado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Origen:</th>
+                            <td>
+                                {% if vale.origen %}
+                                {{ vale.origen.nombre }}
+                                {% elif vale.origen_text %}
+                                {{ vale.origen_text }}
+                                {% else %}
+                                <span class="text-muted">No especificado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Destino:</th>
+                            <td>
+                                {% if vale.destino %}
+                                {{ vale.destino.nombre }}
+                                {% elif vale.destino_text %}
+                                {{ vale.destino_text }}
+                                {% else %}
+                                <span class="text-muted">No especificado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Descripción:</th>
+                            <td>{{ vale.descripcion|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Información de transporte -->
+            {% if vale.transportista or vale.chapa %}
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <i class="bi bi-truck"></i> Información de Transporte
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        {% if vale.transportista %}
+                        <tr>
+                            <th width="40%">Transportista:</th>
+                            <td>{{ vale.transportista }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if vale.transportista_cI %}
+                        <tr>
+                            <th>Carnet Identidad:</th>
+                            <td>{{ vale.transportista_cI }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if vale.chapa %}
+                        <tr>
+                            <th>Chapa vehículo:</th>
+                            <td>{{ vale.chapa }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Información de responsables -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <i class="bi bi-people"></i> Responsables
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        {% if vale.suministrador %}
+                        <tr>
+                            <th width="40%">Suministrador:</th>
+                            <td>{{ vale.suministrador.get_full_name|default:vale.suministrador.username }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if vale.despachado_por %}
+                        <tr>
+                            <th>Despachado por:</th>
+                            <td>
+                                {{ vale.despachado_por|default:vale.despachado_por }}
+                                {% if vale.despachado %}
+                                <span class="badge bg-success">Despachado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if vale.recibido_por %}
+                        <tr>
+                            <th>Recibido por:</th>
+                            <td>{{ vale.recibido_por|default:vale.recibido_por }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if vale.autorizado_por %}
+                        <tr>
+                            <th>Autorizado por:</th>
+                            <td>{{ vale.autorizado_por|default:vale.autorizado_por }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Relaciones especiales -->
+            {% if relacion_produccion %}
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-gear"></i> Relacionado con Producción
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>Solicitud de producción:</strong> 
+                        #{{ relacion_produccion.solicitud_produccion.id }}
+                    </p>
+                    <small class="text-muted">
+                        Fecha solicitud: {{ relacion_produccion.fecha_solicitud|date:"d/m/Y" }}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if relacion_envasado %}
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-box-seam"></i> Relacionado con Envasado
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>Solicitud de envasado:</strong> 
+                        #{{ relacion_envasado.solicitud_envasado.id }}
+                    </p>
+                    <small class="text-muted">
+                        Fecha solicitud: {{ relacion_envasado.fecha_solicitud|date:"d/m/Y" }}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Items del vale -->
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-list-check"></i> Items del Movimiento
+                <span class="badge bg-primary">{{ total_items }} items</span>
+            </div>
+            <div>
+                <span class="badge bg-secondary">Cantidad total: {{ total_cantidad|floatformat:3 }}</span>
+                {% if valor_total > 0 %}
+                <span class="badge bg-success ms-2">Valor total: ${{ valor_total|floatformat:2 }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            {% if items_agrupados %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Item</th>
+                            <th>Código</th>
+                            <th>Cantidad</th>
+                            <th>Lote</th>
+                            <th>Costo Unitario</th>
+                            <th>Valor Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items_agrupados %}
+                        <tr>
+                            <td>
+                                <span class="badge 
+                                    {% if item.tipo == 'Materia Prima' %}bg-primary
+                                    {% elif item.tipo == 'Producto' %}bg-success
+                                    {% elif item.tipo == 'Envase/Embalaje' %}bg-warning
+                                    {% else %}bg-info{% endif %}">
+                                    {{ item.tipo }}
+                                </span>
+                            </td>
+                            <td>{{ item.nombre }}</td>
+                            <td>{{ item.codigo|default:"-" }}</td>
+                            <td>
+                                {{ item.cantidad|floatformat:3 }}
+                                <small class="text-muted">{{ item.unidad }}</small>
+                            </td>
+                            <td>
+                                {% if item.lote %}
+                                <span class="badge bg-secondary">{{ item.lote }}</span>
+                                {% else %}-{% endif %}
+                            </td>
+                            <td>
+                                {% if item.costo %}
+                                ${{ item.costo|floatformat:4 }}
+                                {% else %}-{% endif %}
+                            </td>
+                            <td>
+                                {% if item.costo %}
+                                ${{ item.costo|multiply:item.cantidad|floatformat:2 }}
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if valor_total > 0 %}
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="6" class="text-end"><strong>Total:</strong></td>
+                            <td><strong>${{ valor_total|floatformat:2 }}</strong></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
+                <p class="text-muted mt-2">No hay items registrados en este vale</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Acciones -->
+    <div class="mt-4 d-flex justify-content-between">
+        <div>
+            <a href="{% url 'movimiento_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a lista
+            </a>
+            
+            {% if vale.estado == 'borrador' %}
+            <a href="{% url 'movimiento_update' vale.id %}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            {% endif %}
+        </div>
+        
+        <div>
+            {% if vale.estado == 'borrador' and not vale.entrada and puede_confirmar %}
+            <form method="post" action="{% url 'confirmar_salida' vale.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success" 
+                        onclick="return confirm('¿Está seguro de confirmar esta salida?')">
+                    <i class="bi bi-check-circle"></i> Confirmar Salida
+                </button>
+            </form>
+            {% endif %}
+            
+            {% if vale.estado == 'confirmado' and puede_despachar %}
+            <button class="btn btn-warning">
+                <i class="bi bi-truck"></i> Marcar como Despachado
+            </button>
+            {% endif %}
+            
+            {% if vale.estado == 'borrador' or vale.estado == 'confirmado' %}
+            <button class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#cancelarModal">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para cancelar -->
+<div class="modal fade" id="cancelarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancelar Vale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de cancelar el vale #{{ vale.consecutivo }}?</p>
+                <p class="text-muted small">
+                    Esta acción marcará el vale como cancelado y no podrá ser revertida.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, mantener</button>
+                <form method="post" action="" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Sí, cancelar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+// Funcionalidades adicionales para el detalle
+$(document).ready(function() {
+    // Exportar a PDF
+    $('#btn-exportar-pdf').click(function() {
+        // Implementar exportación a PDF
+        alert('Funcionalidad de exportación a PDF en desarrollo');
+    });
+    
+    // Imprimir vale
+    $('#btn-imprimir').click(function() {
+        window.print();
+    });
+});
+</script>
+{% endblock %}

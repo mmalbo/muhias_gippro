@@ -58,24 +58,20 @@ class Adquisicion(models.Model):
     
     @property
     def cantidad_mprimas(self):
-        print(self.id)
-        cantidad = DetallesAdquisicion.objects.filter(adquisicion=self.id).count()
-        print(cantidad)
+        cantidad = 0
+        cantidad = cantidad + DetallesAdquisicion.objects.filter(adquisicion=self.id).count()
         return cantidad
     
     @property
     def cantidad_envases(self):
-        print(self.id)
-        detalles = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id)
-        print(detalles)
-        cantidad = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id).count()
-        print(cantidad)
+        cantidad = 0
+        cantidad = cantidad + DetallesAdquisicionEnvase.objects.filter(adquisicion__id=self.id).count()
         return cantidad
     
     @property
     def cantidad_insumos(self):
-        cantidad = DetallesAdquisicionInsumo.objects.filter(adquisicion=self.id).count()
-        print(cantidad)
+        cantidad = 0
+        cantidad = cantidad + DetallesAdquisicionInsumo.objects.filter(adquisicion=self.id).count()
         return cantidad
     
 class DetallesAdquisicion(models.Model):

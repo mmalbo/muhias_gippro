@@ -122,7 +122,6 @@ class UpdateMateriaPrimaView(UpdateView):
         context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
         return context
 
-
 class DeleteMateriaPrimaView(DeleteView):
     model = MateriaPrima
     template_name = 'materia_prima/materia_prima_confirm_delete.html'

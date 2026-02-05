@@ -1,9 +1,13 @@
 from django.contrib import admin
 
-from movimientos.models import Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_EE, Movimiento_Ins
+from movimientos.models import Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_EE, Movimiento_Ins, Movimiento_Prod
 
 
 # Register your models here.
+@admin.register(Movimiento_Prod)
+class Movimiento_ProdAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(Movimiento_MP)
 class Movimiento_MPAdmin(admin.ModelAdmin):
     pass

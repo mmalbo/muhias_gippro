@@ -5,6 +5,7 @@ CHOICE_ESTADO_PROD = (
     ('En proceso: Validación', 'En proceso: Validación'),
     ('Concluida-Satisfactoria', 'Concluida-Satisfactoria'),
     ('Concluida-Rechazada', 'Concluida-Rechazada'),
+    ('Concluida-Rechazada-R', 'Concluida-Rechazada-R'),
     ('Cancelada', 'Cancelada')
 )
 

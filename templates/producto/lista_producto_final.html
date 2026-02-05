@@ -1,0 +1,83 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Productos</h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    <table id="datatable" class="table datatable table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Cantidad Almacenada</th>
+                            <th>formato</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for producto_final in productos_finales %}
+                            <tr>
+                                <td>{{ producto_final.codigo_producto }}</td>
+                                <td>{{ producto_final.nombre_comercial }}</td>
+                                <td>{{ producto_final.cantidad_total }}</td>
+                                {% if producto_final.formato.capacidad == 0 %}
+                                     <td>A granel</td>
+                                {% else %}
+                                    <td>{{producto_final.formato}}</td>
+                                {% endif %} 
+
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+
+
+                                        <a href="{% url 'actualizar_producto' producto_final.pk %}"
+                                           title="Editar producto final"
+                                           class="btn far fa-edit"></a>
+                                        <a href="{% url 'eliminar_producto' producto_final.pk %}"
+                                           title="Eliminar producto final"
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Cantidad Almacenada</th>
+                            <th>Es final</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+
+                    <a href="{% url 'crear_producto' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    <!--<a href="{% url 'importarProducto' %}" class="btn btn-success">
+                        Importar excel
+                    </a>-->
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}
