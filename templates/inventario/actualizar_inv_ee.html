@@ -21,15 +21,9 @@
                         <tbody>
                             <tr>
                                 <td>{{ inv_env.envase }}</td>
-                                {% if request.user.groups.all.0.name == 'Almaceneros'%}
                                     <td>{{ inv_env.almacen.nombre }}
                                         <input type="hidden" name="almacen" value="{inv_env.almacen.id}">
                                     </td>
-                                {% elif request.user.groups.all.0.name == 'Presidencia-Admin' %}
-                                    <td>{{ form.almacen }}</td>
-                                {% else %}
-                                    <td>{{ form.almacen }}</td>
-                                {% endif %}
                                 <td>{{ inv_env.cantidad }}</td>
                                 
                                 <td>          

@@ -21,6 +21,29 @@
                         <h2>Datos de la Producción</h2>
                         <form id="produccionForm">
                         {% csrf_token %}
+
+                        {% if produccion_base %}
+                        <div class="alert alert-warning">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-recycle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Reutilizando producción: {{ produccion_base.lote }}
+                                    </h5>
+                                    <p class="mb-0">
+                                        <strong>Producto:</strong> {{ produccion_base.catalogo_producto.nombre_comercial }} |
+                                        <strong>Cantidad:</strong> {{ produccion_base.cantidad_estimada|floatformat:2 }}L |
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo oculto para producción base -->
+                        <input type="hidden" name="produccion_base" value="{{ produccion_base.id }}">
+                        <input type="hidden" name="observaciones_reutilizacion" value="Reutilizando {{ produccion_base.lote }}">
+                        {% endif %}
+
             
                         <div class="form-row">                        
                             <!-- Selección de producto -->
@@ -401,6 +424,135 @@ function validarMateriasPrimas() {
     }
     return true;
 }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-completar formulario si hay datos pre-cargados
+        const urlParams = new URLSearchParams(window.location.search);
+        const produccionBaseId = urlParams.get('produccion_base_id');
+        
+        if (produccionBaseId) {
+            // Auto-seleccionar planta si viene en URL
+            const plantaId = urlParams.get('planta_id');
+            if (plantaId && document.getElementById('id_planta')) {
+                document.getElementById('id_planta').value = plantaId;
+            }
+            
+            // Auto-seleccionar producto
+            const productoId = urlParams.get('catalogo_producto_id');
+            if (productoId && document.getElementById('id_catalogo_producto')) {
+                document.getElementById('id_catalogo_producto').value = productoId;
+            }
+            
+            // Auto-completar cantidad
+            const cantidad = urlParams.get('cantidad_estimada');
+            if (cantidad && document.getElementById('id_cantidad_estimada')) {
+                document.getElementById('id_cantidad_estimada').value = cantidad;
+            }
+            
+            // Auto-marcar producto base si corresponde
+            const prodResult = urlParams.get('prod_result');
+            if (prodResult === 'on' && document.getElementById('id_prod_result')) {
+                document.getElementById('id_prod_result').checked = true;
+            }
+        }
+        
+        // Mostrar materias primas pre-cargadas como sugerencia
+        const materiasPrecargadas = {{ materias_primas_precargadas|safe|default:"[]" }};
+        if (materiasPrecargadas.length > 0) {
+            mostrarMateriasPrimasSugeridas(materiasPrecargadas);
+        }
+    });
+    
+    function mostrarMateriasPrimasSugeridas(materias) {
+        // Crear un contenedor para las sugerencias
+        const container = document.createElement('div');
+        container.className = 'card mt-3';
+        container.innerHTML = `
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Materias Primas Sugeridas (de la producción base)
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Estas son las materias primas utilizadas en la producción base.
+                    Puede usarlas como referencia o hacer clic para agregarlas automáticamente.
+                </p>
+                <div id="materias-sugeridas-list"></div>
+                <button type="button" class="btn btn-sm btn-outline-info mt-2" 
+                        onclick="agregarTodasMateriasSugeridas()">
+                    <i class="fas fa-plus-circle me-1"></i>Agregar Todas
+                </button>
+            </div>
+        `;
+        
+        // Insertar después del formulario de materias primas
+        const formMaterias = document.querySelector('.card.mb-4');
+        if (formMaterias) {
+            formMaterias.parentNode.insertBefore(container, formMaterias.nextSibling);
+        }
+        
+        // Llenar la lista
+        const listContainer = document.getElementById('materias-sugeridas-list');
+        materias.forEach((mp, index) => {
+            const item = document.createElement('div');
+            item.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
+            item.innerHTML = `
+                <div>
+                    <strong>${mp.materia_prima_nombre}</strong>
+                    <br>
+                    <small class="text-muted">
+                        ${mp.cantidad} ${mp.unidad_medida} • 
+                        Almacén: ${mp.almacen_nombre} • 
+                        Costo: $${mp.costo}
+                    </small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-success" 
+                        onclick="agregarMateriaSugerida(${index})">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            `;
+            listContainer.appendChild(item);
+            
+            // Guardar en data attribute para uso posterior
+            item.setAttribute('data-materia-data', JSON.stringify(mp));
+        });
+    }
+    
+    function agregarMateriaSugerida(index) {
+        // Obtener datos de la materia prima
+        const items = document.querySelectorAll('#materias-sugeridas-list > div');
+        const item = items[index];
+        const mpData = JSON.parse(item.getAttribute('data-materia-data'));
+        
+        // Llamar a la función que agrega materias primas (debes tenerla en tu JS)
+        if (typeof agregarMateriaPrima === 'function') {
+            agregarMateriaPrima({
+                materia_prima: mpData.materia_prima_id,
+                cantidad: mpData.cantidad,
+                almacen: mpData.almacen_id
+            });
+            
+            // Cambiar botón a agregado
+            const btn = item.querySelector('button');
+            btn.innerHTML = '<i class="fas fa-check"></i> Agregada';
+            btn.className = 'btn btn-sm btn-success';
+            btn.disabled = true;
+        }
+    }
+    
+    function agregarTodasMateriasSugeridas() {
+        const items = document.querySelectorAll('#materias-sugeridas-list > div');
+        items.forEach((item, index) => {
+            const btn = item.querySelector('button');
+            if (!btn.disabled) {
+                agregarMateriaSugerida(index);
+            }
+        });
+    }
 </script>
 
 <style>
