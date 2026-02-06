@@ -1,0 +1,442 @@
+<!-- templates/produccion/detalle_produccion.html -->
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Detalle de Producción - {{ produccion.lote }}{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid py-4">
+    <!-- Header con acciones -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">
+                <i class="fas fa-industry me-2"></i>Producción {{ produccion.lote }}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'produccion_list' %}">Producciones</a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ produccion.lote }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna izquierda: Información principal -->
+        <div class="col-lg-8">
+            <!-- Tarjeta de información básica -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información General
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Lote:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-dark fs-6">{{ produccion.lote }}</span>
+                                </dd>
+                                <dt class="col-sm-4">Lote Base:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-info fs-6">{{ datos_produccion.lote_base }}</span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Producto:</dt>
+                                <dd class="col-sm-8">
+                                    <strong>{{ produccion.catalogo_producto.nombre_comercial }}</strong>
+                                    {% if produccion.prod_result %}
+                                    <span class="badge bg-success ms-2">Producto Base</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-4">Estado:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge 
+                                        {% if produccion.estado == 'Planificada' %}bg-warning
+                                        {% elif 'En proceso:' in produccion.estado %}bg-info
+                                        {% elif produccion.estado == 'Concluida-Satisfactoria' %}bg-success
+                                        {% elif produccion.estado == 'Concluida-Rechazada' %}bg-danger
+                                        {% elif produccion.estado == 'Cancelada' %}bg-secondary
+                                        {% endif %} fs-6">
+                                        {{ produccion.estado }}
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Planta:</dt>
+                                <dd class="col-sm-8">{{ produccion.planta.nombre }}</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Cantidad Estimada:</dt>
+                                <dd class="col-sm-8">
+                                    {{ produccion.cantidad_estimada|floatformat:2 }} L
+                                </dd>
+                                
+                                <dt class="col-sm-4">Cantidad Real:</dt>
+                                <dd class="col-sm-8">
+                                    {% if produccion.cantidad_real %}
+                                    {{ produccion.cantidad_real|floatformat:2 }} L
+                                    <!-- Usar el filtro widthratio incorporado de Django -->
+                                    {% widthratio produccion.cantidad_real produccion.cantidad_estimada 100 as porcentaje %}
+                                    <span class="badge 
+                                        {% if produccion.cantidad_real >= produccion.cantidad_estimada %}bg-success
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ porcentaje|floatformat:1 }}%
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">No registrada</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-4">Costo Total:</dt>
+                                <dd class="col-sm-8">
+                                    ${{ produccion.costo|floatformat:2 }}
+                                </dd>
+                                
+                                <dt class="col-sm-4">Producto Conforme:</dt>
+                                <dd class="col-sm-8">
+                                    {% if produccion.prod_conform is None %}
+                                    <span class="badge bg-secondary">Pendiente</span>
+                                    {% elif produccion.prod_conform %}
+                                    <span class="badge bg-success">Sí</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    {% if produccion.observaciones_cancelacion %}
+                    <div class="alert alert-warning mt-3">
+                        <strong><i class="fas fa-exclamation-triangle"></i> Cancelación:</strong>
+                        {{ produccion.observaciones_cancelacion }}
+                        <br>
+                        <small class="text-muted">
+                            Fecha: {{ produccion.fecha_cancelacion|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Materias Primas Utilizadas -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-boxes me-2"></i>Materias Primas
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{ materias_primas.count }} items
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Materia Prima</th>
+                                    <th>Cantidad</th>
+                                    <th>Unidad</th>
+                                    <th>Almacén</th>
+                                    <th>Costo Unitario</th>
+                                    <th>Costo Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mp in materias_primas %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ mp.inv_materia_prima.nombre }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ mp.inv_materia_prima.tipo_materia_prima }}
+                                        </small>
+                                    </td>
+                                    <td>{{ mp.cantidad_materia_prima|floatformat:2 }}</td>
+                                    <td>{{ mp.inv_materia_prima.unidad_medida }}</td>
+                                    <td>{{ mp.almacen.nombre }}</td>
+                                    <td>${{ mp.inv_materia_prima.costo|floatformat:2 }}</td>
+                                    <td>
+                                        <!-- Para multiplicar: cantidad * costo_unitario -->
+                                        {% widthratio mp.cantidad_materia_prima 1 mp.inv_materia_prima.costo as costo_total %}
+                                        <strong>${{ costo_total|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        No hay materias primas registradas
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-dark">
+                                <tr>
+                                    <td colspan="5" class="text-end">
+                                        <strong>Total Materias Primas:</strong>
+                                    </td>
+                                    <td>
+                                        <strong>${{ costo_total_mp|floatformat:2|intcomma }}</strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end">
+                                        <strong>Costo Producción:</strong>
+                                    </td>
+                                    <td>
+                                        <strong>${{ produccion.costo|floatformat:2|intcomma }}</strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end">
+                                        <strong>Diferencia:</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if datos_produccion.diferencia_costo >= 0 %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            ${{ datos_produccion.diferencia_costo|floatformat:2|intcomma }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pruebas Químicas -->
+            {% if pruebas_quimicas.exists %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-flask me-2"></i>Pruebas Químicas
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{ pruebas_quimicas.count }} pruebas
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for prueba in pruebas_quimicas %}
+                        <a href="{% url 'editar_parametro_prueba' prueba.id %}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Prueba #{{ prueba.id }}</h6>
+                                    <small class="text-muted">
+                                        Realizada: {{ prueba.fecha_creacion|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge 
+                                        {% if prueba.resultado == 'aprobado' %}bg-success
+                                        {% elif prueba.resultado == 'rechazado' %}bg-danger
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ prueba.get_resultado_display }}
+                                    </span>
+                                    <br>
+                                    {% if prueba.archivo %}
+                                    <small>
+                                        <i class="fas fa-paperclip"></i> Con archivo
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Columna derecha: Sidebar con estadísticas y acciones -->
+        <div class="col-lg-4">
+            <!-- Tarjeta de progreso -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Progreso
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated 
+                            {% if produccion.estado == 'Concluida-Satisfactoria' %}bg-success
+                            {% elif 'En proceso:' in produccion.estado %}bg-info
+                            {% else %}bg-warning{% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ datos_produccion.porcentaje_avance }}%;"
+                            aria-valuenow="{{ datos_produccion.porcentaje_avance }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ datos_produccion.porcentaje_avance }}%
+                        </div>
+                    </div>
+                    
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Eficiencia:</strong> 
+                            {{ datos_produccion.eficiencia|floatformat:1 }}%
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-dollar-sign text-primary me-2"></i>
+                            <strong>Costo/Litro:</strong> 
+                            {% widthratio produccion.costo produccion.cantidad_estimada 100 as porcentaje %}
+                            {{ porcentaje|floatformat:1 }}%
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar me-2"></i>
+                            <strong>Iniciada:</strong> 
+                            {{ produccion.fecha_creacion|date:"d/m/Y" }}
+                        </li>
+                        {% if produccion.fecha_modificacion %}
+                        <li>
+                            <i class="fas fa-history me-2"></i>
+                            <strong>Última actualización:</strong> 
+                            {{ produccion.fecha_modificacion|date:"d/m/Y H:i" }}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Cambiar estado -->
+            {% if estados_disponibles %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sync-alt me-2"></i>Cambiar Estado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="nuevo_estado" class="form-label">Nuevo Estado</label>
+                            <select class="form-select" id="nuevo_estado" name="nuevo_estado" required>
+                                <option value="">Seleccionar...</option>
+                                {% for estado in estados_disponibles %}
+                                <option value="{{ estado }}">{{ estado }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones (opcional)</label>
+                            <textarea class="form-control" id="observaciones" 
+                                      name="observaciones" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-check me-2"></i>Actualizar Estado
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Archivos adjuntos -->
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paperclip me-2"></i>Documentos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if produccion.pruebas_quimicas_ext %}
+                    <div class="mb-3">
+                        <h6>Pruebas Químicas Externas</h6>
+                        <a href="{{ produccion.pruebas_quimicas_ext.url }}" 
+                           target="_blank" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-file-pdf me-1"></i> 
+                            {{ produccion.nombre_archivo_pruebas }}
+                        </a>
+                        <small class="d-block text-muted mt-1">
+                            {{ produccion.extension_archivo|upper }} • 
+                            {{ produccion.pruebas_quimicas_ext.size|filesizeformat }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Espacio para otros documentos -->
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-secondary w-100">
+                            <i class="fas fa-plus me-1"></i> Adjuntar Documento
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial -->
+            {% if historial %}
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Historial
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for registro in historial|slice:":5" %}
+                        <div class="list-group-item">
+                            <small class="text-muted">
+                                {{ registro.action_time|date:"d/m H:i" }}
+                            </small>
+                            <br>
+                            <small>
+                                {{ registro.user.username }} - 
+                                {{ registro.get_action_flag_display }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+function cancelarProduccion(produccionId) {
+    if (confirm('¿Está seguro de cancelar esta producción?')) {
+        const motivo = prompt('Ingrese el motivo de la cancelación:');
+        if (motivo !== null) {
+            fetch(`/produccion/${produccionId}/cancelar/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    observaciones: motivo
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

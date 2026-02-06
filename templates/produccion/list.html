@@ -125,20 +125,20 @@
                                                 <i class="fas fa-info-circle"></i> Ver Cancelación
                                             </a>
                                         {% endif %}
-                                        {% if produccion.estado == 'Concluida-Satisfactoria' %}
-                                            <a href="{% url 'detalle_cancelacion' produccion.id %}"
-                                                class="btn btn-sm"
-                                                title="Ver detalles de cancelación">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        {% endif %}
+                                        
+                                        
                                         {% if produccion.estado == 'Concluida-Rechazada' %}
-                                            <a href="{% url 'detalle_cancelacion' produccion.id %}"
+                                            <a href="{% url 'reutilizar_produccion' produccion.id %}"
                                                 class="btn btn-outline-danger btn-sm"
                                                 title="Ver detalles de cancelación">
-                                                <i class="fas fa-industry"></i> Renovar proceso
+                                                <i class="fas fa-industry"></i> Reutilizar
                                             </a>
                                         {% endif %}
+                                        <a href="{% url 'produccion_detail' produccion.id %}"
+                                            class="btn btn-sm"
+                                            title="Ver detalles de producción">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
