@@ -164,13 +164,6 @@
 </style>
 
 <div class="sidebar" id="sidebar">
-    <!-- Sidebar Header
-    <div class="sidebar-header">
-        <a href="{% url 'principal' %}" class="logo">
-            <img src="{% static 'gestion/images/logo/logo.jpeg' %}" alt="logo">
-            <h3>GIPPro</h3>
-        </a>
-    </div> -->
     
     <!-- Sidebar Navigation -->
     <nav class="sidebar-nav">
@@ -260,6 +253,36 @@
                         
                         <a href="{% url 'parametros_lista' %}" class="nav-link">
                             <span>Parámetros químicos</span>
+                        </a>
+                    </div>
+                </li>
+            {% endif %}
+
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                <!--<div class="nav-title">INVENTARIOS</div>-->
+                <li class="nav-item">
+                    <a href="#submenuCatalogos" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span class="ml-2">Catálogo</span>
+                        <i class="las la-angle-down arrow"></i>
+                    </a>
+                    <div class="submenu collapse" id="submenuCatalogos">
+                        <a href="{% url 'materia_prima:list_materia_prima' %}" class="nav-link">
+                            <span>Materia prima</span>
+                        </a>
+                        <a href="{% url 'list_envase_embalaje' %}" class="nav-link">
+                            <span>Envase o embalaje</span>
+                        </a>
+                        <a href="{% url 'list_insumos' %}" class="nav-link">
+                            <span>Insumos y otros--</span>
+                        </a>
+                        <a href="{% url 'list_producto' %}" class="nav-link">
+                            <span>Productos--</span>
                         </a>
                     </div>
                 </li>

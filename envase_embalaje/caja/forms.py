@@ -24,16 +24,14 @@ class CajaForm(forms.ModelForm):
 class UpdateCajaForm(forms.ModelForm):
     class Meta:
         model = Caja
-        fields = ['codigo','nombre', 'tamanno', 'material' ]
+        fields = ['nombre', 'tamanno', 'material' ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'tamanno': forms.TextInput(attrs={'class': 'form-control'}),
             'material': forms.TextInput(attrs={'class': 'form-control'}),
-            'codigo': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
 
         }
         labels = {
-            'codigo': 'Código',
             'nombre': 'Nombre',
             'tamanno': 'Tamaño',
             'material': 'Material',

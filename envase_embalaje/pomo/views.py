@@ -1,6 +1,6 @@
 import re
 from distutils.command.config import config
-
+from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect, render
@@ -82,13 +82,13 @@ class UpdatePomoView(UpdateView):
     model = Pomo
     form_class = UpdatePomoForm
     template_name = 'pomo/pomo_form.html'
-    success_url = '/pomo/'
+    success_url = reverse_lazy('pomo:listar')
 
 
 class DeletePomoView(DeleteView):
     model = Pomo
     template_name = 'pomo/pomo_confirm_delete.html'
-    success_url = '/pomo/'
+    success_url = reverse_lazy('pomo:listar')
 
 
 def generar_formato_codigo(material, color):

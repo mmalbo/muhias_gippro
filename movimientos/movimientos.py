@@ -19,15 +19,15 @@ def export_vale(request, id_movimiento):
    if inventarios:
       tipo = 'materias primas'
    else:
-      inventarios = vale.movimientos_e.all()
+      inventarios = vale.movimientos_envases.all()
       if inventarios:
          tipo = 'envase o embalaje'
       else:
-         inventarios = vale.movimientos_prod.all()
+         inventarios = vale.movimientos_productos.all()
          if inventarios:
             tipo = 'productos'
          else:
-            inventarios = vale.movimientos_i.all()
+            inventarios = vale.movimientos_insumos.all()
             if inventarios:
                tipo = 'insumos'
             else:

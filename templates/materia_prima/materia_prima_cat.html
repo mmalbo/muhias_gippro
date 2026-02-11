@@ -1,0 +1,84 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Materias Primas 
+                    </h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                    <table id="datatable" class="table datatable table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>U. de Medida</th>
+                            <th>Tipo</th>
+                            <th>Cantidad Total</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for materia_prima in materias_primas %}
+                            <tr>
+                                <td>{{ materia_prima.codigo }}</td>
+                                <td>{{ materia_prima.nombre }}</td>
+                                <td>{{ materia_prima.unidad_medida }}</td>
+                                <td>{{ materia_prima.tipo_materia_prima}}</td>
+                                <td>{{ materia_prima.cantidad_total }}</td>
+                                <td>{{ materia_prima.costo }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'materia_prima:materia_prima_actualizar' materia_prima.pk %}"
+                                           title="Editar materia prima" class="btn far fa-edit"></a>
+                                        
+                                        <a href="{% url 'materia_prima:get_materias_primas' materia_prima.pk %}"
+                                            title="Ver detalles" class="btn fas fa-eye"></a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>U. de Medida</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

@@ -192,14 +192,12 @@ def ajuste_inv_env(request, inv_ee):
                 cantidad = nuevo_cant - viejo_cant
             )
             mov_ee.save()
-            print(mov_ee)
-            print(mov_ee.vale_e)
+            
             messages.success(request, f'Inventario de {inv_env.envase.codigo_envase} actualizado correctamente')
-            return redirect('materia_prima:materia_prima_list')
+            return redirect('envase_embalaje_lista')
         else:
-            print('La form no es valida')
             messages.success(request, f'Error en la form {form.errors}')
-            return redirect('materia_prima:materia_prima_list')
+            return redirect('envase_embalaje_lista')
     else:
         form = AjusteInvMPForm(instance=inv_env, user=request.user)
 
@@ -261,7 +259,6 @@ def ajuste_inv_ins(request, inv_ins):
             messages.success(request, f'Inventario de {inv_insT.insumos} actualizado correctamente')
             return redirect('insumos_list')
         else:
-            print('La form no es valida')
             messages.success(request, f'Error en la form {form.errors}')
             return redirect('insumos_list')
     else:

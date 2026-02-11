@@ -1,0 +1,83 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de envases y embalajes 
+                    </h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                
+                <div class="col-sm-12 col-lg-12">
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                    <table id="datatable" class="table datatable table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Capacidad</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for ee in envase_embalaje %}
+                            <tr>
+                                <td>{{ ee.codigo_envase }}</td>
+                                <td>{{ ee.formato }}</td>
+                                <td>{{ ee.tipo_envase_embalaje}}</td>
+                                <td>{{ ee.cantidad_total }}</td>
+                                <td>{{ ee.costo }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
+                                        <a href="{% url 'envase_embalaje_editar' ee.pk %}"
+                                           title="Editar envase o embalaje" class="btn far fa-edit"></a>
+                                        {% endif %}                                        
+                                        <a href="{% url 'get_envase_embalaje' ee.pk %}"
+                                            title="Ver detalles" class="btn far fa-trash-alt"></a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Capacidad</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'importarEnvaseEmbalaje' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

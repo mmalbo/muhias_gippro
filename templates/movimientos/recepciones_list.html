@@ -5,7 +5,7 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
-                    <h4 class="card-title">Listado de Recepciones pendientes</h4>
+                    <h4 class="card-title">Listado de recepciones pendientes</h4>
                     {% if messages %}
                         <script>
                             {% for message in messages %}
@@ -24,6 +24,7 @@
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de recepción</th>
+                            <th>Almacén</th>
                             <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
@@ -33,6 +34,7 @@
                             <tr>
                                 <td>{{ rp.fecha_compra }}</td>
                                 <td>
+                                    Compra de 
                                     {% if rp.tipo_adquisicion == 'mp' %}
                                       Materias primas
                                     {% elif rp.tipo_adquisicion == 'env' %}
@@ -41,6 +43,7 @@
                                         Insumos y otros
                                     {% endif %}
                                 </td>
+                                <td>{{ rp.almacen }}</td>
                                 <td>
                                     {% if rp.tipo_adquisicion == 'mp' %}
                                         {{ rp.cantidad_mprimas }}
@@ -66,13 +69,47 @@
                                     {% endif %}
                                 </td>
                             </tr>
-
+                        {% endfor %}
+                        {% for mv in mov_pendientes %}
+                        <tr>
+                            <td>{{ mv.fecha_movimiento }}</td>
+                            <td>
+                                Movimiento de 
+                                {{ mv.get_tipo_inventario }} desde {{mv.almacen}}
+                            </td>
+                            <td>
+                                {{ mv.destino }}
+                            </td>
+                            <td>
+                                {{ mv.cantidad_elementos }}
+                            </td>
+                            <td>
+                                {% if mv.get_tipo_inventario == "Materias primas" %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_mp' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% elif mv.get_tipo_inventario == 'Insumos' %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_ins' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% elif mv.get_tipo_inventario == 'Envases y embalajes' %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_env' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% else %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_prod' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
                         {% endfor %}
                         </tbody>
                         <tfoot>
                         <tr class="ligth">
                             <th>Fecha</th>
-                            <th>Tipo de adquisición</th>
+                            <th>Tipo de recepción</th>
+                            <th>Almacén</th>
                             <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>

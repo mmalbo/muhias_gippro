@@ -13,7 +13,7 @@ from django.http import JsonResponse, Http404
 
 class ListInsumosView(ListView):
     model = InsumosOtros
-    template_name = 'insumosOtros/insumos_list.html'
+    template_name = 'insumos/insumos_cat.html'
     context_object_name = 'insumos'
     #Hacer un query para mostrar solo los envases de un almacen si el usuario es almacenero, el almacen al que el pertenece
 
