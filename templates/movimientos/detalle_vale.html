@@ -293,20 +293,19 @@
         
         <div>
             {% if vale.estado == 'borrador' and not vale.entrada and puede_confirmar %}
-            <form method="post" action="{% url 'confirmar_salida' vale.id %}" class="d-inline">
+            <form method="post" action="{% url 'confirmar_salida' vale.id %}" id="confirmForm{{ vale.id }}" class="d-inline">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success" 
-                        onclick="return confirm('¿Está seguro de confirmar esta salida?')">
+                <button type="button" class="btn btn-success" onclick="confirmarSalida('{{ vale.id }}')">
                     <i class="bi bi-check-circle"></i> Confirmar Salida
                 </button>
             </form>
             {% endif %}
             
-            {% if vale.estado == 'confirmado' and puede_despachar %}
+            <!-- {% if vale.estado == 'confirmado' and puede_despachar %}
             <button class="btn btn-warning">
                 <i class="bi bi-truck"></i> Marcar como Despachado
             </button>
-            {% endif %}
+            {% endif %} -->
             
             {% if vale.estado == 'borrador' or vale.estado == 'confirmado' %}
             <button class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#cancelarModal">
@@ -358,5 +357,10 @@ $(document).ready(function() {
         window.print();
     });
 });
+function confirmarSalida(valeId) {
+    if (confirm('¿Está seguro de confirmar esta salida?')) {
+        document.getElementById('confirmForm' + valeId).submit();
+    }
+}
 </script>
 {% endblock %}

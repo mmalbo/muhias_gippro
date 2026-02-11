@@ -8,15 +8,19 @@
                     <h4 class="card-title">{% if object %}Actualizar pomo: {{ object.codigo }}{% else %}Crear pomo{% endif %}</h4>
                     <div class="card">
                         <div class="card-body">
+                            {% if form.errors %}
+                                {% for field in form %}
+                                    {% if field.errors %}
+                                        <div class="alert alert-danger">
+                                            <div>{{ field.label }}: {{ field.errors }}</div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="form-row">
-                                    {% if object %}
-                                        <div class="col-md-6 mb-3">
-                                            {{ form.codigo.label_tag }}
-                                            {{ form.codigo }}
-                                        </div>
-                                    {% endif %}
+                                    {% if object %}{% endif %}
                                     <div class="col-md-6 mb-3">
                                         {{ form.nombre.label_tag }}
                                         {{ form.nombre }}
@@ -29,9 +33,10 @@
                                         {{ form.material.label_tag }}
                                         {{ form.material }}
                                     </div>
+                                    
                                     <div class="col-md-6 mb-3">
-                                        {{ form.color_input.label_tag }}
-                                        {{ form.color_input }}
+                                        {{ form.color.label_tag }}
+                                        {{ form.color }}
                                         <!-- Lista de sugerencias -->
                                          <datalist id="colores-list">
                                             {% for color in form.colores %}
@@ -42,6 +47,7 @@
                                             Seleccione un color existente o escriba uno nuevo
                                         </small>
                                     </div>
+                                    
 
                                 </div>
                                 

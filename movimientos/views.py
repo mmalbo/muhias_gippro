@@ -72,14 +72,12 @@ class CrearSalidaView(CreateView):
                 
                 # Procesar el carrito desde el formulario
                 carrito_data = self.request.POST.get('carrito_data')
-                print(carrito_data)
                 if not carrito_data or carrito_data == '[]':
                     messages.error(self.request, 'Debe agregar al menos un item a la salida')
                     return self.form_invalid(form)
                 
                 # Parsear el carrito
                 carrito = json.loads(carrito_data)
-                print(carrito)
                 # Guardar el vale primero para tener un ID
                 vale.save()
                 
@@ -137,16 +135,14 @@ class CrearSalidaView(CreateView):
             elif tipo == 'envase':
                 ee = EnvaseEmbalaje.objects.get_or_create(
                         id=item_data['item_id'])[0]
-                print(ee)
                 Movimiento_EE.objects.create(
                     vale=vale,
-                    envase_embalaje=item_data['item_id'],
+                    envase_embalaje=ee,
                     cantidad=cantidad,
                     lote=item_data.get('lote', '')
                 )
                 
             elif tipo == 'insumo':
-                print(item_data['item_id'])
                 Movimiento_Ins.objects.create(
                     vale=vale,
                     insumo_id=item_data['item_id'],
@@ -160,7 +156,6 @@ class CrearSalidaView(CreateView):
             # Loggear el error
             print(f"Error al crear movimiento para item {item_data}: {e}")
             raise
-
 
 @require_GET
 def buscar_items_almacen(request):
@@ -533,6 +528,67 @@ def recepcion_materia_prima(request, adq_id):
         'productos': inv_mat, 'adquisicion': adquisicion
     })
 
+# No se ha implementado
+def recepcion_producto(request, adq_id):
+    # Obtener los productos que quieres mostrar (ejemplo: todos)
+    inv_mat = DetallesAdquisicion.objects.filter(adquisicion__id=adq_id)
+    adquisicion = get_object_or_404(Adquisicion, id=adq_id)
+    if adquisicion.registrada:
+        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
+    almacen = adquisicion.almacen
+    if request.method == 'POST':
+        vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                destino = almacen,
+                entrada = True,
+                tipo = 'Adquisición'
+            )
+        # Procesar cada producto
+        for inv in inv_mat:
+            field_name = str(inv.materia_prima.id)
+            cantidad = decimal.Decimal('0.00')
+            cantidad = round(float(request.POST.get(field_name)), 2)
+            cantidad = decimal.Decimal(cantidad)
+            if cantidad:
+                try:
+                    Movimiento_MP.objects.create(
+                        materia_prima=inv.materia_prima,
+                        vale=vale,  
+                        cantidad=cantidad                        
+                    )
+                    inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
+                        materia_prima=inv.materia_prima, almacen=almacen)
+                    if created:
+                        inventario_mp.cantidad = cantidad
+                        inventario_mp.save()
+                    else:
+                        inventario_mp.cantidad = inventario_mp.cantidad + cantidad
+                        inventario_mp.save()
+                    if not cantidad == inv.cantidad:
+                        target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+                        # Crear notificaciones para cada usuario en ese grupo
+                        for group in target_groups:
+                            for user in group.customuser_set.all():
+                                # Notificación en base de datos
+                                Notification.objects.create(
+                                    user=user,
+                                    message=f"No coincide la recepción con la adquisición de: {inv.materia_prima.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
+                                    link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
+                                )                    
+                except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}")
+                    pass
+            else:
+                print("No encontro cantidad")
+        adquisicion.registrada = True
+        adquisicion.save()
+        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
+    
+    # Si es GET, mostrar el formulario con los valores actuales
+    return render(request, 'movimientos/recepcion_mp.html', {
+        'productos': inv_mat, 'adquisicion': adquisicion
+    })
+
 def recepcion_envase(request, adq_id):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
     inv_env = DetallesAdquisicionEnvase.objects.filter(adquisicion__id=adq_id)
@@ -556,7 +612,7 @@ def recepcion_envase(request, adq_id):
                 try:
                     Movimiento_EE.objects.create(
                         envase_embalaje=inv.envase_embalaje,
-                        vale_e=vale,  
+                        vale=vale,  
                         cantidad=cantidad
                     )
                     inventario_ev, created = Inv_Envase.objects.get_or_create(
@@ -616,7 +672,7 @@ def recepcion_insumo(request, adq_id):
                 try:
                     Movimiento_Ins.objects.create(
                         insumo=inv.insumo,
-                        vale_e=vale,  
+                        vale=vale,  
                         cantidad=cantidad
                     )
                     inventario_in, created = Inv_Insumos.objects.get_or_create(
@@ -652,6 +708,249 @@ def recepcion_insumo(request, adq_id):
         'productos': inv_ins
     })
 
+
+def entrada_materia_prima(request, pk):
+    # Obtener los productos que quieres mostrar (ejemplo: todos)
+    vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
+    if vale_v.estado == 'recibido':
+        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
+    almacen = vale_v.destino
+    inv_mat = vale_v.movimientos.all()
+    if request.method == 'POST':
+        vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                origen = vale_v.almacen,
+                destino = almacen,
+                entrada = True,
+                tipo = 'Entrada'
+            )
+        # Procesar cada producto
+        for inv in inv_mat:
+            field_name = str(inv.materia_prima.id)
+            cantidad = decimal.Decimal('0.00')
+            cantidad = round(float(request.POST.get(field_name)), 2)
+            cantidad = decimal.Decimal(cantidad)
+            if cantidad:
+                try:
+                    Movimiento_MP.objects.create(
+                        materia_prima=inv.materia_prima,
+                        vale=vale,  
+                        cantidad=cantidad                        
+                    )
+                    inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
+                        materia_prima=inv.materia_prima, almacen=almacen)
+                    if created:
+                        inventario_mp.cantidad = cantidad
+                        inventario_mp.save()
+                    else:
+                        inventario_mp.cantidad = inventario_mp.cantidad + cantidad
+                        inventario_mp.save()
+                    if not cantidad == inv.cantidad:
+                        target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+                        # Crear notificaciones para cada usuario en ese grupo
+                        for group in target_groups:
+                            for user in group.customuser_set.all():
+                                # Notificación en base de datos
+                                Notification.objects.create(
+                                    user=user,
+                                    message=f"No coincide la entrada con lo enviado de: {inv.materia_prima.nombre}. Cantidad enviada: {inv.cantidad}, Cantidad entrada: {cantidad}",
+                                    link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
+                                )                    
+                except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}")
+                    pass
+            else:
+                print("No encontro cantidad")
+        vale_v.estado = 'recibido'
+        vale_v.save()
+        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
+    
+    # Si es GET, mostrar el formulario con los valores actuales
+    return render(request, 'movimientos/entrada_mp.html', {
+        'inv_mp': inv_mat, 'vale': vale_v
+    })
+
+def entrada_envase(request, pk):
+    # Obtener los productos que quieres mostrar (ejemplo: todos)
+    vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
+    if vale_v.estado == 'recibido':
+        return redirect('envase_embalaje_lista')  # Redirigir a página de éxito        
+    almacen = vale_v.destino
+    inv_env = vale_v.movimientos_envases.all()
+    if request.method == 'POST':
+        vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                origen = vale_v.almacen,
+                destino = almacen,
+                entrada=True,
+                tipo = 'Entrada'
+            )
+        # Procesar cada producto
+        for inv in inv_env:
+            field_name = str(inv.envase_embalaje.codigo_envase)
+            cantidad = decimal.Decimal('0.00')
+            cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+            if cantidad:
+                try:
+                    Movimiento_EE.objects.create(
+                        envase_embalaje=inv.envase_embalaje,
+                        vale=vale,  
+                        cantidad=cantidad
+                    )
+                    inventario_ev, created = Inv_Envase.objects.get_or_create(
+                        envase=inv.envase_embalaje, almacen=almacen)
+                    if created:
+                        inventario_ev.cantidad = cantidad
+                        inventario_ev.save()
+                    else:
+                        inventario_ev.cantidad = inventario_ev.cantidad + cantidad
+                        inventario_ev.save()
+                    if not cantidad == inv.cantidad:
+                        target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+                        # Crear notificaciones para cada usuario en ese grupo
+                        for group in target_groups:
+                            for user in group.customuser_set.all():
+                                # Notificación en base de datos
+                                Notification.objects.create(
+                                    user=user,
+                                    message=f"No coincide la entrada con el envío de: {inv.envase_embalaje.codigo_envase}. Cantidad enviada: {inv.cantidad}, Cantidad recibida: {cantidad}",
+                                    link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
+                                )
+                except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}") 
+                    pass
+            else:
+                print("No se encontro cantidad")
+        vale_v.estado = 'recibido'
+        vale_v.save()
+        return redirect('envase_embalaje_lista')  # Redirigir a página de éxito
+
+    # Si es GET, mostrar el formulario con los valores actuales
+    return render(request, 'movimientos/entrada_env.html', {
+        'inv_env': inv_env, 'vale': vale_v
+    })
+
+def entrada_insumo(request, pk):
+    # Obtener los productos que quieres mostrar (ejemplo: todos)
+    vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
+    if vale_v.estado == 'recibido':
+        return redirect('insumos_list')  # Redirigir a página de éxito        
+    almacen = vale_v.destino
+    inv_ins = vale_v.movimientos_insumos.all()
+    if request.method == 'POST':
+        vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                origen = vale_v.almacen,
+                destino = almacen,
+                entrada=True,
+                tipo = 'Entrada'
+            )
+        # Procesar cada producto
+        for inv in inv_ins:
+            field_name = str(inv.insumo.id)
+            cantidad = decimal.Decimal('0.00')
+            cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+            if cantidad:
+                try:
+                    Movimiento_Ins.objects.create(
+                        insumo=inv.insumo,
+                        vale=vale,  
+                        cantidad=cantidad
+                    )
+                    inventario_in, created = Inv_Insumos.objects.get_or_create(
+                        insumos=inv.insumo, almacen=almacen)
+                    if created:
+                        inventario_in.cantidad = cantidad
+                        inventario_in.save()
+                    else:
+                        inventario_in.cantidad = inventario_in.cantidad + cantidad
+                        inventario_in.save()
+                    if not cantidad == inv.cantidad:
+                        target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+                        # Crear notificaciones para cada usuario en ese grupo
+                        for group in target_groups:
+                            for user in group.customuser_set.all():
+                                # Notificación en base de datos
+                                Notification.objects.create(
+                                    user=user,
+                                    message=f"No coincide la recepción con la entrada de: {inv.insumo.nombre}. Cantidad enviada: {inv.cantidad}, Cantidad recibida: {cantidad}",
+                                    link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
+                                )
+                except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}") 
+                    pass
+            else:
+                print("No encontró cantidad")
+        vale_v.estado = 'recibido'
+        vale_v.save()
+        return redirect('insumos_list')  # Redirigir a página de éxito
+    
+    # Si es GET, mostrar el formulario con los valores actuales
+    return render(request, 'movimientos/entrada_ins.html', {
+        'inv_ins': inv_ins, 'vale': vale_v
+    })
+
+def entrada_producto(request, pk):
+    # Obtener los productos que quieres mostrar (ejemplo: todos)
+    vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
+    if vale_v.estado == 'recibido':
+        return redirect('insumos_list')  # Redirigir a página de éxito        
+    almacen = vale_v.destino
+    inv_prod = vale_v.movimientos_productos.all()
+    if request.method == 'POST':
+        vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                origen = vale_v.almacen,
+                destino = almacen,
+                entrada=True,
+                tipo = 'Adquisición'
+            )
+        # Procesar cada producto
+        for inv in inv_ins:
+            field_name = str(inv.insumo.id)
+            cantidad = decimal.Decimal('0.00')
+            cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+            if cantidad:
+                try:
+                    Movimiento_Ins.objects.create(
+                        insumo=inv.insumo,
+                        vale=vale,  
+                        cantidad=cantidad
+                    )
+                    inventario_in, created = Inv_Insumos.objects.get_or_create(
+                        insumos=inv.insumo, almacen=almacen)
+                    if created:
+                        inventario_in.cantidad = cantidad
+                        inventario_in.save()
+                    else:
+                        inventario_in.cantidad = inventario_in.cantidad + cantidad
+                        inventario_in.save()
+                    if not cantidad == inv.cantidad:
+                        target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+                        # Crear notificaciones para cada usuario en ese grupo
+                        for group in target_groups:
+                            for user in group.customuser_set.all():
+                                # Notificación en base de datos
+                                Notification.objects.create(
+                                    user=user,
+                                    message=f"No coincide la recepción con la adquisición de: {inv.insumo.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
+                                    link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
+                                )
+                except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}") 
+                    pass
+            else:
+                print("No encontró cantidad")
+        vale_v.registrada = True
+        vale_v.save()
+        return redirect('insumos_list')  # Redirigir a página de éxito
+    
+    # Si es GET, mostrar el formulario con los valores actuales
+    return render(request, 'movimientos/entrada_prod.html', {
+        'productos': inv_prod, 'vale': vale_v
+    })
+    
+
 def movimiento_list(request):
     movimientos = Vale_Movimiento_Almacen.objects.all().order_by('-consecutivo')
     print(movimientos)
@@ -661,8 +960,10 @@ def movimiento_list(request):
 
 def recepciones_pendientes_list(request):
     rec_pendientes = Adquisicion.objects.filter(registrada=False).all()
+    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado')
     return render(request, 'movimientos/recepciones_list.html', {
-        'rec_pendientes': rec_pendientes
+        'rec_pendientes': rec_pendientes,
+        'mov_pendientes': mov_pendientes
     })
 
 def solicitudes_pendientes_list(request):
@@ -754,7 +1055,6 @@ def generar_vale(request, cons):
 
 def vale_detalle(request, pk):
     vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
-    print(vale)
     # Manejar POST si tienes un formulario de actualización
     if request.method == 'POST':
         # Si tienes un formulario para actualizar
@@ -889,15 +1189,13 @@ def vale_detalle(request, pk):
     
     return render(request, 'movimientos/detalle_vale.html', context)
 
-
 # Vista para confirmar una salida
 def confirmar_salida(request, pk):
-    vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
-    
     if request.method != 'POST':
         messages.error(request, 'Método no permitido')
-        return redirect('detalle_vale', pk=pk)
+        return redirect('movimiento_detalle', pk=pk)
     
+    vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     # Verificar permisos (agregar según tu sistema de permisos)
     # if not request.user.has_perm('inventario.confirmar_salida'):
     #     messages.error(request, 'No tiene permisos para confirmar salidas')
@@ -923,14 +1221,25 @@ def confirmar_salida(request, pk):
             
             for movimiento in vale.movimientos_productos.all():
                 validar_disponibilidad_producto(movimiento, vale.almacen)
-            
+
+            for movimiento in vale.movimientos_envases.all():
+                validar_disponibilidad_envase(movimiento, vale.almacen)
+
+            for movimiento in vale.movimientos_insumos.all():
+                validar_disponibilidad_insumos(movimiento, vale.almacen)
+
             # 2. Actualizar estado
-            vale.estado = 'confirmado'
-            vale.despachado_por = request.user
-            vale.save()
-            
-            # 3. Aquí iría la lógica para actualizar inventarios
-            # actualizar_inventarios(vale)
+            if vale.destino:
+                vale.estado = 'confirmado'
+            else:
+                vale.estado = 'despachado'
+            vale.despachado_por = request.user.first_name
+            try:
+                vale.save()
+            except Exception as e:
+                print(f'Error inesperado: {str(e)}')
+
+            # 3. Lógica para actualizar inventarios
             
             messages.success(request, f'Vale {vale.consecutivo} confirmado exitosamente')
             
@@ -939,7 +1248,7 @@ def confirmar_salida(request, pk):
     except Exception as e:
         messages.error(request, f'Error inesperado: {str(e)}')
     
-    return redirect('detalle_vale', pk=pk)
+    return redirect('movimiento_list')
 
 
 # Funciones auxiliares para validación
@@ -959,6 +1268,9 @@ def validar_disponibilidad_mp(movimiento, almacen):
             f'Disponible: {inventario.cantidad if inventario else 0}, '
             f'Solicitado: {movimiento.cantidad}'
         )
+    else:
+        inventario.cantidad -= movimiento.cantidad
+        inventario.save()
 
 def validar_disponibilidad_producto(movimiento, almacen):
     """Validar disponibilidad de producto"""
@@ -978,7 +1290,52 @@ def validar_disponibilidad_producto(movimiento, almacen):
             f'Disponible: {inventario.cantidad if inventario else 0}, '
             f'Solicitado: {movimiento.cantidad}'
         )
+    else:
+        inventario.cantidad -= movimiento.cantidad
+        inventario.save()
 
+def validar_disponibilidad_envase(movimiento, almacen):
+    """Validar disponibilidad de envases"""
+    from inventario.models import Inv_Envase
+    print('En validar disponibilidad envase')
+    inventario = Inv_Envase.objects.filter(
+        envase=movimiento.envase_embalaje,
+        almacen=almacen
+    ).first()
+
+    print(f'Disponible: {inventario.cantidad if inventario else 0}, ')
+    
+    if not inventario or inventario.cantidad < movimiento.cantidad:
+        raise ValueError(
+            f'Cantidad insuficiente de {movimiento.envase_embalaje.tipo_envase_embalaje}. '
+            f'Disponible: {inventario.cantidad if inventario else 0}, '
+            f'Solicitado: {movimiento.cantidad}'
+        )
+    else:
+        inventario.cantidad -= movimiento.cantidad
+        inventario.save()
+        print(inventario.cantidad)
+
+def validar_disponibilidad_insumos(movimiento, almacen):
+    """Validar disponibilidad de insumos"""
+    from inventario.models import Inv_Insumos
+    
+    inventario = Inv_Insumos.objects.filter(
+        insumos=movimiento.insumo,
+        almacen=almacen
+    ).first()
+    
+    if not inventario or inventario.cantidad < movimiento.cantidad:
+        raise ValueError(
+            f'Cantidad insuficiente de {movimiento.insumos.nombre}. '
+            f'Disponible: {inventario.cantidad if inventario else 0}, '
+            f'Solicitado: {movimiento.cantidad}'
+        )
+    else:
+        inventario.cantidad -= movimiento.cantidad
+        inventario.save()
+        print(inventario.cantidad)
+        
 class UpdateMovimientoView(UpdateView):
     model = Vale_Movimiento_Almacen
     form_class = MovimientoFormUpdate

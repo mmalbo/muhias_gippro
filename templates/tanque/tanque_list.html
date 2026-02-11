@@ -36,6 +36,7 @@
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Color</th>
+                            <th>Material</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -45,6 +46,7 @@
                                 <td>{{ tanque.codigo }}</td>
                                 <td>{{ tanque.nombre }}</td>
                                 <td>{{ tanque.color }}</td>
+                                <td>{{ tanque.material }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'tanque:actualizar' tanque.pk %}"
@@ -61,6 +63,7 @@
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Color</th>
+                            <th>Material</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

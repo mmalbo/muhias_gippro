@@ -73,6 +73,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
             ('confirmado', 'Confirmado'),
             ('cancelado', 'Cancelado'),
             ('despachado', 'Despachado'),
+            ('recibido', 'Recibido'),
         ],
         default='borrador',
         verbose_name="Estado del vale"
@@ -123,11 +124,11 @@ class Vale_Movimiento_Almacen(ModeloBase):
         if Movimiento_MP.objects.filter(vale=self).exists():
             print('Materias primas')
             return 'Materias primas'
-        if Movimiento_EE.objects.filter(vale_e=self).exists():
+        if Movimiento_EE.objects.filter(vale=self).exists():
             return 'Envases y embalajes'
-        if Movimiento_Ins.objects.filter(vale_e=self).exists():
+        if Movimiento_Ins.objects.filter(vale=self).exists():
             return 'Insumos'
-        if Movimiento_Prod.objects.filter(vale_e=self).exists():
+        if Movimiento_Prod.objects.filter(vale=self).exists():
             return 'Productos'
         if Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).exists():
             return 'Salida a producción'
@@ -164,9 +165,9 @@ class Vale_Movimiento_Almacen(ModeloBase):
         """Cantidad total de items en el movimiento"""
         total = 0
         total += self.movimientos.count()
-        total += self.movimientos_e.count()
-        total += self.movimientos_i.count()
-        total += self.movimientos_prod.count()
+        total += self.movimientos_envases.count()
+        total += self.movimientos_insumos.count()
+        total += self.movimientos_productos.count()
         return total
 
     @property

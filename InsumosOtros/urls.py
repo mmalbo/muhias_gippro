@@ -3,6 +3,7 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
+    path('catalogo/', ListInsumosView.as_view(), name='list_insumos'),
     path('listar/', listInsumos, name='insumos_list'),
     path('crear/', InsumoCreateView.as_view, name='insumo_crear'),
     path('eliminar/<uuid:pk>/', DeleteInsumoView.as_view, name='insumo_eliminar'),

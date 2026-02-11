@@ -68,7 +68,7 @@ def get_productos(request, pk):
     
 class ListaProductoView(ListView):
     model = Producto
-    template_name = 'producto/lista_producto_final.html'
+    template_name = 'producto/producto_cat.html'
     context_object_name = 'productos_finales'
 
     def get_context_data(self, **kwargs):

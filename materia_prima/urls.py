@@ -4,6 +4,7 @@ from . import views
 app_name = 'materia_prima'
 
 urlpatterns = [
+    path('catalogo/', views.ListMateriaPrimaView.as_view(), name='list_materia_prima'),
     path('crear/', views.CreateMateriaPrimaView.as_view(), name='materia_prima_crear'),
     path('listar/', views.listMateriasPrimas, name='materia_prima_list'),
     path('actualizar/<uuid:pk>/', views.UpdateMateriaPrimaView.as_view(), name='materia_prima_actualizar'),

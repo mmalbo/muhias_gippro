@@ -33,7 +33,7 @@ class CreateMateriaPrimaView(CreateView):
 
 class ListMateriaPrimaView(ListView):
     model = MateriaPrima
-    template_name = 'materia_prima/materia_prima_list.html'
+    template_name = 'materia_prima/materia_prima_cat.html'
     context_object_name = 'materias_primas'
     #Hacer un query para mostrar solo la materias primas de un almacen si el usuario es almacenero, el almacen al que el pertenece
 

@@ -12,14 +12,16 @@ class TanqueForm(forms.ModelForm):
     class Meta:
         model = Tanque
         # fields = ['codigo','nombre', 'color']
-        fields = ['nombre', 'color']
+        fields = ['nombre', 'color', 'material']
         widgets = {
             # 'codigo': forms.TextInput(attrs={'class': 'form-control'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'material': forms.TextInput(attrs={'class': 'form-control'}),
         }
         labels = {
             # 'codigo': 'Código',
             'nombre': 'Nombre',
+            'material': 'Material'
         }
 
 
@@ -32,12 +34,12 @@ class UpdateTanqueForm(forms.ModelForm):
 
     class Meta:
         model = Tanque
-        fields = ['codigo', 'nombre', 'color']
+        fields = ['nombre', 'color', 'material']
         widgets = {
-            'codigo': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'material': forms.TextInput(attrs={'class': 'form-control'}),
         }
         labels = {
-            'codigo': 'Código',
             'nombre': 'Nombre',
+            'material': 'Material'
         }
