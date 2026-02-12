@@ -3,6 +3,7 @@ from . import views
 
 
 urlpatterns = [
+    path('catalogo/', views.ListEnvaseEmbalajeView.as_view(), name='list_envase_embalaje'),
     path('listar/', views.listEnvaseEmbalaje, name='envase_embalaje_lista'),
     path('crear/', views.EnvaseEmbalajeCreateView.as_view(), name='envase_embalaje_crear'),
     path('eliminar/<uuid:pk>/', views.DeleteEnvaseEmbalajeView.as_view(), name='envase_embalaje_eliminar'),

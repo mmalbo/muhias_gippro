@@ -456,7 +456,6 @@ class CrearProduccionView(View):
     
         # CASO 3: Si ya es dict o QueryDict, proceder normalmente
         i = 0
-    
         # Función helper para obtener valores de manera segura
         def get_value(data, key):
             if isinstance(data, dict):
@@ -479,10 +478,10 @@ class CrearProduccionView(View):
                 break
         
             cantidad_str = get_value(post_data, f'materias_primas[{i}][cantidad]')
-            almacen_id = get_value(post_data, f'materias_primas[{i}][almacen]')
+            #almacen_id = get_value(post_data, f'materias_primas[{i}][almacen]')
         
             # Validar que todos los campos estén presentes
-            if not all([materia_prima_id, cantidad_str, almacen_id]):
+            if not all([materia_prima_id, cantidad_str]):
                 print(f"⚠️  Materia prima {i} incompleta, saltando...")
                 i += 1
                 continue
@@ -490,35 +489,30 @@ class CrearProduccionView(View):
             try:
                 # Convertir y validar
                 cantidad = Decimal(str(cantidad_str))
-                #materia_prima_id_int = int(materia_prima_id)
-                #almacen_id_int = int(almacen_id)
-            
+                
                 # Obtener objetos
-                materia_prima_obj = MateriaPrima.objects.get(id=materia_prima_id)
-                almacen_obj = Almacen.objects.get(id=almacen_id)
+                inv_materia_prima_obj = Inv_Mat_Prima.objects.get(id=materia_prima_id)
+                almacen_obj = Almacen.objects.get(id=inv_materia_prima_obj.almacen.id)
             
-                # Verificar inventario
-                if Inv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj):
+                # Verificar inventarioInv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj)
+                if inv_materia_prima_obj:
                     try:
-                        invent_mp = Inv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj)
-                        if cantidad > invent_mp.cantidad:
-                            error_msg = f"Cantidad insuficiente de {materia_prima_obj.nombre}"
+                        if cantidad > inv_materia_prima_obj.cantidad:
+                            error_msg = f"Cantidad insuficiente de {inv_materia_prima_obj.materia_prima.nombre}"
                             print(f"❌ {error_msg}")
                             raise ValueError(error_msg)
             
                         # Calcular costo
-                        costo_mp = Decimal(str(materia_prima_obj.costo)) * cantidad
+                        costo_mp = Decimal(str(inv_materia_prima_obj.materia_prima.costo)) * cantidad
             
                         materias_primas.append({
-                            'materia_prima': materia_prima_obj.id,
+                            'materia_prima': inv_materia_prima_obj.materia_prima.id,
                             'cantidad': cantidad,
                             'almacen': almacen_obj.id,
                             'costo': costo_mp,
-                            'materia_prima_obj': materia_prima_obj,
+                            'materia_prima_obj': inv_materia_prima_obj.materia_prima,
                             'almacen_obj': almacen_obj
                         })
-            
-                        print(f"✅ MP {i}: {materia_prima_obj.nombre} - {cantidad}")
                     except (Inv_Mat_Prima.DoesNotExist, ValueError) as e:
                         print(f"❌ Error con MP {i}: {e}")
                         # Relanzar para que sea capturado por procesar_paso_2
