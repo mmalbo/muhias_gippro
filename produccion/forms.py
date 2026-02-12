@@ -3,6 +3,7 @@ from django.utils import timezone
 from django import forms
 
 from materia_prima.models import MateriaPrima
+from inventario.models import *
 from nomencladores.planta.models import Planta
 from nomencladores.almacen.models import Almacen
 from .models import Produccion, Prod_Inv_MP, PruebaQuimica, DetallePruebaQuimica, ParametroPrueba
@@ -107,10 +108,11 @@ class ProduccionForm(forms.ModelForm):
 
 class MateriaPrimaForm(forms.Form):
     materia_prima = forms.ModelChoiceField(
-        queryset=MateriaPrima.objects.all(),
+        queryset=Inv_Mat_Prima.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=True
     )
+    # MateriaPrima
     cantidad = forms.DecimalField(
         max_digits=10,
         decimal_places=3,

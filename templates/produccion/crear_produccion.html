@@ -135,12 +135,12 @@
     <div class="materia-prima-item">
         <h4>Materia Prima #<span class="item-number"></span></h4>
         <div class="form-group">
-            <label>Materia Prima:</label>
+            <label>Materia Prima - Almacen:</label>
             <select class="materia-prima-select" name="materia_prima" required>
                 <option value="">Seleccionar materia prima...</option>
                 {% for mp in materia_prima_form.fields.materia_prima.queryset %}
                 <option value="{{ mp.id }}" data-costo="{{ mp.costo }}" data-unidad="{{ mp.unidad_medida }}">
-                    {{ mp.nombre }} ({{ mp.conformacion }} - {{ mp.unidad_medida }})
+                    {{ mp.materia_prima.nombre }}({{ mp.materia_prima.conformacion }}-{{ mp.materia_prima.unidad_medida }}) - {{ mp.almacen}}
                 </option>
                 {% endfor %}
             </select>
@@ -152,7 +152,7 @@
             <span class="unidad-text"></span>
         </div>
         
-        <div class="form-group">
+        <!--<div class="form-group">
             <label>Almacén:</label>
             <select class="almacen-select" name="almacen" required>
                 <option value="">Seleccionar almacén...</option>
@@ -160,7 +160,7 @@
                 <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
                 {% endfor %}
             </select>
-        </div>
+        </div>-->
         
         <div class="form-group">
             <label>Costo estimado:</label>
@@ -252,6 +252,15 @@ function agregarMateriaPrima() {
     
     materiaPrimaDiv.id = `materia-prima-${materiaPrimaCount}`;
     materiaPrimaDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+
+    /*const elemento = materiaPrimaDiv.querySelector('.item-number');
+    const valor = materiaPrimaCount;
+
+    if (!isNaN(valor) && valor !== null && valor !== undefined) {
+        elemento.textContent = valor+1;
+    } else {
+        elemento.textContent = '0'; // o 'N/A', o ''
+    }*/
     
     // Agregar event listeners
     const select = materiaPrimaDiv.querySelector('.materia-prima-select');
@@ -364,11 +373,11 @@ function enviarPaso2(items) {
     items.forEach((item, index) => {
         const materiaPrima = item.querySelector('.materia-prima-select').value;
         const cantidad = item.querySelector('.cantidad-input').value;
-        const almacen = item.querySelector('.almacen-select').value;
+        //const almacen = item.querySelector('.almacen-select').value;
         
         formData.append(`materias_primas[${index}][materia_prima]`, materiaPrima);
         formData.append(`materias_primas[${index}][cantidad]`, cantidad);
-        formData.append(`materias_primas[${index}][almacen]`, almacen);
+        //formData.append(`materias_primas[${index}][almacen]`, almacen);
     });
     
     // Mostrar loading
@@ -416,9 +425,9 @@ function validarMateriasPrimas() {
     for (let item of items) {
         const materiaPrima = item.querySelector('.materia-prima-select').value;
         const cantidad = item.querySelector('.cantidad-input').value;
-        const almacen = item.querySelector('.almacen-select').value;
+        //const almacen = item.querySelector('.almacen-select').value;
         
-        if (!materiaPrima || !cantidad || !almacen) {
+        if (!materiaPrima || !cantidad ) {
             return false;
         }
     }

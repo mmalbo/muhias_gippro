@@ -13,7 +13,7 @@ from django.http import JsonResponse, Http404
 
 class ListEnvaseEmbalajeView(ListView):
     model = EnvaseEmbalaje
-    template_name = 'envase_embalaje/envase_list.html'
+    template_name = 'envase_embalaje/envase_cat.html'
     context_object_name = 'envase_embalaje'
     #Hacer un query para mostrar solo los envases de un almacen si el usuario es almacenero, el almacen al que el pertenece
 
@@ -102,7 +102,6 @@ class UpdateEnvaseEmbalajeView(UpdateView):
         context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
         return context """
 
-
 class DeleteEnvaseEmbalajeView(DeleteView):
     model = EnvaseEmbalaje
     template_name = 'envase_embalaje/envase_embalaje_confirm_delete.html'
@@ -125,8 +124,6 @@ class CreateImportView(CreateView):
     template_name = 'envase_embalaje/import_form.html'
     success_url = '/envase_embalaje/'
     success_message = "Se ha importado correctamente el envase o embalaje."
-
-
 
 """ class EnvaseEmbalajeListView(ListView):
     model = EnvaseEmbalaje
