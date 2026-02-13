@@ -8,6 +8,7 @@ Conceptos = [
     ('puntoV', _('Punto de Venta')),
     ('cooperada', _('Cooperada')),
     ('consignacion', _('Consignación')),
+    ('planta', _('Planta de producción')),
     ('mixta', _('Mixta')),    
 ]
 

@@ -1,6 +1,6 @@
 from django.db import models
 from bases.bases.models import ModeloBase
-
+from nomencladores.almacen.models import Almacen
 
 class Planta(ModeloBase):
     nombre = models.CharField(
@@ -15,6 +15,11 @@ class Planta(ModeloBase):
         default=False,
         verbose_name="Propia",
     )
+
+    almacen = models.ForeignKey(Almacen, on_delete=models.PROTECT, 
+                               related_name='planta_asociada', 
+                               null=True, blank=True,
+                               verbose_name="Almacén asociado a la planta")
 
     class Meta:
         verbose_name = "Planta"

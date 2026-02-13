@@ -411,7 +411,7 @@ function enviarPaso2(items) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al registrar la producción');
+        alert('Cantidad de materia prima insuficiente en almacén. Verifique disponibilidad');
     })
     .finally(() => {
         submitBtn.textContent = originalText;
