@@ -17,17 +17,17 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Envase</th>
+                                <th>Producto</th>
                                 <th>Cantidad</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for env in productos %}
+                            {% for prod in productos %}
                             <tr>
-                                <td>{{ env.envase_embalaje.codigo_envase }}</td>
+                                <td>{{ prod.producto.nombre_comercial }}</td>
                                 <td>
                                     <input type="number" 
-                                           name="{{ env.envase_embalaje.codigo_envase }}" 
+                                           name="{{ prod.producto.codigo_producto }}" 
                                            value="0"
                                            step="0.10"
                                            min="0"

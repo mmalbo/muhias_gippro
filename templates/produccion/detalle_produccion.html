@@ -276,6 +276,7 @@
                         <div class="progress-bar progress-bar-striped progress-bar-animated 
                             {% if produccion.estado == 'Concluida-Satisfactoria' %}bg-success
                             {% elif 'En proceso:' in produccion.estado %}bg-info
+                            {% elif 'Rechazada' in produccion.estado %}bg-danger
                             {% else %}bg-warning{% endif %}" 
                             role="progressbar" 
                             style="width: {{ datos_produccion.porcentaje_avance }}%;"

@@ -362,6 +362,7 @@
                             </div>
                         </div>
                     </div>
+
                     <!-- Decisión Final -->
                     <div class="row">
                         <div class="col-md-6">
@@ -427,6 +428,25 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ NUEVO: Card para Almacén Destino (solo visible si se aprueba) -->
+                    <div class="card mt-3" id="cardAlmacenDestino">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="fas fa-warehouse me-2"></i>
+                                    Almacén Destino
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <select class="form-select" id="almacen_destino" name="almacen_destino">
+                                <option value="">-- Seleccione un almacén de producto terminado --</option>
+                                {% for almacen in almacenes %}
+                                    <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">El producto se ingresará a este almacén si la prueba es aprobada.</small>
                         </div>
                     </div>
                 </div>
@@ -497,7 +517,7 @@
 </div>
 
 <!-- Template para nuevos parámetros dinámicos -->
-<template id="templateParametroDinamico">
+<!-- <template id="templateParametroDinamico">
     <div class="parametro-dinamico card mb-3">
         <div class="card-body">
             <div class="row">
@@ -531,7 +551,59 @@
             </div>
         </div>
     </div>
+</template> -->
+
+<template id="templateParametroDinamico">
+    <div class="parametro-dinamico card mb-3">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <!-- Selector de parámetro -->
+                <div class="col-md-4">
+                    <label class="form-label small">Parámetro *</label>
+                    <select class="form-control form-control-sm parametro-select" required>
+                        <option value="">Seleccionar...</option>
+                        {% for parametro in parametros_disponibles %}
+                        <option value="{{ parametro.id }}" 
+                                data-tipo="{{ parametro.tipo }}"
+                                data-unidad="{{ parametro.unidad_medida|default:'' }}">
+                            {{ parametro.nombre }}
+                            {% if parametro.unidad_medida %}({{ parametro.unidad_medida }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Valor medido (siempre visible) -->
+                <div class="col-md-3 valor-container">
+                    <label class="form-label small valor-label">Valor Medido *</label>
+                    <input type="text" class="form-control form-control-sm valor-input" 
+                           placeholder="Ingrese valor" required>
+                    <small class="form-text text-muted unidad-text"></small>
+                </div>
+                <!-- Checkbox de cumplimiento (oculto por defecto) -->
+                <div class="col-md-2 cumplimiento-container" style="display: none;">
+                    <label class="form-label small d-block">Cumplimiento</label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input cumplimiento-check">
+                        <label class="form-check-label small">Cumple</label>
+                    </div>
+                </div>
+                <!-- Observaciones -->
+                <div class="col-md-2">
+                    <label class="form-label small">Observaciones</label>
+                    <input type="text" class="form-control form-control-sm observacion-input" 
+                           placeholder="Opicional">
+                </div>
+                <!-- Botón eliminar -->
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-sm btn-danger btn-eliminar-dinamico">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
+
 {% endblock %}
 
 {% block javascript %}
@@ -787,7 +859,7 @@ $('#btnAgregarParametro, #btnAgregarParametroModal').on('click', function() {
     }
 });
     
-function agregarCampoParametro() {
+/* function agregarCampoParametro() {
     const template = document.getElementById('templateParametroDinamico');
     const clone = template.content.cloneNode(true);
         
@@ -804,8 +876,48 @@ function agregarCampoParametro() {
     });
         
     $('#parametrosDinamicos').append($clone);
-}
+} */
     
+// ============================================
+// AGREGAR PARÁMETROS DINÁMICOS (con organolépticos)
+// ============================================
+
+function agregarCampoParametro() {
+    const template = document.getElementById('templateParametroDinamico');
+    const clone = template.content.cloneNode(true);
+    const $clone = $(clone);
+
+    // Mostrar/ocultar checkbox según tipo seleccionado
+    $clone.find('.parametro-select').on('change', function() {
+        const $row = $(this).closest('.parametro-dinamico');
+        const selected = $(this).find('option:selected');
+        const tipo = selected.data('tipo');
+        const unidad = selected.data('unidad') || '';
+
+        // Mostrar unidad
+        $row.find('.unidad-text').text(unidad ? `Unidad: ${unidad}` : '');
+
+        // Checkbox: visible solo si es organoléptico
+        if (tipo === 'organoleptico') {
+            $row.find('.cumplimiento-container').show();
+            $row.find('.valor-label').text('Valor medido (texto) *');
+            $row.find('.valor-input').attr('placeholder', 'Ej: Amarillo, olor agradable...');
+        } else {
+            $row.find('.cumplimiento-container').hide();
+            $row.find('.cumplimiento-check').prop('checked', false); // reset
+            $row.find('.valor-label').text('Valor Medido *');
+            $row.find('.valor-input').attr('placeholder', 'Ingrese valor numérico');
+        }
+    });
+
+    // Botón eliminar
+    $clone.find('.btn-eliminar-dinamico').on('click', function() {
+        $(this).closest('.parametro-dinamico').remove();
+    });
+
+    $('#parametrosDinamicos').append($clone);
+}
+
 $('#btnAgregarMas').on('click', agregarCampoParametro);
     
 // Guardar nuevos parámetros
@@ -818,50 +930,33 @@ $('#formAgregarParametros').on('submit', function(e) {
     let valido = true;
     let contador = 0;
         
-    // Validar y recopilar datos
     $('.parametro-dinamico').each(function() {
-        contador++;
-        const $select = $(this).find('.parametro-select');
-        const $valor = $(this).find('.valor-input');
-        const $observacion = $(this).find('.observacion-input');
-        
-        /*if (!$select.val() || !$valor.val().trim()) {
-            valido = false;
-            $(this).addClass('border-danger');
-            return false; =>True
-        }*/
+        const $row = $(this);
+        const $select = $row.find('.parametro-select');
+        const $valor = $row.find('.valor-input');
+        const $observacion = $row.find('.observacion-input');
+        const $checkbox = $row.find('.cumplimiento-check');
+        const tipo = $select.find('option:selected').data('tipo');
 
         const parametroId = $select.val();
         const valorMedido = $valor.val().trim();
 
-        console.log(`Parámetro:`, {
-            parametro_id: parametroId,
-            valor_medido: valorMedido,
-            select_val: $select.val(),
-            valor_val: $valor.val()
-        });
-        
         if (!parametroId || !valorMedido) {
             valido = false;
-            $(this).addClass('border-danger');
-            console.log(`❌ Parámetro ${index + 1} incompleto`);
-            return true; // Continuar con el siguiente
+            $row.addClass('border-danger');
+            return true; // continuar
         }
-            
-        $(this).removeClass('border-danger');
-            
-        parametros.push({
+        $row.removeClass('border-danger');
+
+        const parametro = {
             parametro_id: parametroId,
             valor_medido: valorMedido,
-            observaciones: $observacion.val().trim() || ''
-            /*parametro_id: $select.val(),
-            valor_medido: $valor.val().trim(),
-            observaciones: $observacion.val().trim(),
-            parametro_nombre: $select.find('option:selected').text()*/
-        });
+            observaciones: $observacion.val().trim() || '',
+            // Solo incluimos cumplimiento si es organoléptico, pero podemos enviar siempre
+            cumplimiento: tipo === 'organoleptico' ? $checkbox.is(':checked') : null
+        };
 
-        console.log(`✅ Parámetro válido`);
-
+        parametros.push(parametro);
     });
     
     console.log('Total parámetros válidos:', parametros.length);
@@ -1032,8 +1127,16 @@ $('#formConcluirPrueba').on('submit', function(e) {
     
     // Validaciones básicas
     const decisionSeleccionada = $('input[name="decision_final"]:checked').val();
+    const almacen = $('#almacen_destino').val();
+
     if (!decisionSeleccionada) {
         mostrarMensaje('warning', 'Debe seleccionar una decisión final');
+        return false;
+    }
+
+    // Si la decisión es Aprobada, el almacén debe estar seleccionado
+    if (decisionSeleccionada === 'Aprobada' && !almacen) {
+        mostrarMensaje('warning', 'Debe seleccionar un almacén destino para el producto aprobado.');
         return false;
     }
     

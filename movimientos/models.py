@@ -98,18 +98,18 @@ class Vale_Movimiento_Almacen(ModeloBase):
             
         tipos = []
         if self.movimientos.exists():
-            print('Materias primas')
+            return 'Materias primas'
             tipos.append('Materias primas')
         if self.movimientos_envases.exists():
-            tipos.append('Envases y embalajes')
+            return 'Envases y embalajes'
         if self.movimientos_insumos.exists():
-            tipos.append('Insumos')
+            return 'Insumos'
         if self.movimientos_productos.exists():
-            tipos.append('Productos')
+            return 'Productos'
         if self.salidas_produccion.exists():
-            tipos.append('Salida a producción')
+            return 'Salida a producción'
         if self.vale_salida_almacen_envasado_set.exists():
-            tipos.append('Salida a envasado')
+            return 'Salida a envasado'
 
         print(tipos)
         # Cachear resultado
