@@ -83,8 +83,8 @@
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
-                                        <a href="{% url 'envase_embalaje_editar' ee.envase.pk %}"
-                                           title="Editar envase o embalaje" class="btn far fa-edit"></a>
+                                        <!--<a href="{% url 'envase_embalaje_editar' ee.envase.pk %}"
+                                           title="Editar envase o embalaje" class="btn far fa-edit"></a>-->
                                         <a href="{% url 'ajuste_inv_ee' ee.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
@@ -93,7 +93,7 @@
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
                                         <a href="{% url 'get_envase_embalaje' ee.pk %}"
-                                            title="Ver detalles" class="btn far fa-trash-alt"></a>
+                                            title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
                             </tr>
