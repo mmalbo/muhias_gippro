@@ -10,14 +10,12 @@ def validate_material(value):
     if len(value) < 3:
         raise ValidationError("El material debe tener al menos 3 caracteres.")
 
-
 def validate_tamanno(value):
     """
     Valida que el tamaño tenga al menos 2 caracteres.
     """
     if len(value) < 2:
         raise ValidationError("El tamaño debe tener al menos 2 caracteres.")
-
 
 class Caja(TipoEnvaseEmbalaje):
     """ nombre = models.CharField(

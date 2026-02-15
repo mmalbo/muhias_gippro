@@ -77,7 +77,7 @@ def listInsumos(request):
 class UpdateInsumosView(UpdateView):
     model = InsumosOtros
     form_class = InsumoUpdateForm
-    template_name = 'insumos/insumo_form.html'
+    template_name = 'insumos/insumos_form.html'
     success_url = reverse_lazy('insumo_lista')  # Cambia esto al nombre de tu URL
 
     def form_valid(self, form):

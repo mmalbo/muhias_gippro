@@ -36,6 +36,7 @@
                         <tr class="ligth">
                             <th>Nombre</th>
                             <th>Propia</th>
+                            <th>Almacen asociado</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -48,6 +49,7 @@
                                 {% else %}
                                     <td>No</td>
                                 {% endif %}
+                                <td>{{ planta.almacen }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
 
@@ -65,6 +67,7 @@
 
                             <th>Nombre</th>
                             <th>Propia</th>
+                            <th>Almacen asociado</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

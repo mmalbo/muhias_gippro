@@ -85,8 +85,8 @@
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
-                                        <a href="{% url 'materia_prima:materia_prima_actualizar' materia_prima.materia_prima.pk %}"
-                                           title="Editar materia prima" class="btn far fa-edit"></a>
+                                        <!--<a href="{% url 'materia_prima:materia_prima_actualizar' materia_prima.materia_prima.pk %}"
+                                           title="Editar materia prima" class="btn far fa-edit"></a>-->
                                         <a href="{% url 'ajuste_inv_mp' materia_prima.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}

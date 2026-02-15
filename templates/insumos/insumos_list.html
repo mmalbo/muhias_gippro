@@ -80,8 +80,8 @@
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
-                                        <a href="{% url 'insumos_editar' ins.insumos.pk %}"
-                                           title="Editar insumo" class="btn far fa-edit"></a>
+                                        <!--<a href="{% url 'insumos_editar' ins.insumos.pk %}"
+                                           title="Editar insumo" class="btn far fa-edit"></a>-->
                                         <a href="{% url 'ajuste_inv_ins' ins.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
@@ -90,7 +90,7 @@
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
                                         <a href="{% url 'get_insumo' ins.pk %}"
-                                            title="Ver detalles" class="btn far fa-trash-alt"></a>
+                                            title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
                             </tr>

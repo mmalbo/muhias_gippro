@@ -37,7 +37,8 @@
                             <th style="width: 25%">Ubicación</th>
                             <th style="width: 10%">Propio</th>
                             <th style="width: 15%">Concepto</th>
-                            <th style="width: 25%">Acciones</th>
+                            <th style="width: 15%">Responsable</th>
+                            <th style="width: 10%">Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -51,6 +52,7 @@
                                     <td>No</td>
                                 {% endif %}
                                 <td>{{ almacen.concepto }}</td>
+                                <td>{{ almacen.responsable }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'almacen_editar' almacen.pk %}" title="Editar almacén"
@@ -68,7 +70,8 @@
                             <th style="width: 25%">Ubicación</th>
                             <th style="width: 10%">Propio</th>
                             <th style="width: 15%">Concepto</th>
-                            <th style="width: 25%">Acciones</th>
+                            <th style="width: 15%">Responsable</th>
+                            <th style="width: 10%">Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
