@@ -7,7 +7,8 @@ from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionVi
                     eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion, agita_produccion, 
                     lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica,
                     detalle_prueba_quimica, agregar_parametros_prueba, editar_parametro_prueba, eliminar_parametro_prueba,
-                    calcular_resultados_prueba, concluir_prueba, ProduccionDetailView, reutilizar_produccion)
+                    calcular_resultados_prueba, concluir_prueba, ProduccionDetailView, reutilizar_produccion,
+                    EditarProduccionView)
 
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
@@ -30,6 +31,8 @@ urlpatterns = [
 
     #Concluir producción
     path('<uuid:pk>/concluir/', concluir_produccion, name='concluir_produccion'),
+
+     path('produccion/<uuid:pk>/editar/', EditarProduccionView.as_view(), name='editar_produccion'),
 
     path('produccion/<uuid:pk>/reutilizar/', reutilizar_produccion, name='reutilizar_produccion'),
 

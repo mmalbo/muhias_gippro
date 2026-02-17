@@ -18,5 +18,5 @@ class PlantaForm(forms.ModelForm):
         labels = {
             'nombre': 'Nombre:',
             'propio': 'Propia:',
-            'almacen': 'Almacén asociado',
+            'almacen': 'AlmacÃ©n asociado',
         }

@@ -18,7 +18,7 @@ class ListInsumosView(ListView):
     #Hacer un query para mostrar solo los envases de un almacen si el usuario es almacenero, el almacen al que el pertenece
 
     def get_context_data(self, **kwargs):
-        # Llama al método de la clase base
+        # Llama al mÃ©todo de la clase base
         context = super().get_context_data(**kwargs)
 
         # Agrega mensajes al contexto si existen

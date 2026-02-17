@@ -19,7 +19,7 @@ class Planta(ModeloBase):
     almacen = models.ForeignKey(Almacen, on_delete=models.PROTECT, 
                                related_name='planta_asociada', 
                                null=True, blank=True,
-                               verbose_name="Almacén asociado a la planta")
+                               verbose_name="AlmacÃ©n asociado a la planta")
 
     class Meta:
         verbose_name = "Planta"

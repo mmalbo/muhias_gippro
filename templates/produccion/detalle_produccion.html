@@ -43,7 +43,7 @@
                                 </dd>
                                 <dt class="col-sm-4">Lote Base:</dt>
                                 <dd class="col-sm-8">
-                                    <span class="badge bg-info fs-6">{{ datos_produccion.lote_base }}</span>
+                                    <span class="badge bg-success fs-6">{{ datos_produccion.lote_base }}</span>
                                 </dd>
                                 
                                 <dt class="col-sm-4">Producto:</dt>
@@ -101,7 +101,7 @@
                                 
                                 <dt class="col-sm-4">Producto Conforme:</dt>
                                 <dd class="col-sm-8">
-                                    {% if produccion.prod_conform is None %}
+                                    {% if not produccion.tiene_prueba_quimica %}
                                     <span class="badge bg-secondary">Pendiente</span>
                                     {% elif produccion.prod_conform %}
                                     <span class="badge bg-success">Sí</span>
@@ -161,7 +161,7 @@
                                             {{ mp.inv_materia_prima.tipo_materia_prima }}
                                         </small>
                                     </td>
-                                    <td>{{ mp.cantidad_materia_prima|floatformat:2 }}</td>
+                                    <td>{{ mp.cantidad_materia_prima|floatformat:4 }}</td>
                                     <td>{{ mp.inv_materia_prima.unidad_medida }}</td>
                                     <td>{{ mp.almacen.nombre }}</td>
                                     <td>${{ mp.inv_materia_prima.costo|floatformat:2 }}</td>
@@ -296,8 +296,7 @@
                         <li class="mb-2">
                             <i class="fas fa-dollar-sign text-primary me-2"></i>
                             <strong>Costo/Litro:</strong> 
-                            {% widthratio produccion.costo produccion.cantidad_estimada 100 as porcentaje %}
-                            {{ porcentaje|floatformat:1 }}%
+                            {{ datos_produccion.costo_litro|floatformat:3 }}
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-calendar me-2"></i>
@@ -315,7 +314,7 @@
                 </div>
             </div>
 
-            <!-- Cambiar estado -->
+            <!-- Cambiar estado 
             {% if estados_disponibles %}
             <div class="card mb-4">
                 <div class="card-header bg-warning">
@@ -346,7 +345,7 @@
                     </form>
                 </div>
             </div>
-            {% endif %}
+            {% endif %}-->
 
             <!-- Archivos adjuntos -->
             <div class="card mb-4">

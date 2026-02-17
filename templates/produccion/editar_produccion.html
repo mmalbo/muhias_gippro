@@ -1,0 +1,601 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="page-title mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Editar Producción: {{ produccion.lote }}
+                        </h4>
+                        <p class="text-muted">
+                            Producto: {{ produccion.catalogo_producto.nombre_comercial }}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-{{ produccion.estado|lower }} fs-6 p-2">
+                            <i class="fas fa-{{ produccion.estado|lower }} me-1"></i>
+                            {{ produccion.get_estado_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="card">
+        <div class="card-body">
+            <!-- Stepper -->
+            <div class="stepper-wrapper mb-4">
+                <div class="stepper-item active" id="step1-indicator">
+                    <div class="step-counter">1</div>
+                    <div class="step-name">Cantidad Estimada</div>
+                </div>
+                <div class="stepper-item" id="step2-indicator">
+                    <div class="step-counter">2</div>
+                    <div class="step-name">Materias Primas</div>
+                </div>
+            </div>
+
+            <!-- Paso 1: Cantidad Estimada -->
+            <div id="step1" class="step-content">
+                <form id="formPaso1" >
+                    {% csrf_token %}
+                    <input type="hidden" name="step" value="1">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Información General</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Producto</label>
+                                        <input type="text" class="form-control" 
+                                               value="{{ produccion.catalogo_producto.nombre_comercial }}" readonly>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Planta</label>
+                                        <input type="text" class="form-control" 
+                                               value="{{ produccion.planta.nombre }}" readonly>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="cantidad_estimada" class="form-label">
+                                            Cantidad Estimada (L) *
+                                        </label>
+                                        <input type="number" step="0.01" min="0.01" 
+                                               class="form-control" id="cantidad_estimada" 
+                                               name="cantidad_estimada" 
+                                               value="{{ produccion.cantidad_estimada }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Resumen Actual</h5>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-6">Costo Total:</dt>
+                                        <dd class="col-sm-6">${{ produccion.costo|floatformat:2 }}</dd>
+                                        
+                                        <dt class="col-sm-6">Materias Primas:</dt>
+                                        <dd class="col-sm-6">{{ produccion.detalles.count }}</dd>
+                                        
+                                        <dt class="col-sm-6">Estado:</dt>
+                                        <dd class="col-sm-6">{{ produccion.get_estado_display }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'produccion_detail' produccion.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-arrow-right me-1"></i> Continuar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Paso 2: Materias Primas (oculto inicialmente) -->
+            <div id="step2" class="step-content" style="display: none;">
+                <form id="formPaso2">
+                    {% csrf_token %}
+                    <input type="hidden" name="step" value="2">
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-flask me-2"></i> Materias Primas
+                            </h5>
+                            <button type="button" class="btn btn-sm btn-success" id="btnAgregarMateriaPrima">
+                                <i class="fas fa-plus me-1"></i> Agregar Materia Prima
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="tablaMateriasPrimas">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="5%">#</th>
+                                            <th width="25%">Materia Prima</th>
+                                            <th width="15%">Cantidad</th>
+                                            <th width="15%">Unidad</th>
+                                            <th width="15%">Almacén</th>
+                                            <th width="15%">Costo Total</th>
+                                            <th width="10%">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="materiasPrimasContainer">
+                                        <!-- Se llenará con JavaScript -->
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="5" class="text-end">TOTAL:</th>
+                                            <th id="totalCosto">$0.00</th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" id="btnVolverPaso1">
+                            <i class="fas fa-arrow-left me-1"></i> Volver
+                        </button>
+                        <button type="submit" class="btn btn-success" id="btnGuardar">
+                            <i class="fas fa-save me-1"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para fila de materia prima -->
+<template id="templateMateriaPrima">
+    <tr class="materia-prima-row">
+        <td class="indice"></td>
+        <td>
+            <select class="form-select form-select-sm materia-prima-select" required>
+                <option value="">Seleccionar...</option>
+                {% for mp in materias_primas_disponibles %}
+                <option value="{{ mp.id }}" 
+                        data-unidad="{{ mp.unidad_medida }}"
+                        data-costo="{{ mp.costo }}">
+                    {{ mp.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="id" class="materia-prima-id-hidden">
+        </td>
+        <td>
+            <input type="number" step="0.01" min="0.01" class="form-control form-control-sm cantidad-input" 
+                   name="cantidad" placeholder="Cantidad" required>
+        </td>
+        <td class="unidad-medida"></td>
+        <td>
+            <select class="form-select form-select-sm almacen-select" name="almacen" required>
+                <option value="">Almacén</option>
+                {% for almacen in almacenes %}
+                <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="costo-total text-end">$0.00</td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger btn-eliminar">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block javascript %}
+<script>
+// Datos iniciales desde el backend
+
+const materiasPrimasIniciales = JSON.parse('{{ materias_primas_json|escapejs }}');
+const materiasPrimasDisponibles = JSON.parse('{{ materias_primas_disponibles|escapejs }}');
+
+$(document).ready(function() {
+    let contadorFilas = 0;
+    let datosMateriasPrimas = materiasPrimasIniciales || [];
+    
+// ============================================
+// PASO 1: Guardar cantidad estimada - VERSIÓN CORREGIDA
+// ============================================
+$('#formPaso1').on('submit', function(e) {
+    e.preventDefault();
+    
+    const cantidadEstimada = $('#cantidad_estimada').val();
+    
+    if (!cantidadEstimada || cantidadEstimada <= 0) {
+        mostrarMensaje('warning', 'Ingrese una cantidad estimada válida');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const $submitBtn = $(this).find('button[type="submit"]');
+    const originalText = $submitBtn.html();
+    $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Procesando...');
+    
+    // Crear FormData para asegurar que se envíe como POST
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    formData.append('step', '1');
+    formData.append('cantidad_estimada', cantidadEstimada);
+    
+    console.log('📤 Enviando paso 1 - cantidad estimada:', cantidadEstimada);
+    
+    $.ajax({
+        url: '{% url "editar_produccion" produccion.id %}',
+        method: 'POST',  // Asegurar que sea POST
+        data: formData,
+        processData: false,  // Importante para FormData
+        contentType: false,  // Importante para FormData
+        success: function(response) {
+            console.log('✅ Respuesta recibida:', response);
+            
+            if (response.success) {
+                // Avanzar al paso 2
+                $('#step1').hide();
+                $('#step2').show();
+                $('#step1-indicator').removeClass('active');
+                $('#step2-indicator').addClass('active');
+                
+                // Cargar materias primas
+                cargarMateriasPrimas(datosMateriasPrimas);
+                
+                mostrarMensaje('success', 'Cantidad estimada actualizada');
+            } else {
+                mostrarMensaje('error', response.errors || 'Error al guardar');
+                $submitBtn.prop('disabled', false).html(originalText);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error en la petición:', error);
+            console.error('Status:', status);
+            console.error('Respuesta:', xhr.responseText);
+            
+            let errorMsg = 'Error de conexión';
+            try {
+                const response = JSON.parse(xhr.responseText);
+                errorMsg = response.errors || errorMsg;
+            } catch (e) {
+                // Si no es JSON, mostrar el texto de error
+                errorMsg = xhr.responseText || errorMsg;
+            }
+            
+            mostrarMensaje('error', errorMsg);
+            $submitBtn.prop('disabled', false).html(originalText);
+        }
+    });
+});
+    
+    // ============================================
+    // VOLVER AL PASO 1
+    // ============================================
+    $('#btnVolverPaso1').on('click', function() {
+        $('#step2').hide();
+        $('#step1').show();
+        $('#step2-indicator').removeClass('active');
+        $('#step1-indicator').addClass('active');
+    });
+    
+    // ============================================
+    // CARGAR MATERIAS PRIMAS EN TABLA
+    // ============================================
+    function cargarMateriasPrimas(materias) {
+        $('#materiasPrimasContainer').empty();
+        contadorFilas = 0;
+        
+        materias.forEach(mp => {
+            agregarFilaExistente(mp);
+        });
+        
+        if (materias.length === 0) {
+            agregarFilaVacia();
+        }
+        
+        calcularTotal();
+    }
+    
+    function agregarFilaExistente(mp) {
+        contadorFilas++;
+        const template = document.getElementById('templateMateriaPrima');
+        const clone = template.content.cloneNode(true);
+        const $fila = $(clone);
+        
+        // Configurar índices y valores
+        $fila.find('.indice').text(contadorFilas);
+        $fila.find('.materia-prima-select').val(mp.materia_prima_id);
+        $fila.find('.materia-prima-id-hidden').val(mp.id || '');
+        $fila.find('.cantidad-input').val(mp.cantidad);
+        $fila.find('.almacen-select').val(mp.almacen_id);
+        
+        // Actualizar unidad y costo
+        const selectedOption = $fila.find('.materia-prima-select option:selected');
+        const unidad = selectedOption.data('unidad') || mp.unidad_medida;
+        $fila.find('.unidad-medida').text(unidad);
+        
+        // Event listeners
+        configurarEventosFila($fila);
+        
+        $('#materiasPrimasContainer').append($fila);
+        actualizarCostoFila($fila);
+    }
+    
+    function agregarFilaVacia() {
+        contadorFilas++;
+        const template = document.getElementById('templateMateriaPrima');
+        const clone = template.content.cloneNode(true);
+        const $fila = $(clone);
+        
+        $fila.find('.indice').text(contadorFilas);
+        configurarEventosFila($fila);
+        
+        $('#materiasPrimasContainer').append($fila);
+    }
+    
+    // ============================================
+    // AGREGAR NUEVA MATERIA PRIMA
+    // ============================================
+    $('#btnAgregarMateriaPrima').on('click', function() {
+        contadorFilas++;
+        const template = document.getElementById('templateMateriaPrima');
+        const clone = template.content.cloneNode(true);
+        const $fila = $(clone);
+        
+        $fila.find('.indice').text(contadorFilas);
+        configurarEventosFila($fila);
+        
+        $('#materiasPrimasContainer').append($fila);
+    });
+    
+    // ============================================
+    // CONFIGURAR EVENTOS DE UNA FILA
+    // ============================================
+    function configurarEventosFila($fila) {
+        // Cambio en materia prima
+        $fila.find('.materia-prima-select').on('change', function() {
+            const selected = $(this).find('option:selected');
+            const unidad = selected.data('unidad') || '';
+            const costo = selected.data('costo') || 0;
+            
+            $fila.find('.unidad-medida').text(unidad);
+            $fila.data('costo-unitario', costo);
+            
+            actualizarCostoFila($fila);
+        });
+        
+        // Cambio en cantidad
+        $fila.find('.cantidad-input').on('input', function() {
+            actualizarCostoFila($fila);
+        });
+        
+        // Botón eliminar
+        $fila.find('.btn-eliminar').on('click', function() {
+            if ($('#materiasPrimasContainer tr').length > 1) {
+                $fila.remove();
+                reordenarIndices();
+                calcularTotal();
+            } else {
+                mostrarMensaje('warning', 'Debe haber al menos una materia prima');
+            }
+        });
+    }
+    
+    // ============================================
+    // ACTUALIZAR COSTO DE UNA FILA
+    // ============================================
+    function actualizarCostoFila($fila) {
+        const cantidad = parseFloat($fila.find('.cantidad-input').val()) || 0;
+        const costoUnitario = parseFloat($fila.find('.materia-prima-select option:selected').data('costo')) || 0;
+        const costoTotal = cantidad * costoUnitario;
+        
+        $fila.find('.costo-total').text('$' + costoTotal.toFixed(2));
+        
+        calcularTotal();
+    }
+    
+    // ============================================
+    // CALCULAR TOTAL GENERAL
+    // ============================================
+    function calcularTotal() {
+        let total = 0;
+        
+        $('.materia-prima-row').each(function() {
+            const costoText = $(this).find('.costo-total').text();
+            const costo = parseFloat(costoText.replace('$', '')) || 0;
+            total += costo;
+        });
+        
+        $('#totalCosto').text('$' + total.toFixed(2));
+    }
+    
+    // ============================================
+    // REORDENAR ÍNDICES DESPUÉS DE ELIMINAR
+    // ============================================
+    function reordenarIndices() {
+        let i = 1;
+        $('.materia-prima-row').each(function() {
+            $(this).find('.indice').text(i++);
+        });
+        contadorFilas = i - 1;
+    }
+    
+    // ============================================
+    // ENVIAR FORMULARIO (PASO 2)
+    // ============================================
+    $('#formPaso2').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Validar que todas las filas estén completas
+        let filasValidas = true;
+        let errores = [];
+        
+        $('.materia-prima-row').each(function(index) {
+            const $fila = $(this);
+            const materiaPrima = $fila.find('.materia-prima-select').val();
+            const cantidad = $fila.find('.cantidad-input').val();
+            const almacen = $fila.find('.almacen-select').val();
+            
+            if (!materiaPrima) {
+                filasValidas = false;
+                errores.push(`Fila ${index + 1}: Seleccione una materia prima`);
+                $fila.find('.materia-prima-select').addClass('is-invalid');
+            }
+            
+            if (!cantidad || cantidad <= 0) {
+                filasValidas = false;
+                errores.push(`Fila ${index + 1}: Ingrese una cantidad válida`);
+                $fila.find('.cantidad-input').addClass('is-invalid');
+            }
+            
+            if (!almacen) {
+                filasValidas = false;
+                errores.push(`Fila ${index + 1}: Seleccione un almacén`);
+                $fila.find('.almacen-select').addClass('is-invalid');
+            }
+        });
+        
+        if (!filasValidas) {
+            mostrarMensaje('warning', 'Complete todos los campos:\n' + errores.join('\n'));
+            return;
+        }
+        
+        // Recolectar datos
+        const materiasPrimas = [];
+        $('.materia-prima-row').each(function() {
+            const $fila = $(this);
+            materiasPrimas.push({
+                id: $fila.find('.materia-prima-id-hidden').val(),
+                materia_prima: $fila.find('.materia-prima-select').val(),
+                cantidad: $fila.find('.cantidad-input').val(),
+                almacen: $fila.find('.almacen-select').val()
+            });
+        });
+        
+        // Crear FormData
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append('step', '2');
+        
+        materiasPrimas.forEach((mp, index) => {
+            if (mp.id) {
+                formData.append(`materias_primas[${index}][id]`, mp.id);
+            }
+            formData.append(`materias_primas[${index}][materia_prima]`, mp.materia_prima);
+            formData.append(`materias_primas[${index}][cantidad]`, mp.cantidad);
+            formData.append(`materias_primas[${index}][almacen]`, mp.almacen);
+        });
+        
+        // Deshabilitar botón
+        $('#btnGuardar').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Guardando...');
+        
+        $.ajax({
+            url: '{% url "editar_produccion" produccion.id %}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    mostrarMensaje('success', response.message);
+                    setTimeout(() => {
+                        window.location.href = response.redirect_url;
+                    }, 1500);
+                } else {
+                    $('#btnGuardar').prop('disabled', false).html('<i class="fas fa-save me-1"></i> Guardar Cambios');
+                    mostrarMensaje('error', response.errors || 'Error al guardar');
+                }
+            },
+            error: function(xhr) {
+                $('#btnGuardar').prop('disabled', false).html('<i class="fas fa-save me-1"></i> Guardar Cambios');
+                mostrarMensaje('error', 'Error de conexión');
+            }
+        });
+    });
+    
+    // ============================================
+    // FUNCIÓN PARA MOSTRAR MENSAJES
+    // ============================================
+    function mostrarMensaje(tipo, mensaje) {
+        // Usar SweetAlert2 si está disponible
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: tipo,
+                title: tipo === 'success' ? 'Éxito' : tipo === 'warning' ? 'Advertencia' : 'Error',
+                text: mensaje,
+                timer: tipo === 'success' ? 2000 : undefined,
+                showConfirmButton: tipo !== 'success'
+            });
+        } else {
+            alert(mensaje);
+        }
+    }
+});
+</script>
+
+<style>
+.stepper-wrapper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.stepper-item {
+    position: relative;
+    flex: 1;
+    text-align: center;
+    padding: 0 10px;
+}
+.step-counter {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: bold;
+}
+.stepper-item.active .step-counter {
+    background-color: #0d6efd;
+    color: white;
+}
+.step-name {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+.stepper-item.active .step-name {
+    color: #0d6efd;
+    font-weight: bold;
+}
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+</style>
+{% endblock %}
