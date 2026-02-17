@@ -16,7 +16,7 @@ class ItemInventarioBase(ModeloBase):
     almacen = models.ForeignKey(
         Almacen, on_delete=models.DO_NOTHING,
         null=False,
-        verbose_name="Almacén"
+        verbose_name="AlmacÃ©n"
     )
     cantidad = models.DecimalField(
         max_digits=7, decimal_places=2, 
@@ -31,7 +31,7 @@ class ItemInventarioBase(ModeloBase):
         abstract = True
     
     def get_item(self):
-        """Método para obtener el item específico según el tipo"""
+        """MÃ©todo para obtener el item especÃ­fico segÃºn el tipo"""
         if self.tipo == 'materia_prima':
             return self.inventarios_mp.first()
         elif self.tipo == 'producto':

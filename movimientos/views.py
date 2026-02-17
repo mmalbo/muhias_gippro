@@ -721,7 +721,8 @@ def entrada_materia_prima(request, pk):
                 origen = vale_v.almacen,
                 destino = almacen,
                 entrada = True,
-                tipo = 'Entrada'
+                tipo = 'Entrada',
+                estado = 'confirmado'
             )
         # Procesar cada producto
         for inv in inv_mat:
@@ -782,7 +783,8 @@ def entrada_envase(request, pk):
                 origen = vale_v.almacen,
                 destino = almacen,
                 entrada=True,
-                tipo = 'Entrada'
+                tipo = 'Entrada',
+                estado = 'confirmado'
             )
         # Procesar cada producto
         for inv in inv_env:
@@ -842,7 +844,8 @@ def entrada_insumo(request, pk):
                 origen = vale_v.almacen,
                 destino = almacen,
                 entrada=True,
-                tipo = 'Entrada'
+                tipo = 'Entrada', 
+                estado = 'confirmado'
             )
         # Procesar cada producto
         for inv in inv_ins:
@@ -901,8 +904,9 @@ def entrada_producto(request, pk):
                 almacen = almacen,
                 origen = vale_v.almacen,
                 destino = almacen,
+                estado = 'confirmado',
                 entrada=True,
-                tipo = 'Adquisición'
+                tipo = 'Entrada'
             )
         # Procesar cada producto
         for inv in inv_prod:
@@ -940,16 +944,16 @@ def entrada_producto(request, pk):
                     pass
             else:
                 print("No encontró cantidad")
-        vale_v.registrada = True
+        vale_v.estado = 'recibido'
         vale_v.save()
-        return redirect('productos_list')  # Redirigir a página de éxito
+        return redirect('producto_list')  # Redirigir a página de éxito
     
     # Si es GET, mostrar el formulario con los valores actuales
     return render(request, 'movimientos/entrada_prod.html', {
         'productos': inv_prod, 'vale': vale_v
     })
 
-def entrada_producto_produccion(request, pk):
+""" def entrada_producto_produccion(request, pk):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
@@ -1008,7 +1012,7 @@ def entrada_producto_produccion(request, pk):
     # Si es GET, mostrar el formulario con los valores actuales
     return render(request, 'movimientos/entrada_prod.html', {
         'productos': inv_prod, 'vale': vale_v
-    })
+    }) """
     
     
 def movimiento_list(request):

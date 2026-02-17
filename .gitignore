@@ -15,7 +15,7 @@ env/
 */migrations/*.py
 !*/migrations/__init__.py
 
-# También puedes ser más específico con carpetas comunes
+# Tambi�n puedes ser m�s espec�fico con carpetas comunes
 app/migrations/
 */migrations/
 
@@ -46,3 +46,6 @@ logs/
 htmlcov/
 .coverage
 .coverage.*
+*.pyc
+*.pyc
+*.pyc

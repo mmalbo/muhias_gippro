@@ -60,13 +60,27 @@
                                 
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-                                        <!--Iniciar producción--> <!-- bi bi-play-btnacciónfast-forward de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->
+                                         <!-- bi bi-play-btnacciónfast-forward de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->
+                                        <a href="{% url 'produccion_detail' produccion.id %}"
+                                            class="btn btn-sm"
+                                            title="Ver detalles de producción">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if not produccion.estado == 'Concluida-Rechazada' and not produccion.estado == 'Concluida-Rechazada-R' and not produccion.estado == 'Concluida-Satisfactoria' %}
+                                        <a href="{% url 'editar_produccion' produccion.id %}"
+                                            class="btn btn-sm"
+                                            title="Editar detalles de producción">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                        <!--Iniciar producción-->
                                         {% if produccion.estado == 'Planificada' %}
                                             <a href="{% url 'iniciar_produccion' produccion.id %}"
                                                 title="Iniciar mezclado" class="btn btn-light btn-sm" fill="currentColor">
                                                 <i class="fas fa-play"></i>                                                
                                             </a>
                                         {% endif %}
+                                        <!--Agitando-->
                                         {% if produccion.estado == 'En proceso: Iniciando mezcla' %}
                                             <a href="{% url 'agita_produccion' produccion.id %}"
                                                 title="Iniciar agitado" class="btn btn-light btn-sm" fill="currentColor">
@@ -112,7 +126,7 @@
                                         {% endif %}
                                         <!--Cancelar producción--> <!--formulario para indicar la causa ¿Pregunta que
                                          hago con la materia prima o el semiproducto?|split -->
-                                        {% if produccion.estado == 'Planificada' or produccion.estado == 'En proceso: Iniciando mezcla'%}
+                                        {% if produccion.estado == 'Planificada'%}
                                             <a href="{% url 'cancelar_produccion' produccion.id %}" 
                                                 class="btn btn-danger btn-sm"
                                                 title="Cancelar producción">
@@ -125,8 +139,6 @@
                                                 <i class="fas fa-info-circle"></i> Ver Cancelación
                                             </a>
                                         {% endif %}
-                                        
-                                        
                                         {% if produccion.estado == 'Concluida-Rechazada' %}
                                             <a href="{% url 'reutilizar_produccion' produccion.id %}"
                                                 class="btn btn-outline-danger btn-sm"
@@ -134,11 +146,7 @@
                                                 <i class="fas fa-industry"></i> Reutilizar
                                             </a>
                                         {% endif %}
-                                        <a href="{% url 'produccion_detail' produccion.id %}"
-                                            class="btn btn-sm"
-                                            title="Ver detalles de producción">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                                        
                                     </div>
                                 </td>
                             </tr>

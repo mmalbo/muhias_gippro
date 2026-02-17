@@ -33,6 +33,7 @@ from .forms import (ProduccionForm, MateriaPrimaForm,
     SubirPruebasQuimicasForm, CancelarProduccionForm, PruebaQuimicaForm, 
     DetallePruebaForm, AprobarPruebaForm, ParametroPruebaForm, BuscarParametroForm)
 
+
 class ProduccionListView(ListView):
     model = Produccion
     template_name = 'produccion/list.html'
@@ -222,7 +223,6 @@ class CrearProduccionView(View):
         # Recuperar datos del paso 1 de la sesión
         
         produccion_data = request.session.get('produccion_data', {})
-        print(produccion_data)
         if not produccion_data:
             return JsonResponse({
                 'success': False, 
@@ -266,10 +266,7 @@ class CrearProduccionView(View):
                     # Intentar convertir a dict de alguna otra manera
                     post_data = dict(request.POST) if hasattr(request.POST, '__dict__') else {}
         except Exception as e:
-            print(f"❌ Error procesando post_data: {e}")
             post_data = {}
-    
-        print(f"✅ post_data procesado. Tipo: {type(post_data)}, Keys: {list(post_data.keys())[:5] if post_data else 'vacío'}")
     
         # Procesar materias primas
         materias_primas = self.procesar_materias_primas(post_data)
@@ -381,48 +378,6 @@ class CrearProduccionView(View):
             'id', 'nombre', 'tipo_materia_prima', 'conformacion', 'unidad_medida', 'concentracion', 'costo'
         )
         return list(materias_primas)
-    
-    def procesar_materias_primas_V(self, post_data):
-        materias_primas = []
-        i = 0
-        
-        while f'materias_primas[{i}][materia_prima]' in post_data:
-            materia_prima_id = post_data.get(f'materias_primas[{i}][materia_prima]')
-            cantidad = Decimal(post_data.get(f'materias_primas[{i}][cantidad]'))
-            almacen_id = post_data.get(f'materias_primas[{i}][almacen]')
-            
-            if materia_prima_id and cantidad and almacen_id:
-                try:
-                    # Primero obtener las instancias
-                    materia_prima_obj = MateriaPrima.objects.get(id=materia_prima_id)
-                    almacen_obj = Almacen.objects.get(id=almacen_id)
-
-                    costo_mp = Decimal(materia_prima_obj.costo)*cantidad
-
-                    try:
-                        # Luego buscar en el inventario .almacen == almacen_obj
-                        invent_mp = Inv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj)
-                    except (Inv_Mat_Prima.DoesNotExist, ):
-                        return JsonResponse({'success': False, 'errors': 'No hay existencia de esa materia prima en almacen,'})
-
-                    if invent_mp:
-                        if cantidad < invent_mp.cantidad:
-                            materias_primas.append({
-                                'materia_prima': materia_prima_id,
-                                'cantidad': cantidad,
-                                'almacen': almacen_id,
-                                'costo': costo_mp
-                                })
-                        else:
-                            return JsonResponse({'success': False, 'errors': 'La cantidad solicitada es superior a la existente en almacen,'})
-                    else:
-                        return JsonResponse({'success': False, 'errors': 'No hay existencia de esa materia prima en almacen,'})
-                except (MateriaPrima.DoesNotExist, Almacen.DoesNotExist):
-                    return JsonResponse({'success': False, 'errors': 'No hay existencia de esa materia prima en almacen,'})
-            
-            i += 1
-        
-        return materias_primas
 
     def procesar_materias_primas(self, post_data):
         materias_primas = []
@@ -580,6 +535,12 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             porcentaje_avance = 80
         else:
             porcentaje_avance = 100
+
+        # Calcular costo por litro
+        if not produccion.cantidad_real:
+            costo_litro = produccion.costo / float(produccion.cantidad_estimada)
+        else:
+            costo_litro = produccion.costo / float(produccion.cantidad_real)
              
         
         # 5. Datos para gráficos o estadísticas
@@ -591,6 +552,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             'eficiencia': (produccion.cantidad_real or 0) / produccion.cantidad_estimada * 100 
             if produccion.cantidad_real else 0,
             'porcentaje_avance': porcentaje_avance,
+            'costo_litro': costo_litro
         }
         
         # 6. Productos relacionados (si aplica)
@@ -783,6 +745,306 @@ def detalle_cancelacion(request, pk):
     return render(request, 'produccion/detalle_cancelacion.html', {
         'produccion': produccion
     })
+
+class EditarProduccionView(View):
+    template_name = 'produccion/editar_produccion.html'
+    
+    def get(self, request, pk):
+        # Obtener la producción existente
+        print('En el get')
+        produccion = get_object_or_404(Produccion, id=pk)
+        
+        # Solo permitir editar si está en estado Planificada
+        #if produccion.estado not in ['Planificada', 'En Proceso']:
+        #    messages.error(request, 'No se puede editar una producción en este estado.')
+        #    return redirect('detalle_produccion', pk=produccion.id)
+        
+        # Inicializar sesión con los datos actuales
+        request.session['editar_produccion_data'] = {
+            'produccion_id': str(produccion.id),
+            'catalogo_producto_id': str(produccion.catalogo_producto.id),
+            'cantidad_estimada': str(produccion.cantidad_estimada),
+            'planta_id': str(produccion.planta.id),
+            'prod_result': 'on' if produccion.prod_result else '',
+        }
+        
+        # Obtener materias primas actuales
+        materias_primas_actuales = Prod_Inv_MP.objects.filter(lote_prod=produccion)
+        materias_primas_json = self._obtener_materias_primas_json(materias_primas_actuales)
+        
+        context = {
+            'produccion': produccion,
+            'materias_primas_actuales': materias_primas_actuales,
+            'materias_primas_json': json.dumps(materias_primas_json),
+            'materias_primas_disponibles': Inv_Mat_Prima.objects.all(),  #filter(activo=True),
+            #'almacenes': Almacen.objects.filter(activo=True),
+        }
+        
+        return render(request, self.template_name, context)
+    
+    def _obtener_materias_primas_json(self, materias_primas_actuales):
+        """Convierte las materias primas actuales a JSON para el frontend"""
+        materias = []
+        for mp in materias_primas_actuales:
+            # Obtener inventario actual
+            inventario = Inv_Mat_Prima.objects.filter(
+                materia_prima=mp.inv_materia_prima,
+                almacen=mp.almacen
+            ).first()
+            
+            materias.append({
+                'id': str(mp.id),
+                'materia_prima_id': str(mp.inv_materia_prima.id),
+                'materia_prima_nombre': mp.inv_materia_prima.nombre,
+                'cantidad': float(mp.cantidad_materia_prima),
+                'almacen_id': str(mp.almacen.id),
+                'almacen_nombre': mp.almacen.nombre,
+                'unidad_medida': mp.inv_materia_prima.unidad_medida,
+                'costo_unitario': float(mp.inv_materia_prima.costo),
+                'costo_total': float(mp.cantidad_materia_prima) * mp.inv_materia_prima.costo,
+                'inventario_disponible': float(inventario.cantidad) if inventario else 0,
+            })
+        return materias
+    
+    def post(self, request, pk):
+        
+        produccion = get_object_or_404(Produccion, id=pk)
+        
+        # Verificar estado nuevamente
+        #if produccion.estado not in ['Planificada', 'En Proceso']:
+        #    return JsonResponse({
+        #        'success': False, 
+        #        'errors': 'No se puede editar una producción en este estado.'
+        #    })
+        
+        # Recuperar datos de sesión o usar los actuales
+        editar_data = request.session.get('editar_produccion_data', {})
+        
+        step = request.POST.get('step')
+        print(f"🔍 POST recibido - step: {step}")
+        print(f"🔍 POST data: {request.POST}")
+        
+        if step == '1':
+            return self.procesar_paso_1(request, produccion)
+        elif step == '2':
+            return self.procesar_paso_2(request, produccion)
+        else:
+            return JsonResponse({'success': False, 'errors': 'Paso no válido'})
+    
+    def procesar_paso_1(self, request, produccion):
+        """Actualizar cantidad estimada"""
+        cantidad_estimada = request.POST.get('cantidad_estimada')
+    
+        print(f"🔍 procesar_paso_1 - POST data: {request.POST}")
+        print(f"🔍 cantidad_estimada recibida: {cantidad_estimada}")
+    
+        if not cantidad_estimada:
+            return JsonResponse({'success': False, 'errors': 'La cantidad estimada es obligatoria'})
+    
+        try:
+            # Validar que sea un número positivo
+            cantidad_decimal = Decimal(cantidad_estimada)
+            if cantidad_decimal <= 0:
+                return JsonResponse({'success': False, 'errors': 'La cantidad debe ser mayor a cero'})
+        
+            # Actualizar en sesión
+            editar_data = request.session.get('editar_produccion_data', {})
+            editar_data['cantidad_estimada'] = str(cantidad_decimal)
+            request.session['editar_produccion_data'] = editar_data
+            request.session.modified = True
+        
+            print(f"✅ Cantidad estimada guardada en sesión: {cantidad_decimal}")
+        
+            return JsonResponse({'success': True, 'step': 2})
+        
+        except (ValueError, InvalidOperation) as e:
+            return JsonResponse({'success': False, 'errors': f'La cantidad no es válida: {str(e)}'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'errors': f'Error: {str(e)}'})
+    
+    def procesar_paso_2(self, request, produccion):
+        """Actualizar materias primas"""
+        # Procesar materias primas enviadas
+        print('En paso 2')
+        try:
+            materias_primas_nuevas = self.procesar_materias_primas(request.POST)
+        except ValueError as e:
+            return JsonResponse({'success': False, 'errors': str(e)})
+        
+        #if not materias_primas_nuevas:
+        #    return JsonResponse({'success': False, 'errors': 'Debe agregar al menos una materia prima'})
+        
+        try:
+            
+            with transaction.atomic():
+                # 1. Actualizar cantidad estimada
+                editar_data = request.session.get('editar_produccion_data', {})
+                if 'cantidad_estimada' in editar_data:
+                    produccion.cantidad_estimada = Decimal(editar_data['cantidad_estimada'])
+                
+                # 2. Calcular nuevo costo total
+                costo_total = sum(Decimal(str(mp['costo'])) for mp in materias_primas_nuevas)
+                produccion.costo = costo_total
+                
+                # 3. Obtener materias primas actuales
+                materias_actuales = Prod_Inv_MP.objects.filter(lote_prod=produccion)
+                
+                # 4. Identificar IDs de materias primas nuevas
+                ids_nuevos = [mp.get('id') for mp in materias_primas_nuevas if mp.get('id')]
+                
+                # 5. Eliminar las que ya no están
+                for mp_actual in materias_actuales:
+                    if str(mp_actual.id) not in ids_nuevos:
+                        # Devolver al inventario antes de eliminar
+                        inventario = Inv_Mat_Prima.objects.filter(
+                            materia_prima=mp_actual.inv_materia_prima.materia_prima,
+                            almacen=mp_actual.almacen
+                        ).first()
+                        
+                        if inventario:
+                            inventario.cantidad -= mp_actual.cantidad_materia_prima
+                            inventario.save()
+                        
+                        mp_actual.delete()
+                
+                # 6. Actualizar o crear nuevas materias primas
+                vale = None
+                for mp_data in materias_primas_nuevas:
+                    materia_prima_obj = get_object_or_404(MateriaPrima, id=mp_data['materia_prima'])
+                    almacen_obj = get_object_or_404(Almacen, id=mp_data['almacen'])
+                    
+                    # Obtener inventario
+                    inventario = Inv_Mat_Prima.objects.filter(
+                        materia_prima=materia_prima_obj,
+                        almacen=almacen_obj
+                    ).first()
+                    
+                    if not inventario:
+                        raise ValueError(f'No hay inventario de {materia_prima_obj.nombre} en {almacen_obj.nombre}')
+                    
+                    nueva_cantidad = Decimal(str(mp_data['cantidad']))
+                    cantidad_anterior = Decimal('0')
+                    
+                    # Verificar si es una actualización o creación
+                    if mp_data.get('id'):  # Actualizar existente
+                        mp_existente = Prod_Inv_MP.objects.get(id=mp_data['id'])
+                        cantidad_anterior = mp_existente.cantidad_materia_prima
+                        
+                        # Ajustar inventario
+                        if nueva_cantidad > cantidad_anterior:
+                            diferencia = nueva_cantidad - cantidad_anterior
+                            if inventario.cantidad < diferencia:
+                                raise ValueError(f'Inventario insuficiente de {materia_prima_obj.nombre}')
+                            inventario.cantidad -= diferencia
+                        else:
+                            diferencia = cantidad_anterior - nueva_cantidad
+                            inventario.cantidad += diferencia
+                        
+                        mp_existente.cantidad_materia_prima = nueva_cantidad
+                        mp_existente.save()
+                        
+                    else:  # Crear nueva
+                        if inventario.cantidad < nueva_cantidad:
+                            raise ValueError(f'Inventario insuficiente de {materia_prima_obj.nombre}')
+                        
+                        inventario.cantidad -= nueva_cantidad
+                        
+                        # Crear o reutilizar vale
+                        if not vale:
+                            vale = Vale_Movimiento_Almacen.objects.create(
+                                tipo='Solicitud',
+                                entrada=False,
+                                almacen=almacen_obj
+                            )
+                        
+                        Prod_Inv_MP.objects.create(
+                            lote_prod=produccion,
+                            inv_materia_prima=inventario,
+                            cantidad_materia_prima=nueva_cantidad,
+                            almacen=almacen_obj,
+                            vale=vale
+                        )
+                    
+                    inventario.save()
+                
+                # Guardar producción
+                produccion.save()
+                
+                # Limpiar sesión
+                if 'editar_produccion_data' in request.session:
+                    del request.session['editar_produccion_data']
+                    request.session.modified = True
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Producción actualizada exitosamente',
+                    'redirect_url': reverse('detalle_produccion', args=[produccion.id])
+                })
+                
+        except Exception as e:
+            return JsonResponse({'success': False, 'errors': f'Error al guardar: {str(e)}'})
+    
+    def procesar_materias_primas(self, post_data):
+        """Procesa las materias primas del formulario"""
+        materias_primas = []
+        
+        # Función helper para obtener valores
+        def get_value(data, key):
+            if isinstance(data, dict):
+                return data.get(key)
+            elif hasattr(data, 'get'):
+                return data.get(key)
+            return None
+        
+        i = 0
+        while True:
+            # Buscar por diferentes formatos posibles
+            id_key = f'materias_primas[{i}][id]'
+            materia_key = f'materias_primas[{i}][materia_prima]'
+            cantidad_key = f'materias_primas[{i}][cantidad]'
+            almacen_key = f'materias_primas[{i}][almacen]'
+            
+            # Intentar obtener materia prima
+            materia_prima_id = get_value(post_data, materia_key)
+            
+            if not materia_prima_id:
+                # Intentar con formato alternativo
+                materia_prima_id = get_value(post_data, f'materias_primas[{i}].materia_prima')
+            
+            if not materia_prima_id:
+                break
+            
+            # Obtener otros valores
+            mp_id = get_value(post_data, id_key)
+            cantidad_str = get_value(post_data, cantidad_key) or get_value(post_data, f'materias_primas[{i}].cantidad')
+            almacen_id = get_value(post_data, almacen_key) or get_value(post_data, f'materias_primas[{i}].almacen')
+            
+            if not all([materia_prima_id, cantidad_str, almacen_id]):
+                i += 1
+                continue
+            
+            try:
+                cantidad = Decimal(str(cantidad_str))
+                
+                # Obtener objetos y calcular costo
+                materia_prima_obj = get_object_or_404(MateriaPrima, id=materia_prima_id)
+                costo_mp = cantidad * materia_prima_obj.costo
+                
+                mp_data = {
+                    'id': mp_id if mp_id else None,
+                    'materia_prima': materia_prima_id,
+                    'cantidad': cantidad,
+                    'almacen': almacen_id,
+                    'costo': costo_mp,
+                }
+                materias_primas.append(mp_data)
+                
+            except Exception as e:
+                raise ValueError(f'Error en materia prima {i}: {str(e)}')
+            
+            i += 1
+        
+        return materias_primas
 
 #funcionalidades para insertar pruebas químicas externas, emitidas por archivo.
 def subir_pruebas_quimicas(request, pk):
