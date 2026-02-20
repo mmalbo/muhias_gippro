@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from materia_prima.models import MateriaPrima
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
+from producto.models import Producto
 from nomencladores.almacen.models import Almacen
 import os
 
@@ -73,6 +74,12 @@ class Adquisicion(models.Model):
         cantidad = 0
         cantidad = cantidad + DetallesAdquisicionInsumo.objects.filter(adquisicion=self.id).count()
         return cantidad
+
+    @property
+    def cantidad_productos(self):
+        cantidad = 0
+        cantidad = cantidad + DetallesAdquisicionProducto.objects.filter(adquisicion=self.id).count()
+        return cantidad
     
 class DetallesAdquisicion(models.Model):
     adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, null=True, related_name='detalles')
@@ -130,3 +137,18 @@ class DetallesAdquisicionInsumo(models.Model):
     def __str__(self):
         return f"{self.insumo.nombre} - {self.adquisicion.fecha_compra}"
     
+class DetallesAdquisicionProducto(models.Model):
+    adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, null=True, related_name='detalles_productos')
+    producto = models.ForeignKey(
+        Producto, null=True, on_delete=models.CASCADE,  # Cambiado a PROTECT
+        verbose_name="Producto adquirido"
+    )
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cantidad", null=False, default=1)
+    #El almacén debe ser para la adquisición. No para cada detalle de adquisicion. 
+    recibida = models.BooleanField(
+        verbose_name="Recibida en almacén",
+        null=False, default=False
+    )
+
+    def __str__(self):
+        return f"{self.producto.nombre_comercial} - {self.adquisicion.fecha_compra}"

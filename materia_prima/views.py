@@ -12,7 +12,7 @@ from tablib import Dataset
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from nomencladores.almacen.models import Almacen
-from materia_prima.forms import MateriaPrimaForm, MateriaPrimaFormUpdate
+from materia_prima.forms import MateriaPrimaForm, MateriaPrimaFormUpdate, MateriaPrimaCostoForm
 from materia_prima.models import MateriaPrima
 from inventario.models import Inv_Mat_Prima
 from .forms import AgregarTipoForm
@@ -144,6 +144,13 @@ class CreateImportView(CreateView):
     template_name = 'materia_prima/import_form.html'
     success_url = '/materia_prima/'
     success_message = "Se ha importado correctamente la materia prima."
+
+class CreateImportCostoView(CreateView):
+    model = MateriaPrima
+    form_class = MateriaPrimaCostoForm
+    template_name = 'materia_prima/import_costo_form.html'
+    success_url = '/materia_prima/'
+    success_message = "Se ha actualizado correctamente el costo de las materias primas."
 
 def importar(request):
     if request.method == 'POST':
@@ -360,6 +367,82 @@ def importar(request):
             messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
             return redirect('materia_prima:materia_prima_list')
     return render(request, 'materia_prima/import_form.html')
+
+def importarCosto(request):
+    if request.method == 'POST':
+        file = request.FILES.get('excel')
+        No_fila = 0
+        materia_existentes = []
+
+        if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
+            messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
+            return redirect('updateCostoMateriasPrimas')
+
+        try:
+            with (transaction.atomic()):
+                format = 'xls' if file.name.endswith('.xls') else 'xlsx'
+                imported_data = Dataset().load(file.read(), format=format)
+                print(f"Importada: {imported_data}")    
+                for data in imported_data:
+                    print(f"En el for{str(data[1])}")
+                    nombre = str(data[0]).strip() if data[0] is not None else None  # Asegúrate de que sea un string
+                    costo = str(data[1]).strip() if data[1] is not None else None
+
+                    print(f"nombre: {nombre}")
+                    print(f"costo: {costo}")
+
+                    if not all([nombre, costo]):
+                        print(f"Fila {No_fila + 2}: Todos los campos son obligatorios.")
+                        messages.error(request, f"Fila {No_fila + 2}: Todos los campos son obligatorios.")
+                        return redirect('materia_prima:updateCostoMateriasPrimas')
+
+                    if len(nombre) > 255:
+                        print(f"Fila {No_fila + 2}: El nombre de la materia prima no puede exceder 255 caracteres.")
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: El nombre de la materia prima no puede exceder 255 caracteres.")
+                        return redirect('materia_prima:updateCostoMateriasPrimas')
+
+                    if not re.match(r'^-?\d+(\.\d+)?$', costo) or float(costo) <= 0:
+                        print(f"Fila {No_fila + 2}: 'Costo' debe ser un número decimal válido mayor que cero.")
+                        messages.error(request,
+                                       f"Fila {No_fila + 2}: 'Costo' debe ser un número decimal válido mayor que cero.")
+                        return redirect('materia_prima:updateCostoMateriasPrimas')
+
+                    costo = float(costo)  # Convertimos a entero después de la validación
+                    print(costo)
+                    try:
+                        materia_prima = MateriaPrima.objects.filter(nombre=nombre)
+                        if not materia_prima:
+                            print(f"No se encontró la materia prima de la {No_fila + 1}")
+                        else:    
+                            materia_prima[0].costo = costo
+                            materia_prima[0].save()
+                            print("Guardada")
+                            No_fila += 1 # Incrementa solo si se guarda correctamente
+                        
+
+                    except Exception as e:
+                        print(f"Error al procesar la fila {No_fila + 2}: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila {No_fila + 2}: {str(e)}")
+                        return redirect('materia_prima:updateCostoMateriasPrimas')
+
+                # Mensajes finales
+                print(No_fila)
+                if No_fila > 0:
+                    Total_filas = No_fila
+                    messages.success(request, f'Se ha actualizado el costo de {Total_filas} materias primas satisfactoriamente.')
+                else:
+                    messages.warning(request, "No se importó actualizó ningún costo")
+                    return redirect('materia_prima:updateCostoMateriasPrimas')
+
+                return redirect('materia_prima:materia_prima_list')
+
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
+            return redirect('materia_prima:materia_prima_list')
+    return render(request, 'materia_prima/import_costo_form.html')
+
+
 
 ###Gestionar Tipos de MP
 

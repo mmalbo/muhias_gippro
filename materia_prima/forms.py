@@ -30,7 +30,20 @@ class MateriaPrimaForm(forms.ModelForm):
             'ficha_tecnica': 'Ficha técnica',
             'hoja_seguridad': 'Hoja de seguridad',
         }
+class MateriaPrimaCostoForm(forms.ModelForm):
 
+    class Meta:
+        model = MateriaPrima
+        fields = ['nombre', 'costo']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'costo': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'nombre': 'Nombre',
+            'costo': 'Costo',
+        }
+        
 class MateriaPrimaFormUpdate(forms.ModelForm):
 
     class Meta:
