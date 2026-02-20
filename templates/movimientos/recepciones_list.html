@@ -39,6 +39,8 @@
                                       Materias primas
                                     {% elif rp.tipo_adquisicion == 'env' %}
                                       Envases y embalajes
+                                    {% elif rp.tipo_adquisicion == 'prod' %}
+                                      Productos
                                     {% else %}
                                         Insumos y otros
                                     {% endif %}
@@ -49,6 +51,8 @@
                                         {{ rp.cantidad_mprimas }}
                                     {% elif rp.tipo_adquisicion == 'env' %}
                                         {{ rp.cantidad_envases }}
+                                    {% elif rp.tipo_adquisicion == 'prod' %}
+                                        {{ rp.cantidad_productos }}
                                     {% else %}
                                         {{ rp.cantidad_insumos }}
                                     {% endif %}
@@ -61,6 +65,10 @@
                                     {% elif rp.tipo_adquisicion == 'env' %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'recepcion_env' rp.id %}" class="btn btn-success">Recepcionar</a>
+                                    </div>
+                                    {% elif rp.tipo_adquisicion == 'prod' %}
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'recepcion_prod' rp.id %}" class="btn btn-success">Recepcionar</a>
                                     </div>
                                     {% else %}
                                     <div class="button-container" style="display: flex; gap: 10px;">

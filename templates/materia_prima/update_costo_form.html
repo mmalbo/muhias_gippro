@@ -1,0 +1,93 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-11 col-lg-11">
+                    <h4 class="card-title">{% if object %}Actualizar materia prima{% else %}Crear materia
+                        prima{% endif %}</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            {% if form.errors %}
+                                {% for field in form %}
+                                    {% if field.errors %}
+                                        <div class="alert alert-danger">
+                                            <div>{{ field.label }}: {{ field.errors }}</div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                            {% endif %}
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="form-row">
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.codigo.label_tag }}
+                                        {{ form.codigo }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.nombre.label_tag }}
+                                        {{ form.nombre }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.unidad_medida.label_tag }}
+                                        {{ form.unidad_medida }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.concentracion.label_tag }}
+                                        {{ form.concentracion }}
+                                        {#                                {{ form.username.helptext }}#}
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.conformacion.label_tag }}
+                                        {{ form.conformacion }}
+                                        {#                                {{ form.username.helptext }}#}
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.cantidad_almacen.label_tag }}
+                                        {{ form.cantidad_almacen }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.costo.label_tag }}
+                                        {{ form.costo }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.tipo_materia_prima.label_tag }}
+                                        {{ form.tipo_materia_prima }}
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.almacen.label_tag }}
+                                        {{ form.almacen }}
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.ficha_tecnica.label_tag }}
+                                        {{ form.ficha_tecnica }}
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.hoja_seguridad.label_tag }}
+                                        {{ form.hoja_seguridad }}
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="form-group" style="text-align: center;">
+                                    <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}
+                                        Añadir{% endif %}</button>
+                                    <a href="{% url 'materia_prima:materia_prima_list' %}" class="btn btn-danger">Cancelar</a>
+                                    {% if not object %}
+                                        <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success">
+                                            Importar excel
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

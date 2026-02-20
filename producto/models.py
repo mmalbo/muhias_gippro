@@ -12,11 +12,11 @@ class Producto(ModeloBase):
     )
 
     codigo_3l = models.CharField(max_length=3, verbose_name="Código de 3 letras del producto", null=True,
-        blank=True, default='XXX' #, unique=True   Asegura que el código del producto sea único
+        blank=True, default='XXX' 
     )
 
     nombre_comercial = models.CharField( max_length=255, verbose_name="Nombre comercial", null=False,
-        blank=False  # Asegura que este campo no esté vacío
+        blank=False 
     )
 
     estado = models.CharField( choices=ESTADOS, max_length=255, null=False, default='inventario',
@@ -46,7 +46,7 @@ class Producto(ModeloBase):
         ]
     
     def __str__(self):
-        return f"{self.codigo_producto} - {self.nombre_comercial}"
+        return f"{self.codigo_producto} - {self.nombre_comercial} {self.formato}"
 
     @property
     def cantidad_total(self):
@@ -58,7 +58,6 @@ class Producto(ModeloBase):
         )['total']
         return total if total is not None else 0
 
-    # Agregar estos métodos a la clase Producto
     def clean(self):
         """Validaciones a nivel de modelo"""
         super().clean()
@@ -66,10 +65,10 @@ class Producto(ModeloBase):
         errors = {}
 
         # Validar estado coherente con documentos
-        if self.estado == 'disponibleV' and not self.ficha_tecnica_folio:
+        """ if self.estado == 'disponibleV' and not self.ficha_tecnica_folio:
             errors['ficha_tecnica'] = 'Los productos disponibles para la venta deben tener ficha técnica'
         if self.estado == 'disponibleV' and not self.ficha_costo:
-            errors['ficha_costo'] = 'Los productos disponibles para la venta deben tener ficha de costo'
+            errors['ficha_costo'] = 'Los productos disponibles para la venta deben tener ficha de costo' """
         if not self.pk and self.formato:  # Si es nuevo y tiene formato asignado
             if self.formato.capacidad != 0:
                 errors['formato'] = 'Los productos nuevos deben crearse en formato "A Granel"'
@@ -77,11 +76,11 @@ class Producto(ModeloBase):
         # Validar unicidad del nombre comercial por formato
         if Producto.objects.filter(
             nombre_comercial=self.nombre_comercial,
-#            formato=self.formato,
+            formato=self.formato,
             estado='inventario'
         ).exclude(pk=self.pk).exists():
             errors['nombre_comercial'] = 'Ya existe un producto en inventario con este nombre y formato'
-    
+
         if errors:
             raise ValidationError(errors)
 

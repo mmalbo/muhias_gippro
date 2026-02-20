@@ -22,6 +22,7 @@
                 <div class="col-sm-12 col-lg-12">
                     {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
                     <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    <a href="{% url 'materia_prima:updateCostoMateriasPrimas' %}" class="btn btn-success"> Actualizar costos desde archivo </a>
                     {% endif %}
                     <table id="datatable" class="table datatable table-striped">
                         <thead>
