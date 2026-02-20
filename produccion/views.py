@@ -18,6 +18,7 @@ from django.db import transaction
 from decimal import Decimal, InvalidOperation
 import datetime
 import json
+from django.core.serializers.json import DjangoJSONEncoder
 import urllib.parse
 
 from collections import OrderedDict
@@ -771,13 +772,20 @@ class EditarProduccionView(View):
         # Obtener materias primas actuales
         materias_primas_actuales = Prod_Inv_MP.objects.filter(lote_prod=produccion)
         materias_primas_json = self._obtener_materias_primas_json(materias_primas_actuales)
+
+        materias_disponibles = list(Inv_Mat_Prima.objects.values(
+            'materia_prima', 'almacen', 'cantidad', 'costo'
+        ))
+        materias_disponibles_json = json.dumps(materias_disponibles, cls=DjangoJSONEncoder)
+
+        print(materias_primas_json)
         
         context = {
             'produccion': produccion,
             'materias_primas_actuales': materias_primas_actuales,
             'materias_primas_json': json.dumps(materias_primas_json),
-            'materias_primas_disponibles': Inv_Mat_Prima.objects.all(),  #filter(activo=True),
-            #'almacenes': Almacen.objects.filter(activo=True),
+            'materias_primas_disponibles': materias_disponibles_json,  #filter(activo=True),
+            'almacenes': [] #Almacen.objects.filter(activo=True),
         }
         
         return render(request, self.template_name, context)
@@ -2045,9 +2053,8 @@ def concluir_prueba(request, pk):
                 # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
                 almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
                 vale = Vale_Movimiento_Almacen.objects.create(
-                    almacen = prueba.produccion.planta.almacen,
-                    origen = prueba.produccion.planta.almacen,
-                    destino = almacen_destino, # Aquí va el nuevo parametro almacen desde el modal 
+                    origen = prueba.produccion.planta.nombre,
+                    destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,
                     tipo = 'Producción terminada',
                     estado='confirmado'

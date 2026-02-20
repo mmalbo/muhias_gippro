@@ -16,10 +16,10 @@ class Planta(ModeloBase):
         verbose_name="Propia",
     )
 
-    almacen = models.ForeignKey(Almacen, on_delete=models.PROTECT, 
+    """ almacen = models.ForeignKey(Almacen, on_delete=models.PROTECT, 
                                related_name='planta_asociada', 
                                null=True, blank=True,
-                               verbose_name="Almacén asociado a la planta")
+                               verbose_name="Almacén asociado a la planta") """
 
     class Meta:
         verbose_name = "Planta"
