@@ -26,6 +26,7 @@ class ItemInventarioBase(ModeloBase):
     # Campos para identificar el tipo de item
     tipo = models.CharField(max_length=20, default='', editable=False)
     item_id = models.UUIDField(default=uuid.uuid4)
+    #descripcion = models.CharField(max_length=150, default='')
     
     class Meta:
         abstract = True

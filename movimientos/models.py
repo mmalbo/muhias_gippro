@@ -44,7 +44,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
     tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='Recepción', verbose_name = "Tipo de movimiento")
     consecutivo = models.IntegerField(null=False, verbose_name="Código del vale")
     # Revisar aquí hay una inconsistencia, si se borra el almacén esteatributo dice que no hace nada, pero no puede ser nulo.
-    almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen que registra", null=True, blank=False,)
+    almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen que registra", null=True, blank=False)
     fecha_movimiento = models.DateField(auto_now=True, null=False,verbose_name="Fecha de solicitud")
     suministrador = models.ForeignKey(CustomUser, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Suministrador")
     orden_No = models.IntegerField(blank=True, null=True, verbose_name="Número de orden")
@@ -52,14 +52,16 @@ class Vale_Movimiento_Almacen(ModeloBase):
     transportista = models.CharField(blank=True, null=True, default='', max_length=150, verbose_name="Transportista")
     transportista_cI = models.CharField(blank=True, null=True, default='', max_length=11, verbose_name="Carnet de identidad")
     chapa = models.CharField(blank=True, null=True, max_length=150, verbose_name="Chapa del vehículo")
-    origen = models.ForeignKey(Almacen, on_delete=models.PROTECT, 
+    origen = models.CharField(blank=True, null=True, max_length=150, verbose_name="Origen del movimiento") 
+    """ models.ForeignKey(Almacen, on_delete=models.PROTECT, 
                                related_name='movimientos_origen', 
                                null=True, blank=True,
-                               verbose_name="Origen del movimiento")
-    destino = models.ForeignKey(Almacen, on_delete=models.PROTECT, 
+                               verbose_name="Origen del movimiento") """
+    destino = models.CharField(blank=True, null=True, max_length=150, verbose_name="Destino del movimiento")
+    """ models.CharField(blank=True, null=True, max_length=150, verbose_name="Chapa del vehículo") models.ForeignKey(Almacen, on_delete=models.PROTECT, 
                                 related_name='movimientos_destino', 
                                 null=True, blank=True,
-                                verbose_name="Destino del movimiento")
+                                verbose_name="Destino del movimiento") """
     despachado_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Almacenero que despacha")
     recibido_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Quien recibe")
     autorizado_por = models.CharField(blank=True, null=True, max_length=150, verbose_name="Autoriza")
@@ -324,7 +326,7 @@ class Movimiento_Prod(MovimientoBase):
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale.entrada else 'Salida '
-        return f'{entrada} de {self.producto.nombre_comercial} en {self.vale.almacen.nombre}'
+        return f'{entrada} de {self.producto.nombre_comercial} en ' #{self.vale.almacen.nombre}
 
 #Relación mucho a mucho de vale con insumo
 class Movimiento_Ins(MovimientoBase):

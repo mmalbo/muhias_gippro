@@ -9,10 +9,10 @@ from django.db.models import Sum
 
 class EnvaseEmbalaje(ModeloBase):
     codigo_envase = models.CharField(unique=True, null=False, blank=False, max_length=20, verbose_name="Código del envase")
-
+    nombre = models.CharField(max_length=255, verbose_name="Nombre",blank=False, null=False, default="Envase")
     tipo_envase_embalaje = models.ForeignKey(TipoEnvaseEmbalaje, on_delete=models.DO_NOTHING, null=True, verbose_name="Tipo de envase de embalaje")
-
     formato = models.ForeignKey(Formato, on_delete=models.DO_NOTHING, null=True, verbose_name="Formato de envase")
+    proveedor = models.CharField(max_length=255, verbose_name="Proveedor",blank=False, null=False, default="Proveedor")
 
     ESTADOS = [
         ('comprado', 'Comprado'),

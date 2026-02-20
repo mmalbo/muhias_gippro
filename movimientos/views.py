@@ -1,6 +1,6 @@
 from django.forms import formset_factory
 from .forms import RecepcionMateriaPrimaForm, MovimientoFormUpdate
-from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo
+from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo, DetallesAdquisicionProducto
 from inventario.models import Inv_Mat_Prima, Inv_Insumos, Inv_Envase, Inv_Producto 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
@@ -163,9 +163,6 @@ def buscar_items_almacen(request):
     almacen_id = request.GET.get('almacen_id')
     tipo = request.GET.get('tipo', '')
     term = request.GET.get('q', '')
-    print(almacen_id)
-    print(tipo)
-    print(term)
         
     items = []
         
@@ -436,7 +433,7 @@ def salida_produccion(request, prod_id):
             almacen = mp_prod[0].almacen
             vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = almacen,
+                origen = almacen.nombre,
                 destino = Produccion.planta.nombre,
                 entrada = False,
                 tipo = 'Entrega'
@@ -528,13 +525,13 @@ def recepcion_materia_prima(request, adq_id):
         'productos': inv_mat, 'adquisicion': adquisicion
     })
 
-# No se ha implementado. Esto es adquisicion de productos terminados
+# Adquisicion de productos terminados
 def recepcion_producto(request, adq_id):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
-    inv_mat = DetallesAdquisicion.objects.filter(adquisicion__id=adq_id)
+    inv_prod = DetallesAdquisicionProducto.objects.filter(adquisicion__id=adq_id)
     adquisicion = get_object_or_404(Adquisicion, id=adq_id)
     if adquisicion.registrada:
-        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
+        return redirect('producto_list')  # Redirigir a página de éxito        
     almacen = adquisicion.almacen
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
@@ -544,26 +541,26 @@ def recepcion_producto(request, adq_id):
                 tipo = 'Adquisición'
             )
         # Procesar cada producto
-        for inv in inv_mat:
-            field_name = str(inv.materia_prima.id)
+        for inv in inv_prod:
+            field_name = str(inv.producto.id)
             cantidad = decimal.Decimal('0.00')
             cantidad = round(float(request.POST.get(field_name)), 2)
             cantidad = decimal.Decimal(cantidad)
             if cantidad:
                 try:
-                    Movimiento_MP.objects.create(
-                        materia_prima=inv.materia_prima,
+                    Movimiento_Prod.objects.create(
+                        producto=inv.producto,
                         vale=vale,  
                         cantidad=cantidad                        
                     )
-                    inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
-                        materia_prima=inv.materia_prima, almacen=almacen)
+                    inventario_prod, created = Inv_Producto.objects.get_or_create(
+                        producto=inv.producto, almacen=almacen)
                     if created:
-                        inventario_mp.cantidad = cantidad
-                        inventario_mp.save()
+                        inventario_prod.cantidad = cantidad
+                        inventario_prod.save()
                     else:
-                        inventario_mp.cantidad = inventario_mp.cantidad + cantidad
-                        inventario_mp.save()
+                        inventario_prod.cantidad = inventario_prod.cantidad + cantidad
+                        inventario_prod.save()
                     if not cantidad == inv.cantidad:
                         target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
                         # Crear notificaciones para cada usuario en ese grupo
@@ -572,7 +569,7 @@ def recepcion_producto(request, adq_id):
                                 # Notificación en base de datos
                                 Notification.objects.create(
                                     user=user,
-                                    message=f"No coincide la recepción con la adquisición de: {inv.materia_prima.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
+                                    message=f"No coincide la recepción con la adquisición de: {inv.producto.nombre_comercial}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
                                     link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
                                 )                    
                 except Exception as e: #(ValueError, TypeError):
@@ -582,11 +579,11 @@ def recepcion_producto(request, adq_id):
                 print("No encontro cantidad")
         adquisicion.registrada = True
         adquisicion.save()
-        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
+        return redirect('producto_list')  # Redirigir a página de éxito
     
     # Si es GET, mostrar el formulario con los valores actuales
-    return render(request, 'movimientos/recepcion_mp.html', {
-        'productos': inv_mat, 'adquisicion': adquisicion
+    return render(request, 'movimientos/recepcion_prod.html', {
+        'productos': inv_prod, 'adquisicion': adquisicion
     })
 
 def recepcion_envase(request, adq_id):
@@ -713,13 +710,13 @@ def entrada_materia_prima(request, pk):
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
         return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
-    almacen = vale_v.destino
+    almacen = Almacen.objects.filter(nombre=vale_v.destino)[0] 
     inv_mat = vale_v.movimientos.all()
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen,
-                destino = almacen,
+                origen = vale_v.almacen.nombre,
+                destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Entrada',
                 estado = 'confirmado'
@@ -775,13 +772,13 @@ def entrada_envase(request, pk):
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
         return redirect('envase_embalaje_lista')  # Redirigir a página de éxito        
-    almacen = vale_v.destino
+    almacen = Almacen.objects.filter(nombre=vale_v.destino)[0] 
     inv_env = vale_v.movimientos_envases.all()
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen,
-                destino = almacen,
+                origen = vale_v.almacen.nombre,
+                destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Entrada',
                 estado = 'confirmado'
@@ -836,13 +833,13 @@ def entrada_insumo(request, pk):
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
         return redirect('insumos_list')  # Redirigir a página de éxito        
-    almacen = vale_v.destino
+    almacen = Almacen.objects.filter(nombre=vale_v.destino)[0] 
     inv_ins = vale_v.movimientos_insumos.all()
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen,
-                destino = almacen,
+                origen = vale_v.almacen.nombre,
+                destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Entrada', 
                 estado = 'confirmado'
@@ -897,31 +894,36 @@ def entrada_producto(request, pk):
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
         return redirect('producto_list')  # Redirigir a página de éxito        
-    almacen = vale_v.destino
+    almacen = Almacen.objects.filter(nombre=vale_v.destino)[0] 
     inv_prod = vale_v.movimientos_productos.all()
+    print(f'inv_prod: {inv_prod}')
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen,
-                destino = almacen,
+                origen = vale_v.origen,
+                destino = almacen.nombre,
                 estado = 'confirmado',
                 entrada=True,
                 tipo = 'Entrada'
             )
         # Procesar cada producto
         for inv in inv_prod:
+            print("En el for")
+            print(inv)
             field_name = str(inv.producto.id)
             cantidad = decimal.Decimal('0.00')
             cantidad = decimal.Decimal(float(request.POST.get(field_name)))
             if cantidad:
+                print(cantidad)
                 try:
                     Movimiento_Prod.objects.create(
                         producto=inv.producto,
                         vale=vale,  
                         cantidad=cantidad
                     )
+                    print(inv.producto)
                     inventario_in, created = Inv_Producto.objects.get_or_create(
-                        producto=inv.producto, almacen=almacen)
+                        lote=inv.lote, producto=inv.producto, almacen=almacen)
                     if created:
                         inventario_in.cantidad = cantidad
                         inventario_in.save()
@@ -1017,7 +1019,6 @@ def entrada_producto(request, pk):
     
 def movimiento_list(request):
     movimientos = Vale_Movimiento_Almacen.objects.all().order_by('-consecutivo')
-    print(movimientos)
     return render(request, 'movimientos/movimientos_list.html', {
         'movimientos': movimientos
     })

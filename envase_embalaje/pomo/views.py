@@ -125,7 +125,7 @@ def generar_codigo(codigo_base, ultimo):
 
     return codigo
 
-def importarPomo(request):
+def importarPomoE(request):
     if request.method == 'POST':
         file = request.FILES.get('excel')  # Cambia el nombre de la variable si es necesario
         pomos_existentes = []
@@ -137,6 +137,7 @@ def importarPomo(request):
             return redirect('pomo:importarPomo')
 
         try:
+            print("En el try")
             with transaction.atomic():
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
@@ -149,7 +150,8 @@ def importarPomo(request):
                     Col_Color = str(data[2]).strip() if data[2] is not None else None  # Col_Color
 
                     color = Color.objects.filter(nombre__iexact=Col_Color).first()
-
+                    
+                    print(nombre+"-"+forma+"-"+material+"-"+color.nombre)
                     codigo_base = generar_formato_codigo(data[4],data[2])#  str(data[0]).strip() Col_Codigo
                     existe = Pomo.objects.filter(nombre=nombre,forma=forma,material=material,color=color).first()
                     ultimo = Pomo.objects.filter(codigo__icontains=codigo_base).first()
@@ -185,6 +187,7 @@ def importarPomo(request):
                         return redirect('pomo:importarPomo')
 
                     try:
+                        print("Creando el pomo")
                         pomo = Pomo(
                             codigo=codigo,
                             nombre=nombre,
@@ -196,8 +199,14 @@ def importarPomo(request):
                         pomo.save()
                         No_fila += 1
                     except Exception as e:
+                        print(f"Error al guardar el pomo: {str(e)}")
                         messages.error(request, f"Error al procesar la fila : {str(e)}")
                         return redirect('pomo:importarPomo')
+                    
+                    if Pomo.objects.filter(nombre=pomo.nombre).exists():
+                        print(pomo.nombre+" fue guardado")
+                        continue
+                    
 
                 # Mensajes de resultado
                 if No_fila > 0:
@@ -218,6 +227,120 @@ def importarPomo(request):
                 return redirect('pomo:listar')
 
         except Exception as e:
+            messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
+            return redirect('pomo:listar')
+
+    return render(request, 'pomo/import_form.html')
+
+def importarPomo(request):
+    if request.method == 'POST':
+        file = request.FILES.get('excel')
+        pomos_existentes = []
+        pomos_importados = 0  # Cambio: contador específico para importados
+        fila_actual = 0
+
+        # Validar el archivo
+        if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
+            messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
+            return redirect('pomo:importarPomo')
+
+        try:
+            print("En el try")
+            with transaction.atomic():
+                format = 'xls' if file.name.endswith('.xls') else 'xlsx'
+                imported_data = Dataset().load(file.read(), format=format)
+
+                for index, data in enumerate(imported_data):  # Cambio: usar enumerate
+                    fila_actual = index + 1  # Para mensajes de error
+                    
+                    nombre = str(data[1]).strip() if data[1] is not None else None
+                    forma = str(data[3]).strip() if data[3] is not None else None
+                    material = str(data[4]).strip() if data[4] is not None else None
+                    Col_Color = str(data[2]).strip() if data[2] is not None else None
+
+                    color = Color.objects.filter(nombre__iexact=Col_Color).first()
+                    
+                    print(f"{nombre}-{forma}-{material}-{color.nombre if color else 'None'}")
+                    
+                    # Validaciones antes de procesar
+                    if not nombre or not forma or not material or not Col_Color:
+                        messages.error(request,
+                                       f"Fila {fila_actual + 1}: Los campos 'Nombre', 'Forma', 'Color' y "
+                                       f"'Material' son obligatorios.")
+                        return redirect('pomo:importarPomo')
+
+                    if color is None:
+                        messages.error(request,
+                                       f"Fila {fila_actual + 1}: No existe el color {Col_Color} en el nomenclador de colores")
+                        return redirect('pomo:importarPomo')
+                        
+                    if len(nombre) > 255:
+                        messages.error(request, f"Fila {fila_actual + 1}: El nombre no puede exceder 255 caracteres.")
+                        return redirect('pomo:importarPomo')
+
+                    if len(forma) > 255:
+                        messages.error(request, f"Fila {fila_actual + 1}: El tamaño no puede exceder 255 caracteres.")
+                        return redirect('pomo:importarPomo')
+
+                    if len(material) > 255:
+                        messages.error(request, f"Fila {fila_actual + 1}: El material no puede exceder 255 caracteres.")
+                        return redirect('pomo:importarPomo')
+
+                    # Verificar si existe
+                    existe = Pomo.objects.filter(
+                        nombre=nombre,
+                        forma=forma,
+                        material=material,
+                        color=color
+                    ).first()
+                    
+                    codigo_base = generar_formato_codigo(data[4], data[2])
+                    
+                    if existe:
+                        pomos_existentes.append(existe.codigo)
+                        print(f"Pomo existente: {existe.codigo}")
+                        continue
+                    
+                    # Generar código para nuevo pomo
+                    ultimo = Pomo.objects.filter(codigo__icontains=codigo_base).first()
+                    codigo = generar_codigo(codigo_base, ultimo)
+
+                    try:
+                        print(f"Creando el pomo: {codigo}")
+                        pomo = Pomo(
+                            codigo=codigo,
+                            nombre=nombre,
+                            forma=forma,
+                            material=material,
+                            color=color
+                        )
+                        pomo.full_clean()
+                        pomo.save()
+                        pomos_importados += 1  # Incrementar contador de importados
+                        print(f"{pomo.nombre} fue guardado correctamente")
+                        
+                    except Exception as e:
+                        print(f"Error al guardar el pomo: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila {fila_actual + 1}: {str(e)}")
+                        return redirect('pomo:importarPomo')
+
+                # Mensajes de resultado
+                if pomos_importados > 0:
+                    messages.success(request, f'Se han importado {pomos_importados} pomos satisfactoriamente.')
+                    
+                if pomos_existentes:
+                    messages.warning(
+                        request, 
+                        'Los siguientes códigos ya se encontraban registrados: ' + ', '.join(pomos_existentes)
+                    )
+                    
+                if pomos_importados == 0 and not pomos_existentes:
+                    messages.warning(request, "No se importó ningún pomo.")
+
+                return redirect('pomo:listar')
+
+        except Exception as e:
+            print(f"Error general: {str(e)}")
             messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
             return redirect('pomo:listar')
 

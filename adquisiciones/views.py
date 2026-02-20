@@ -1,11 +1,12 @@
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, redirect, get_object_or_404
 from formtools.wizard.views import SessionWizardView
-from .forms import CompraForm, CantidadMateriasForm, MateriaPrimaForm, CantidadEnvasesForm, EnvasesForm, InsumosForm, CantidadInsumosForm
-from .models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo
+from .forms import CompraForm, CantidadMateriasForm, MateriaPrimaForm, CantidadEnvasesForm, EnvasesForm, InsumosForm, CantidadInsumosForm, ProductosForm, CantidadProductosForm
+from .models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo, DetallesAdquisicionProducto
 from materia_prima.models import MateriaPrima
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
+from producto.models import Producto
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 #from django.views.generic.edit import CreateView
 from django.http import JsonResponse
@@ -197,8 +198,6 @@ class CompraWizard(SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
-#from materia_prima.tipo_materia_prima.choices import CHOICE_TIPO
-
 class MateriaPrimaDetalleView(View):
     def get(self, request, pk):
         try:
@@ -213,6 +212,22 @@ class MateriaPrimaDetalleView(View):
             })
         except MateriaPrima.DoesNotExist:
             return JsonResponse({'error': 'Materia prima no encontrada'}, status=404)
+
+def list_mp_adquisiciones(request, template_name="adquisicion/mp_list.html"):
+    adquisiciones = Adquisicion.objects.annotate(
+        num_ad=Count('detalles')
+    ).filter(num_ad__gt=0)
+    return render(request, template_name, locals())
+
+def list_detalles_mp_adquisicion(request, id, template_name="adquisicion/detalles_mp_list.html"):
+    adquisicion = get_object_or_404(Adquisicion, id=id)
+    if adquisicion:
+        detalles = DetallesAdquisicion.objects.filter(adquisicion=id)
+        #.order_by('almacen')
+    else:
+        messages.error(request, "Error al acceder a esa adquisición")
+    return render(request, template_name, locals())
+
 
 # Para los envases y embalajes 
 class CompraEnvaseWizard(SessionWizardView):
@@ -395,6 +410,22 @@ class EnvaseDetalleView(View):
         except EnvaseEmbalaje.DoesNotExist:
             return JsonResponse({'error': 'Envase no encontrado'}, status=404)
 
+def list_env_adquisiciones(request, template_name="adquisicion/env_list.html"):
+    adquisiciones = Adquisicion.objects.annotate(
+        num_ad=Count('detalles_envases')
+    ).filter(num_ad__gt=0)
+    return render(request, template_name, locals())
+
+def list_detalles_env_adquisicion(request, id, template_name="adquisicion/detalles_env_list.html"):
+    adquisicion = get_object_or_404(Adquisicion, id=id)
+    if adquisicion:
+        detalles = DetallesAdquisicionEnvase.objects.filter(adquisicion=id)
+        #.order_by('almacen')
+    else:
+        messages.error(request, "Error al acceder a esa adquisición")
+    return render(request, template_name, locals())
+
+
 # Para los insumos
 class CompraInsumoWizard(SessionWizardView):
     file_storage = file_storage
@@ -568,7 +599,6 @@ class InsumoDetalleView(View):
     def get(self, request, pk):
         try:
             insumo = InsumosOtros.objects.get(pk=pk)
-            #format = str(envase.formato.capacidad) + ' ' + envase.formato.unidad_medida
             return JsonResponse({
                 'codigo': insumo.codigo,
                 'nombre': insumo.nombre or '',
@@ -577,43 +607,10 @@ class InsumoDetalleView(View):
         except InsumosOtros.DoesNotExist:
             return JsonResponse({'error': 'Insumo no encontrado'}, status=404)
 
-def compra_exitosa(request):
-    return render(request, 'adquisicion/exito.html')
-
-def list_mp_adquisiciones(request, template_name="adquisicion/mp_list.html"):
-    adquisiciones = Adquisicion.objects.annotate(
-        num_ad=Count('detalles')
-    ).filter(num_ad__gt=0)
-    return render(request, template_name, locals())
-
-def list_env_adquisiciones(request, template_name="adquisicion/env_list.html"):
-    adquisiciones = Adquisicion.objects.annotate(
-        num_ad=Count('detalles_envases')
-    ).filter(num_ad__gt=0)
-    return render(request, template_name, locals())
-
 def list_ins_adquisiciones(request, template_name="adquisicion/ins_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles_insumos')
     ).filter(num_ad__gt=0)
-    return render(request, template_name, locals())
-
-def list_detalles_mp_adquisicion(request, id, template_name="adquisicion/detalles_mp_list.html"):
-    adquisicion = get_object_or_404(Adquisicion, id=id)
-    if adquisicion:
-        detalles = DetallesAdquisicion.objects.filter(adquisicion=id)
-        #.order_by('almacen')
-    else:
-        messages.error(request, "Error al acceder a esa adquisición")
-    return render(request, template_name, locals())
-
-def list_detalles_env_adquisicion(request, id, template_name="adquisicion/detalles_env_list.html"):
-    adquisicion = get_object_or_404(Adquisicion, id=id)
-    if adquisicion:
-        detalles = DetallesAdquisicionEnvase.objects.filter(adquisicion=id)
-        #.order_by('almacen')
-    else:
-        messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
 
 def list_detalles_ins_adquisicion(request, id, template_name="adquisicion/detalles_ins_list.html"):
@@ -624,3 +621,209 @@ def list_detalles_ins_adquisicion(request, id, template_name="adquisicion/detall
     else:
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
+
+
+# Para los productos
+class CompraProductoWizard(SessionWizardView):
+    file_storage = file_storage
+    # Diccionario que mapea cada paso con su template
+    template_dict = {
+        'compra': 'adquisicion/compra_form.html',
+        'cantidad': 'adquisicion/cantidad_form.html',
+        'producto': 'adquisicion/producto_form.html',  # Para todos los pasos producto_*
+    }
+
+    def get_template_names(self):
+        """Determina qué plantilla usar para el paso actual"""
+        current_step = self.steps.current
+        
+        # Si es un paso de producto, usa el template genérico
+        if current_step.startswith('producto_'):
+            return [self.template_dict['producto']]
+        
+        # Para pasos conocidos, usa su template específico
+        if current_step in self.template_dict:
+            return [self.template_dict[current_step]]
+        
+        # Fallback por defecto
+        return ['adquisicion/wizard_base.html']
+
+    form_list = [
+        ('compra', CompraForm),
+        ('cantidad', CantidadProductosForm),
+    ]
+
+    def get_form_list(self):
+        """Versión robusta que siempre retorna al menos los formularios base"""
+        form_list = OrderedDict(self.form_list)
+        
+        # Agregar pasos dinámicos si hay datos de cantidad
+        try:
+            cantidad_data = self.storage.get_step_data('cantidad')
+            if cantidad_data and 'cantidad-cantidad' in cantidad_data:
+                num_productos = int(cantidad_data['cantidad-cantidad'][0])
+                for i in range(num_productos):
+                    form_list[f'producto_{i}'] = ProductosForm
+        except (KeyError, ValueError, TypeError):
+            pass
+        return form_list
+    
+    def get_form_initial(self, step):
+        initial = super().get_form_initial(step)
+        
+        # Para los pasos de producto, intentar mantener la selección previa
+        if step.startswith('producto_'):
+            prev_data = self.get_cleaned_data_for_step(step)
+            if prev_data:
+                initial.update(prev_data)
+        
+        return initial
+
+    def get_form(self, step=None, data=None, files=None):
+        # Asegurar que siempre haya una lista de formularios
+        form_list = self.get_form_list()
+        if not form_list:
+            form_list = OrderedDict([
+                ('compra', CompraForm),
+                ('cantidad', CantidadProductosForm),
+            ])
+        
+        if step is None:
+            step = self.steps.current
+        try:
+            form_class = form_list[step]
+            return form_class(data=data, files=files, prefix=self.get_form_prefix(step, form_class))
+        except KeyError:
+            # Si el paso no existe, redirigir al primer paso
+            self.storage.current_step = 'compra'
+            form_class = form_list['compra']
+            return form_class(data=data, files=files, prefix=self.get_form_prefix('compra', form_class))
+    
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form, **kwargs)
+        
+        # Asegurar que siempre tengamos una lista de pasos
+        form_list = self.get_form_list()
+        if not form_list:
+            form_list = OrderedDict([
+                ('compra', CompraForm),
+                ('cantidad', CantidadProductosForm),
+            ])
+
+        # Añadir información específica del paso
+        current_step = self.steps.current
+        if current_step.startswith('producto_'):
+            producto_num = int(current_step.split('_')[1]) + 1
+            context['step_title'] = f"Producto {producto_num}"
+        else:
+            context['step_title'] = {
+                'compra': 'Información General',
+                'cantidad': 'Cantidad de Productos'
+            }.get(current_step, 'Paso del Proceso')
+        
+        # Calcular progreso
+        step_index = list(form_list.keys()).index(self.steps.current)
+        context.update({
+            'step_number': step_index + 1,
+            'total_steps': len(form_list),
+            'step_title': self.get_step_title(),
+            'form_list_keys': list(form_list.keys()),
+        })
+        
+        return context
+    
+    def get_step_title(self):
+        titles = {
+            'compra': "Información General",
+            'cantidad': "Cantidad de productos",
+        }
+        
+        if self.steps.current.startswith('producto_'):
+            try:
+                index = int(self.steps.current.split('_')[1]) + 1
+                return f"Producto {index}"
+            except (ValueError, IndexError):
+                return "Registro de productos"
+        
+        return titles.get(self.steps.current, "Paso del Proceso")
+    
+    def done(self, form_list, **kwargs):
+        # Procesamiento seguro de los datos
+        try:
+            compra_data = [f for f in form_list if isinstance(f, CompraForm)][0].cleaned_data
+            cantidad_data = [f for f in form_list if isinstance(f, CantidadProductosForm)][0].cleaned_data
+            
+            # Crear compra
+            compra = Adquisicion.objects.create(
+                fecha_compra=compra_data['fecha_compra'],
+                importada=compra_data['importada'],
+                factura=compra_data['factura'],
+                tipo_adquisicion='prod',
+                almacen = compra_data['almacen']
+            )
+            
+            # Procesar productos
+            producto_forms = [f for f in form_list if isinstance(f, ProductosForm)]
+            for form in producto_forms[:cantidad_data['cantidad']]:
+                data = form.cleaned_data
+                
+                if data['opcion'] == ProductosForm.EXISTING:
+                    producto = data['producto_existente']
+                else:
+                    print("A crear producto")
+                    producto = Producto.objects.create(
+                        codigo_producto=data['codigo_producto'],
+                        nombre_comercial=data['nombre_comercial'],
+                        formato=data['formato'],
+                        costo=data['costo']
+                    )
+                    print("Creado el producto")                
+                DetallesAdquisicionProducto.objects.create(
+                    adquisicion=compra,
+                    producto=producto,
+                    cantidad=data['cantidad']
+                )
+            
+            # Limpiar almacenamiento
+            self.storage.reset()
+            return redirect('list_producto')
+        
+        except Exception as e:
+            print(f"Error al procesar compra: {e}")
+            # Manejar el error adecuadamente
+            return redirect('error_page')
+
+class ProductoDetalleView(View):
+    def get(self, request, pk):
+        try:
+            producto = Producto.objects.get(pk=pk)
+            format = str(producto.formato.capacidad) + ' ' + producto.formato.unidad_medida
+            return JsonResponse({
+                'codigo_producto': producto.codigo_producto,
+                'nombre_comercial': producto.nombre_comercial or '',
+                'formato': format or '',
+            })
+        except Producto.DoesNotExist:
+            return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+
+def list_prod_adquisiciones(request, template_name="adquisicion/prod_list.html"):
+    adquisiciones = Adquisicion.objects.annotate(
+        num_ad=Count('detalles_productos')
+    ).filter(num_ad__gt=0)
+    return render(request, template_name, locals())
+
+def list_detalles_prod_adquisicion(request, id, template_name="adquisicion/detalles_prod_list.html"):
+    adquisicion = get_object_or_404(Adquisicion, id=id)
+    if adquisicion:
+        detalles = DetallesAdquisicionProducto.objects.filter(adquisicion=id)
+        #.order_by('almacen')
+    else:
+        messages.error(request, "Error al acceder a esa adquisición")
+    return render(request, template_name, locals())
+
+
+
+def compra_exitosa(request):
+    return render(request, 'adquisicion/exito.html')
+
+
