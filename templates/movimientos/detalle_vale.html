@@ -55,7 +55,7 @@
                             <th>Origen:</th>
                             <td>
                                 {% if vale.origen %}
-                                {{ vale.origen.nombre }}
+                                {{ vale.origen }}
                                 {% elif vale.origen_text %}
                                 {{ vale.origen_text }}
                                 {% else %}
@@ -67,7 +67,7 @@
                             <th>Destino:</th>
                             <td>
                                 {% if vale.destino %}
-                                {{ vale.destino.nombre }}
+                                {{ vale.destino }}
                                 {% elif vale.destino_text %}
                                 {{ vale.destino_text }}
                                 {% else %}

@@ -29,7 +29,7 @@ class CrearSalidaView(CreateView):
     model = Vale_Movimiento_Almacen
     template_name = 'movimientos/crear_salida.html'
     fields = [
-        'almacen', 'tipo', 'destino',
+        'almacen', 'tipo',
         'descripcion', 'transportista', 'transportista_cI',
         'chapa', 'recibido_por', 'autorizado_por'
     ]
@@ -40,9 +40,6 @@ class CrearSalidaView(CreateView):
         # Personalizar los campos
         form.fields['almacen'].queryset = Almacen.objects.all()
         form.fields['almacen'].empty_label = "--------- Seleccione un almacén ---------"
-        form.fields['destino'].queryset = Almacen.objects.all()
-        form.fields['destino'].required = False
-        form.fields['destino'].empty_label = "--------- Seleccione destino (opcional) ---------"
         return form
     
     def get_context_data(self, **kwargs):
@@ -53,8 +50,7 @@ class CrearSalidaView(CreateView):
             ('Transferencia', 'Transferencia'),
             ('Venta', 'Venta'),
             ('Consumo interno', 'Consumo interno'),
-            ('Desecho', 'Desecho'),
-            ('Merma', 'Merma'),
+            ('I+D', 'I+D'),
             ('Conduce', 'Conduce'),
         ]
         context['tipos_salida'] = tipos_salida
@@ -62,13 +58,19 @@ class CrearSalidaView(CreateView):
         return context
     
     def form_valid(self, form):
+        print("En form valid")
         try:
             with transaction.atomic():
                 # Crear el vale de movimiento
                 vale = form.save(commit=False)
                 vale.entrada = False  # Es una salida
                 vale.estado = 'borrador'
-                vale.despachado_por = self.request.user
+                vale.despachado_por = self.request.user.first_name
+                destino = self.request.POST.get('destino')
+                vale.destino = destino
+                almacen_id = self.request.POST.get('almacen')
+                almacen = Almacen.objects.filter(id=almacen_id)[0]
+                vale.origen = almacen.nombre
                 
                 # Procesar el carrito desde el formulario
                 carrito_data = self.request.POST.get('carrito_data')
@@ -80,10 +82,8 @@ class CrearSalidaView(CreateView):
                 carrito = json.loads(carrito_data)
                 # Guardar el vale primero para tener un ID
                 vale.save()
-                
                 # Crear los movimientos para cada item del carrito
                 for item in carrito:
-                    print(item)
                     self.crear_movimiento_item(vale, item)
                 
                 # Limpiar el carrito de la sesión si existe
@@ -475,7 +475,7 @@ def recepcion_materia_prima(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                destino = almacen,
+                destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Adquisición'
             )
@@ -536,7 +536,7 @@ def recepcion_producto(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                destino = almacen,
+                destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Adquisición'
             )
@@ -596,7 +596,7 @@ def recepcion_envase(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                destino = almacen,
+                destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Adquisición'
             )
@@ -656,7 +656,7 @@ def recepcion_insumo(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                destino = almacen,
+                destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Adquisición'
             )
@@ -710,6 +710,7 @@ def entrada_materia_prima(request, pk):
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
         return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
+    print(vale_v.destino)
     almacen = Almacen.objects.filter(nombre=vale_v.destino)[0] 
     inv_mat = vale_v.movimientos.all()
     if request.method == 'POST':
@@ -900,7 +901,7 @@ def entrada_producto(request, pk):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.origen,
+                origen = vale_v.almacen.nombre,
                 destino = almacen.nombre,
                 estado = 'confirmado',
                 entrada=True,
@@ -1216,8 +1217,8 @@ def vale_detalle(request, pk):
     
     # Nota: Si mantienes el nombre original de la relación, ajusta esto
     # Si cambiaste a vale_salida_almacen_envasado_set:
-    if hasattr(vale, 'vale_salida_almacen_envasado_set') and vale.vale_salida_almacen_envasado_set.exists():
-        relacion_envasado = vale.vale_salida_almacen_envasado_set.first()
+    """ if hasattr(vale, 'vale_salida_almacen_envasado_set') and vale.vale_salida_almacen_envasado_set.exists():
+        relacion_envasado = vale.vale_salida_almacen_envasado_set.first() """
     
     # O si mantuviste el nombre original:
     # if vale.vale_salida_almacen_envasado_set.exists():  # Django crea este nombre por defecto
@@ -1232,7 +1233,7 @@ def vale_detalle(request, pk):
     puede_confirmar = vale.estado == 'borrador' and not vale.entrada  # Solo salidas en borrador
     puede_cancelar = vale.estado in ['borrador', 'confirmado']
     puede_despachar = vale.estado == 'confirmado' and vale.despachado == False
-    
+    print(vale.destino)
     context = {
         'vale': vale,
         'tipo_inventario': tipo_inventario,

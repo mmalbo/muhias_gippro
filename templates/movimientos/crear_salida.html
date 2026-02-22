@@ -102,7 +102,7 @@ button:not([type="submit"]) {
                             <select name="destino" class="form-select" id="id_destino">
                                 <option value="">--------- Seleccione destino (opcional) ---------</option>
                                 {% for almacen in almacenes %}
-                                <option value="{{ almacen.id }}" 
+                                <option value="{{ almacen.nombre }}" 
                                         {% if form.destino.value == almacen.id %}selected{% endif %}>
                                     {{ almacen.nombre }}
                                 </option>
