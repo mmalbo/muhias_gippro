@@ -15,7 +15,7 @@ env/
 */migrations/*.py
 !*/migrations/__init__.py
 
-# Tambi�n puedes ser m�s espec�fico con carpetas comunes
+# Tambien puedes ser mas especifico con carpetas comunes
 app/migrations/
 */migrations/
 

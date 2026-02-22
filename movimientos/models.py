@@ -326,7 +326,10 @@ class Movimiento_Prod(MovimientoBase):
 
     def __str__(self):
         entrada = 'Entrada ' if self.vale.entrada else 'Salida '
-        return f'{entrada} de {self.producto.nombre_comercial} en ' #{self.vale.almacen.nombre}
+        if self.vale.almacen:
+            return f'{entrada} de {self.producto.nombre_comercial} en {self.vale.almacen.nombre} '
+        else:
+            return f'{entrada} de {self.producto.nombre_comercial} en {self.vale.origen} '
 
 #Relación mucho a mucho de vale con insumo
 class Movimiento_Ins(MovimientoBase):

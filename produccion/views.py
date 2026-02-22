@@ -39,6 +39,8 @@ class ProduccionListView(ListView):
     model = Produccion
     template_name = 'produccion/list.html'
     context_object_name = 'produccions'
+    # Opción A: Usando ordering en la vista
+    ordering = ['-fecha_creacion']
 
 class ProduccionDeleteView(DeleteView):
     model = Produccion
@@ -754,7 +756,7 @@ class EditarProduccionView(View):
         # Obtener la producción existente
         print('En el get')
         produccion = get_object_or_404(Produccion, id=pk)
-        
+        print(produccion)
         # Solo permitir editar si está en estado Planificada
         #if produccion.estado not in ['Planificada', 'En Proceso']:
         #    messages.error(request, 'No se puede editar una producción en este estado.')
@@ -774,7 +776,7 @@ class EditarProduccionView(View):
         materias_primas_json = self._obtener_materias_primas_json(materias_primas_actuales)
 
         materias_disponibles = list(Inv_Mat_Prima.objects.values(
-            'materia_prima', 'almacen', 'cantidad', 'costo'
+            'materia_prima', 'almacen', 'cantidad'
         ))
         materias_disponibles_json = json.dumps(materias_disponibles, cls=DjangoJSONEncoder)
 
