@@ -125,18 +125,6 @@ class CreateImportView(CreateView):
     success_url = '/envase_embalaje/'
     success_message = "Se ha importado correctamente el envase o embalaje."
 
-""" class EnvaseEmbalajeListView(ListView):
-    model = EnvaseEmbalaje
-    template_name = 'envase_embalaje/lista.html'
-    context_object_name = 'envases_embalajes'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Agregar el tipo a cada objeto en el contexto
-        for item in context[self.context_object_name]:
-            item.tipo = item.__class__.__name__  # Agregar el tipo dinámicamente
-        return context
-"""
 class EnvaseEmbalajeCreateView(CreateView):
     model = EnvaseEmbalaje
     form_class = EnvaseEmbalajeForm
