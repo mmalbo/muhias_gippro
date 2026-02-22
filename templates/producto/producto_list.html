@@ -56,7 +56,7 @@
                     {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
                     <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
                     {% endif %}
-                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    {% if user.is_superuser %}
                     <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                     <table id="datatable" class="table datatable table-striped">
@@ -118,7 +118,7 @@
                     {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
                     <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
                     {% endif %}
-                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    {% if user.is_superuser %}
                     <a href="{% url 'importarProducto' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                 </div>

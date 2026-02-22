@@ -20,8 +20,10 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    {% if user.is_superuser %}
                     <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
                     <a href="{% url 'materia_prima:updateCostoMateriasPrimas' %}" class="btn btn-success"> Actualizar costos desde archivo </a>
                     {% endif %}
                     <table id="datatable" class="table datatable table-striped">
@@ -70,10 +72,10 @@
                         </tr>
                         </tfoot>
                     </table>
-                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
-                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
-                    {% endif %}
                     {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser %}
+                    <a href="{% url 'materia_prima:updateCostoMateriasPrimas' %}" class="btn btn-success"> Actualizar costos desde archivo </a>
+                    {% endif %}
+                    {% if user.is_superuser %}
                     <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                 </div>
