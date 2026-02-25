@@ -66,14 +66,14 @@ class MateriaPrima(ModeloBase):
     ficha_tecnica = models.FileField(
         upload_to='fichas_tecnicas/',
         null=True,
-        editable=True,
+        blank=True,
         verbose_name="Ficha técnica"
     )
 
     hoja_seguridad = models.FileField(
         upload_to='hojas_seguridad/',
         null=True,
-        editable=True,
+        blank=True,
         verbose_name="Hoja de seguridad"
     )
 

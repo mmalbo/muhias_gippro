@@ -757,11 +757,7 @@ class EditarProduccionView(View):
         print('En el get')
         produccion = get_object_or_404(Produccion, id=pk)
         print(produccion)
-        # Solo permitir editar si está en estado Planificada
-        #if produccion.estado not in ['Planificada', 'En Proceso']:
-        #    messages.error(request, 'No se puede editar una producción en este estado.')
-        #    return redirect('detalle_produccion', pk=produccion.id)
-        
+    
         # Inicializar sesión con los datos actuales
         request.session['editar_produccion_data'] = {
             'produccion_id': str(produccion.id),
@@ -770,63 +766,87 @@ class EditarProduccionView(View):
             'planta_id': str(produccion.planta.id),
             'prod_result': 'on' if produccion.prod_result else '',
         }
-        
+    
         # Obtener materias primas actuales
         materias_primas_actuales = Prod_Inv_MP.objects.filter(lote_prod=produccion)
         materias_primas_json = self._obtener_materias_primas_json(materias_primas_actuales)
-
-        materias_disponibles = list(Inv_Mat_Prima.objects.values(
-            'materia_prima', 'almacen', 'cantidad'
-        ))
-        materias_disponibles_json = json.dumps(materias_disponibles, cls=DjangoJSONEncoder)
-
-        print(materias_primas_json)
-        
-        context = {
-            'produccion': produccion,
-            'materias_primas_actuales': materias_primas_actuales,
-            'materias_primas_json': json.dumps(materias_primas_json),
-            'materias_primas_disponibles': materias_disponibles_json,  #filter(activo=True),
-            'almacenes': [] #Almacen.objects.filter(activo=True),
-        }
-        
-        return render(request, self.template_name, context)
     
+        # Obtener materias primas disponibles para el selector - ¡CORREGIDO!
+        # Necesitas obtener los objetos completos con la información necesaria
+        materias_disponibles = Inv_Mat_Prima.objects.select_related('materia_prima', 'almacen').filter(
+            cantidad__gt=0,  # Solo las que tienen stock
+            #materia_prima__activo=True   Asumiendo que tienes este campo
+        )[:50]  # Limitar para evitar problemas de rendimiento
+    
+        # Formatear para el template - estructura que espera el frontend
+        materias_disponibles_list = []
+        for inv in materias_disponibles:
+            materias_disponibles_list.append({
+                'id': inv.id,
+                'materia_prima_id': inv.materia_prima.id,
+                'materia_prima_nombre': inv.materia_prima.nombre,
+                'unidad_medida': inv.materia_prima.unidad_medida,
+                'costo': float(inv.materia_prima.costo),
+                'almacen_id': inv.almacen.id,
+                'almacen_nombre': inv.almacen.nombre,
+                'cantidad_disponible': float(inv.cantidad)
+            })
+    
+            # Obtener almacenes para el selector
+            almacenes = Almacen.objects.all()  # Asumiendo que tienes este filtro
+            almacenes_list = [{'id': a.id, 'nombre': a.nombre} for a in almacenes]
+    
+            context = {
+                'produccion': produccion,
+                'materias_primas_actuales': materias_primas_actuales,
+                'materias_primas_json': materias_primas_json,
+                'materias_primas_disponibles': materias_disponibles,
+                'materias_disponibles_json': materias_disponibles_list,
+                'almacenes': almacenes,
+                'almacenes_json': almacenes_list,
+            }
+    
+        return render(request, self.template_name, context)
+
     def _obtener_materias_primas_json(self, materias_primas_actuales):
         """Convierte las materias primas actuales a JSON para el frontend"""
         materias = []
+        print("🔍 En obtener materias primas existentes")
+    
         for mp in materias_primas_actuales:
             # Obtener inventario actual
             inventario = Inv_Mat_Prima.objects.filter(
                 materia_prima=mp.inv_materia_prima,
                 almacen=mp.almacen
             ).first()
-            
-            materias.append({
-                'id': str(mp.id),
-                'materia_prima_id': str(mp.inv_materia_prima.id),
-                'materia_prima_nombre': mp.inv_materia_prima.nombre,
+        
+            # IMPORTANTE: mp.inv_materia_prima es el objeto Inv_Mat_Prima
+            # Necesitamos acceder a materia_prima (el objeto MateriaPrima) a través de él
+            materia_prima_obj = mp.inv_materia_prima
+        
+            materia_data = {
+                'id': str(mp.id),  # ID de Prod_Inv_MP
+                'inventario_id': str(mp.inv_materia_prima.id) if mp.inv_materia_prima else None,  # ID de Inv_Mat_Prima
+                'materia_prima_id': str(materia_prima_obj.id),  # ID de MateriaPrima
+                'materia_prima_nombre': materia_prima_obj.nombre,
                 'cantidad': float(mp.cantidad_materia_prima),
                 'almacen_id': str(mp.almacen.id),
                 'almacen_nombre': mp.almacen.nombre,
-                'unidad_medida': mp.inv_materia_prima.unidad_medida,
-                'costo_unitario': float(mp.inv_materia_prima.costo),
-                'costo_total': float(mp.cantidad_materia_prima) * mp.inv_materia_prima.costo,
+                'unidad_medida': materia_prima_obj.unidad_medida,
+                'costo_unitario': float(materia_prima_obj.costo),
+                'costo_total': float(mp.cantidad_materia_prima) * materia_prima_obj.costo,
                 'inventario_disponible': float(inventario.cantidad) if inventario else 0,
-            })
+            }
+        
+            print(f"  ➕ Materia prima existente: {materia_data}")
+            materias.append(materia_data)
+        
         return materias
     
     def post(self, request, pk):
         
         produccion = get_object_or_404(Produccion, id=pk)
-        
-        # Verificar estado nuevamente
-        #if produccion.estado not in ['Planificada', 'En Proceso']:
-        #    return JsonResponse({
-        #        'success': False, 
-        #        'errors': 'No se puede editar una producción en este estado.'
-        #    })
-        
+    
         # Recuperar datos de sesión o usar los actuales
         editar_data = request.session.get('editar_produccion_data', {})
         
@@ -875,7 +895,7 @@ class EditarProduccionView(View):
     def procesar_paso_2(self, request, produccion):
         """Actualizar materias primas"""
         # Procesar materias primas enviadas
-        print('En paso 2')
+        print(f"🔍 procesar_paso_2 - POST data: {request.POST}")
         try:
             materias_primas_nuevas = self.procesar_materias_primas(request.POST)
         except ValueError as e:
@@ -905,9 +925,10 @@ class EditarProduccionView(View):
                 # 5. Eliminar las que ya no están
                 for mp_actual in materias_actuales:
                     if str(mp_actual.id) not in ids_nuevos:
+                        mp_actual_obj=MateriaPrima.objects.get(id=mp_actual.inv_materia_prima.id)
                         # Devolver al inventario antes de eliminar
                         inventario = Inv_Mat_Prima.objects.filter(
-                            materia_prima=mp_actual.inv_materia_prima.materia_prima,
+                            materia_prima=mp_actual_obj,
                             almacen=mp_actual.almacen
                         ).first()
                         
@@ -922,7 +943,6 @@ class EditarProduccionView(View):
                 for mp_data in materias_primas_nuevas:
                     materia_prima_obj = get_object_or_404(MateriaPrima, id=mp_data['materia_prima'])
                     almacen_obj = get_object_or_404(Almacen, id=mp_data['almacen'])
-                    
                     # Obtener inventario
                     inventario = Inv_Mat_Prima.objects.filter(
                         materia_prima=materia_prima_obj,
@@ -969,7 +989,7 @@ class EditarProduccionView(View):
                         
                         Prod_Inv_MP.objects.create(
                             lote_prod=produccion,
-                            inv_materia_prima=inventario,
+                            inv_materia_prima=materia_prima_obj,
                             cantidad_materia_prima=nueva_cantidad,
                             almacen=almacen_obj,
                             vale=vale
@@ -988,7 +1008,7 @@ class EditarProduccionView(View):
                 return JsonResponse({
                     'success': True,
                     'message': 'Producción actualizada exitosamente',
-                    'redirect_url': reverse('detalle_produccion', args=[produccion.id])
+                    'redirect_url': reverse('produccion_detail', args=[produccion.id])
                 })
                 
         except Exception as e:
@@ -1038,7 +1058,7 @@ class EditarProduccionView(View):
                 
                 # Obtener objetos y calcular costo
                 materia_prima_obj = get_object_or_404(MateriaPrima, id=materia_prima_id)
-                costo_mp = cantidad * materia_prima_obj.costo
+                costo_mp = float(cantidad) * float(materia_prima_obj.costo)
                 
                 mp_data = {
                     'id': mp_id if mp_id else None,

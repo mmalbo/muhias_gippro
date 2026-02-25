@@ -133,7 +133,7 @@
 <!-- Template para materia prima (hidden) -->
 <template id="materiaPrimaTemplate">
     <div class="materia-prima-item">
-        <h4>Materia Prima #<span class="item-number"></span></h4>
+        <h4>Materia Prima #<span class="item-number"></span>0</h4>
         <div class="form-group">
             <label>Materia Prima - Almacen:</label>
             <select class="materia-prima-select" name="materia_prima" required>
@@ -162,10 +162,10 @@
             </select>
         </div>-->
         
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label>Costo estimado:</label>
             <span class="costo-text">$0.00</span>
-        </div>
+        </div> -->
         
         <button type="button" class="remove-btn" onclick="removerMateriaPrima(this)">Eliminar</button>
     </div>
@@ -433,6 +433,48 @@ function validarMateriasPrimas() {
     }
     return true;
 }
+</script>
+
+<script>
+    // Depuración
+console.log('Elemento item-number:', document.querySelector('.item-number'));
+console.log('Contenido actual:', document.querySelector('.item-number')?.textContent);
+$(document).ready(function() {
+    // Función para actualizar el contador
+    function actualizarContadorMateriasPrimas() {
+        // Cuenta cuántas filas de materias primas hay
+        var cantidad = $('.materia-prima-fila').length; // Ajusta el selector según tu clase
+        
+        // Si no hay filas, contar de otra manera (inputs, etc)
+        if (cantidad === 0) {
+            cantidad = $('input[name^="materias_primas"]').length; // Cuenta inputs relacionados
+        }
+        
+        // Actualizar el span asegurando que sea un número
+        $('.item-number').text(cantidad || 0);
+    }
+    
+    // Llamar al cargar la página
+    actualizarContadorMateriasPrimas();
+    
+    // Actualizar cuando se agregue o elimine una materia prima
+    $(document).on('click', '.agregar-materia-prima', function() {
+        // Después de agregar, actualizar contador
+        setTimeout(actualizarContadorMateriasPrimas, 100);
+    });
+    
+    $(document).on('click', '.eliminar-materia-prima', function() {
+        // Después de eliminar, actualizar contador
+        setTimeout(actualizarContadorMateriasPrimas, 100);
+    });
+    
+    // Opcional: Observar cambios en el DOM si es dinámico
+    const observer = new MutationObserver(actualizarContadorMateriasPrimas);
+    observer.observe(document.getElementById('contenedor-materias-primas'), { 
+        childList: true, 
+        subtree: true 
+    });
+});
 </script>
 
 <script>

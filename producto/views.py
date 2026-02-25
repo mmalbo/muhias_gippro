@@ -6,12 +6,14 @@ from django.urls import reverse_lazy
 from tablib import Dataset
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, Http404
-
+import decimal
 from ficha_tecnica.models import FichaTecnica
 from nomencladores.almacen.models import Almacen
 from .models import Producto
 from .forms import ProductoForm
 from inventario.models import Inv_Producto
+from envase_embalaje.formato.models import Formato
+from datetime import date, datetime, timezone
 
 @login_required
 def listProductos(request):
@@ -87,7 +89,7 @@ class ListaProductoView(ListView):
 class CrearProductoView(CreateView):
     model = Producto
     form_class = ProductoForm
-    template_name = 'producto_final/form.html'
+    template_name = 'producto/form.html'
     success_url = reverse_lazy('producto_final_list')
 
 class ActualizarProductoView(UpdateView):
@@ -98,18 +100,18 @@ class ActualizarProductoView(UpdateView):
 
 class EliminarProductoView(DeleteView):
     model = Producto
-    template_name = 'producto_final/eliminar_producto_final.html'
+    template_name = 'producto/eliminar_producto_final.html'
     success_url = reverse_lazy('producto_final_list')
 
 class DetalleProductoView(DetailView):
     model = Producto
-    template_name = 'producto_final/detalle_producto_final.html'
+    template_name = 'producto/detalle_producto_final.html'
 
 class CreateImportView(CreateView):
     model = Producto
     form_class = ProductoForm
-    template_name = 'producto_final/import_form.html'
-    success_url = '/producto_final/'
+    template_name = 'producto/import_form.html'
+    success_url = '/producto/'
     success_message = "Se ha importado correctamente."
 
 def importar(request):
@@ -119,6 +121,7 @@ def importar(request):
         producto_existentes = []
 
         if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
+            print('La extensión del archivo no es correcta, debe ser .xls o .xlsx')
             messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
             return redirect('importarProducto')
 
@@ -128,47 +131,47 @@ def importar(request):
                 imported_data = Dataset().load(file.read(), format=format)
                 Col_Codigo = 0
                 Col_Nombre = 1
-                Col_Almacen = 2
-                Col_Cantidad = 3
-                Col_Formato = 4
-                Col_Costo = 5
+                Col_3l = 2
+                Col_Almacen = 3
+                Col_Cantidad = 4
+                Col_Formato = 5
+                Col_Costo = 6
                 i = 0
                 print("Entrando al ciclo:")
                 while i <= len(imported_data):
                     data = imported_data[i]
                     codigo = str(data[Col_Codigo]).strip() if data[Col_Codigo] is not None else None
                     nombre = str(data[Col_Nombre]).strip() if data[Col_Nombre] is not None else None  # Asegúrate de que sea un string
+                    codigo_3l = str(data[Col_3l]).strip() if data[Col_3l] is not None else None
                     cantidad = str(data[Col_Cantidad]).strip() if data[Col_Cantidad] is not None else None
                     almacen = str(data[Col_Almacen]).strip() if data[Col_Almacen] is not None else None
-                    formato = str(data[Col_Formato]).strip() if data[Col_Almacen] is not None else None  # Convertir a minúsculas
-                    costo = str(data[Col_Costo]).strip() if data[Col_Almacen] is not None else None
-
-                    print(codigo)
-                    print(formato)
+                    formato = str(data[Col_Formato]).strip() if data[Col_Formato] is not None else None  # Convertir a minúsculas
+                    costo = str(data[Col_Costo]).strip() if data[Col_Costo] is not None else None
                     
-                    existe = Producto.objects.filter(codigo_producto__iexact=codigo)
+                    """ existe = Producto.objects.filter(nombre_comercial=nombre)
                     if existe:
                         print("Ya existe "+nombre)
                         producto_existentes.append(codigo)
                         i += 1  # Incrementa solo si se guarda correctamente
-                        continue  # Si ya existe, saltamos a la siguiente fila
+                        continue  # Si ya existe, saltamos a la siguiente fila """
 
                     # Validaciones de los datos
                     if not all(
-                            [codigo, nombre, cantidad, almacen, formato, costo]):
-                        print("Falta algo")
+                            [codigo, nombre, codigo_3l, cantidad, almacen, formato, costo]):
+                        print(f"Fila {i}: Todos los campos son obligatorios.")
                         messages.error(request, f"Fila {i}: Todos los campos son obligatorios.")
                         return redirect('importarProducto')
 
                     almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
-                    print(almacen_obj)
                     if almacen_obj is None:
                         print("No existe el almacen")
                         messages.error(request,
                                        f"Fila {i}: No existe el almacén  '{str(data[Col_Almacen]).strip()}' en el nomenclador")
                         return redirect('importarProducto')
+                    else:
+                        print(f"Almacen {almacen_obj.nombre}")
 
-                    """if len(nombre) > 255:
+                    if len(nombre) > 255:
                         messages.error(request,
                                        f"Fila {i}: El nombre del producto no puede exceder 255 caracteres.")
                         return redirect('importarProducto')
@@ -178,27 +181,98 @@ def importar(request):
                                        f"Fila {i}: El código no puede exceder 20 caracteres.")
                         return redirect('importarProducto')
 
+                    if len(codigo_3l) > 3:
+                        messages.error(request,
+                                       f"Fila {i}: El código corto solo debe tener 3 letras.")
+                        return redirect('importarProducto')
+
                     if not cantidad.isdigit() or int(cantidad) < 0:
                         messages.error(request,
                                        f"Fila {i}: 'Cantidad' debe ser un número entero.")
-                        return redirect('importarProducto')"""
+                        return redirect('importarProducto')
+                    
+                    print(f"Validaciones OK")
+                    print(f"Formato: {formato}") 
+                    cap_str = ''          
+                    for i in formato:
+                        try:
+                            if int(i) or i == '0':
+                                cap_str = cap_str + i
+                            else:
+                                break
+                        except:
+                            break
+                    if cap_str == '':
+                        capacidad = 0
+                    else:
+                        capacidad = int(cap_str)
+                    if 'kg' in formato.lower():
+                        um = 'KG'
+                    elif 'ml' in formato.lower():
+                        um = 'ML'
+                    elif 'granel' in formato.lower():
+                        capacidad = 0
+                        um = 'L'
+                    else:
+                        um = 'U'
 
-                    cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
+                    print(f"UM: {um} capacidad: {capacidad}")
 
+
+                    formato_o = Formato.objects.filter(unidad_medida=um, capacidad=capacidad).first()
+                    if not formato_o:
+                        formato_o = Formato.objects.create(unidad_medida=um, capacidad=capacidad)
+
+
+                    print(f"Formato: {formato_o}")
+
+                    #cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
+
+                    print(f"Nombre: {nombre}")
+                    
                     try:
-                        producto = Producto(
-                            codigo_producto=codigo,
+                        producto, created_prod = Producto.objects.update_or_create(                    
                             nombre_comercial=nombre,
-                            costo = costo,
-                            formato = formato                                                        
+                            defaults={
+                            'codigo_producto' : codigo,
+                            'costo' : costo,
+                            'formato' : formato_o.id, 
+                            'codigo_3l' : codigo_3l
+                            }
                         )
-                        #producto.clean()  # Valida los datos antes de guardar
+
+                        if created_prod:
+                            print(f"Creado producto {producto.nombre_comercial}")
+                        else:
+                            print(f"No creado el producto {producto.nombre_comercial}")
+
+                        producto.clean()  
                         producto.save()
-                        print(producto)
-                        
-                        #almacen=almacen,  # Asumiendo que este es el ID
-                        #cantidad_alm=cantidad,
-                        
+
+                        #Ahora a actualizar inventario
+                        inventario_prod, created_inv = Inv_Producto.objects.get_or_create(
+                            producto=producto, almacen=almacen)
+                        if created_inv:
+                            print('Creado inventario')
+                            print(inventario_prod.almacen)
+                            fecha_actual = datetime.now()
+                            fecha_codigo = fecha_actual.strftime('%y%m%d')
+                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
+                            inventario_prod.lote = lote
+                        else:
+                            print('No fue ceado el inventario')
+                            print(inventario_prod.almacen)
+                        """ if cantidad > inventario_prod.cantidad:
+                            vale.entrada = True 
+                            mov.cantidad = cantidad - inventario_prod.cantidad
+                        else:
+                            vale.entrada = False
+                            mov.cantidad = inventario_prod.cantidad - cantidad
+                        vale.save()
+                        mov.save() """
+                        inventario_prod.cantidad = decimal.Decimal(cantidad_dig)
+                        inventario_prod.save()
+
                         No_fila += 1   #Incrementa solo si se guarda correctamente
 
                     except Exception as e:
@@ -233,4 +307,4 @@ def importar(request):
         except Exception as e:
             messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
             return redirect('producto_list')
-    return render(request, 'producto_final/import_form.html')
+    return render(request, 'producto/import_form.html')

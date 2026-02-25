@@ -1,0 +1,432 @@
+<!-- produccion/envasado/templates/envasado/solicitud_form.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Nueva Solicitud de Envasado</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="solicitudForm">
+                        {% csrf_token %}
+                        
+                        <!-- Datos del lote a envasar -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5>1. Producto a envasar</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Lote de producción:</label>
+                                            {{ form.lote_produccion_origen }}
+                                            {% if form.lote_produccion_origen.errors %}
+                                                <div class="text-danger">{{ form.lote_produccion_origen.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Cantidad a envasar (L/kg):</label>
+                                            {{ form.cantidad_solicitada }}
+                                            {% if form.cantidad_solicitada.errors %}
+                                                <div class="text-danger">{{ form.cantidad_solicitada.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Fecha estimada de inicio:</label>
+                                            {{ form.fecha_inicio }}
+                                            {% if form.fecha_inicio.errors %}
+                                                <div class="text-danger">{{ form.fecha_inicio.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="detalleLote" class="alert alert-info mt-2" style="display: none;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Múltiples envases -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-success text-white">
+                                <h5>2. Envases a utilizar</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="envasesTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Envase</th>
+                                                <th>Código</th>
+                                                <th>Tipo</th>
+                                                <th>Cantidad disponible</th>
+                                                <th>Unidades requeridas</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="envasesBody">
+                                            <!-- Los envases se agregarán dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <h6>Agregar envase:</h6>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="envaseSelect">
+                                            <option value="">Seleccionar envase...</option>
+                                            {% for envase in envases_disponibles %}
+                                                <option value="{{ envase.id }}" 
+                                                        data-nombre="{{ envase.envase.nombre }}"
+                                                        data-codigo="{{ envase.envase.codigo_envase }}"
+                                                        data-tipo="{{ envase.envase.tipo_envase_embalaje }}"
+                                                        data-cantidad="{{ envase.cantidad }}">
+                                                    {{ envase.envase.nombre }} ({{ envase.envase.codigo_envase }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control" id="cantidadEnvase" 
+                                               placeholder="Cantidad" min="1" step="1">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary" id="agregarEnvase">
+                                            Agregar Envase
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Múltiples insumos -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning">
+                                <h5>3. Insumos necesarios</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="insumosTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Insumo</th>
+                                                <th>Cantidad disponible</th>
+                                                <th>Unidad</th>
+                                                <th>Cantidad requerida</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="insumosBody">
+                                            <!-- Los insumos se agregarán dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <h6>Agregar insumo:</h6>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="insumoSelect">
+                                            <option value="">Seleccionar insumo...</option>
+                                            {% for insumo in insumos_disponibles %}
+                                                <option value="{{ insumo.id }}" 
+                                                        data-nombre="{{ insumo.insumos.nombre }}"
+                                                        data-cantidad="{{ insumo.cantidad }}"
+                                                        data-unidad="{{ insumo.insumos.unidad_medida }}">
+                                                    {{ insumo.insumos.nombre }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control" id="cantidadInsumo" 
+                                               placeholder="Cantidad" min="0.01" step="0.01">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary" id="agregarInsumo">
+                                            Agregar Insumo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-secondary text-white">
+                                <h5>4. Observaciones</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    {{ form.observaciones }}
+                                    {% if form.observaciones.errors %}
+                                        <div class="text-danger">{{ form.observaciones.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campos ocultos -->
+                        {{ form.envases }}
+                        {{ form.insumos }}
+
+                        <!-- Botones -->
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fa fa-save"></i> Crear Solicitud
+                            </button>
+                            <a href="{% url 'envasado:lista_solicitudes' %}" class="btn btn-secondary btn-lg">
+                                <i class="fa fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Variables para almacenar datos
+    let envases = [];
+    let insumos = [];
+
+    // Mostrar detalles del lote seleccionado
+    $('#id_lote_produccion_origen').change(function() {
+        var loteId = $(this).val();
+        if (loteId) {
+            $.ajax({
+                url: '{% url "envasado:detalle_lote" %}',
+                data: {'lote_id': loteId},
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        $('#detalleLote').html(
+                            '<strong>Producto:</strong> ' + data.producto + '<br>' +
+                            '<strong>Disponible:</strong> ' + data.cantidad_disponible + ' L/kg<br>' +
+                            '<strong>Almacén:</strong> ' + data.almacen
+                        ).show();
+                    }
+                }
+            });
+        } else {
+            $('#detalleLote').hide();
+        }
+    });
+
+    // Agregar envase
+    $('#agregarEnvase').click(function() {
+        var envaseId = $('#envaseSelect').val();
+        var cantidad = parseInt($('#cantidadEnvase').val());
+        
+        if (!envaseId) {
+            alert('Seleccione un envase');
+            return;
+        }
+        if (!cantidad || cantidad <= 0) {
+            alert('Ingrese una cantidad válida');
+            return;
+        }
+
+        var option = $('#envaseSelect option:selected');
+        var nombre = option.data('nombre');
+        var codigo = option.data('codigo');
+        var tipo = option.data('tipo');
+        var disponible = option.data('cantidad');
+
+        // Verificar disponibilidad
+        if (cantidad > disponible) {
+            alert(`Solo hay ${disponible} unidades disponibles de este envase`);
+            return;
+        }
+
+        // Verificar si ya existe
+        if (envases.some(e => e.id === envaseId)) {
+            alert('Este envase ya fue agregado');
+            return;
+        }
+
+        // Agregar a la lista
+        envases.push({
+            id: parseInt(envaseId),
+            nombre: nombre,
+            codigo: codigo,
+            tipo: tipo,
+            cantidad: cantidad,
+            disponible: disponible
+        });
+
+        actualizarTablaEnvases();
+        
+        // Limpiar campos
+        $('#envaseSelect').val('');
+        $('#cantidadEnvase').val('');
+        
+        actualizarCampoOculto('envases', envases);
+    });
+
+    // Agregar insumo
+    $('#agregarInsumo').click(function() {
+        var insumoId = $('#insumoSelect').val();
+        var cantidad = parseFloat($('#cantidadInsumo').val());
+        
+        if (!insumoId) {
+            alert('Seleccione un insumo');
+            return;
+        }
+        if (!cantidad || cantidad <= 0) {
+            alert('Ingrese una cantidad válida');
+            return;
+        }
+
+        var option = $('#insumoSelect option:selected');
+        var nombre = option.data('nombre');
+        var disponible = option.data('cantidad');
+        var unidad = option.data('unidad');
+
+        // Verificar disponibilidad
+        if (cantidad > disponible) {
+            alert(`Solo hay ${disponible} ${unidad} disponibles de este insumo`);
+            return;
+        }
+
+        // Verificar si ya existe
+        if (insumos.some(i => i.id === insumoId)) {
+            alert('Este insumo ya fue agregado');
+            return;
+        }
+
+        // Agregar a la lista
+        insumos.push({
+            id: parseInt(insumoId),
+            nombre: nombre,
+            cantidad: cantidad,
+            unidad: unidad,
+            disponible: disponible
+        });
+
+        actualizarTablaInsumos();
+        
+        // Limpiar campos
+        $('#insumoSelect').val('');
+        $('#cantidadInsumo').val('');
+        
+        actualizarCampoOculto('insumos', insumos);
+    });
+
+    // Funciones para eliminar
+    window.eliminarEnvase = function(index) {
+        envases.splice(index, 1);
+        actualizarTablaEnvases();
+        actualizarCampoOculto('envases', envases);
+    };
+
+    window.eliminarInsumo = function(index) {
+        insumos.splice(index, 1);
+        actualizarTablaInsumos();
+        actualizarCampoOculto('insumos', insumos);
+    };
+
+    function actualizarTablaEnvases() {
+        var tbody = $('#envasesBody');
+        tbody.empty();
+        
+        envases.forEach(function(envase, index) {
+            var row = '<tr>' +
+                '<td>' + envase.nombre + '</td>' +
+                '<td>' + envase.codigo + '</td>' +
+                '<td>' + envase.tipo + '</td>' +
+                '<td>' + envase.disponible + '</td>' +
+                '<td>' + envase.cantidad + '</td>' +
+                '<td>' +
+                '<button type="button" class="btn btn-danger btn-sm" onclick="eliminarEnvase(' + index + ')">' +
+                'Eliminar</button>' +
+                '</td>' +
+                '</tr>';
+            tbody.append(row);
+        });
+
+        if (envases.length === 0) {
+            tbody.append('<tr><td colspan="6" class="text-center">No hay envases agregados</td></tr>');
+        }
+    }
+
+    function actualizarTablaInsumos() {
+        var tbody = $('#insumosBody');
+        tbody.empty();
+        
+        insumos.forEach(function(insumo, index) {
+            var row = '<tr>' +
+                '<td>' + insumo.nombre + '</td>' +
+                '<td>' + insumo.disponible + '</td>' +
+                '<td>' + insumo.unidad + '</td>' +
+                '<td>' + insumo.cantidad + '</td>' +
+                '<td>' +
+                '<button type="button" class="btn btn-danger btn-sm" onclick="eliminarInsumo(' + index + ')">' +
+                'Eliminar</button>' +
+                '</td>' +
+                '</tr>';
+            tbody.append(row);
+        });
+
+        if (insumos.length === 0) {
+            tbody.append('<tr><td colspan="5" class="text-center">No hay insumos agregados</td></tr>');
+        }
+    }
+
+    function actualizarCampoOculto(campo, datos) {
+        $('#' + campo).val(JSON.stringify(datos));
+    }
+
+    // Validar formulario antes de enviar
+    $('#solicitudForm').submit(function(e) {
+        if (envases.length === 0) {
+            alert('Debe agregar al menos un envase');
+            e.preventDefault();
+            return false;
+        }
+
+        var lote = $('#id_lote_produccion_origen').val();
+        var cantidad = $('#id_cantidad_solicitada').val();
+
+        if (!lote) {
+            alert('Debe seleccionar un lote de producción');
+            e.preventDefault();
+            return false;
+        }
+        if (!cantidad || cantidad <= 0) {
+            alert('Debe ingresar una cantidad válida');
+            e.preventDefault();
+            return false;
+        }
+
+        return true;
+    });
+});
+</script>
+
+<style>
+.card-header h5 {
+    margin-bottom: 0;
+    color: #fff;
+}
+.table th {
+    background-color: #f8f9fa;
+}
+#detalleLote {
+    margin-top: 10px;
+}
+</style>
+{% endblock %}
