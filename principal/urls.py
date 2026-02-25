@@ -15,6 +15,7 @@ urlpatterns = [
 #    path('tipos_materia_prima/', include('materia_prima.tipo_materia_prima.urls'), name='tipos_materia_prima'),
     path('materia_prima/', include('materia_prima.urls'), name='materia_prima'),
     path('produccion/', include('produccion.urls'), name='produccion'),
+    path('envasado/', include('produccion.envasado.urls'), name='envasado'),
     path('producto/', include('producto.urls'), name='producto'),
     path('tapa/', include('envase_embalaje.tapa.urls'), name='tapa'),
     path('tanque/', include('envase_embalaje.tanque.urls'), name='tanque'),

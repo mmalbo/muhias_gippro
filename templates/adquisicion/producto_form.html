@@ -1,0 +1,151 @@
+{% extends "adquisicion/wizard_base.html" %}
+{% load static %}
+
+{% block step_content %}
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="{{ wizard.form.prefix }}-opcion" 
+                           id="{{ wizard.form.prefix }}-opcion-existing" value="existing" 
+                           {% if wizard.form.initial.opcion != 'new' %}checked{% endif %}>
+                    <label class="form-check-label" for="{{ wizard.form.prefix }}-opcion-existing">
+                        Usar producto existente
+                    </label>
+                </div>
+                {% if almacenero == 'False' %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="{{ wizard.form.prefix }}-opcion" 
+                           id="{{ wizard.form.prefix }}-opcion-new" value="new"
+                           {% if wizard.form.initial.opcion == 'new' %}checked{% endif %}>
+                    <label class="form-check-label" for="{{ wizard.form.prefix }}-opcion-new">
+                        Registrar nuevo producto
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div id="existing-section" style="{% if wizard.form.initial.opcion != 'new' %}display: block;{% else %}display: none;{% endif %}">
+                <div class="mb-3">
+                    <label class="form-label">Seleccionar producto:</label>
+                    {{ wizard.form.producto_existente }}
+                </div>
+            </div>
+            <div id="new-section" style="{% if wizard.form.initial.opcion == 'new' %}display: block;{% else %}display: none;{% endif %}">
+                <div class="mb-3">
+                    {{ wizard.form.codigo_producto.label_tag }}
+                    {{ wizard.form.codigo_producto }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.nombre_comercial.label_tag }}
+                    {{ wizard.form.nombre_comercial }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.formato.label_tag }}
+                    {{ wizard.form.formato }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.costo.label_tag }}
+                    {{ wizard.form.costo }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card" id="producto-details" style="{% if wizard.form.initial.opcion == 'existing' and wizard.form.initial.producto_existente %}display: block;{% else %}display: none;{% endif %}">
+                <div class="card-header bg-light">Detalles del producto</div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Código:</dt>
+                        <dd class="col-sm-8" id="detail-codigo">-</dd>
+                        
+                        <dt class="col-sm-4">Nombre:</dt>
+                        <dd class="col-sm-8" id="detail-nombre">-</dd>
+
+                        <dt class="col-sm-4">Formato:</dt>
+                        <dd class="col-sm-8" id="detail-formato">-</dd>
+
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        {{ wizard.form.cantidad.label_tag }}
+        {{ wizard.form.cantidad }}
+        <div class="form-text">Cantidad adquirida en esta compra</div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const prefix = "{{ wizard.form.prefix }}";
+        const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
+        const existingSection = document.getElementById('existing-section');
+        const newSection = document.getElementById('new-section');
+        const detailsCard = document.getElementById('producto-details');
+        const selectProducto = document.querySelector(`select[name="${prefix}-producto_existente"]`);
+        
+        // Función para mostrar/ocultar secciones
+        function toggleSections() {
+            const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
+            
+            if (selectedValue === 'existing') {
+                existingSection.style.display = 'block';
+                newSection.style.display = 'none';
+                detailsCard.style.display = 'block';
+            } else {
+                existingSection.style.display = 'none';
+                newSection.style.display = 'block';
+                detailsCard.style.display = 'none';
+            }
+        }
+        
+        // Inicializar estado
+        toggleSections();
+        
+        // Escuchar cambios en los radios
+        opcionRadios.forEach(radio => {
+            radio.addEventListener('change', toggleSections);
+        });
+        
+        // Cargar detalles cuando se selecciona un producto
+        if (selectProducto) {
+            selectProducto.addEventListener('change', function() {
+                const productoId = this.value;
+                
+                if (productoId) {
+                    fetch(`/adquisiciones/api/producto/${productoId}/`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la respuesta');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById('detail-codigo').textContent = data.codigo_producto || '-';
+                            document.getElementById('detail-formato').textContent = data.formato || '-';
+                            document.getElementById('detail-nombre').textContent = data.nombre_comercial || '-';
+                        })
+                        .catch(error => {
+                            console.error('Error al obtener detalles:', error);
+                            alert('Error al cargar los detalles de los productos');
+                        });
+                } else {
+                    // Limpiar detalles si no hay selección
+                    document.getElementById('detail-codigo').textContent = '-';
+                    document.getElementById('detail-formato').textContent = '-';
+                    document.getElementById('detail-nombre').textContent = '-';
+                }
+            });
+            
+            // Cargar detalles iniciales si hay una selección
+            if (selectProducto.value) {
+                selectProducto.dispatchEvent(new Event('change'));
+            }
+        }
+    });
+    </script>
+
+    {% endblock %}

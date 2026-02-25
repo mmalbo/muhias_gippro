@@ -23,7 +23,7 @@
                     <table id="datatable" class="table data-table table-striped">
                         <thead>
                         <tr class="ligth">
-                            <th style="width: 50%">Envase o embalaje</th>
+                            <th style="width: 50%">Producto</th>
                             <th style="width: 15%">Cantidad</th>
                             <th style="width: 35%">Almacén</th>
                         </tr>
@@ -31,7 +31,7 @@
                         <tbody>
                         {% for det in detalles %}
                             <tr>
-                                <td>{{ det.envase_embalaje }}</td>
+                                <td>{{ det.producto }}</td>
                                 <td>{{ det.cantidad }}</td>
                                 <td>{{ det.adquisicion.almacen }}</td>
                             </tr>
@@ -39,7 +39,7 @@
                         </tbody>
                         <tfoot>
                         <tr>
-                            <th style="width: 50%">Materia prima</th>
+                            <th style="width: 50%">Producto</th>
                             <th style="width: 15%">Cantidad</th>
                             <th style="width: 35%">Almacén</th>
                         </tr>
@@ -49,15 +49,15 @@
             </div>
         </div>
         <!-- Agrega este código en la sección donde quieras mostrar el modal -->
-        <div id="materia_prima_modal" class="modal" style="text-align: left" tabindex="-1">
+        <div id="producto_modal" class="modal" style="text-align: left" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <span class="close-button">&times;</span>
                     <div class="modal-header">
-                        <h2>Almacén: <strong><span id="modalCodigoMateriaPrima"></span></strong></h2>
+                        <h2>Almacén: <strong><span id="modalCodigoProducto"></span></strong></h2>
                     </div>
                     <div style="margin-left: 1rem;">
-                        <strong><p>Listado de materias primas asociadas:</p></strong>
+                        <strong><p>Listado de productos asociados:</p></strong>
                     </div>
                     <ul id="almacenes-list"></ul>
                     <div class="modal-footer">
@@ -74,22 +74,22 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const showAlmacenesLinks = document.querySelectorAll('.show_materias_primas');
-            const modal = document.getElementById('materia_prima_modal');
+            const showAlmacenesLinks = document.querySelectorAll('.show_productos');
+            const modal = document.getElementById('producto_modal');
             const closeButton = document.getElementsByClassName('close-button')[0];
 
             showAlmacenesLinks.forEach(function (link) {
                 link.addEventListener('click', function (event) {
                     event.preventDefault();
                     const pk = this.dataset.pk;
-                    fetch(`/materia_prima/materias_primas/${pk}/`)
+                    fetch(`/producto/producto/${pk}/`)
                         .then(response => response.json())
                         .then(data => {
                             const almacenesList = document.getElementById('almacenes-list');
-                            const modalCodigoMateriaPrima = document.getElementById('modalCodigoMateriaPrima');
-                            modalCodigoMateriaPrima.innerHTML = '';
+                            const modalCodigoProducto = document.getElementById('modalCodigoProducto');
+                            modalCodigoProducto.innerHTML = '';
                             almacenesList.innerHTML = '';
-                            const codigo = document.createElement('codigo');
+                            const codigo_producto = document.createElement('codigo_producto');
                             if (data.length > 0) {
                                 data.forEach(almacen => {
                                     const li = document.createElement('li');
@@ -97,9 +97,9 @@
                                     codigo.textContent = almacen.nombre_almacen;
                                     almacenesList.appendChild(li);
                                 });
-                                modalCodigoMateriaPrima.appendChild(codigo);
+                                modalCodigoProducto.appendChild(codigo);
                             } else {
-                                almacenesList.innerHTML = 'No hay materias primas asociadas';
+                                almacenesList.innerHTML = 'No hay productos asociados';
                             }
                             modal.style.display = 'block';
                         });
@@ -113,7 +113,7 @@
         });
 
         function closeModal() {
-            var modal = document.getElementById("materia_prima_modal");
+            var modal = document.getElementById("producto_modal");
             modal.style.display = "none";
         }
     </script>

@@ -17,7 +17,7 @@ from datetime import date, datetime, timezone
 import decimal
 
 def importar_productos_desde_api(request):
-    url = "http://testtienda.produccionesmuhia.ca/catalogo/listarGippro/"
+    url = "http://tienda.produccionesmuhia.ca/catalogo/listarGippro/"
     params = {
         'fields': 'gname,presentation,sku,is_feedstock,count,categories'
     }
@@ -112,14 +112,14 @@ def importar_productos_desde_api(request):
                 else:
                     capacidad = int(cap_str)
                 if 'kg' in formato_str:
-                    um = 'Kg'
+                    um = 'KG'
                 elif 'ml' in formato_str:
-                    um = 'ml'
+                    um = 'ML'
                 elif 'granel' in formato_str:
                     capacidad = 0
                     um = 'L'
                 else:
-                    um = 'L'
+                    um = 'U'
                 formato = Formato.objects.filter(unidad_medida=um, capacidad=capacidad).first()
                 if not formato:
                     formato = Formato.objects.create(unidad_medida=um, capacidad=capacidad)

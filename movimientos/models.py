@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from bases.bases.models import ModeloBase
 from nomencladores.almacen.models import Almacen
-from produccion.envasado.models import Envasado
+#from produccion.envasado.models import Envasado
 from materia_prima.models import MateriaPrima
 from producto.models import Producto
 from envase_embalaje.models import EnvaseEmbalaje
@@ -268,7 +268,7 @@ class Vale_Salida_Almacen_Produccion(ModeloBase):
     )
 
 #Relación mucho a mucho de movimiento con envasado
-class Vale_Salida_Almacen_Envasado(ModeloBase):
+"""class Vale_Salida_Almacen_Envasado(ModeloBase):
     fecha_solicitud = models.DateField(
         auto_now=True, null=True,
         verbose_name="Fecha de solicitud"
@@ -285,7 +285,7 @@ class Vale_Salida_Almacen_Envasado(ModeloBase):
         null=True, blank=True,
         verbose_name="Movimiento"
     )
-
+"""
 #Relación mucho a mucho de vale con materia prima 
 class Movimiento_MP(MovimientoBase):
     materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.PROTECT,

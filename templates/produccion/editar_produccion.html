@@ -171,22 +171,25 @@
     </div>
 </div>
 
-<!-- Template para fila de materia prima -->
+<!-- Template para fila de materia prima - CORREGIDO -->
 <template id="templateMateriaPrima">
     <tr class="materia-prima-row">
         <td class="indice"></td>
         <td>
             <select class="form-select form-select-sm materia-prima-select" required>
                 <option value="">Seleccionar...</option>
-                {% for mp in materias_primas_disponibles %}
-                <option value="{{ mp.id }}" 
-                        data-unidad="{{ mp.materia_prima.unidad_medida }}"
-                        data-costo="{{ mp.materia_prima.costo }}">
-                    {{ mp.materia_prima.nombre }}
+                {% for inv in materias_primas_disponibles %}
+                <option value="{{ inv.materia_prima.id }}" 
+                        data-inventario-id="{{ inv.id }}"
+                        data-unidad="{{ inv.materia_prima.unidad_medida }}"
+                        data-costo="{{ inv.materia_prima.costo }}"
+                        data-almacen-id="{{ inv.almacen.id }}">
+                    {{ inv.materia_prima.nombre }} - {{ inv.almacen.nombre }} ({{ inv.cantidad }} disp.)
                 </option>
                 {% endfor %}
             </select>
             <input type="hidden" name="id" class="materia-prima-id-hidden">
+            <input type="hidden" name="inventario_id" class="inventario-id-hidden">
         </td>
         <td>
             <input type="number" step="0.01" min="0.01" class="form-control form-control-sm cantidad-input" 
@@ -232,7 +235,7 @@ console.log('✅ Datos cargados:', {
 
 $(document).ready(function() {
     let contadorFilas = 0;
-    //let datosMateriasPrimas = materiasPrimasIniciales || [];
+    let datosMateriasPrimas = materiasPrimasIniciales || [];
     
 // ============================================
 // PASO 1: Guardar cantidad estimada - VERSIÓN CORREGIDA
@@ -314,66 +317,111 @@ $('#formPaso1').on('submit', function(e) {
     });
     
     // ============================================
-    // CARGAR MATERIAS PRIMAS EN TABLA
+    // CARGAR MATERIAS PRIMAS EN TABLA - VERSIÓN MEJORADA
     // ============================================
     function cargarMateriasPrimas(materias) {
         console.log('📦 Cargando materias primas:', materias);
         $('#materiasPrimasContainer').empty();
         contadorFilas = 0;
-        
+    
         // Verificar que materias sea un array
         if (!Array.isArray(materias)) {
             console.warn('⚠️ materias no es un array, usando array vacío');
             materias = [];
         }
 
-        // Si hay materias, cargarlas
         if (materias.length > 0) {
             materias.forEach(mp => {
                 agregarFilaExistente(mp);
             });
         } else {
-            // Si no hay, agregar una fila vacía
             agregarFilaVacia();
         }
-        
+    
         calcularTotal();
     }
-    
+
     function agregarFilaExistente(mp) {
         contadorFilas++;
         const template = document.getElementById('templateMateriaPrima');
         const clone = template.content.cloneNode(true);
         const $fila = $(clone);
-        
-        // Configurar índices y valores
+    
         console.log('➕ Agregando fila existente:', mp);
-        
-        // Configurar índices y valores
+    
+        // Configurar índices y valores ocultos
         $fila.find('.indice').text(contadorFilas);
         $fila.find('.materia-prima-id-hidden').val(mp.id || '');
-        // Seleccionar materia prima
+        $fila.find('.inventario-id-hidden').val(mp.inventario_id || '');
+    
+        // Seleccionar materia prima en el select
         const $select = $fila.find('.materia-prima-select');
-        $select.val(mp.materia_prima_id);
+    
+        // Recorrer todas las opciones para encontrar la que coincida
+        let opcionEncontrada = false;
+        $select.find('option').each(function() {
+            const $option = $(this);
+            const optionValue = $option.val();
+            const optionAlmacenId = $option.data('almacen-id');
         
+            // Coincidencia por ID de materia prima y almacén
+            if (optionValue == mp.materia_prima_id && optionAlmacenId == mp.almacen_id) {
+                $option.prop('selected', true);
+                opcionEncontrada = true;
+                console.log('  ✅ Opción encontrada por materia prima y almacén');
+                return false; // break each
+            }
+        });
+    
+        // Si no se encontró por ambos, intentar solo por materia prima
+        if (!opcionEncontrada) {
+            $select.val(mp.materia_prima_id);
+            console.log('  ⚠️ Opción seleccionada solo por materia prima');
+        }
+    
         // Establecer cantidad
         $fila.find('.cantidad-input').val(mp.cantidad);
-        
-        // Seleccionar almacén
-        $fila.find('.almacen-select').val(mp.almacen_id)
-        
-        // Actualizar unidad y costo
-        const selectedOption = $fila.find('.materia-prima-select option:selected');
+    
+        // Seleccionar almacén en su propio select
+        const $almacenSelect = $fila.find('.almacen-select');
+        $almacenSelect.val(mp.almacen_id);
+    
+        // Actualizar unidad de medida
+        const selectedOption = $select.find('option:selected');
         const unidad = selectedOption.data('unidad') || mp.unidad_medida;
         $fila.find('.unidad-medida').text(unidad);
-        
-        // Event listeners
-        configurarEventosFila($fila);
-        
-        $('#materiasPrimasContainer').append($fila);
-        actualizarCostoFila($fila);
-    }
     
+        // Guardar costo unitario en data de la fila
+        const costoUnitario = selectedOption.data('costo') || mp.costo_unitario;
+        $fila.data('costo-unitario', costoUnitario);
+    
+        // Configurar eventos de la fila
+        configurarEventosFila($fila);
+    
+        // Agregar la fila a la tabla
+        $('#materiasPrimasContainer').append($fila);
+    
+        // Calcular costo de la fila
+        actualizarCostoFila($fila);
+    
+        console.log('  ✅ Fila agregada correctamente');
+    }
+
+    function actualizarUnidadYCosto($fila) {
+        const selectedOption = $fila.find('.materia-prima-select option:selected');
+        const unidad = selectedOption.data('unidad') || '';
+        const costo = selectedOption.data('costo') || 0;
+    
+        $fila.find('.unidad-medida').text(unidad);
+        $fila.data('costo-unitario', costo);
+    
+        // Si hay un inventario-id, guardarlo
+        const inventarioId = selectedOption.data('inventario-id');
+        if (inventarioId) {
+            $fila.find('.inventario-id-hidden').val(inventarioId);
+        }
+    }
+
     function agregarFilaVacia() {
         contadorFilas++;
         const template = document.getElementById('templateMateriaPrima');
@@ -410,18 +458,44 @@ $('#formPaso1').on('submit', function(e) {
             const selected = $(this).find('option:selected');
             const unidad = selected.data('unidad') || '';
             const costo = selected.data('costo') || 0;
-            
+            const almacenId = selected.data('almacen-id');
+            const inventarioId = selected.data('inventario-id');
+        
             $fila.find('.unidad-medida').text(unidad);
             $fila.data('costo-unitario', costo);
-            
+        
+            // Actualizar inventario_id oculto
+            if (inventarioId) {
+                $fila.find('.inventario-id-hidden').val(inventarioId);
+            }
+        
+            // Si el option tiene almacén predefinido, seleccionarlo automáticamente
+            if (almacenId) {
+                $fila.find('.almacen-select').val(almacenId);
+            } else {
+                // Si no tiene almacén predefinido, limpiar la selección
+                $fila.find('.almacen-select').val('');
+            }
+        
+            // Remover clases de error si las hay
+            $(this).removeClass('is-invalid');
+            $fila.find('.almacen-select').removeClass('is-invalid');
+            $fila.find('.cantidad-input').removeClass('is-invalid');
+        
             actualizarCostoFila($fila);
         });
-        
+    
         // Cambio en cantidad
         $fila.find('.cantidad-input').on('input', function() {
             actualizarCostoFila($fila);
+            $(this).removeClass('is-invalid');
         });
-        
+    
+        // Cambio en almacén
+        $fila.find('.almacen-select').on('change', function() {
+            $(this).removeClass('is-invalid');
+        });
+    
         // Botón eliminar
         $fila.find('.btn-eliminar').on('click', function() {
             if ($('#materiasPrimasContainer tr').length > 1) {

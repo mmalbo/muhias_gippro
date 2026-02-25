@@ -412,7 +412,7 @@
             {% endif %}
             
             <!-- Envasado -->
-            <!-- {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                 <li class="nav-item">
                     <a href="#submenuEnvasado" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
                         <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -425,15 +425,15 @@
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuEnvasado">
-                        <a href="#" class="nav-link">
+                        <a href="{% url 'envasado:crear_solicitud' %}" class="nav-link">
                             <span>Nuevo envasado</span>
                         </a>
-                        <a href="{% url 'produccion_list' %}" class="nav-link">
+                        <a href="{% url 'envasado:lista_solicitudes' %}" class="nav-link">
                             <span>Listar</span>
                         </a>
                     </div>
                 </li>
-            {% endif %} -->
+            {% endif %} 
         </ul>
     </nav>
     

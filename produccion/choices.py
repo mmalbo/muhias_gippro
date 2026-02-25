@@ -30,3 +30,10 @@ ESTADOS_PRUEBA = [
         ('Rechazada', 'Rechazada'),
         ('Aprobada', 'Aprobada'),
     ]
+
+ESTADOS_ENV = [
+        ('Planificada', 'Planificada'),
+        ('en_proceso', 'En Proceso'),
+        ('completada', 'Completada'),
+        ('cancelada', 'Cancelada'),
+    ]

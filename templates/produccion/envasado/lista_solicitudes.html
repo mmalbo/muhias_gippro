@@ -1,0 +1,49 @@
+<!-- templates/envasado/lista_solicitudes.html -->
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div class="container">
+    <h2>Solicitudes de Envasado</h2>
+    
+    <div class="mb-3">
+        <a href="{% url 'envasado:crear_solicitud' %}" class="btn btn-primary">
+            Nueva Solicitud
+        </a>
+    </div>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Folio</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Fecha Solicitud</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solicitud in solicitudes %}
+            <tr>
+                <td>{{ solicitud.folio }}</td>
+                <td>{{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</td>
+                <td>{{ solicitud.cantidad_solicitada }}</td>
+                <td>{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</td>
+                <td>
+                    <span class="badge {% if solicitud.estado == 'Planificada' %}bg-warning
+                                     {% elif solicitud.estado == 'en_proceso' %}bg-info
+                                     {% elif solicitud.estado == 'completada' %}bg-success
+                                     {% else %}bg-secondary{% endif %}">
+                        {{ solicitud.get_estado_display }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'envasado:detalle_solicitud' solicitud.pk %}" 
+                       class="btn btn-sm btn-info">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
