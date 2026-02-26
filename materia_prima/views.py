@@ -10,13 +10,14 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from tablib import Dataset
 from django.contrib.auth.decorators import login_required, user_passes_test
-
+from datetime import date, datetime, timezone
 from nomencladores.almacen.models import Almacen
 from materia_prima.forms import MateriaPrimaForm, MateriaPrimaFormUpdate, MateriaPrimaCostoForm
 from materia_prima.models import MateriaPrima
 from inventario.models import Inv_Mat_Prima
 from .forms import AgregarTipoForm
 from .choices import obtener_tipos_materia_prima, eliminar_tipo_materia_prima, agregar_tipo_materia_prima
+import decimal
 
 class CreateMateriaPrimaView(CreateView):
     #Hay que replicar acá similar a la adquisición pero creando los objetos a la inversa, primero las materias primas y
@@ -172,36 +173,47 @@ def importar(request):
                     conformacion = str(data[4]).strip() if data[4] is not None else None
                     costo = str(data[5]).strip() if data[5] is not None else None
                     tipo_materia_prima = str(data[6]).strip() if data[6] is not None else None
-                    
-                    if not all([nombre, concentracion,  conformacion, unidad, costo]):
-                        print(f"Fila {No_fila + 2}: Todos los campos son obligatorios.")
-                        messages.error(request, f"Fila {No_fila + 2}: Todos los campos son obligatorios.")
+                    almacen = str(data[7]).strip() if data[7] is not None else None
+                    cantidad = str(data[8]).strip() if data[8] is not None else None
+                    print(data)                    
+                    if not all([nombre, concentracion,  conformacion, unidad, costo, almacen, cantidad]):
+                        print(f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
+                        messages.error(request, f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         return redirect('materia_prima:importarMateriasPrimas')
 
                     if len(nombre) > 255:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: El nombre de la materia prima no puede exceder 255 caracteres.")
+                                       f"Fila {No_fila + 1}: El nombre de la materia prima no puede exceder 255 caracteres.")
                         return redirect('materia_prima:importarMateriasPrimas')
 
                     if len(unidad) > 10:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: La unidad de medida no puede exceder 10 caracteres.")
+                                       f"Fila {No_fila + 1}: La unidad de medida no puede exceder 10 caracteres.")
                         return redirect('materia_prima:importarMateriasPrimas')
 
                     if len(conformacion) > 50:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: La conformación no puede exceder 50 caracteres.")
+                                       f"Fila {No_fila + 1}: La conformación no puede exceder 50 caracteres.")
                         return redirect('materia_prima:importarMateriasPrimas')
 
                     if not concentracion.isdigit() or int(concentracion) <= 0:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: 'Concentración' debe ser un número entero mayor que cero.")
+                                       f"Fila {No_fila + 1}: 'Concentración' debe ser un número entero mayor que cero.")
                         return redirect('materia_prima:importarMateriasPrimas')
                     
                     if not re.match(r'^-?\d+(\.\d+)?$', costo) or float(costo) <= 0:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: 'Costo' debe ser un número decimal válido mayor que cero.")
+                                       f"Fila {No_fila + 1}: 'Costo' debe ser un número decimal válido mayor que cero.")
                         return redirect('materia_prima:importarMateriasPrimas')
+
+                    almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
+                    if almacen_obj is None:
+                        print("No existe el almacen")
+                        messages.error(request,
+                                       f"Fila {No_fila}: No existe el almacén  '{str(data[7]).strip()}' en el nomenclador")
+                        return redirect('importarProducto')
+                    else:
+                        print(f"Almacen {almacen_obj.nombre}")
 
                     costo = float(costo)  # Convertimos a entero después de la validación
                     concentracion = int(concentracion)  # Convertimos a entero después de la validación
@@ -220,7 +232,30 @@ def importar(request):
 
                         materia_prima.clean()  # Valida los datos antes de guardar
                         materia_prima.save()
-                        
+
+                        #Ahora a actualizar inventario
+                        inventario_mp, created_inv = Inv_Mat_Prima.objects.get_or_create(
+                            materia_prima=materia_prima, almacen=almacen_obj)
+                        if created_inv:
+                            print('Creado inventario')
+                            fecha_actual = datetime.now()
+                            fecha_codigo = fecha_actual.strftime('%y%m%d')
+                        else:
+                            print('No fue ceado el inventario')
+                            print(inventario_mp.almacen)
+                        """ if cantidad > inventario_prod.cantidad:
+                            vale.entrada = True 
+                            mov.cantidad = cantidad - inventario_prod.cantidad
+                        else:
+                            vale.entrada = False
+                            mov.cantidad = inventario_prod.cantidad - cantidad
+                        vale.save()
+                        mov.save() """
+                        inventario_mp.cantidad = decimal.Decimal(cantidad)
+                        print(inventario_mp.cantidad)
+                        inventario_mp.save()
+                        print(inventario_mp.materia_prima)
+
                         No_fila += 1 # Incrementa solo si se guarda correctamente
                         
 

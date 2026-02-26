@@ -5,7 +5,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.urls import reverse_lazy
 from tablib import Dataset
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 import decimal
 from ficha_tecnica.models import FichaTecnica
 from nomencladores.almacen.models import Almacen
@@ -14,6 +14,60 @@ from .forms import ProductoForm
 from inventario.models import Inv_Producto
 from envase_embalaje.formato.models import Formato
 from datetime import date, datetime, timezone
+import openpyxl
+from openpyxl.styles import Font
+
+@login_required
+def exportar_productos_excel(request):
+    # Crear el libro y la hoja
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Productos"
+
+    # Definir los encabezados
+    encabezados = ["Código", "Nombre", "Formato", "Cantidad", "Costo"]
+    ws.append(encabezados)
+
+    # Dar formato a los encabezados (negrita)
+    for col in range(1, 6):
+        celda = ws.cell(row=1, column=col)
+        celda.font = Font(bold=True)
+
+    # Obtener los datos (mismo queryset que usas en la tabla)
+    productos = Producto.objects.all()  # Ajusta si hay filtros
+
+    # Agregar los datos fila por fila
+    for prod in productos:
+        print(prod.formato)
+        formato = str(prod.formato.capacidad) + ' ' + prod.formato.unidad_medida
+        ws.append([
+            prod.codigo_producto,
+            prod.nombre_comercial,
+            formato,
+            prod.cantidad_total,
+            prod.costo,
+        ])
+
+    # Ajustar ancho de columnas automáticamente (opcional)
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[col_letter].width = adjusted_width
+
+    # Preparar la respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=productos.xlsx'
+    wb.save(response)
+    return response
 
 @login_required
 def listProductos(request):
@@ -121,7 +175,6 @@ def importar(request):
         producto_existentes = []
 
         if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
-            print('La extensión del archivo no es correcta, debe ser .xls o .xlsx')
             messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
             return redirect('importarProducto')
 
@@ -137,9 +190,8 @@ def importar(request):
                 Col_Formato = 5
                 Col_Costo = 6
                 i = 0
-                print("Entrando al ciclo:")
-                while i <= len(imported_data):
-                    data = imported_data[i]
+                print(f"Entrando al ciclo:{len(imported_data)}")
+                for data in imported_data:
                     codigo = str(data[Col_Codigo]).strip() if data[Col_Codigo] is not None else None
                     nombre = str(data[Col_Nombre]).strip() if data[Col_Nombre] is not None else None  # Asegúrate de que sea un string
                     codigo_3l = str(data[Col_3l]).strip() if data[Col_3l] is not None else None
@@ -148,13 +200,6 @@ def importar(request):
                     formato = str(data[Col_Formato]).strip() if data[Col_Formato] is not None else None  # Convertir a minúsculas
                     costo = str(data[Col_Costo]).strip() if data[Col_Costo] is not None else None
                     
-                    """ existe = Producto.objects.filter(nombre_comercial=nombre)
-                    if existe:
-                        print("Ya existe "+nombre)
-                        producto_existentes.append(codigo)
-                        i += 1  # Incrementa solo si se guarda correctamente
-                        continue  # Si ya existe, saltamos a la siguiente fila """
-
                     # Validaciones de los datos
                     if not all(
                             [codigo, nombre, codigo_3l, cantidad, almacen, formato, costo]):
@@ -192,12 +237,12 @@ def importar(request):
                         return redirect('importarProducto')
                     
                     print(f"Validaciones OK")
-                    print(f"Formato: {formato}") 
+                    
                     cap_str = ''          
-                    for i in formato:
+                    for j in formato:
                         try:
-                            if int(i) or i == '0':
-                                cap_str = cap_str + i
+                            if int(j) or j == '0':
+                                cap_str = cap_str + j
                             else:
                                 break
                         except:
@@ -210,6 +255,8 @@ def importar(request):
                         um = 'KG'
                     elif 'ml' in formato.lower():
                         um = 'ML'
+                    elif 'l' in formato.lower():
+                        um = 'L'
                     elif 'granel' in formato.lower():
                         capacidad = 0
                         um = 'L'
@@ -227,16 +274,14 @@ def importar(request):
                     print(f"Formato: {formato_o}")
 
                     #cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
-
-                    print(f"Nombre: {nombre}")
                     
                     try:
                         producto, created_prod = Producto.objects.update_or_create(                    
                             nombre_comercial=nombre,
+                            formato=formato_o,
                             defaults={
                             'codigo_producto' : codigo,
                             'costo' : costo,
-                            'formato' : formato_o.id, 
                             'codigo_3l' : codigo_3l
                             }
                         )
@@ -251,10 +296,9 @@ def importar(request):
 
                         #Ahora a actualizar inventario
                         inventario_prod, created_inv = Inv_Producto.objects.get_or_create(
-                            producto=producto, almacen=almacen)
+                            producto=producto, almacen=almacen_obj)
                         if created_inv:
                             print('Creado inventario')
-                            print(inventario_prod.almacen)
                             fecha_actual = datetime.now()
                             fecha_codigo = fecha_actual.strftime('%y%m%d')
                             lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
@@ -262,21 +306,14 @@ def importar(request):
                         else:
                             print('No fue ceado el inventario')
                             print(inventario_prod.almacen)
-                        """ if cantidad > inventario_prod.cantidad:
-                            vale.entrada = True 
-                            mov.cantidad = cantidad - inventario_prod.cantidad
-                        else:
-                            vale.entrada = False
-                            mov.cantidad = inventario_prod.cantidad - cantidad
-                        vale.save()
-                        mov.save() """
-                        inventario_prod.cantidad = decimal.Decimal(cantidad_dig)
+                        inventario_prod.cantidad = decimal.Decimal(cantidad)
                         inventario_prod.save()
 
                         No_fila += 1   #Incrementa solo si se guarda correctamente
 
                     except Exception as e:
-                        messages.error(request, f"Error al procesar la fila {No_fila + 1}: {str(e)}")
+                        print(f"Error al procesar la fila {i + 1}: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila {i + 1}: {str(e)}")
                         return redirect('importarProducto')
 
                     i += 1

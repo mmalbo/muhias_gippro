@@ -185,7 +185,7 @@ class CrearProduccionView(View):
             request.session.modified = True
             return JsonResponse({'success': True, 'step': 2})
         else:
-            print("❌ Errores en formulario:", produccion_form.errors)
+            print("Errores en formulario:", produccion_form.errors)
             return JsonResponse({'success': False, 'errors': produccion_form.errors})
 
     def procesar_producto(self, request):
@@ -216,10 +216,10 @@ class CrearProduccionView(View):
                 catalogo_producto = Producto.objects.get(id=catalogo_producto_id)
                 return catalogo_producto_id
             except Producto.DoesNotExist:
-                print(f"❌ Producto con ID {catalogo_producto_id} no existe")
+                print(f"Producto con ID {catalogo_producto_id} no existe")
                 return None
         else:
-            print("❌ No se proporcionó ni nuevo producto ni producto existente")
+            print("No esta el producto ni producto existente")
             return None
 
     def procesar_paso_2(self, request):
@@ -229,12 +229,12 @@ class CrearProduccionView(View):
         if not produccion_data:
             return JsonResponse({
                 'success': False, 
-                'errors': 'Datos de producción no encontrados. Por favor, complete el paso 1 nuevamente.'
+                'errors': 'Datos de produccion no encontrados. Por favor, complete el paso 1 nuevamente.'
             })
 
         # DEBUG: Ver qué tipo de dato es request.POST
-        print(f"🔍 DEBUG - Tipo de request.POST: {type(request.POST)}")
-        print(f"🔍 DEBUG - Contenido keys: {list(request.POST.keys())}")
+        print(f" DEBUG - Tipo de request.POST: {type(request.POST)}")
+        print(f" DEBUG - Contenido keys: {list(request.POST.keys())}")
            
         # Verificar que'lote',  los datos mínimos estén presentes
         required_fields = ['catalogo_producto_id', 'cantidad_estimada', 'planta_id']
@@ -313,7 +313,7 @@ class CrearProduccionView(View):
             if produccion_data.get('produccion_base_id'):
                 produccion_base = Produccion.objects.get(id=produccion_data['produccion_base_id'])
             else:
-                print("No está llegando la produccion base")
+                print("No esta llegando la produccion base")
 
             print(produccion_base)
             # Guardar producción
@@ -390,12 +390,12 @@ class CrearProduccionView(View):
     
         # CASO 1: Si post_data es None o vacío
         if not post_data:
-            print("⚠️  post_data está vacío")
+            print("post_data esta vacio")
             return []
     
         # CASO 2: Si es bytes (error original)
         if isinstance(post_data, bytes):
-            print("⚠️  post_data es bytes, convirtiendo...")
+            print("post_data es bytes, convirtiendo...")
             try:
                 import json
                 post_data = json.loads(post_data.decode('utf-8'))
@@ -409,11 +409,12 @@ class CrearProduccionView(View):
                         if values:
                             post_data[key] = values[0]
                 except Exception as e:
-                    print(f"❌ Error decodificando bytes: {e}")
+                    print(f"Error decodificando bytes: {e}")
                     return []
     
         # CASO 3: Si ya es dict o QueryDict, proceder normalmente
         i = 0
+    
         # Función helper para obtener valores de manera segura
         def get_value(data, key):
             if isinstance(data, dict):
@@ -440,7 +441,7 @@ class CrearProduccionView(View):
         
             # Validar que todos los campos estén presentes
             if not all([materia_prima_id, cantidad_str]):
-                print(f"⚠️  Materia prima {i} incompleta, saltando...")
+                print(f" Materia prima {i} incompleta, saltando...")
                 i += 1
                 continue
         
@@ -457,7 +458,7 @@ class CrearProduccionView(View):
                     try:
                         if cantidad > inv_materia_prima_obj.cantidad:
                             error_msg = f"Cantidad insuficiente de {inv_materia_prima_obj.materia_prima.nombre}"
-                            print(f"❌ {error_msg}")
+                            print(f" {error_msg}")
                             raise ValueError(error_msg)
             
                         # Calcular costo
@@ -472,18 +473,18 @@ class CrearProduccionView(View):
                             'almacen_obj': almacen_obj
                         })
                     except (Inv_Mat_Prima.DoesNotExist, ValueError) as e:
-                        print(f"❌ Error con MP {i}: {e}")
+                        print(f"Error con MP {i}: {e}")
                         # Relanzar para que sea capturado por procesar_paso_2
                         raise ValueError(f"Materia prima {i}: {str(e)}")
 
 
             except (MateriaPrima.DoesNotExist, Almacen.DoesNotExist, 
                     Inv_Mat_Prima.DoesNotExist, ValueError) as e:
-                print(f"❌ Error Fuera con MP {i}: {e}")
+                print(f"Error Fuera con MP {i}: {e}")
                 # Relanzar para que sea capturado por procesar_paso_2
                 raise ValueError(f"Materia prima {i}: {str(e)}")
             except Exception as e:
-                print(f"❌ Error inesperado con MP {i}: {e}")
+                print(f"Error inesperado con MP {i}: {e}")
                 raise
         
             i += 1

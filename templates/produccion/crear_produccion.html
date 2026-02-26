@@ -162,10 +162,10 @@
             </select>
         </div>-->
         
-        <!-- <div class="form-group">
+        <div class="form-group">
             <label>Costo estimado:</label>
             <span class="costo-text">$0.00</span>
-        </div> -->
+        </div>
         
         <button type="button" class="remove-btn" onclick="removerMateriaPrima(this)">Eliminar</button>
     </div>
@@ -411,7 +411,7 @@ function enviarPaso2(items) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Cantidad de materia prima insuficiente en almacén. Verifique disponibilidad');
+        alert('Cantidad de materia prima insuficiente en almacén. Verifique disponibilidad'+ JSON.stringify(error));
     })
     .finally(() => {
         submitBtn.textContent = originalText;

@@ -115,6 +115,8 @@ def importar_productos_desde_api(request):
                     um = 'KG'
                 elif 'ml' in formato_str:
                     um = 'ML'
+                elif 'l' in formato_str:
+                    um = 'L'
                 elif 'granel' in formato_str:
                     capacidad = 0
                     um = 'L'
@@ -136,7 +138,6 @@ def importar_productos_desde_api(request):
                     except Exception as e:
                         continue
                 else:
-                    producto.formato = formato
                     created_prod = False
                     cant_vieja = producto.cantidad_total
                 cantidad = decimal.Decimal(producto_data.get('count', '0'))
