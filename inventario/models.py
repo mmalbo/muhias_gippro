@@ -76,7 +76,7 @@ class Inv_Producto(ItemInventarioBase):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.producto.nombre_comercial} en {self.almacen.nombre}'
+        return f'{self.lote}: {self.producto.nombre_comercial} en {self.almacen.nombre}'
  
 class Inv_Envase(ItemInventarioBase):
     envase = models.ForeignKey(

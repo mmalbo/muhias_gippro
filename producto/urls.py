@@ -13,4 +13,5 @@ urlpatterns = [
     # path('producto/<uuid:pk>/detalle/', views.DetalleProductoView.as_view(), name='detalle_producto'),
     path('importar/', views.CreateImportView.as_view(), name='importarProducto'),
     path('importar/importar/', views.importar, name='importarProd'),
+    path('exportar-productos/', views.exportar_productos_excel, name='exportar_productos_excel'),
 ]

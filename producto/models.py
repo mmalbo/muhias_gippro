@@ -69,9 +69,9 @@ class Producto(ModeloBase):
             errors['ficha_tecnica'] = 'Los productos disponibles para la venta deben tener ficha técnica'
         if self.estado == 'disponibleV' and not self.ficha_costo:
             errors['ficha_costo'] = 'Los productos disponibles para la venta deben tener ficha de costo' """
-        if not self.pk and self.formato:  # Si es nuevo y tiene formato asignado
+        """ if not self.pk and self.formato:  # Si es nuevo y tiene formato asignado
             if self.formato.capacidad != 0:
-                errors['formato'] = 'Los productos nuevos deben crearse en formato "A Granel"'
+                errors['formato'] = 'Los productos nuevos deben crearse en formato "A Granel"' """
     
         # Validar unicidad del nombre comercial por formato
         if Producto.objects.filter(
@@ -86,5 +86,9 @@ class Producto(ModeloBase):
 
     def save(self, *args, **kwargs):
         """Validaciones adicionales al guardar"""
-        self.full_clean()
+        try:
+            self.full_clean()
+        except ValidationError as e:
+            print(e)
+        print("Guardando producto")
         super().save(*args, **kwargs)

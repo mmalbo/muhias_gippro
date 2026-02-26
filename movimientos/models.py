@@ -110,8 +110,8 @@ class Vale_Movimiento_Almacen(ModeloBase):
             return 'Productos'
         if self.salidas_produccion.exists():
             return 'Salida a producción'
-        if self.vale_salida_almacen_envasado_set.exists():
-            return 'Salida a envasado'
+        """  if self.vale_salida_almacen_envasado_set.exists():
+            return 'Salida a envasado' """
 
         print(tipos)
         # Cachear resultado
@@ -134,8 +134,8 @@ class Vale_Movimiento_Almacen(ModeloBase):
             return 'Productos'
         if Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).exists():
             return 'Salida a producción'
-        if Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).exists():
-            return 'Salida a envasado'
+        """ if Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).exists():
+            return 'Salida a envasado' """
         if Prod_Inv_MP.objects.filter(vale=self).exists():
             print('Solicitud de produccion')
             return 'Solicitud desde producción'
@@ -299,7 +299,7 @@ class Movimiento_MP(MovimientoBase):
     def __str__(self):
         tipo = 'Entrada' if self.vale.entrada else 'Salida'
         nombre = self.materia_prima.nombre if self.materia_prima else 'Sin materia prima'
-        return f'{tipo} de {nombre} en {self.vale.almacen.nombre}'
+        return f'{tipo} de {nombre} en {self.vale.almacen}'
 
 #Relación mucho a mucho de vale con envase y embalaje 
 class Movimiento_EE(MovimientoBase):

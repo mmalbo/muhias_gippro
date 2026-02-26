@@ -65,7 +65,6 @@ INSTALLED_APPS = [
     'hoja_seguridad.apps.HojaSeguridadConfig',
     'InsumosOtros.apps.InsumosotrosConfig',
     'materia_prima.apps.MateriaPrimaConfig',
-    #'materia_prima.tipo_materia_prima.apps.TipoMateriaPrimaConfig',
     'movimientos.apps.MovimientosConfig',
     'nomencladores.apps.NomencladoresConfig',
     'nomencladores.almacen.apps.nomencladorAlamacenConfig',
@@ -73,12 +72,13 @@ INSTALLED_APPS = [
     'nomencladores.planta.apps.nomencladorPlantaConfig',
     'principal.apps.PrincipalConfig',
     'produccion.apps.ProduccionConfig',
+    'produccion.envasado.apps.EnvasadoConfig',
     'producto.apps.ProductoConfig',
-    #'registro_perdida_almacen.apps.RegistroPerdidaAlmacenConfig',
     'usuario.apps.UsuarioConfig',
     'adquisiciones.apps.AdquisicionesConfig',
     'utils.apps.UtilsConfig',
     'inventario.apps.InventarioConfig',
+    
 ]
 
 MIDDLEWARE = [

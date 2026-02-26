@@ -208,7 +208,7 @@ $(document).ready(function() {
         var loteId = $(this).val();
         if (loteId) {
             $.ajax({
-                url: '{% url "envasado:detalle_lote" %}',
+                url: '{% url "envasado:lista_solicitudes" %}',
                 data: {'lote_id': loteId},
                 dataType: 'json',
                 success: function(data) {
