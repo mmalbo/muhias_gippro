@@ -70,7 +70,7 @@ class CrearProduccionView(View):
             # Mensaje informativo
             messages.info(
                 request, 
-                f'Reutilizando producción {datos_precargados.get("produccion_base_lote", "")}. '
+                f'Reutilizando produccion {datos_precargados.get("produccion_base_lote", "")}. '
                 'Los datos han sido pre-cargados.'
             )
             
@@ -84,7 +84,7 @@ class CrearProduccionView(View):
         return render(request, self.template_name, context)
 
     def _obtener_datos_precargados(self, request):
-        """Extrae datos pre-cargados de query parameters o sesión"""
+        """Extrae datos pre-cargados de query parameters o sesion"""
         datos = {}
         
         # 1. Verificar query parameters (viene de reutilizar_produccion)
@@ -133,7 +133,7 @@ class CrearProduccionView(View):
         ]
     
     def _obtener_produccion_base(self, request):
-        """Obtiene la producción base si existe"""
+        """Obtiene la produccion base si existe"""
         produccion_base_id = None
         
         if 'produccion_base_id' in request.GET:
@@ -157,10 +157,10 @@ class CrearProduccionView(View):
         elif step == '2':
             return self.procesar_paso_2(request)
         else:
-            return JsonResponse({'success': False, 'errors': 'Paso no válido'})
+            return JsonResponse({'success': False, 'errors': 'Paso no valido'})
     
     def procesar_paso_1(self, request):
-        """Guardar solo los valores primitivos en sesión"""
+        """Guardar solo los valores primitivos en sesion"""
         produccion_form = ProduccionForm(request.POST)
         if produccion_form.is_valid():
             # Procesar producto (existente o nuevo)
@@ -231,12 +231,8 @@ class CrearProduccionView(View):
                 'success': False, 
                 'errors': 'Datos de produccion no encontrados. Por favor, complete el paso 1 nuevamente.'
             })
-
-        # DEBUG: Ver qué tipo de dato es request.POST
-        print(f" DEBUG - Tipo de request.POST: {type(request.POST)}")
-        print(f" DEBUG - Contenido keys: {list(request.POST.keys())}")
            
-        # Verificar que'lote',  los datos mínimos estén presentes
+        # Verificar que'lote',  los datos minimos esten presentes
         required_fields = ['catalogo_producto_id', 'cantidad_estimada', 'planta_id']
         missing_fields = [field for field in required_fields if not produccion_data.get(field)]
         
@@ -360,9 +356,9 @@ class CrearProduccionView(View):
 
             # Mensaje específico para reutilización
             if produccion.produccion_base:
-                message = f'Producción creada reutilizando {produccion_base.lote} como base'
+                message = f'Produccion creada reutilizando {produccion_base.lote} como base'
             else:
-                message = 'Producción creada exitosamente'
+                message = 'Produccion creada exitosamente'
             
             return JsonResponse({
                 'success': True, 
@@ -384,11 +380,8 @@ class CrearProduccionView(View):
 
     def procesar_materias_primas(self, post_data):
         materias_primas = []
-    
-        # DEBUG
-        print(f"🔍 procesar_materias_primas - Tipo post_data: {type(post_data)}")
-    
-        # CASO 1: Si post_data es None o vacío
+         
+        # CASO 1: Si post_data es None o vacio
         if not post_data:
             print("post_data esta vacio")
             return []
