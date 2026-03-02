@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from bases.bases.models import ModeloBase
 from django.db.models import Sum
 from nomencladores.almacen.models import Almacen
@@ -56,3 +56,56 @@ class InsumosOtros(ModeloBase):
     
     def __str__(self):
         return self.nombre
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        print("En el save")
+        if self.pk:  # Si el objeto ya tiene un ID (ya existe)
+            print("Ya existe")
+            insumo_actual = InsumosOtros.objects.filter(pk=self.pk).first
+
+            if insumo_actual:
+                print("Insumo actual")
+                consecutivo = self.codigo[-3:]  # Los últimos 3 dígitos del código
+                print(consecutivo)
+                if not consecutivo:
+                    consecutivo = '001'
+                print(consecutivo)
+                # Generar las nuevas abreviaturas del material y color
+                nombre = self.nombre
+
+                # Generar el nuevo código
+                self.codigo = f"{nombre}{consecutivo}"
+                print(f"{self.codigo}")
+            else:
+                print("No encontro el insumo")
+        else:
+            print("No existe")
+            # Si el objeto no existe, generar el código como antes
+            if not self.codigo:
+                print("No tiene codigo")
+                # Obtener el código del tipo de envase
+                codigo = self.nombre
+
+                # Obtener el último consecutivo usado
+                ultimo_consecutivo = InsumosOtros.objects.filter(
+                    codigo__startswith=f"{codigo}"
+                ).count()
+
+                # Generar el nuevo consecutivo (3 dígitos)
+                nuevo_consecutivo = f"{ultimo_consecutivo + 1:03d}"
+
+                # Generar el código completo
+                self.codigo = f"{codigo}{nuevo_consecutivo}"
+                print(self.codigo)
+            else:
+                print("Ya tiene código y no hago nada")
+
+        # Guardar el objeto
+        print("A guardar super")
+        try:
+            super().save(*args, **kwargs)
+            print("Paso el super save")
+        except Exception as e:
+            print(f"{e}")
+

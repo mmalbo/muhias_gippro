@@ -175,8 +175,8 @@ def importar(request):
                     tipo_materia_prima = str(data[6]).strip() if data[6] is not None else None
                     almacen = str(data[7]).strip() if data[7] is not None else None
                     cantidad = str(data[8]).strip() if data[8] is not None else None
-                    print(data)                    
-                    if not all([nombre, concentracion,  conformacion, unidad, costo, almacen, cantidad]):
+
+                    if not all([nombre, concentracion,  conformacion, unidad, costo, almacen]):
                         print(f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         messages.error(request, f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         return redirect('materia_prima:importarMateriasPrimas')
@@ -217,6 +217,9 @@ def importar(request):
 
                     costo = float(costo)  # Convertimos a entero después de la validación
                     concentracion = int(concentracion)  # Convertimos a entero después de la validación
+
+                    if not cantidad:
+                        cantidad = 0
                     
                     try:
                         materia_prima, created_mp = MateriaPrima.objects.update_or_create(                    
@@ -243,14 +246,7 @@ def importar(request):
                         else:
                             print('No fue ceado el inventario')
                             print(inventario_mp.almacen)
-                        """ if cantidad > inventario_prod.cantidad:
-                            vale.entrada = True 
-                            mov.cantidad = cantidad - inventario_prod.cantidad
-                        else:
-                            vale.entrada = False
-                            mov.cantidad = inventario_prod.cantidad - cantidad
-                        vale.save()
-                        mov.save() """
+                        
                         inventario_mp.cantidad = decimal.Decimal(cantidad)
                         print(inventario_mp.cantidad)
                         inventario_mp.save()
@@ -370,8 +366,6 @@ def importarCosto(request):
             messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
             return redirect('materia_prima:materia_prima_list')
     return render(request, 'materia_prima/import_costo_form.html')
-
-
 
 ###Gestionar Tipos de MP
 

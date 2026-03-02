@@ -70,7 +70,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
             cantidad__gt=0
         ).select_related('insumos', 'almacen').order_by('insumos__nombre')
         
-        context['hoy'] = timezone.now().date()
+        #context['hoy'] = timezone.now().date()
         return context
 
     def form_valid(self, form):
@@ -78,6 +78,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
+        print(form.errors)
         messages.error(self.request, 'Por favor corrige los errores en el formulario.')
         return super().form_invalid(form)
 

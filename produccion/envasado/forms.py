@@ -6,6 +6,7 @@ from .models import *
 from producto.models import Producto
 from inventario.models import *
 from envase_embalaje.models import *
+import json
 
 class SolicitudEnvasadoForm(forms.ModelForm):
     class Meta:
@@ -49,7 +50,7 @@ class SolicitudEnvasadoForm(forms.ModelForm):
         
         # Filtrar lotes con cantidad disponible
         self.fields['lote_produccion_origen'].queryset = Inv_Producto.objects.filter(
-            cantidad__gt=0 ).select_related('producto', 'almacen').order_by('lote_produccion')
+            cantidad__gt=0 ).select_related('producto', 'almacen').order_by('lote')
 
     def clean_cantidad_solicitada(self):
         cantidad = self.cleaned_data.get('cantidad_solicitada')
@@ -68,7 +69,7 @@ class SolicitudEnvasadoForm(forms.ModelForm):
         if lote and cantidad:
             if lote.cantidad < cantidad:
                 raise ValidationError({
-                    'cantidad_solicitada': f'El lote {lote.lote_produccion} solo tiene {lote.cantidad} disponibles'
+                    'cantidad_solicitada': f'El lote {lote.lote} solo tiene {lote.cantidad} disponibles'
                 })
 
         # Validar que haya al menos un envase
@@ -95,7 +96,6 @@ class SolicitudEnvasadoForm(forms.ModelForm):
             
             # Procesar envases
             if self.cleaned_data.get('envases'):
-                import json
                 envases = json.loads(self.cleaned_data['envases'])
                 for envase_data in envases:
                     DetalleEnvasado.objects.create(
@@ -106,7 +106,6 @@ class SolicitudEnvasadoForm(forms.ModelForm):
             
             # Procesar insumos
             if self.cleaned_data.get('insumos'):
-                import json
                 insumos = json.loads(self.cleaned_data['insumos'])
                 for insumo_data in insumos:
                     ConsumoInsumoEnvasado.objects.create(

@@ -14,6 +14,7 @@ from .forms import ProductoForm
 from inventario.models import Inv_Producto
 from envase_embalaje.formato.models import Formato
 from datetime import date, datetime, timezone
+import decimal
 import openpyxl
 from openpyxl.styles import Font
 
@@ -190,7 +191,7 @@ def importar(request):
                 Col_Formato = 5
                 Col_Costo = 6
                 i = 0
-                print(f"Entrando al ciclo:{len(imported_data)}")
+
                 for data in imported_data:
                     codigo = str(data[Col_Codigo]).strip() if data[Col_Codigo] is not None else None
                     nombre = str(data[Col_Nombre]).strip() if data[Col_Nombre] is not None else None  # Asegúrate de que sea un string
@@ -202,7 +203,7 @@ def importar(request):
                     
                     # Validaciones de los datos
                     if not all(
-                            [codigo, nombre, codigo_3l, cantidad, almacen, formato, costo]):
+                            [codigo, nombre, codigo_3l, almacen, formato, costo]):
                         print(f"Fila {i}: Todos los campos son obligatorios.")
                         messages.error(request, f"Fila {i}: Todos los campos son obligatorios.")
                         return redirect('importarProducto')
@@ -231,12 +232,10 @@ def importar(request):
                                        f"Fila {i}: El código corto solo debe tener 3 letras.")
                         return redirect('importarProducto')
 
-                    if not cantidad.isdigit() or int(cantidad) < 0:
+                    if not cantidad.isdigit() or decimal(cantidad) < 0:
                         messages.error(request,
                                        f"Fila {i}: 'Cantidad' debe ser un número entero.")
                         return redirect('importarProducto')
-                    
-                    print(f"Validaciones OK")
                     
                     cap_str = ''          
                     for j in formato:
@@ -246,6 +245,7 @@ def importar(request):
                             else:
                                 break
                         except:
+                            print("Falla aqui, for Formato")
                             break
                     if cap_str == '':
                         capacidad = 0
@@ -265,12 +265,9 @@ def importar(request):
 
                     print(f"UM: {um} capacidad: {capacidad}")
 
-
                     formato_o = Formato.objects.filter(unidad_medida=um, capacidad=capacidad).first()
                     if not formato_o:
                         formato_o = Formato.objects.create(unidad_medida=um, capacidad=capacidad)
-
-
                     print(f"Formato: {formato_o}")
 
                     #cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
