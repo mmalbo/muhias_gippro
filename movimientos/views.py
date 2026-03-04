@@ -1146,6 +1146,7 @@ def vale_detalle(request, pk):
     productos = vale.movimientos_productos.all()
     envases = vale.movimientos_envases.all()
     insumos = vale.movimientos_insumos.all()
+    sol_prod = vale.mp_produccion.all()
     
     # Preparar datos para la plantilla
     items_agrupados = []
@@ -1207,10 +1208,26 @@ def vale_detalle(request, pk):
             })
             total_items += 1
             total_cantidad += float(ins.cantidad)
-    
+
+    if sol_prod.exists():
+        for mp in sol_prod:
+            items_agrupados.append({
+                'tipo': 'Materia Prima',
+                'nombre': mp.inv_materia_prima.nombre if mp.inv_materia_prima else 'Sin nombre',
+                'codigo': mp.inv_materia_prima.codigo if mp.inv_materia_prima and hasattr(mp.inv_materia_prima, 'codigo') else '',
+                'cantidad': mp.cantidad_materia_prima,
+                'unidad': getattr(mp.inv_materia_prima, 'unidad_medida', '') if mp.inv_materia_prima else '',
+                'lote': '',
+                'costo': mp.inv_materia_prima.costo
+            })
+            total_items += 1
+            total_cantidad += float(mp.cantidad_materia_prima)
+            
     # Verificar si está relacionado con producción o envasado
     relacion_produccion = None
     relacion_envasado = None
+    lote_prod = sol_prod.first().lote_prod
+    fecha_prod = sol_prod.first().fecha_creacion
     
     if vale.salidas_produccion.exists():
         relacion_produccion = vale.salidas_produccion.first()
@@ -1247,6 +1264,9 @@ def vale_detalle(request, pk):
         'productos': productos,
         'envases': envases,
         'insumos': insumos,
+        'sol_prod': sol_prod,
+        'lote_prod': lote_prod,
+        'fecha_prod': fecha_prod,
         'puede_confirmar': puede_confirmar,
         'puede_cancelar': puede_cancelar,
         'puede_despachar': puede_despachar,

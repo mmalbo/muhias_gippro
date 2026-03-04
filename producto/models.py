@@ -5,6 +5,7 @@ from ficha_tecnica.models import FichaTecnica
 from materia_prima.choices import ESTADOS
 from envase_embalaje.formato.models import Formato
 from django.db.models import Sum
+from utils.utils import eliminar_tildes
 
 class Producto(ModeloBase):
     codigo_producto = models.CharField( max_length=20, verbose_name="Código del producto", null=True,
@@ -64,15 +65,6 @@ class Producto(ModeloBase):
 
         errors = {}
 
-        # Validar estado coherente con documentos
-        """ if self.estado == 'disponibleV' and not self.ficha_tecnica_folio:
-            errors['ficha_tecnica'] = 'Los productos disponibles para la venta deben tener ficha técnica'
-        if self.estado == 'disponibleV' and not self.ficha_costo:
-            errors['ficha_costo'] = 'Los productos disponibles para la venta deben tener ficha de costo' """
-        """ if not self.pk and self.formato:  # Si es nuevo y tiene formato asignado
-            if self.formato.capacidad != 0:
-                errors['formato'] = 'Los productos nuevos deben crearse en formato "A Granel"' """
-    
         # Validar unicidad del nombre comercial por formato
         if Producto.objects.filter(
             nombre_comercial=self.nombre_comercial,
@@ -89,6 +81,6 @@ class Producto(ModeloBase):
         try:
             self.full_clean()
         except ValidationError as e:
-            print(e)
+            print(eliminar_tildes(e))
         print("Guardando producto")
         super().save(*args, **kwargs)

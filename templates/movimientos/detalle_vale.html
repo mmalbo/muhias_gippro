@@ -157,18 +157,18 @@
             </div>
             
             <!-- Relaciones especiales -->
-            {% if relacion_produccion %}
+            {% if sol_prod %}
             <div class="card mb-3">
                 <div class="card-header bg-info text-white">
                     <i class="bi bi-gear"></i> Relacionado con Producción
                 </div>
                 <div class="card-body">
                     <p class="mb-1">
-                        <strong>Solicitud de producción:</strong> 
-                        #{{ relacion_produccion.solicitud_produccion.id }}
+                        <strong>Solicitud desde producción:</strong> 
+                        #{{ lote_prod }}
                     </p>
                     <small class="text-muted">
-                        Fecha solicitud: {{ relacion_produccion.fecha_solicitud|date:"d/m/Y" }}
+                        Fecha solicitud: {{ fecha_prod|date:"d/m/Y" }}
                     </small>
                 </div>
             </div>

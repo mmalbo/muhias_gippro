@@ -17,6 +17,7 @@ from datetime import date, datetime, timezone
 import decimal
 import openpyxl
 from openpyxl.styles import Font
+from utils.utils import eliminar_tildes
 
 @login_required
 def exportar_productos_excel(request):
@@ -170,6 +171,7 @@ class CreateImportView(CreateView):
     success_message = "Se ha importado correctamente."
 
 def importar(request):
+    print("En el import")
     if request.method == 'POST':
         file = request.FILES.get('excel')
         No_fila = 0
@@ -221,23 +223,31 @@ def importar(request):
                         messages.error(request,
                                        f"Fila {i}: El nombre del producto no puede exceder 255 caracteres.")
                         return redirect('importarProducto')
+                    else: print(nombre)
 
                     if len(codigo) > 20:
                         messages.error(request,
                                        f"Fila {i}: El código no puede exceder 20 caracteres.")
                         return redirect('importarProducto')
+                    else: print(codigo)
 
                     if len(codigo_3l) > 3:
                         messages.error(request,
                                        f"Fila {i}: El código corto solo debe tener 3 letras.")
                         return redirect('importarProducto')
+                    else: print(codigo_3l)
 
-                    if not cantidad.isdigit() or decimal(cantidad) < 0:
+                    if decimal.Decimal(cantidad) < 0:
                         messages.error(request,
-                                       f"Fila {i}: 'Cantidad' debe ser un número entero.")
+                                       f"Fila {i}: 'Cantidad' debe ser un número positivo.")
                         return redirect('importarProducto')
-                    
-                    cap_str = ''          
+                    else: print(cantidad)
+
+                    print(costo)
+
+                    print("Estoy luego de validaciones")
+                    cap_str = ''
+					          
                     for j in formato:
                         try:
                             if int(j) or j == '0':
@@ -245,8 +255,8 @@ def importar(request):
                             else:
                                 break
                         except:
-                            print("Falla aqui, for Formato")
                             break
+
                     if cap_str == '':
                         capacidad = 0
                     else:
@@ -273,38 +283,39 @@ def importar(request):
                     #cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
                     
                     try:
-                        producto, created_prod = Producto.objects.update_or_create(                    
-                            nombre_comercial=nombre,
-                            formato=formato_o,
-                            defaults={
-                            'codigo_producto' : codigo,
-                            'costo' : costo,
-                            'codigo_3l' : codigo_3l
-                            }
-                        )
+                        producto, created_prod = Producto.objects.update_or_create(
+                                nombre_comercial=nombre,
+                                formato=formato_o,
+                                defaults={"codigo_producto": codigo,
+                                          "costo": costo,
+                                          "codigo_3l": codigo_3l}
+                            )
 
-                        if created_prod:
-                            print(f"Creado producto {producto.nombre_comercial}")
-                        else:
-                            print(f"No creado el producto {producto.nombre_comercial}")
+                        print(producto)
 
                         producto.clean()  
                         producto.save()
 
                         #Ahora a actualizar inventario
-                        inventario_prod, created_inv = Inv_Producto.objects.get_or_create(
-                            producto=producto, almacen=almacen_obj)
-                        if created_inv:
-                            print('Creado inventario')
+                        if producto:
+                            print('preparando inventario')
                             fecha_actual = datetime.now()
                             fecha_codigo = fecha_actual.strftime('%y%m%d')
                             lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
-                            inventario_prod.lote = lote
-                        else:
-                            print('No fue ceado el inventario')
-                            print(inventario_prod.almacen)
-                        inventario_prod.cantidad = decimal.Decimal(cantidad)
+                            
+                        inventario_prod, created_inv = Inv_Producto.objects.update_or_create(
+                            producto=producto, 
+                            almacen=almacen_obj, 
+                            lote=lote,
+                            defaults={"cantidad": decimal.Decimal(cantidad)} 
+                        )
                         inventario_prod.save()
+                        if created_inv:
+                            print(f"Creado: {inventario_prod}")
+                        else:
+                            print(f"Actualizado: {inventario_prod}")
+                            
+                        
 
                         No_fila += 1   #Incrementa solo si se guarda correctamente
 

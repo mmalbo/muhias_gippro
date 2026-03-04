@@ -226,6 +226,9 @@ class Prod_Inv_MP(ModeloBase):
         verbose_name="Vale de solicitud asociado a esta producción",
         null=True, blank=False, related_name="mp_produccion")
 
+    def __str__(self):
+        return f"{self.inv_materia_prima.nombre} para {self.lote_prod.catalogo_producto.nombre_comercial}"
+
 class ParametroPrueba(models.Model):
     """Catálogo de parámetros que se miden en las pruebas químicas"""
     UNIDADES_MEDIDA = [

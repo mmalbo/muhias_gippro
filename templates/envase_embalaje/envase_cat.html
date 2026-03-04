@@ -22,7 +22,7 @@
                 
                 <div class="col-sm-12 col-lg-12">
                     {% if user.is_superuser %}
-                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    <a href="{% url 'importarEnvaseEmbalaje' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                     <table id="datatable" class="table datatable table-striped">
                         <thead>

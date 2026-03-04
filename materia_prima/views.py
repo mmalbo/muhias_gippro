@@ -1,14 +1,15 @@
-import re
 from os.path import basename
-
+import re
+import decimal
 from django.db import transaction
+from tablib import Dataset
 from django.http import JsonResponse, Http404
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
-from tablib import Dataset
+
 from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date, datetime, timezone
 from nomencladores.almacen.models import Almacen
@@ -17,7 +18,6 @@ from materia_prima.models import MateriaPrima
 from inventario.models import Inv_Mat_Prima
 from .forms import AgregarTipoForm
 from .choices import obtener_tipos_materia_prima, eliminar_tipo_materia_prima, agregar_tipo_materia_prima
-import decimal
 
 class CreateMateriaPrimaView(CreateView):
     #Hay que replicar acá similar a la adquisición pero creando los objetos a la inversa, primero las materias primas y
