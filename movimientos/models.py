@@ -110,6 +110,8 @@ class Vale_Movimiento_Almacen(ModeloBase):
             return 'Productos'
         if self.salidas_produccion.exists():
             return 'Salida a producción'
+        if self.mp_produccion.exists():
+            return 'Solicitud para producción'
         """  if self.vale_salida_almacen_envasado_set.exists():
             return 'Salida a envasado' """
 
@@ -137,7 +139,6 @@ class Vale_Movimiento_Almacen(ModeloBase):
         """ if Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).exists():
             return 'Salida a envasado' """
         if Prod_Inv_MP.objects.filter(vale=self).exists():
-            print('Solicitud de produccion')
             return 'Solicitud desde producción'
         print("No encontre nada")
 
@@ -170,6 +171,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
         total += self.movimientos_envases.count()
         total += self.movimientos_insumos.count()
         total += self.movimientos_productos.count()
+        total += self.mp_produccion.count()
         return total
 
     @property

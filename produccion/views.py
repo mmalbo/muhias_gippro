@@ -332,7 +332,8 @@ class CrearProduccionView(View):
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Solicitud',
                 entrada = False,
-                almacen = almacen_obj
+                origen = almacen_obj.nombre,
+                destino = Produccion.planta.nombre
             )
 
             # Guardar relación con materias primas
@@ -445,10 +446,11 @@ class CrearProduccionView(View):
                 # Obtener objetos
                 inv_materia_prima_obj = Inv_Mat_Prima.objects.get(id=materia_prima_id)
                 almacen_obj = Almacen.objects.get(id=inv_materia_prima_obj.almacen.id)
-            
+                
                 # Verificar inventarioInv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj)
                 if inv_materia_prima_obj:
                     try:
+                        print(inv_materia_prima_obj.cantidad)
                         if cantidad > inv_materia_prima_obj.cantidad:
                             error_msg = f"Cantidad insuficiente de {inv_materia_prima_obj.materia_prima.nombre}"
                             print(f" {error_msg}")
