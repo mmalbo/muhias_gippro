@@ -192,20 +192,30 @@ class CrearProduccionView(View):
         """Procesa el producto (existente o nuevo) y retorna el ID"""
         nuevo_producto_nombre = request.POST.get('nuevo_producto_nombre')
         catalogo_producto_id = request.POST.get('catalogo_producto')
+        prod_base = request.POST.get('prod_result')
 
         if nuevo_producto_nombre:
             # Crear nuevo producto en el catálogo
             try:
                 formato_agranel = Formato.objects.filter(capacidad=0).first()
-
-                # Crear en CatalogoProducto (no en Producto)
-                catalogo_producto = Producto.objects.create(
-                    nombre_comercial=nuevo_producto_nombre.strip(),
-                    formato=formato_agranel,
-                    estado="produccion",
-                    costo=0
-                )
-                return catalogo_producto.id
+                if prod_base:
+                    materia_base = MateriaPrima.objects.create(
+                        tipo_materia_prima = 'bases',
+                        nombre = nuevo_producto_nombre,
+                        unidad_medida = 'L',
+                        conformacion = 'Tanques',
+                        costo=0                  
+                    )
+                    return materia_base.id
+                else:
+                    # Crear en CatalogoProducto (no en Producto)
+                    catalogo_producto = Producto.objects.create( 
+                                nombre_comercial=nuevo_producto_nombre.strip(), 
+                                formato=formato_agranel, 
+                                estado="produccion", 
+                                costo=0
+                                )
+                    return catalogo_producto.id
                 
             except Exception as e:
                 print(f"Error al crear producto: {e}")
@@ -213,10 +223,12 @@ class CrearProduccionView(View):
         elif catalogo_producto_id:
             # Usar producto existente - verificar que existe
             try:
-                catalogo_producto = Producto.objects.get(id=catalogo_producto_id)
+                catalogo_producto = Producto.objects.filter(id=catalogo_producto_id).first()
+                if not catalogo_producto:
+                    catalogo_producto = MateriaPrima.objects.filter(id=catalogo_producto_id).first()
                 return catalogo_producto_id
-            except Producto.DoesNotExist:
-                print(f"Producto con ID {catalogo_producto_id} no existe")
+            except Exception as e:
+                print(f"Producto con ID {catalogo_producto_id} no existe: {e}")
                 return None
         else:
             print("No esta el producto ni producto existente")
@@ -276,7 +288,10 @@ class CrearProduccionView(View):
         try:
             # Obtener la instancia de Planta
             planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
-            catalogo_producto_instance = Producto.objects.get(id=produccion_data['catalogo_producto_id'])
+            print(planta_instance.nombre)
+            catalogo_producto_instance = Producto.objects.filter(id=produccion_data['catalogo_producto_id']).first()
+            if not catalogo_producto_instance:
+                catalogo_producto_instance = MateriaPrima.objects.filter(id=produccion_data['catalogo_producto_id']).first()
             # GENERAR LOTE CON EL NUEVO FORMATO
             cantidad_estimada = float(produccion_data['cantidad_estimada'])
             lote_generado = Produccion.generar_lote(
@@ -325,19 +340,24 @@ class CrearProduccionView(View):
                 produccion_base=produccion_base,
                 observaciones_reutilizacion=produccion_data.get('observaciones_reutilizacion', '')
             )
-
+            print(produccion.lote)
+            
             #generar un vale de almacen tipo solicitud costo_mp = mp_data['costo']
             id_almacen = materias_primas[0]['almacen']
             almacen_obj = Almacen.objects.get(id=id_almacen)
+            print(almacen_obj.nombre)
+            print(planta_instance.nombre)
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Solicitud',
                 entrada = False,
                 origen = almacen_obj.nombre,
-                destino = Produccion.planta.nombre
+                destino = planta_instance.nombre
             )
-
+            print(vale)
             # Guardar relación con materias primas
+            
             for mp_data in materias_primas:
+                print(mp_data)
                 almacen_o=Almacen.objects.get(id=mp_data['almacen'])
                 mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
                 if not vale.almacen:
@@ -349,6 +369,7 @@ class CrearProduccionView(View):
                     almacen=almacen_o,
                     vale = vale
                 )
+                print(mat_pri_o.nombre)
                 
             # Limpiar sesión
             if 'produccion_data' in request.session:
@@ -452,7 +473,7 @@ class CrearProduccionView(View):
                     try:
                         print(inv_materia_prima_obj.cantidad)
                         if cantidad > inv_materia_prima_obj.cantidad:
-                            error_msg = f"Cantidad insuficiente de {inv_materia_prima_obj.materia_prima.nombre}"
+                            error_msg = f"Cantidad insuficiente de de {inv_materia_prima_obj.materia_prima.nombre}"
                             print(f" {error_msg}")
                             raise ValueError(error_msg)
             

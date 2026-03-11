@@ -10,6 +10,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date, datetime, timezone
 from nomencladores.almacen.models import Almacen
@@ -19,7 +20,7 @@ from inventario.models import Inv_Mat_Prima
 from .forms import AgregarTipoForm
 from .choices import obtener_tipos_materia_prima, eliminar_tipo_materia_prima, agregar_tipo_materia_prima
 
-class CreateMateriaPrimaView(CreateView):
+class CreateMateriaPrimaView(LoginRequiredMixin, CreateView):
     #Hay que replicar acá similar a la adquisición pero creando los objetos a la inversa, primero las materias primas y
     #la adquisición se crea vacía con la fecha actual
     """ model = MateriaPrima
@@ -32,7 +33,7 @@ class CreateMateriaPrimaView(CreateView):
         messages.success(self.request, self.success_message)
         return super().form_valid(form) """
 
-class ListMateriaPrimaView(ListView):
+class ListMateriaPrimaView(LoginRequiredMixin, ListView):
     model = MateriaPrima
     template_name = 'materia_prima/materia_prima_cat.html'
     context_object_name = 'materias_primas'
@@ -93,7 +94,7 @@ def listMateriasPrimas(request):
 
     return render(request, 'materia_prima/materia_prima_list.html', context)
 
-class UpdateMateriaPrimaView(UpdateView):
+class UpdateMateriaPrimaView(LoginRequiredMixin, UpdateView):
     model = MateriaPrima
     form_class = MateriaPrimaFormUpdate
     template_name = 'materia_prima/materia_prima_form.html'
@@ -121,12 +122,14 @@ class UpdateMateriaPrimaView(UpdateView):
         context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
         return context
 
-class DeleteMateriaPrimaView(DeleteView):
+class DeleteMateriaPrimaView(LoginRequiredMixin, DeleteView):
     model = MateriaPrima
     template_name = 'materia_prima/materia_prima_confirm_delete.html'
     success_url = reverse_lazy('materia_prima_list')  # Cambia esto al nombre de tu URL
 
+@login_required
 def get_materias_primas(request, pk):
+    print("Entre al método")
     try:
         almacen = Almacen.objects.get(pk=pk)
         materias_primas = almacen.materias_primas.all()
@@ -137,20 +140,30 @@ def get_materias_primas(request, pk):
     except Almacen.DoesNotExist:
         raise Http404("Materia prima no encontrado")
 
-class CreateImportView(CreateView):
+@login_required
+def detalle_materia_prima(request, pk):
+    """Ver detalle completo de un parámetro"""
+    materia_prima = get_object_or_404(MateriaPrima, id=pk)
+    
+    return render(request, 'materia_prima\detalle_materia_prima.html', {
+        'materia_prima': materia_prima,
+    })
+
+class CreateImportView(LoginRequiredMixin, CreateView):
     model = MateriaPrima
     form_class = MateriaPrimaForm
     template_name = 'materia_prima/import_form.html'
     success_url = '/materia_prima/'
     success_message = "Se ha importado correctamente la materia prima."
 
-class CreateImportCostoView(CreateView):
+class CreateImportCostoView(LoginRequiredMixin, CreateView):
     model = MateriaPrima
     form_class = MateriaPrimaCostoForm
     template_name = 'materia_prima/import_costo_form.html'
     success_url = '/materia_prima/'
     success_message = "Se ha actualizado correctamente el costo de las materias primas."
 
+@login_required
 def importar(request):
     if request.method == 'POST':
         file = request.FILES.get('excel')
@@ -293,6 +306,7 @@ def importar(request):
             return redirect('materia_prima:materia_prima_list')
     return render(request, 'materia_prima/import_form.html')
 
+@login_required
 def importarCosto(request):
     if request.method == 'POST':
         file = request.FILES.get('excel')
@@ -368,7 +382,7 @@ def importarCosto(request):
     return render(request, 'materia_prima/import_costo_form.html')
 
 ###Gestionar Tipos de MP
-
+@login_required
 def gestionar_tipos_MP(request):
     # Obtener todas las categorías
     print("entre en view gestionar")
@@ -401,7 +415,7 @@ def gestionar_tipos_MP(request):
     }
     return render(request, 'materia_prima/gestionar_tipos.html', context)
 
-#@login_required
+@login_required
 def eliminar_tipos_MP(request, valor):
     if request.method == 'POST':
         # Verificar si hay materias primas usando esta categoría

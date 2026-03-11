@@ -173,6 +173,12 @@ class CompraWizard(SessionWizardView):
                 
                 if data['opcion'] == MateriaPrimaForm.EXISTING:
                     materia = data['materia_existente']
+
+                    # Actualizar costo si se proporcionó uno nuevo
+                    nuevo_costo = data.get('nuevo_costo')
+                    if nuevo_costo is not None and nuevo_costo != materia.costo:
+                        materia.costo = nuevo_costo
+                        materia.save()
                 else:
                     materia = MateriaPrima.objects.create(
                         nombre=data['nombre'],
@@ -191,7 +197,7 @@ class CompraWizard(SessionWizardView):
                 )
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('materia_prima:materia_prima_list')
+            return redirect('compras_mp_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -390,7 +396,7 @@ class CompraEnvaseWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('envase_embalaje_lista')
+            return redirect('compras_env_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -588,7 +594,7 @@ class CompraInsumoWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('insumos_list')
+            return redirect('compras_ins_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")
@@ -786,7 +792,7 @@ class CompraProductoWizard(SessionWizardView):
             
             # Limpiar almacenamiento
             self.storage.reset()
-            return redirect('list_producto')
+            return redirect('compras_prod_list')
         
         except Exception as e:
             print(f"Error al procesar compra: {e}")

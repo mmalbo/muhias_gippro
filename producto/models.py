@@ -35,6 +35,8 @@ class Producto(ModeloBase):
         verbose_name="Ficha de costo" )
 
     formato = models.ForeignKey(Formato, on_delete=models.PROTECT, default=None, verbose_name="Formato")
+
+    prod_base = models.BooleanField(default=False, verbose_name="Producto base")
     
     class Meta:
         verbose_name = "Producto"

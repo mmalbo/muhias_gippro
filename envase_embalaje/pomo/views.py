@@ -110,7 +110,7 @@ def generar_codigo(codigo_base, ultimo):
         try:
             cod_num = int(ultimo.codigo[7:10])
         except (ValueError, IndexError):
-            print(f"Error: El código '{ultimo.codigo}' no tiene el formato esperado. Usando 0 como base.")
+            print(f"Error: El codigo '{ultimo.codigo}' no tiene el formato esperado. Usando 0 como base.")
 
     else:
         cod_num = 1
@@ -143,15 +143,15 @@ def importarPomoE(request):
                 imported_data = Dataset().load(file.read(), format=format)
 
                 for data in imported_data:
-#enumerate(index,
+                    #enumerate(index,
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Col_Nombre
                     forma = str(data[3]).strip() if data[3] is not None else None  # Col_Tamanno
                     material = str(data[4]).strip() if data[4] is not None else None  # Col_Material
                     Col_Color = str(data[2]).strip() if data[2] is not None else None  # Col_Color
 
                     color = Color.objects.filter(nombre__iexact=Col_Color).first()
-                    
-                    print(nombre+"-"+forma+"-"+material+"-"+color.nombre)
+                    print(f"En el try{color.nombre}")
+                    #print(nombre+"-"+forma+"-"+material+"-"+color.nombre)
                     codigo_base = generar_formato_codigo(data[4],data[2])#  str(data[0]).strip() Col_Codigo
                     existe = Pomo.objects.filter(nombre=nombre,forma=forma,material=material,color=color).first()
                     ultimo = Pomo.objects.filter(codigo__icontains=codigo_base).first()
