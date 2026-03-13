@@ -186,6 +186,7 @@ class EnvasesForm(forms.Form):
         initial=EXISTING
     )
 
+    nuevo_costo = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
         required=False,
