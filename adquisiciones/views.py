@@ -17,9 +17,9 @@ from django import forms
 import os
 from django.views import View
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
-
-### Incorporar envases...
 
 # Configuración de almacenamiento temporal
 TMP_STORAGE = os.path.join(settings.BASE_DIR, 'tmp_wizard')
@@ -28,7 +28,7 @@ if not os.path.exists(TMP_STORAGE):
 file_storage = FileSystemStorage(location=TMP_STORAGE)
 
 # Para las materias primas
-class CompraWizard(SessionWizardView):
+class CompraWizard(LoginRequiredMixin, SessionWizardView):
     file_storage = file_storage
     # Diccionario que mapea cada paso con su template
     template_dict = {
@@ -204,7 +204,7 @@ class CompraWizard(SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
-class MateriaPrimaDetalleView(View):
+class MateriaPrimaDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             materia = MateriaPrima.objects.get(pk=pk)
@@ -215,16 +215,19 @@ class MateriaPrimaDetalleView(View):
                 'conformacion': materia.conformacion or '',
                 'tipo': materia.tipo_materia_prima or '',
                 'medida': materia.unidad_medida or '',
+                'costo':materia.costo or '',
             })
         except MateriaPrima.DoesNotExist:
             return JsonResponse({'error': 'Materia prima no encontrada'}, status=404)
 
+@login_required
 def list_mp_adquisiciones(request, template_name="adquisicion/mp_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles')
     ).filter(num_ad__gt=0)
     return render(request, template_name, locals())
 
+@login_required
 def list_detalles_mp_adquisicion(request, id, template_name="adquisicion/detalles_mp_list.html"):
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
@@ -234,9 +237,8 @@ def list_detalles_mp_adquisicion(request, id, template_name="adquisicion/detalle
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
 
-
 # Para los envases y embalajes 
-class CompraEnvaseWizard(SessionWizardView):
+class CompraEnvaseWizard(LoginRequiredMixin, SessionWizardView):
     file_storage = file_storage
     # Diccionario que mapea cada paso con su template
     template_dict = {
@@ -381,6 +383,12 @@ class CompraEnvaseWizard(SessionWizardView):
                 
                 if data['opcion'] == EnvasesForm.EXISTING:
                     envase = data['envase_existente']
+
+                    # Actualizar costo si se proporcionó uno nuevo
+                    nuevo_costo = data.get('nuevo_costo')
+                    if nuevo_costo is not None and nuevo_costo != envase.costo:
+                        envase.costo = nuevo_costo
+                        envase.save()
                 else:
                     envase = EnvaseEmbalaje.objects.create(
                         tipo_envase_embalaje=data['tipo_envase_embalaje'],
@@ -403,7 +411,7 @@ class CompraEnvaseWizard(SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
-class EnvaseDetalleView(View):
+class EnvaseDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             envase = EnvaseEmbalaje.objects.get(pk=pk)
@@ -412,16 +420,19 @@ class EnvaseDetalleView(View):
                 'codigo': envase.codigo_envase,
                 'formato': format or '',
                 'tipo': envase.tipo_envase_embalaje.nombre or '',
+                'costo': envase.costo or '',
             })
         except EnvaseEmbalaje.DoesNotExist:
             return JsonResponse({'error': 'Envase no encontrado'}, status=404)
 
+@login_required
 def list_env_adquisiciones(request, template_name="adquisicion/env_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles_envases')
     ).filter(num_ad__gt=0)
     return render(request, template_name, locals())
 
+@login_required
 def list_detalles_env_adquisicion(request, id, template_name="adquisicion/detalles_env_list.html"):
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
@@ -431,9 +442,8 @@ def list_detalles_env_adquisicion(request, id, template_name="adquisicion/detall
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
 
-
 # Para los insumos
-class CompraInsumoWizard(SessionWizardView):
+class CompraInsumoWizard(LoginRequiredMixin, SessionWizardView):
     file_storage = file_storage
     # Diccionario que mapea cada paso con su template
     template_dict = {
@@ -579,6 +589,12 @@ class CompraInsumoWizard(SessionWizardView):
                 
                 if data['opcion'] == InsumosForm.EXISTING:
                     insumo = data['insumo_existente']
+
+                    # Actualizar costo si se proporcionó uno nuevo
+                    nuevo_costo = data.get('nuevo_costo')
+                    if nuevo_costo is not None and nuevo_costo != insumo.costo:
+                        insumo.costo = nuevo_costo
+                        insumo.save()
                 else:
                     insumo = InsumosOtros.objects.create(
                         codigo=data['codigo'],
@@ -601,7 +617,7 @@ class CompraInsumoWizard(SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
-class InsumoDetalleView(View):
+class InsumoDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             insumo = InsumosOtros.objects.get(pk=pk)
@@ -609,16 +625,19 @@ class InsumoDetalleView(View):
                 'codigo': insumo.codigo,
                 'nombre': insumo.nombre or '',
                 'descripcion': insumo.descripcion or '',
+                'costo': insumo.costo or '',
             })
         except InsumosOtros.DoesNotExist:
             return JsonResponse({'error': 'Insumo no encontrado'}, status=404)
 
+@login_required
 def list_ins_adquisiciones(request, template_name="adquisicion/ins_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles_insumos')
     ).filter(num_ad__gt=0)
     return render(request, template_name, locals())
 
+@login_required
 def list_detalles_ins_adquisicion(request, id, template_name="adquisicion/detalles_ins_list.html"):
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
@@ -630,7 +649,7 @@ def list_detalles_ins_adquisicion(request, id, template_name="adquisicion/detall
 
 
 # Para los productos
-class CompraProductoWizard(SessionWizardView):
+class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
     file_storage = file_storage
     # Diccionario que mapea cada paso con su template
     template_dict = {
@@ -775,6 +794,12 @@ class CompraProductoWizard(SessionWizardView):
                 
                 if data['opcion'] == ProductosForm.EXISTING:
                     producto = data['producto_existente']
+                    
+                    # Actualizar costo si se proporcionó uno nuevo
+                    nuevo_costo = data.get('nuevo_costo')
+                    if nuevo_costo is not None and nuevo_costo != producto.costo:
+                        producto.costo = nuevo_costo
+                        producto.save()
                 else:
                     print("A crear producto")
                     producto = Producto.objects.create(
@@ -799,7 +824,7 @@ class CompraProductoWizard(SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
-class ProductoDetalleView(View):
+class ProductoDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             producto = Producto.objects.get(pk=pk)
@@ -808,10 +833,12 @@ class ProductoDetalleView(View):
                 'codigo_producto': producto.codigo_producto,
                 'nombre_comercial': producto.nombre_comercial or '',
                 'formato': format or '',
+                'costo': producto.costo or '',
             })
         except Producto.DoesNotExist:
             return JsonResponse({'error': 'Producto no encontrado'}, status=404)
 
+@login_required
 def list_prod_adquisiciones(request, template_name="adquisicion/prod_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles_productos')
@@ -827,9 +854,6 @@ def list_detalles_prod_adquisicion(request, id, template_name="adquisicion/detal
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
 
-
-
+@login_required
 def compra_exitosa(request):
     return render(request, 'adquisicion/exito.html')
-
-

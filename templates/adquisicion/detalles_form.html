@@ -30,6 +30,9 @@
                 
                 <dt class="col-sm-3">Conformación:</dt>
                 <dd class="col-sm-9" id="detail-conformacion">-</dd>
+
+                <dt class="col-sm-3">Costo:</dt>
+                <dd class="col-sm-9" id="detail-costo">-</dd>
             </dl>
         </div>
     </div>
@@ -87,12 +90,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('detail-nombre').textContent = data.nombre;
                         document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
                         document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
+                        document.getElementById('detail-costo').textContent = data.costo || '-';
                         detallesContainer.style.display = 'block';
                     
                         // Actualizar campos ocultos
                         document.querySelector('[name="0-nombre"]').value = data.nombre;
                         document.querySelector('[name="0-concentracion"]').value = data.concentracion || '';
                         document.querySelector('[name="0-conformacion"]').value = data.conformacion || '';
+                        document.querySelector('[name="0-costo"]').value = data.costo || '';
                     } else {
                         console.error('Error del servidor:', data.message);
                     }
@@ -140,13 +145,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 document.getElementById('detail-nombre').textContent = data.nombre;
                                 document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
                                 document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
+                                document.getElementById('detail-costo').textContent = data.costo || '-';
                                 detallesContainer.style.display = 'block';
                                 
                                 // Actualizar campos ocultos
                                 document.querySelector('[name="0-nombre"]').value = data.nombre;
                                 document.querySelector('[name="0-concentracion"]').value = data.concentracion || '';
                                 document.querySelector('[name="0-conformacion"]').value = data.conformacion || '';
-                                
+                                document.querySelector('[name="0-costo"]').value = data.costo || '';
                                 nuevaMateriaModal.hide();
                             } else if (data.errors) {
                                 // Mostrar errores

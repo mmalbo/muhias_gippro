@@ -38,17 +38,29 @@
                                             </div>
                                              <div class="col-md-3">
                                                 <div class="mb-3">
+                                                    {% if parametro.valor_minimo %}
                                                     Valor mínimo: {{ parametro.valor_minimo }}
+                                                    {% else %}
+                                                    Valor mínimo: ---
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="mb-3">
+                                                    {% if parametro.valor_maximo %}
                                                     Valor máximo: {{ parametro.valor_maximo }}
+                                                    {% else %}
+                                                    Valor máximo: ---
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="mb-3">
+                                                    {% if parametro.valor_objetivo %}
                                                     Valor objetivo: {{ parametro.valor_objetivo }}
+                                                    {% else %}
+                                                    Valor objetivo: ---
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>                            

@@ -26,9 +26,9 @@
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
-                            <th>Cantidad</th>
-                            <th>Capacidad</th>
                             <th>Tipo de envase o embalaje</th>
+                            <th>Formato</th>
+                            <th>Cantidad</th>  
                             <th>Almacén</th>
                             <th>Acciones</th>
                         </tr>
@@ -37,9 +37,13 @@
                         {% for envase_embalaje in envases_embalajes %}
                             <tr>
                                 <td>{{ envase_embalaje.codigo_envase }}</td>
-                                <td>{{ envase_embalaje.cantidad_total }}</td>
-                                <td>{{ envase_embalaje.formato }}</td>
                                 <td>{{ envase_embalaje.tipo_envase_embalaje }}</td>
+                                {% if envase_embalaje.formato %}
+                                    <td>{{ envase_embalaje.formato }}</td>
+                                {% else %}
+                                    <td> --- </td>
+                                {% endif %}
+                                <td>{{ envase_embalaje.cantidad_total }}</td>
                                 <td>
                                     {{ envase_embalaje.almacen }}
                                 </td>
@@ -61,11 +65,10 @@
                         <tfoot>
                         <tr>
                             <th>Código</th>
-                            <th>Cantidad</th>
-                            <th>Capacidad</th>
                             <th>Tipo de envase o embalaje</th>
+                            <th>Formato</th>
+                            <th>Cantidad</th>  
                             <th>Almacén</th>
-
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

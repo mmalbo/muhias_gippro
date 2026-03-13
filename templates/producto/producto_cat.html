@@ -53,7 +53,7 @@
                                         <a href="{% url 'actualizar_producto' prod.pk %}"
                                            title="Editar envase o embalaje" class="btn far fa-edit"></a>
                                         {% endif %}                                        
-                                        <a href="{% url 'get_productos' prod.pk %}"
+                                        <a href="{% url 'detalle_producto' prod.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
@@ -74,7 +74,7 @@
                     </table>
                     
                     {% if user.is_superuser %}
-                    <a href="{% url 'importarEnvaseEmbalaje' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    <a href="{% url 'importarProd' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                 </div>
             </div>
