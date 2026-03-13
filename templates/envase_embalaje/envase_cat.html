@@ -28,7 +28,7 @@
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
-                            <th>Capacidad</th>
+                            <th>Formato</th>
                             <th>Tipo</th>
                             <th>Cantidad</th>
                             <th>Costo</th>
@@ -39,7 +39,11 @@
                         {% for ee in envase_embalaje %}
                             <tr>
                                 <td>{{ ee.codigo_envase }}</td>
-                                <td>{{ ee.formato }}</td>
+                                {% if ee.formato %}
+                                    <td>{{ ee.formato }}</td>
+                                {% else %}
+                                    <td> --- </td>
+                                {% endif %}
                                 <td>{{ ee.tipo_envase_embalaje}}</td>
                                 <td>{{ ee.cantidad_total }}</td>
                                 <td>{{ ee.costo }}</td>
@@ -49,7 +53,7 @@
                                         <a href="{% url 'envase_embalaje_editar' ee.pk %}"
                                            title="Editar envase o embalaje" class="btn far fa-edit"></a>
                                         {% endif %}                                        
-                                        <a href="{% url 'get_envase_embalaje' ee.pk %}"
+                                        <a href="{% url 'detalle_envase_embalaje' ee.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>

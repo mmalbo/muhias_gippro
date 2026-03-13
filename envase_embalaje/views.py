@@ -13,12 +13,13 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.http import JsonResponse, Http404
 import re
 import decimal
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from tablib import Dataset
 
 # Create your views here.
 
-class ListEnvaseEmbalajeView(ListView):
+class ListEnvaseEmbalajeView(LoginRequiredMixin, ListView):
     model = EnvaseEmbalaje
     template_name = 'envase_embalaje/envase_cat.html'
     context_object_name = 'envase_embalaje'
@@ -81,7 +82,7 @@ def listEnvaseEmbalaje(request):
 
     return render(request, 'envase_embalaje/envase_list.html', context)
 
-class UpdateEnvaseEmbalajeView(UpdateView):
+class UpdateEnvaseEmbalajeView(LoginRequiredMixin, UpdateView):
     model = EnvaseEmbalaje
     form_class = EnvaseEmbalajeUpdateForm
     template_name = 'envase_embalaje/envase_embalaje_form.html'
@@ -109,11 +110,12 @@ class UpdateEnvaseEmbalajeView(UpdateView):
         context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
         return context """
 
-class DeleteEnvaseEmbalajeView(DeleteView):
+class DeleteEnvaseEmbalajeView(LoginRequiredMixin, DeleteView):
     model = EnvaseEmbalaje
     template_name = 'envase_embalaje/envase_embalaje_confirm_delete.html'
     success_url = reverse_lazy('envase_embalaje_list')  # Cambia esto al nombre de tu URL
 
+@login_required
 def get_envase_embalaje(request, pk):
     try:
         almacen = Almacen.objects.get(pk=pk)
@@ -125,14 +127,24 @@ def get_envase_embalaje(request, pk):
     except Almacen.DoesNotExist:
         raise Http404("Envase o embalaje no encontrado")
 
-class CreateImportView(CreateView):
+@login_required
+def detalle_envase(request, pk):
+    """Ver detalle completo de un parámetro"""
+    envase = get_object_or_404(EnvaseEmbalaje, id=pk)
+    
+    return render(request, 'envase_embalaje\detalle_envase_embalaje.html', {
+        'envase': envase,
+    })
+
+
+class CreateImportView(LoginRequiredMixin, CreateView):
     model = EnvaseEmbalaje
     form_class = EnvaseEmbalajeForm
     template_name = 'envase_embalaje/import_form.html'
     success_url = '/envase_embalaje/'
     success_message = "Se ha importado correctamente el envase o embalaje."
 
-class EnvaseEmbalajeCreateView(CreateView):
+class EnvaseEmbalajeCreateView(LoginRequiredMixin, CreateView):
     model = EnvaseEmbalaje
     form_class = EnvaseEmbalajeForm
     template_name = 'envase_embalaje/form.html'
@@ -144,6 +156,7 @@ class EnvaseEmbalajeCreateView(CreateView):
         context['almacenes'] = EnvaseEmbalaje.objects.all()
         return context
 
+@login_required
 def importar(request):
     print("En importar")
     if request.method == 'POST':

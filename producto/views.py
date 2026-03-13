@@ -5,6 +5,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.urls import reverse_lazy
 from tablib import Dataset
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse, Http404, HttpResponse
 import decimal
 from ficha_tecnica.models import FichaTecnica
@@ -113,6 +114,7 @@ def listProductos(request):
 
     return render(request, 'producto/producto_list.html', context)
 
+@login_required
 def get_productos(request, pk):
     try:
         almacen = Almacen.objects.get(pk=pk)
@@ -124,7 +126,7 @@ def get_productos(request, pk):
     except Almacen.DoesNotExist:
         raise Http404("Producto no encontrado")
     
-class ListaProductoView(ListView):
+class ListaProductoView(LoginRequiredMixin, ListView):
     model = Producto
     template_name = 'producto/producto_cat.html'
     context_object_name = 'productos_finales'
@@ -142,34 +144,35 @@ class ListaProductoView(ListView):
             messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
 
-class CrearProductoView(CreateView):
+class CrearProductoView(LoginRequiredMixin, CreateView):
     model = Producto
     form_class = ProductoForm
     template_name = 'producto/form.html'
     success_url = reverse_lazy('producto_final_list')
 
-class ActualizarProductoView(UpdateView):
+class ActualizarProductoView(LoginRequiredMixin, UpdateView):
     model = Producto
     form_class = ProductoForm
     template_name = 'producto/form.html'
     success_url = reverse_lazy('list_producto')
 
-class EliminarProductoView(DeleteView):
+class EliminarProductoView(LoginRequiredMixin, DeleteView):
     model = Producto
     template_name = 'producto/eliminar_producto_final.html'
     success_url = reverse_lazy('producto_final_list')
 
-class DetalleProductoView(DetailView):
+class DetalleProductoView(LoginRequiredMixin, DetailView):
     model = Producto
     template_name = 'producto/detalle_producto_final.html'
 
-class CreateImportView(CreateView):
+class CreateImportView(LoginRequiredMixin, CreateView):
     model = Producto
     form_class = ProductoForm
     template_name = 'producto/import_form.html'
     success_url = '/producto/'
     success_message = "Se ha importado correctamente."
 
+@login_required
 def importar(request):
     print("En el import")
     if request.method == 'POST':

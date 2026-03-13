@@ -7,6 +7,7 @@ from .forms import InsumosOtrosForm, InsumoUpdateForm
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin
 from nomencladores.almacen.models import Almacen
 from inventario.models import Inv_Insumos
 from django.shortcuts import redirect, render, get_object_or_404
@@ -16,7 +17,7 @@ from tablib import Dataset
 import decimal
 from datetime import datetime
 
-class ListInsumosView(ListView):
+class ListInsumosView(LoginRequiredMixin, ListView):
     model = InsumosOtros
     template_name = 'insumos/insumos_cat.html'
     context_object_name = 'insumos'
@@ -79,7 +80,7 @@ def listInsumos(request):
 
     return render(request, 'insumos/insumos_list.html', context)
 
-class UpdateInsumosView(UpdateView):
+class UpdateInsumosView(LoginRequiredMixin, UpdateView):
     model = InsumosOtros
     form_class = InsumoUpdateForm
     template_name = 'insumos/insumos_form.html'
@@ -89,11 +90,12 @@ class UpdateInsumosView(UpdateView):
         messages.success(self.request, "Se ha actualizado correctamente el insumo.")
         return super().form_valid(form)
 
-class DeleteInsumoView(DeleteView):
+class DeleteInsumoView(LoginRequiredMixin, DeleteView):
     model = InsumosOtros
     template_name = 'insumos/insumos_confirm_delete.html'
     success_url = reverse_lazy('insumo_list')  # Cambia esto al nombre de tu URL
 
+@login_required
 def get_insumo(request, pk):
     try:
         almacen = Almacen.objects.get(pk=pk)
@@ -105,14 +107,14 @@ def get_insumo(request, pk):
     except Almacen.DoesNotExist:
         raise Http404("Insumo no encontrado")
 
-class CreateImportView(CreateView):
+class CreateImportView(LoginRequiredMixin, CreateView):
     model = InsumosOtros
     form_class = InsumosOtrosForm
     template_name = 'insumos/import_form.html'
     success_url = '/insumo/'
     success_message = "Se ha importado correctamente el insumo."
 
-class InsumoCreateView(CreateView):
+class InsumoCreateView(LoginRequiredMixin, CreateView):
     model = InsumosOtros
     form_class = InsumosOtrosForm
     template_name = 'insumos/insumos_form.html'
@@ -124,46 +126,13 @@ class InsumoCreateView(CreateView):
         context['almacenes'] = InsumosOtros.objects.all()
         return context
     
-""" def insumos_list(request):
-    insumos = InsumosOtros.objects.all()
-    return render(request, 'insumos/insumos_list.html', {'insumos': insumos})
-
-def insumos_create(request):
-    if request.method == 'POST':
-        form = InsumosOtrosForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('insumos_list')
-    else:
-        form = InsumosOtrosForm()
-    return render(request, 'insumos/insumos_form.html', {'form': form})
-
-
-def insumos_update(request, pk):
-    insumo = get_object_or_404(InsumosOtros, pk=pk)
-    if request.method == 'POST':
-        form = InsumosOtrosForm(request.POST, instance=insumo)
-        if form.is_valid():
-            form.save()
-            return redirect('insumos_list')
-    else:
-        form = InsumosOtrosForm(instance=insumo)
-    return render(request, 'insumos/insumos_form.html', {'form': form})
-
-
-def insumos_delete(request, pk):
-    insumo = get_object_or_404(InsumosOtros, pk=pk)
-    if request.method == 'POST':
-        insumo.delete()
-        return redirect('insumos_list')
-    return render(request, 'insumos/insumos_confirm_delete.html', {'insumo': insumo})
-
-
 # Nueva vista para ver detalles
+@login_required
 def insumos_detail(request, pk):
     insumo = get_object_or_404(InsumosOtros, pk=pk)
-    return render(request, 'insumos/insumos_detail.html', {'insumo': insumo}) """
+    return render(request, 'insumos/insumos_detail.html', {'insumo': insumo}) 
 
+@login_required
 def importar(request):
     print("En importar isumos")
     if request.method == 'POST':
