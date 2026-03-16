@@ -1162,7 +1162,7 @@ def vale_detalle(request, pk):
                 'cantidad': mp.cantidad,
                 'unidad': getattr(mp.materia_prima, 'unidad_medida', '') if mp.materia_prima else '',
                 'lote': mp.lote or '',
-                'costo': mp.costo_unitario
+                'costo': mp.materia_prima.costo
             })
             total_items += 1
             total_cantidad += float(mp.cantidad)
@@ -1222,13 +1222,13 @@ def vale_detalle(request, pk):
             })
             total_items += 1
             total_cantidad += float(mp.cantidad_materia_prima)
-            
+        lote_prod = sol_prod.first().lote_prod
+        fecha_prod = sol_prod.first().fecha_creacion
+
     # Verificar si está relacionado con producción o envasado
     relacion_produccion = None
     relacion_envasado = None
-    lote_prod = sol_prod.first().lote_prod
-    fecha_prod = sol_prod.first().fecha_creacion
-    
+        
     if vale.salidas_produccion.exists():
         relacion_produccion = vale.salidas_produccion.first()
     
@@ -1265,8 +1265,7 @@ def vale_detalle(request, pk):
         'envases': envases,
         'insumos': insumos,
         'sol_prod': sol_prod,
-        'lote_prod': lote_prod,
-        'fecha_prod': fecha_prod,
+        
         'puede_confirmar': puede_confirmar,
         'puede_cancelar': puede_cancelar,
         'puede_despachar': puede_despachar,
