@@ -57,7 +57,6 @@ class AlmacenListView(ListView):
             messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
 
-
 class AlmacenCreateView(CreateView):
     model = Almacen
     form_class = AlmacenForm
@@ -77,7 +76,6 @@ class AlmacenCreateView(CreateView):
             messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
 
-
 class AlmacenUpdateView(UpdateView):
     model = Almacen
     form_class = AlmacenForm
@@ -93,12 +91,10 @@ class AlmacenUpdateView(UpdateView):
         context['materias_primas'] = Almacen.objects.all()
         return context
 
-
 class AlmacenDeleteView(DeleteView):
     model = Almacen
     template_name = 'almacenes/eliminar.html'
     success_url = '/almacen/almacenes/'
-
 
 def get_almacenes(request, pk):
     try:
@@ -109,13 +105,11 @@ def get_almacenes(request, pk):
     except EnvaseEmbalaje.DoesNotExist:
         raise Http404("Envase o embalaje no encontrado")
 
-
 class CreateImportView(CreateView):
     model = Almacen
     form_class = AlmacenForm
     template_name = 'almacenes/import_form.html'
     success_url = '/almacen/almacenes/'
-
 
 def importar(request):
     if request.method == 'POST':

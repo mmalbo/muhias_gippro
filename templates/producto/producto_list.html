@@ -1,0 +1,130 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="col-sm-12 col-lg-12">
+                    <h4 class="card-title">Listado de Productos {% if es_almacenero and almacen %}
+                        - {{almacen.nombre}} {% endif %}
+                    </h4>
+                    {% if messages %}
+                        <script>
+                            {% for message in messages %}
+                                Swal.fire({
+                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
+                                    title: '{{ message }}',
+                                    showConfirmButton: true
+                                });
+                            {% endfor %}
+                        </script>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filtroForm">
+                        <div class="row">
+                            {% if es_admin %}
+                            <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="almacen"><i class="fas fawarehouse"></i> Almacén </label>
+                                <select name="almacen" id="almacen" class="form-control" onchange="this.form.submit()">
+                                    <option value="todos">Todos los almacenes</option>
+                                    {% for almacen in almacenes %}
+                                    <option value="{{almacen.id}}" 
+                                        {% if almacen_id == almacen.id|stringformat:"i" %}selected{% endif %}>
+                                        {{almacen.nombre}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            </div>
+                            {% else %}
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="almacen"><i class="fas fa-warehouse"></i>
+                                        Almacén
+                                    </label> 
+                                    <input type="text" class="form-control" value="{{ almacen.nombre|default:'No asignado'}}"
+                                    disabled>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+                <div class="col-sm-12 col-lg-12">
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'nueva_compra_producto' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if user.is_superuser %}
+                    <a href="{% url 'importarProd' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                    <table id="datatable" class="table datatable table-striped">
+                        <thead>
+                        <tr class="ligth">
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Formato</th>
+                            <th>Lote</th>
+                            <th>Almacén</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for producto in inv_productos %}
+                            <tr>
+                                <td>{{ producto.producto.codigo_producto }}</td>
+                                <td>{{ producto.producto.nombre_comercial }} - {{producto.producto.codigo_3l}}</td>
+                                <td>{{ producto.producto.formato }}</td>
+                                <td>{{ producto.lote }}</td>
+                                <td>{{ producto.almacen }}</td>
+                                <td>{{ producto.cantidad }}</td>
+                                <td>{{ producto.producto.costo }}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
+                                        <!--<a href="{% url 'actualizar_producto' producto.producto.pk %}"
+                                           title="Editar producto" class="btn far fa-edit"></a>-->
+                                        <a href="{% url 'ajuste_inv_prod' producto.pk %}"
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
+                                        {% endif %}
+                                        {% if request.user.groups.all.0.name == 'Almaceneros'%}
+                                        <a href="{% url 'ajuste_inv_prod' producto.pk %}"
+                                           title="Ajuste de inventario" class="btn far fa-edit"></a>
+                                        {% endif %}
+                                        <a href="{% url 'detalle_producto' producto.producto.pk %}"
+                                            title="Ver detalles" class="btn fas fa-eye"></a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Formato</th>
+                            <th>Lote</th>
+                            <th>Concentración</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser or request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'nueva_compra' %}" class="btn btn-success">Nueva recepción en almacen</a>
+                    {% endif %}
+                    {% if user.is_superuser %}
+                    <a href="{% url 'importarProducto' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}

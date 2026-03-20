@@ -1,4 +1,5 @@
 from .models import Vale_Movimiento_Almacen, Transportista, Movimiento_EE, Movimiento_Ins, Movimiento_MP
+from inventario.models import Inv_Mat_Prima
 from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 from django.http import HttpResponseRedirect, HttpResponse, Http404, JsonResponse
@@ -12,35 +13,53 @@ def export_vale(request, id_movimiento):
    #data['date'] = 
    #Diccionario de vale
    current_vale = {}        
-   movimiento = Vale_Movimiento_Almacen.objects.filter(consecutivo=id_movimiento)[0]
-   print(movimiento)
-   inventarios = Movimiento_MP.objects.filter(vale=movimiento.id)
-   data['tipop'] = 'MP'
-   if not inventarios:
-      inventarios = Movimiento_EE.objects.filter(vale_e=movimiento.id)
-      data['tipop'] = 'ENV'
-   if not inventarios:
-      inventarios = Movimiento_Ins.objects.filter(vale_e=movimiento.id)
-      data['tipop'] = 'INS'
+   vale = Vale_Movimiento_Almacen.objects.filter(consecutivo=id_movimiento)[0]
+   print(vale.tipo)
+   inventarios = Movimiento_MP.objects.filter(vale=vale.id) #vale.movimientos.all()
+   if inventarios:
+      tipo = 'materias primas'
+   else:
+      inventarios = vale.movimientos_envases.all()
+      if inventarios:
+         tipo = 'envase o embalaje'
+      else:
+         inventarios = vale.movimientos_productos.all()
+         if inventarios:
+            tipo = 'productos'
+         else:
+            inventarios = vale.movimientos_insumos.all()
+            if inventarios:
+               tipo = 'insumos'
+            else:
+               inventarios = vale.mp_produccion.all()
+               if inventarios:
+                  tipo = 'Solicitud'
+   data['tipop'] = tipo
    if not inventarios:
       return HttpResponse('No se registraron movimientos de inventario con ese id')   
    else:
-      data['consecutivo'] = movimiento.consecutivo
-      data['almacen'] = movimiento.almacen
-      data['fecha'] = movimiento.fecha_movimiento
-      data['suministrador'] = movimiento.suministrador
-      data['orden'] = movimiento.orden_No
-      data['lote'] = movimiento.lote_No
-      data['tipoi'] = movimiento.tipo
-      if movimiento.transportista:
-         data['nombre_transportista'] = movimiento.transportista.nombre
-         data['ci_transportista'] = movimiento.transportista.cI
-         data['cargo_transportista'] = movimiento.transportista.cargo
+      data['consecutivo'] = vale.consecutivo
+      if tipo == 'Solicitud':
+         data['almacen'] = vale.mp_produccion.first().almacen
+      else:
+         data['almacen'] = vale.almacen
+      #data['RestoAlmacen'] = vale.almacen.get_inv_mp()
+      data['fecha'] = vale.fecha_movimiento
+      data['suministrador'] = vale.suministrador
+      data['origen'] = vale.origen
+      data['destino'] = vale.destino 
+      data['orden'] = vale.orden_No
+      data['lote'] = vale.lote_No
+      data['tipoi'] = vale.tipo.upper()
+      data['descripcion'] = vale.descripcion
+      if vale.transportista:
+         data['nombre_transportista'] = vale.transportista
+         data['ci_transportista'] = vale.transportista_cI
       else:
          data['nombre_transportista'] = ''
          data['ci_transportista'] = ''
          data['cargo_transportista'] = ''
-      data['chapa'] = movimiento.suministrador
+      data['chapa'] = vale.chapa
       template_src = 'movimientos/vale.html'
       template = get_template(template_src)
       context = {'data': data, 'inventarios': inventarios, 'request': request}

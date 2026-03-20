@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     
     'rest_framework',
     'formtools',
@@ -64,7 +65,6 @@ INSTALLED_APPS = [
     'hoja_seguridad.apps.HojaSeguridadConfig',
     'InsumosOtros.apps.InsumosotrosConfig',
     'materia_prima.apps.MateriaPrimaConfig',
-    #'materia_prima.tipo_materia_prima.apps.TipoMateriaPrimaConfig',
     'movimientos.apps.MovimientosConfig',
     'nomencladores.apps.NomencladoresConfig',
     'nomencladores.almacen.apps.nomencladorAlamacenConfig',
@@ -72,12 +72,13 @@ INSTALLED_APPS = [
     'nomencladores.planta.apps.nomencladorPlantaConfig',
     'principal.apps.PrincipalConfig',
     'produccion.apps.ProduccionConfig',
+    'produccion.envasado.apps.EnvasadoConfig',
     'producto.apps.ProductoConfig',
-    'registro_perdida_almacen.apps.RegistroPerdidaAlmacenConfig',
     'usuario.apps.UsuarioConfig',
     'adquisiciones.apps.AdquisicionesConfig',
     'utils.apps.UtilsConfig',
     'inventario.apps.InventarioConfig',
+    
 ]
 
 MIDDLEWARE = [
@@ -174,16 +175,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = 'media/'
 
-
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ACCOUNT_LOGOUT_REDIRECT = "login"
 
 #SESSION_COOKIE_HTTPONLY = True  # Esto hará que las cookies de sesión no sean accesibles por scripts de JavaScript.
 #CSRF_COOKIE_HTTPONLY = True  # Esto significa que la cookie no será accesible por scripts de JavaScript en el navegador y solo se enviará automáticamente en solicitudes HTTP.
 #SESSION_COOKIE_SECURE = True  # Esto garantizará que las cookies de sesión solo se envíen a través de conexiones HTTPS seguras
-SESSION_COOKIE_AGE = 1800  # Duración de la sesión en segundos (30 minutos)
-SESSION_SAVE_EVERY_REQUEST = True  # Actualizxar la sesión en cada solicitud
+#SESSION_COOKIE_AGE = 1800  # Duración de la sesión en segundos (30 minutos)
+#SESSION_SAVE_EVERY_REQUEST = True  # Actualizxar la sesión en cada solicitud
 #SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Caducar la sesión al cerrar el navegador
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 #SESSION_COOKIE_SAMESITE = 'Strict'  # Permite el envío de cookies de sesión solo a solicitudes provenientes del mismo sitio

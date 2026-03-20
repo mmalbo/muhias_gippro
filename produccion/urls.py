@@ -4,12 +4,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionView, get_materias_primas_data,
                     iniciar_produccion, concluir_produccion, subir_pruebas_quimicas, descargar_pruebas_quimicas,
-<<<<<<< Updated upstream
-                    eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion )
-=======
                     eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion, agita_produccion, 
-                    lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica )
->>>>>>> Stashed changes
+                    lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica,
+                    detalle_prueba_quimica, agregar_parametros_prueba, editar_parametro_prueba, eliminar_parametro_prueba,
+                    calcular_resultados_prueba, concluir_prueba, ProduccionDetailView, reutilizar_produccion,
+                    EditarProduccionView)
 
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
@@ -19,29 +18,50 @@ urlpatterns = [
     #Creación de nuevas producciones
     path('nueva/', CrearProduccionView.as_view(), name='crear_produccion'),
     path('api/materias-primas/', get_materias_primas_data, name='materias_primas_data'),
+
+    # DetailView
+    path('produccion/<uuid:pk>/', ProduccionDetailView.as_view(), name='produccion_detail'),
     
     #Iniciar produccion 
     path('<uuid:pk>/iniciar/', iniciar_produccion, name='iniciar_produccion'),
     #path('<uuid:pk>/iniciar/', CambiarEstadoProduccionView.as_view(), name='cambiar_produccion'),
 
-<<<<<<< Updated upstream
-=======
     #Iniciar produccion 
     path('<uuid:pk>/avance/', agita_produccion, name='agita_produccion'),
 
->>>>>>> Stashed changes
     #Concluir producción
     path('<uuid:pk>/concluir/', concluir_produccion, name='concluir_produccion'),
 
+     path('produccion/<uuid:pk>/editar/', EditarProduccionView.as_view(), name='editar_produccion'),
+
+    path('produccion/<uuid:pk>/reutilizar/', reutilizar_produccion, name='reutilizar_produccion'),
+
     #Crear pruebas
     path('<uuid:pk>/reg_prueba/', crear_prueba_quimica, name='crear_prueba_quimica'),
+    path('<uuid:pk>/det_prueba/', detalle_prueba_quimica, name='detalle_prueba_quimica'),
+
+    # Gestión de parámetros de una prueba
+    path('prueba-quimica/<uuid:prueba_id>/agregar-parametros/', agregar_parametros_prueba, 
+         name='agregar_parametros_prueba'),
+    # Para editar DETALLE de prueba química (valor medido)
+    path('parametro-prueba/<uuid:pk>/editar/', editar_parametro_prueba, 
+         name='editar_parametro_prueba'),
+    # Para eliminar DETALLE de prueba química
+    path('parametro-prueba/<uuid:pk>/eliminar/', eliminar_parametro_prueba, 
+         name='eliminar_parametro_prueba'),
+    
+    path('prueba-quimica/<uuid:pk>/calcular-resultados/', calcular_resultados_prueba, name='calcular_resultados_prueba'),
+    
+    path('prueba-quimica/<uuid:pk>/concluir/', concluir_prueba, name='concluir_prueba_quimica'),
+    
+    #path('prueba-quimica/<uuid:pk>/estado/<str:estado>/', cambiar_estado_prueba, name='cambiar_estado_prueba'),
     
     #Subir pruebas
     path('produccion/<uuid:pk>/pruebas/', subir_pruebas_quimicas, name='subir_pruebas'),
     path('produccion/<uuid:pk>/pruebas/descargar/', descargar_pruebas_quimicas, name='descargar_pruebas'),
     path('produccion/<uuid:pk>/pruebas/eliminar/', eliminar_pruebas_quimicas, name='eliminar_pruebas'),
 
-    #Gestionar pruebas químicas
+    #Gestionar parametros
     path('parametros/', lista_parametros, name='parametros_lista'),
     path('parametros/crear/', crear_parametro, name='crear_parametro'),
     path('parametros/<uuid:parametro_id>/editar/', editar_parametro, name='editar_parametro'),

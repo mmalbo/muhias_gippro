@@ -5,7 +5,7 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
-                    <h4 class="card-title">Listado de Recepciones pendientes</h4>
+                    <h4 class="card-title">Listado de recepciones pendientes</h4>
                     {% if messages %}
                         <script>
                             {% for message in messages %}
@@ -19,12 +19,13 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de recepción</th>
-                            <th>Cantidad de productos<th>
+                            <th>Almacén</th>
+                            <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -32,22 +33,42 @@
                         {% for rp in rec_pendientes %}
                             <tr>
                                 <td>{{ rp.fecha_compra }}</td>
-                                <td>{{ rp.tipo_adquisicion }}</td>
-                                {% if tipo_adquisicion == mp %}
-                                <td>{{ rp.cantidad_mprimas }}</td>
-                                {% elif tipo_adquisicion == env %}
-                                <td>{{ rp.cantidad_envases }}</td>
-                                {% else %}
-                                <td>{{ rp.cantidad_insumos }}</td>
-                                {% endif %}
                                 <td>
-                                    {% if tipo_adquisicion == mp %}
+                                    Compra de 
+                                    {% if rp.tipo_adquisicion == 'mp' %}
+                                      Materias primas
+                                    {% elif rp.tipo_adquisicion == 'env' %}
+                                      Envases y embalajes
+                                    {% elif rp.tipo_adquisicion == 'prod' %}
+                                      Productos
+                                    {% else %}
+                                        Insumos y otros
+                                    {% endif %}
+                                </td>
+                                <td>{{ rp.almacen }}</td>
+                                <td>
+                                    {% if rp.tipo_adquisicion == 'mp' %}
+                                        {{ rp.cantidad_mprimas }}
+                                    {% elif rp.tipo_adquisicion == 'env' %}
+                                        {{ rp.cantidad_envases }}
+                                    {% elif rp.tipo_adquisicion == 'prod' %}
+                                        {{ rp.cantidad_productos }}
+                                    {% else %}
+                                        {{ rp.cantidad_insumos }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if rp.tipo_adquisicion == 'mp' %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'recepcion_mp' rp.id %}" class="btn btn-success">Recepcionar</a>
                                     </div>
-                                    {% elif tipo_adquisicion == env %}
+                                    {% elif rp.tipo_adquisicion == 'env' %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'recepcion_env' rp.id %}" class="btn btn-success">Recepcionar</a>
+                                    </div>
+                                    {% elif rp.tipo_adquisicion == 'prod' %}
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'recepcion_prod' rp.id %}" class="btn btn-success">Recepcionar</a>
                                     </div>
                                     {% else %}
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -56,14 +77,48 @@
                                     {% endif %}
                                 </td>
                             </tr>
-
+                        {% endfor %}
+                        {% for mv in mov_pendientes %}
+                        <tr>
+                            <td>{{ mv.fecha_movimiento }}</td>
+                            <td>
+                                Movimiento de 
+                                {{ mv.get_tipo_inventario }} desde {{mv.almacen}}
+                            </td>
+                            <td>
+                                {{ mv.destino }}
+                            </td>
+                            <td>
+                                {{ mv.cantidad_elementos }}
+                            </td>
+                            <td>
+                                {% if mv.get_tipo_inventario == "Materias primas" %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_mp' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% elif mv.get_tipo_inventario == 'Insumos' %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_ins' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% elif mv.get_tipo_inventario == 'Envases y embalajes' %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_env' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% else %}
+                                <div class="button-container" style="display: flex; gap: 10px;">
+                                    <a href="{% url 'entrada_prod' mv.id %}" class="btn btn-success">Recepcionar</a>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
                         {% endfor %}
                         </tbody>
                         <tfoot>
                         <tr class="ligth">
                             <th>Fecha</th>
-                            <th>Tipo de adquisición</th>
-                            <th>Cantidad de productos<th>
+                            <th>Tipo de recepción</th>
+                            <th>Almacén</th>
+                            <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

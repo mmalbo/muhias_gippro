@@ -1,10 +1,12 @@
 CHOICE_ESTADO_PROD = (
-    ('1', 'Planificada'),
-    ('2', 'Iniciando mezcla'),
-    ('3', 'En proceso: Agitado'),
-    ('4', 'En proceso: Validación'),
-    ('5', 'Concluida'),
-    ('6', 'Cancelada')
+    ('Planificada', 'Planificada'),
+    ('En proceso: Iniciando mezcla', 'En proceso: Iniciando mezcla'),
+    ('En proceso: Agitado', 'En proceso: Agitado'),
+    ('En proceso: Validación', 'En proceso: Validación'),
+    ('Concluida-Satisfactoria', 'Concluida-Satisfactoria'),
+    ('Concluida-Rechazada', 'Concluida-Rechazada'),
+    ('Concluida-Rechazada-R', 'Concluida-Rechazada-R'),
+    ('Cancelada', 'Cancelada')
 )
 
 CHOICE_ESTADO_SOL = (
@@ -23,8 +25,15 @@ TIPOS_PARAMETRO = [
     ]
 
 ESTADOS_PRUEBA = [
+        ('En Proceso', 'En Proceso'),
+        ('Completada', 'Completada'),
+        ('Rechazada', 'Rechazada'),
+        ('Aprobada', 'Aprobada'),
+    ]
+
+ESTADOS_ENV = [
+        ('Planificada', 'Planificada'),
         ('en_proceso', 'En Proceso'),
         ('completada', 'Completada'),
-        ('rechazada', 'Rechazada'),
-        ('aprobada', 'Aprobada'),
+        ('cancelada', 'Cancelada'),
     ]

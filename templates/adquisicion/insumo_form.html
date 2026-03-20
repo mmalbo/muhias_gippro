@@ -31,6 +31,17 @@
                     <label class="form-label">Seleccionar insumo:</label>
                     {{ wizard.form.insumo_existente }}
                 </div>
+                <!-- Nuevo campo para actualizar costo -->
+                <div class="mb-3" id="costo-update-section" style="display: none;">
+                    <label class="form-label">Actualizar costo:</label>
+                    <div class="input-group">
+                        {{ wizard.form.nuevo_costo }}
+                        <span class="input-group-text" id="costo-actual-label">
+                            Costo actual: <span id="costo-actual">-</span>
+                        </span>
+                    </div>
+                    <div class="form-text">Si desea actualizar el costo de la materia prima, ingrese el nuevo valor</div>
+                </div>
             </div>
             <div id="new-section" style="{% if wizard.form.initial.opcion == 'new' %}display: block;{% else %}display: none;{% endif %}">
                 <div class="mb-3">
@@ -62,6 +73,9 @@
                         <dt class="col-sm-4">Descripción:</dt>
                         <dd class="col-sm-8" id="detail-descripcion">-</dd>
 
+                        <dt class="col-sm-4">Costo actual:</dt>
+                        <dd class="col-sm-8" id="detail-costo">-</dd>
+
                     </dl>
                 </div>
             </div>
@@ -73,11 +87,6 @@
         {{ wizard.form.cantidad }}
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
-    <!-- <div class="mb-3">
-        {{ wizard.form.almacen.label_tag }}
-        {{ wizard.form.almacen }}
-        <div class="form-text">Almacén donde será ubicada esta compra.</div>
-    </div> -->
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -87,6 +96,8 @@
         const newSection = document.getElementById('new-section');
         const detailsCard = document.getElementById('insumo-details');
         const selectInsumo = document.querySelector(`select[name="${prefix}-insumo_existente"]`);
+        const costoUpdateSection = document.getElementById('costo-update-section');
+        const costoActualSpan = document.getElementById('costo-actual');
         
         // Función para mostrar/ocultar secciones
         function toggleSections() {
@@ -96,10 +107,17 @@
                 existingSection.style.display = 'block';
                 newSection.style.display = 'none';
                 detailsCard.style.display = 'block';
+                // Mostrar sección de actualización de costo si hay una materia seleccionada
+                if (selectInsumo && selectInsumo.value) {
+                    costoUpdateSection.style.display = 'block';
+                } else {
+                    costoUpdateSection.style.display = 'none';
+                }
             } else {
                 existingSection.style.display = 'none';
                 newSection.style.display = 'block';
                 detailsCard.style.display = 'none';
+                costoUpdateSection.style.display = 'none';
             }
         }
         
@@ -128,6 +146,13 @@
                             document.getElementById('detail-codigo').textContent = data.codigo || '-';
                             document.getElementById('detail-nombre').textContent = data.nombre || '-';
                             document.getElementById('detail-descripcion').textContent = data.descripcion || '-';
+                            document.getElementById('detail-costo').textContent = data.costo ? `$${data.costo}` : '-';
+
+                            // Actualizar el span con el costo actual
+                            costoActualSpan.textContent = data.costo || '-';
+                            
+                            // Mostrar sección de actualización de costo
+                            costoUpdateSection.style.display = 'block';
                         })
                         .catch(error => {
                             console.error('Error al obtener detalles:', error);
@@ -138,6 +163,11 @@
                     document.getElementById('detail-codigo').textContent = '-';
                     document.getElementById('detail-nombre').textContent = '-';
                     document.getElementById('detail-descripcion').textContent = '-';
+                    document.getElementById('detail-costo').textContent = '-';
+                    costoActualSpan.textContent = '-';
+                    
+                    // Ocultar sección de actualización de costo
+                    costoUpdateSection.style.display = 'none';
                 }
             });
             

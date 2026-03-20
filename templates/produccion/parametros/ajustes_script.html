@@ -1,0 +1,326 @@
+<!-- templates/parametros/crear_parametro.html -->
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+    <div class="wrapper">
+        <div class="content-page">
+            <div class="container-fluid">
+                <div class="container mt-4">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="mb-0">
+                                        <i class="fas fa-flask"></i>
+                                        {% if parametro %}Editar{% else %}Crear{% endif %} Parámetro de Prueba
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" id="parametroForm">
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ form.nombre.label_tag }}
+                                                    {{ form.nombre }}
+                                                    {% if form.nombre.errors %}
+                                                    <div class="text-danger small">{{ form.nombre.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ form.tipo.label_tag }}
+                                                    {{ form.tipo }}
+                                                    {% if form.tipo.errors %}
+                                                    <div class="text-danger small">{{ form.tipo.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Campos condicionales según tipo de parámetro -->
+                                        <div id="camposNumericos" class="campos-condicionales">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <div class="mb-3">
+                                                        {{ form.unidad_medida.label_tag }}
+                                                        {{ form.unidad_medida }}
+                                                        {% if form.unidad_medida.errors %}
+                                                        <div class="text-danger small">{{ form.unidad_medida.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="mb-3">
+                                                        {{ form.valor_minimo.label_tag }}
+                                                        {{ form.valor_minimo }}
+                                                        {% if form.valor_minimo.errors %}
+                                                        <div class="text-danger small">{{ form.valor_minimo.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="mb-3">
+                                                        {{ form.valor_maximo.label_tag }}
+                                                        {{ form.valor_maximo }}
+                                                        {% if form.valor_maximo.errors %}
+                                                        <div class="text-danger small">{{ form.valor_maximo.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="mb-3">
+                                                        {{ form.valor_objetivo.label_tag }}
+                                                        {{ form.valor_objetivo }}
+                                                        {% if form.valor_objetivo.errors %}
+                                                        <div class="text-danger small">{{ form.valor_objetivo.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>                            
+                                        </div>
+
+                                        <!-- Campos para Organolepticos -->
+                                        <div id="camposOrganolepticos" class="campos-condicionales" style="display: none;">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="alert alert-info mb-3">
+                                                        <i class="fas fa-info-circle"></i>
+                                                        Los parámetros organolépticos se evalúan cualitativamente.
+                                                        No requieren valores numéricos mínimos, máximos u objetivo.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Campos generales -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ form.metodo_ensayo.label_tag }}
+                                                    {{ form.metodo_ensayo }}
+                                                    {% if form.metodo_ensayo.errors %}
+                                                    <div class="text-danger small">{{ form.metodo_ensayo.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ form.descripcion.label_tag }}
+                                                    {{ form.descripcion }}
+                                                    {% if form.descripcion.errors %}
+                                                    <div class="text-danger small">{{ form.descripcion.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Campo opcional para opciones predefinidas -->
+                                        <div id="camposOpciones" class="campos-condicionales" style="display: none;">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="mb-3">
+                                                        {{ form.opciones_predefinidas.label_tag }}
+                                                        {{ form.opciones_predefinidas }}
+                                                        <small class="form-text text-muted">
+                                                            Ingrese las opciones separadas por comas (ej: Bueno, Regular, Malo)
+                                                        </small>
+                                                        {% if form.opciones_predefinidas.errors %}
+                                                        <div class="text-danger small">{{ form.opciones_predefinidas.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3 form-check">
+                                            {{ form.activo }}
+                                            {{ form.activo.label_tag }}
+                                            {% if form.activo.errors %}
+                                            <div class="text-danger small">{{ form.activo.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                            <a href="{% url 'parametros_lista' %}" class="btn btn-secondary me-md-2">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> 
+                                                {% if parametro %}Actualizar{% else %}Crear{% endif %} Parámetro
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('id_tipo');
+    const camposNumericos = document.getElementById('camposNumericos');
+    const camposOrganolepticos = document.getElementById('camposOrganolepticos');
+    const camposOpciones = document.getElementById('camposOpciones');
+    
+    // Referencias a campos individuales para marcarlos como requeridos/opcionales
+    const unidadMedidaInput = document.querySelector('[name="unidad_medida"]');
+    const valorMinimoInput = document.querySelector('[name="valor_minimo"]');
+    const valorMaximoInput = document.querySelector('[name="valor_maximo"]');
+    const valorObjetivoInput = document.querySelector('[name="valor_objetivo"]');
+    
+    function toggleCampos() {
+        const tipoValor = tipoSelect.value ? tipoSelect.value.toLowerCase() : '';
+        const esOrganoleptico = tipoValor.includes('organoleptico') || 
+                                tipoValor.includes('organoléptico') ||
+                                tipoValor === 'organolepticos' ||
+                                tipoValor === 'organolépticos';
+        
+        // Resetear display de todos los campos condicionales
+        camposNumericos.style.display = 'none';
+        camposOrganolepticos.style.display = 'none';
+        camposOpciones.style.display = 'none';
+        
+        // Mostrar campos según el tipo
+        if (esOrganoleptico) {
+            // Ocultar campos numéricos y mostrar panel informativo
+            camposOrganolepticos.style.display = 'block';
+            
+            // Opcional: Hacer campos numéricos no requeridos
+            if (unidadMedidaInput) unidadMedidaInput.required = false;
+            if (valorMinimoInput) valorMinimoInput.required = false;
+            if (valorMaximoInput) valorMaximoInput.required = false;
+            if (valorObjetivoInput) valorObjetivoInput.required = false;
+            
+            // Opcional: Limpiar valores
+            if (valorMinimoInput) valorMinimoInput.value = '';
+            if (valorMaximoInput) valorMaximoInput.value = '';
+            if (valorObjetivoInput) valorObjetivoInput.value = '';
+            
+        } else if (tipoValor === 'opciones' || tipoValor === 'cualitativo') {
+            // Mostrar campo de opciones predefinidas
+            camposOpciones.style.display = 'block';
+            camposNumericos.style.display = 'none';
+            
+        } else {
+            // Para otros tipos (físico, químico, microbiológico), mostrar campos numéricos
+            camposNumericos.style.display = 'block';
+            
+            // Hacer campos requeridos si es necesario
+            if (unidadMedidaInput) unidadMedidaInput.required = true;
+            if (valorMinimoInput) valorMinimoInput.required = true;
+            if (valorMaximoInput) valorMaximoInput.required = true;
+        }
+    }
+    
+    // Detectar cambios en tiempo real para nombres que contengan palabras clave
+    function detectarTipoPorNombre() {
+        const nombreInput = document.getElementById('id_nombre');
+        if (!nombreInput) return;
+        
+        nombreInput.addEventListener('input', function() {
+            const nombre = this.value.toLowerCase();
+            const tipoActual = tipoSelect.value;
+            
+            // Si el usuario aún no ha seleccionado un tipo, sugerir automáticamente
+            if (!tipoActual || tipoActual === '') {
+                if (nombre.includes('olor') || nombre.includes('color') || 
+                    nombre.includes('sabor') || nombre.includes('textura') ||
+                    nombre.includes('apariencia') || nombre.includes('aroma')) {
+                    
+                    // Buscar opción de organoléptico en el select
+                    for (let option of tipoSelect.options) {
+                        if (option.text.toLowerCase().includes('organoleptico') || 
+                            option.text.toLowerCase().includes('organoléptico')) {
+                            tipoSelect.value = option.value;
+                            toggleCampos();
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Validación antes de enviar el formulario
+    document.getElementById('parametroForm').addEventListener('submit', function(e) {
+        const tipoValor = tipoSelect.value ? tipoSelect.value.toLowerCase() : '';
+        const esOrganoleptico = tipoValor.includes('organoleptico') || 
+                                tipoValor.includes('organoléptico') ||
+                                tipoValor === 'organolepticos' ||
+                                tipoValor === 'organolépticos';
+        
+        if (!esOrganoleptico) {
+            // Para tipos no organolépticos, validar campos numéricos
+            if (valorMinimoInput && valorMaximoInput) {
+                const min = parseFloat(valorMinimoInput.value);
+                const max = parseFloat(valorMaximoInput.value);
+                
+                if (!isNaN(min) && !isNaN(max) && min > max) {
+                    e.preventDefault();
+                    alert('El valor mínimo no puede ser mayor que el valor máximo.');
+                    valorMinimoInput.focus();
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    });
+    
+    // Ejecutar al cargar y cuando cambie el select
+    toggleCampos();
+    detectarTipoPorNombre();
+    tipoSelect.addEventListener('change', toggleCampos);
+    
+    // También ejecutar cuando se cargue la página (para edición)
+    setTimeout(toggleCampos, 100);
+});
+</script>
+
+<style>
+.campos-condicionales {
+    border-left: 4px solid #007bff;
+    padding-left: 15px;
+    margin: 15px 0;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+#camposOrganolepticos {
+    border-left-color: #6f42c1; /* Color morado para organolépticos */
+}
+
+#camposOpciones {
+    border-left-color: #28a745; /* Color verde para opciones */
+}
+
+/* Estilo para etiquetas de campos condicionales */
+.campos-condicionales .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Animación suave al mostrar/ocultar */
+.campos-condicionales {
+    opacity: 1;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.campos-condicionales[style*="display: none"] {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+</style>
+{% endblock %}

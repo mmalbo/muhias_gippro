@@ -1,0 +1,22 @@
+<!-- Modal para especificar cantidad -->
+<div class="modal fade" id="cantidadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Especificar Cantidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="item-nombre"></p>
+                <p id="disponible-texto" class="text-muted small"></p>
+                <input type="number" class="form-control" id="input-cantidad" 
+                       step="0.01" min="0.01">
+                <div class="invalid-feedback" id="error-cantidad"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-agregar-carrito">Agregar</button>
+            </div>
+        </div>
+    </div>
+</div>

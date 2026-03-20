@@ -31,6 +31,28 @@ class MateriaPrimaForm(forms.ModelForm):
             'hoja_seguridad': 'Hoja de seguridad',
         }
 
+        def __init__(self, *args, **kwargs):
+            super(MateriaPrimaForm, self).__init__(*args, **kwargs)
+            self.fields['hoja_seguridad'].widget.attrs = {
+            'required': False}
+            self.fields['ficha_tecnica'].widget.attrs = {
+            'required': False}
+            
+            
+class MateriaPrimaCostoForm(forms.ModelForm):
+
+    class Meta:
+        model = MateriaPrima
+        fields = ['nombre', 'costo']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'costo': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'nombre': 'Nombre',
+            'costo': 'Costo',
+        }
+        
 class MateriaPrimaFormUpdate(forms.ModelForm):
 
     class Meta:
@@ -53,8 +75,13 @@ class MateriaPrimaFormUpdate(forms.ModelForm):
             'conformacion': 'Conformación',
             'costo': 'Costo',
         }
-        
 
+        def __init__(self, *args, **kwargs):
+            super(MateriaPrimaFormUpdate, self).__init__(*args, **kwargs)
+            
+            self.fields['concentracion'].required = False
+            self.fields['conformacion'].required = False
+            
 class AgregarTipoForm(forms.Form):
     valor = forms.CharField(
         max_length=50,

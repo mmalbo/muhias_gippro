@@ -66,14 +66,14 @@ class MateriaPrima(ModeloBase):
     ficha_tecnica = models.FileField(
         upload_to='fichas_tecnicas/',
         null=True,
-        editable=True,
+        blank=True,
         verbose_name="Ficha técnica"
     )
 
     hoja_seguridad = models.FileField(
         upload_to='hojas_seguridad/',
         null=True,
-        editable=True,
+        blank=True,
         verbose_name="Hoja de seguridad"
     )
 
@@ -107,14 +107,12 @@ class MateriaPrima(ModeloBase):
         self._meta.get_field('tipo_materia_prima').choices = obtener_tipos_materia_prima()
         codigo = self.tipo_materia_prima[:3] + self.nombre[:3] + str(self.concentracion).zfill(3) + '0'
         while True:
-            print("En wile True")
             if MateriaPrima.objects.filter(codigo=codigo).exists():
                 tem = int(codigo[-1]) + 1
                 codigo = codigo[:-1] + str(tem)
             else:
                 self.codigo = codigo
                 break
-        print(f'codigo generado al guardar {self.codigo}')
         super().save(*args, **kwargs)
     
     def clean(self):

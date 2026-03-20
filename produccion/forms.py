@@ -3,30 +3,13 @@ from django.utils import timezone
 from django import forms
 
 from materia_prima.models import MateriaPrima
+from inventario.models import *
 from nomencladores.planta.models import Planta
 from nomencladores.almacen.models import Almacen
-<<<<<<< Updated upstream
-from .models import Produccion, Prod_Inv_MP
-from producto.models import Producto
-from envase_embalaje.formato.models import Formato
-
-class ProductoRapidoForm(forms.ModelForm):
-    """Form para crear producto rápido desde producción"""
-    class Meta:
-        model = Producto
-        fields = ['nombre_comercial']
-        widgets = {
-            'nombre_comercial': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre del nuevo producto...'
-            }),            
-        }
-=======
 from .models import Produccion, Prod_Inv_MP, PruebaQuimica, DetallePruebaQuimica, ParametroPrueba
 from producto.models import Producto
 from envase_embalaje.formato.models import Formato
 from .choices import TIPOS_PARAMETRO
->>>>>>> Stashed changes
 
 class ProductoRapidoForm(forms.ModelForm):
     """Form para crear producto rápido desde producción"""
@@ -46,7 +29,7 @@ class ProduccionForm(forms.ModelForm):
 
     # Campo para seleccionar producto existente
     catalogo_producto = forms.ModelChoiceField(
-        queryset=Producto.objects.all(),
+        queryset=Producto.objects.filter(formato__capacidad=0),
         required=False,
         label="Seleccionar Producto Existente",
         widget=forms.Select(attrs={'class': 'form-control'}),
@@ -65,13 +48,13 @@ class ProduccionForm(forms.ModelForm):
         help_text="Si el producto no existe en el catálogo, ingrese el nombre aquí"
     )
     
-    class Meta:
+    class Meta: #'lote', 'costo', 
         model = Produccion
-        fields = ['lote', 'cantidad_estimada', 'costo', 'planta', 'prod_result']
+        fields = [ 'cantidad_estimada', 'planta', 'prod_result']
         widgets = {
-            'lote': forms.TextInput(attrs={'class': 'form-control'}),
+            #'lote': forms.TextInput(attrs={'class': 'form-control'}),
             'cantidad_estimada': forms.NumberInput(attrs={'class': 'form-control'}),
-            'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            #'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'prod_result': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             #'planta': forms.Select(attrs={'class': 'form-control'}),
         }
@@ -125,10 +108,11 @@ class ProduccionForm(forms.ModelForm):
 
 class MateriaPrimaForm(forms.Form):
     materia_prima = forms.ModelChoiceField(
-        queryset=MateriaPrima.objects.all(),
+        queryset=Inv_Mat_Prima.objects.filter(cantidad__gt=0),
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=True
     )
+    # MateriaPrima
     cantidad = forms.DecimalField(
         max_digits=10,
         decimal_places=3,
@@ -299,12 +283,15 @@ class PruebaQuimicaForm(forms.ModelForm):
 class DetallePruebaForm(forms.ModelForm):
     class Meta:
         model = DetallePruebaQuimica
-        fields = ['parametro', 'valor_medido', 'observaciones']
+        fields = ['parametro', 'valor_medido', 'cumplimiento', 'observaciones']
         widgets = {
             'parametro': forms.Select(attrs={'class': 'form-control'}),
             'valor_medido': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.001'
+            }),
+            'cumplimiento': forms.CheckboxInput(attrs={
+                'class': 'form-check-input cumplimiento-check'
             }),
             'observaciones': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -316,6 +303,10 @@ class DetallePruebaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Filtrar parámetros activos
         self.fields['parametro'].queryset = ParametroPrueba.objects.filter(activo=True)
+
+        # Ocultar campo cumplimiento inicialmente (se mostrará dinámicamente)
+        self.fields['cumplimiento'].required = False
+        self.fields['cumplimiento'].widget.attrs['style'] = 'display: none;'
 
 class AprobarPruebaForm(forms.Form):
     observaciones_aprobacion = forms.CharField(

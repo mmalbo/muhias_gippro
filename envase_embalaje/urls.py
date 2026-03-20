@@ -3,8 +3,12 @@ from . import views
 
 
 urlpatterns = [
-    path('envase_embalaje/', views.EnvaseEmbalajeListView.as_view(), name='envase_embalaje_lista'),
-    path('envase_embalaje/crear/', views.EnvaseEmbalajeCreateView.as_view(), name='envase_embalaje_crear'),
-    path('envase_embalaje/<uuid:pk>/editar/', views.EnvaseEmbalajeUpdateView.as_view(), name='envase_embalaje_editar'),
-    path('envase_embalaje/<uuid:pk>/eliminar/', views.EnvaseEmbalajeDeleteView.as_view(), name='envase_embalaje_eliminar'),
+    path('catalogo/', views.ListEnvaseEmbalajeView.as_view(), name='list_envase_embalaje'),
+    path('listar/', views.listEnvaseEmbalaje, name='envase_embalaje_lista'),
+    path('crear/', views.EnvaseEmbalajeCreateView.as_view(), name='envase_embalaje_crear'),
+    path('eliminar/<uuid:pk>/', views.DeleteEnvaseEmbalajeView.as_view(), name='envase_embalaje_eliminar'),
+    path('envases_embalajes/<uuid:pk>/', views.get_envase_embalaje, name='get_envase_embalaje'),
+    path('envase_embalaje/<uuid:pk>/', views.detalle_envase, name='detalle_envase_embalaje'),
+    path('importar/', views.importar, name='importarEnvaseEmbalaje'),
+    path('actualizar/<uuid:pk>/', views.UpdateEnvaseEmbalajeView.as_view(), name='envase_embalaje_editar'),
 ]

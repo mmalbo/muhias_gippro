@@ -8,14 +8,14 @@
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de tanques</h4>
                     
-                    <form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
+                    <!--<form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
                     {% csrf_token %}
                         <div> 
                             <h6 style="display: inline-block;"> Buscar por: </h6> 
                             {{ filter.form }}                
                             <button type="submit" class="btn btn-primary" style="display: inline-block;"> <i class="fas fa-search mr-0"> </i> Filtrar</button>
                         </div>   
-                    </form>
+                    </form>-->
 
                     {% if messages %}
                         <script>
@@ -30,12 +30,13 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Color</th>
+                            <th>Material</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -45,6 +46,7 @@
                                 <td>{{ tanque.codigo }}</td>
                                 <td>{{ tanque.nombre }}</td>
                                 <td>{{ tanque.color }}</td>
+                                <td>{{ tanque.material }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'tanque:actualizar' tanque.pk %}"
@@ -61,6 +63,7 @@
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Color</th>
+                            <th>Material</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

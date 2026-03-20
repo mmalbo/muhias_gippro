@@ -1,0 +1,1139 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="page-title mb-0">
+                            <i class="fas fa-flask me-2"></i>
+                            Prueba Química #{{ prueba.id }}
+                        </h4>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb m-0 p-0">
+                                <li class="breadcrumb-item"><a href="{% url 'produccion_list' %}">Producción</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'detalle_produccion' prueba.produccion.id %}">Lote {{ prueba.produccion.lote }}</a></li>
+                                <li class="breadcrumb-item active">Prueba Química</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-{{ prueba.color_estado }} fs-6 p-2">
+                            <i class="fas fa-{{ prueba.icono_estado }} me-1"></i>
+                            {{ prueba.get_estado_display|upper }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Total Parámetros</h5>
+                            <h3 class="my-2">{{ total_parametros }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list-check text-primary fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Aprobados</h5>
+                            <h3 class="my-2 text-success">{{ parametros_aprobados }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle text-success fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Rechazados</h5>
+                            <h3 class="my-2 text-danger">{{ parametros_rechazados }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle text-danger fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover bg-{{ prueba.color_estado }} text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-normal mt-0 mb-2">% Aprobación</h5>
+                            <h2 class="my-2">{{ porcentaje_aprobacion }}%</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-pie fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Resultado Final 
+            {% if prueba.resultado_final %}
+            <div class="card border-{% if prueba.aprobado %}success{% else %}danger{% endif %}">
+                <div class="card-header bg-{% if prueba.aprobado %}success{% else %}danger{% endif %} text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-{% if prueba.aprobado %}thumbs-up{% else %}thumbs-down{% endif %} me-2"></i>
+                        Resultado Final: {% if prueba.aprobado %} 'APROBADA' {% else %} 'RECHAZADA' {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Conclusión:</strong></p>
+                    <p class="mb-0">{{ prueba.resultado_final|linebreaks }}</p>
+                    
+                    {% if prueba.observaciones %}
+                    <hr>
+                    <p class="mb-2"><strong>Observaciones:</strong></p>
+                    <p class="mb-0 text-muted">{{ prueba.observaciones|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}-->
+    <div class="row">
+        <!-- Columna izquierda: Información y Acciones -->
+        <div class="col-lg-4">
+            <!-- Información de la Prueba -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i> Información de la Prueba
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Producción:</dt>
+                        <dd class="col-sm-7">
+                            <a href="{% url 'detalle_produccion' prueba.produccion.id %}" class="text-decoration-none">
+                                <strong>{{ prueba.produccion.lote }}</strong>
+                            </a>
+                        </dd>
+                        
+                        <dt class="col-sm-5">Producto:</dt>
+                        <dd class="col-sm-7">{{ prueba.produccion.catalogo_producto.nombre }}</dd>
+                        
+                        <dt class="col-sm-5">Fecha Prueba:</dt>
+                        <dd class="col-sm-7">{{ prueba.fecha_prueba|date:"d/m/Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-5">Fecha Vencimiento:</dt>
+                        <dd class="col-sm-7">
+                            {% if prueba.fecha_vencimiento %}
+                                {{ prueba.fecha_vencimiento|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">No especificado</span>
+                            {% endif %}
+                        </dd>
+                        
+                        {% if prueba.evaluado_por %}
+                        <dt class="col-sm-5">Evaluado por:</dt>
+                        <dd class="col-sm-7">{{ prueba.evaluado_por.get_full_name|default:prueba.evaluado_por.username }}</dd>
+                        
+                        <dt class="col-sm-5">Fecha Evaluación:</dt>
+                        <dd class="col-sm-7">{{ prueba.fecha_evaluacion|date:"d/m/Y H:i" }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Panel de Acciones -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i> Acciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if prueba.estado == 'pendiente' %}
+                        <a href="{% url 'cambiar_estado_prueba' prueba.id 'en_proceso' %}" class="btn btn-info">
+                            <i class="fas fa-play-circle me-2"></i> Iniciar Prueba
+                        </a>
+                        {% endif %}
+                        
+                        {% if prueba.estado == 'en_proceso' %}
+                        <a href="{% url 'cambiar_estado_prueba' prueba.id 'completada' %}" class="btn btn-primary">
+                            <i class="fas fa-check-double me-2"></i> Marcar como Completada
+                        </a>
+                        {% endif %}
+                        
+                        {% if prueba.puede_concluir %}
+                        <a href="{% url 'concluir_prueba_quimica' prueba.id %}" class="btn btn-success">
+                            <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
+                        </a>
+                        {% endif %}
+                        
+                        {% if prueba.estado in 'pendiente,en_proceso,completada' %}
+                        <a href="{% url 'cambiar_estado_prueba' prueba.id 'cancelada' %}" class="btn btn-danger">
+                            <i class="fas fa-ban me-2"></i> Cancelar Prueba
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'editar_prueba_quimica' prueba.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i> Editar Prueba
+                        </a>
+                        
+                        {% if prueba.archivo_resultado %}
+                        <a href="{{ prueba.archivo_resultado.url }}" class="btn btn-outline-info" target="_blank">
+                            <i class="fas fa-file-download me-2"></i> Descargar Resultado
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultado Final -->
+            {% if prueba.resultado_final %}
+            <div class="card border-{{ 'success' if prueba.aprobado else 'danger' }}">
+                <div class="card-header bg-{{ 'success' if prueba.aprobado else 'danger' }} text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-{{ 'thumbs-up' if prueba.aprobado else 'thumbs-down' }} me-2"></i>
+                        Resultado Final: {{ 'APROBADO' if prueba.aprobado else 'RECHAZADO' }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Conclusión:</strong></p>
+                    <p class="mb-0">{{ prueba.resultado_final|linebreaks }}</p>
+                    
+                    {% if prueba.observaciones %}
+                    <hr>
+                    <p class="mb-2"><strong>Observaciones:</strong></p>
+                    <p class="mb-0 text-muted">{{ prueba.observaciones|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Columna derecha: Parámetros -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list-check me-2"></i> Parámetros Evaluados
+                    </h5>
+                    <span class="badge bg-primary">Total: {{ total_parametros }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="25%">Parámetro</th>
+                                    <th width="15%">Valor Medido</th>
+                                    <th width="15%">Esperado/Rango</th>
+                                    <th width="10%">Unidad</th>
+                                    <th width="10%">Desviación</th>
+                                    <th width="10%">Estado</th>
+                                    <th width="10%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for parametro in parametros %}
+                                <tr class="{% if parametro.dentro_especificacion %}table-success{% else %}table-danger{% endif %}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ parametro.parametro.nombre }}</strong>
+                                        {% if parametro.observaciones %}
+                                        <br>
+                                        <small class="text-muted">{{ parametro.observaciones|truncatechars:50 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ parametro.valor_medido }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if parametro.parametro.valor_minimo and parametro.parametro.valor_maximo %}
+                                        {{ parametro.parametro.valor_minimo }} - {{ parametro.parametro.valor_maximo }}
+                                        {% elif parametro.parametro.valor_referencia %}
+                                        {{ parametro.parametro.valor_referencia }}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ parametro.parametro.unidad_medida|default:"-" }}</td>
+                                    <td>
+                                        {% if parametro.desviacion %}
+                                        <span class="badge {% if parametro.dentro_especificacion %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ parametro.desviacion }}
+                                        </span>
+                                        {% if parametro.porcentaje_desviacion %}
+                                        <br>
+                                        <small>{{ parametro.porcentaje_desviacion }}%</small>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if parametro.dentro_especificacion %}bg-success{% else %}bg-danger{% endif %}">
+                                            <i class="fas fa-{% if parametro.dentro_especificacion %}check{% else %}times{% endif %} me-1"></i>
+                                            {{ 'OK' if parametro.dentro_especificacion else 'Falla' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary btn-ver-detalle" 
+                                                    data-parametro-id="{{ parametro.id }}"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modalDetalleParametro">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <!--<a href="{% url 'editar_parametro_prueba' parametro.id %}" 
+                                               class="btn btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>-->
+                                            <button type="button" class="btn btn-outline-secondary btn-editar-parametro" 
+                                                    data-parametro-id="{{ parametro.id }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-flask fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No hay parámetros registrados</h5>
+                                        <p class="text-muted mb-0">Agregue parámetros para evaluar esta prueba</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ parametros_aprobados }} de {{ total_parametros }} parámetros aprobados
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <a href="{% url 'agregar_parametro_prueba' prueba.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus me-1"></i> Agregar Parámetro
+                            </a>
+                            <a href="{% url 'importar_parametros_prueba' prueba.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-file-import me-1"></i> Importar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                            {% if prueba.estado != 'APROBADA' and prueba.estado != 'RECHAZADA' %}
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnCalcularResultados">
+                                <i class="fas fa-calculator me-1"></i> Calcular Resultados
+                            </button>
+                            {% endif %}
+                        </div>
+            <!-- Gráfico de Resultados -->
+            {% if total_parametros > 0 %}
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i> Resumen Gráfico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="graficoPrueba" height="100"></canvas>
+                </div>
+            </div>
+            {% endif %}
+            <!-- Gráfico de Resultados 
+            {% if total_parametros > 0 %}
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i> Resumen Gráfico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="graficoPrueba" height="100"></canvas>
+                </div>
+            </div>
+            {% endif %}-->
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalles del parámetro -->
+<div class="modal fade" id="modalParametro{{ parametro.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-vial me-2"></i>
+                    {{ parametro.parametro.nombre }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row">
+                    <!--<dt class="col-sm-4">Valor Medido:</dt>
+                    <dd class="col-sm-8">{{ parametro.valor_medido }}</dd>
+                                                    
+                    <dt class="col-sm-4">Valor Esperado:</dt>
+                    <dd class="col-sm-8">{{ parametro.valor_esperado|default:"-" }}</dd>
+                                                    
+                    <dt class="col-sm-4">Rango Permitido:</dt>
+                    <dd class="col-sm-8">
+                        {% if parametro.parametro.valor_minimo and parametro.parametro.valor_maximo %}
+                        {{ parametro.parametro.valor_minimo }} - {{ parametro.parametro.valor_maximo }}
+                        {% else %}
+                        <span class="text-muted">No especificado</span>
+                        {% endif %}
+                    </dd>
+                                                    
+                    <dt class="col-sm-4">Unidad:</dt>
+                    <dd class="col-sm-8">{{ parametro.parametro.unidad_medida|default:"-" }}</dd>
+                                                    
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge {% if parametro.dentro_especificacion %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ 'Dentro de especificación' if parametro.dentro_especificacion else 'Fuera de especificación' }}
+                        </span>
+                    </dd>
+                                                    
+                    {% if parametro.observaciones %}
+                    <dt class="col-sm-4">Observaciones:</dt>
+                        <dd class="col-sm-8">{{ parametro.observaciones|linebreaks }}</dd>
+                    {% endif %}-->
+                </dl>
+            </div>
+            <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+        
+    <!-- Tarjetas de Resumen
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Total Parámetros</h5>
+                            <h3 class="my-2" id="totalParametros">{{ total_parametros }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list-check text-primary fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Aprobados</h5>
+                            <h3 class="my-2 text-success" id="parametrosAprobados">{{ parametros_aprobados }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle text-success fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover border-danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="text-muted fw-normal mt-0 mb-2">Rechazados</h5>
+                            <h3 class="my-2 text-danger" id="parametrosRechazados">{{ parametros_rechazados }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle text-danger fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover border-info text-white" style="background-color: #17a2b8;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-normal mt-0 mb-2">% Aprobación</h5>
+                            <h2 class="my-2" id="porcentajeAprobacion">{{ porcentaje_aprobacion }}%</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-pie fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    /*if (total_parametros > 0 )
+    // Gráfico de resultados
+    const ctx = document.getElementById('graficoPrueba').getContext('2d');
+    const grafico = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Aprobados', 'Rechazados'],
+            datasets: [{
+                data: [{{ parametros_aprobados }}, {{ parametros_rechazados }}],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(40, 167, 69)',
+                    'rgb(220, 53, 69)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            const value = context.raw;
+                            const total = {{ total_parametros }};
+                            const percentage = Math.round((value / total) * 100);
+                            label += value + ' (' + percentage + '%)';
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+    */
+    // Confirmación para acciones críticas
+    $('.btn-danger').on('click', function(e) {
+        if (!confirm('¿Está seguro de realizar esta acción? Esta operación no se puede deshacer.')) {
+            e.preventDefault();
+        }
+    });
+
+    $('.btn-ver-detalle').on('click', function() {
+        const parametroId = $(this).data('parametro-id');
+        
+        // Aquí deberías hacer una petición AJAX para obtener los detalles del parámetro
+        // Por ahora, usaré los datos que ya están en la tabla
+        const row = $(this).closest('tr');
+        const nombre = row.find('td:nth-child(2) strong').text();
+        const valorMedido = row.find('td:nth-child(3) strong').text();
+        const rango = row.find('td:nth-child(4)').text().trim();
+        const unidad = row.find('td:nth-child(5)').text().trim();
+        const estado = row.find('td:nth-child(7) .badge').text().trim();
+        
+        // Actualizar el modal
+        $('#modalParametroNombre').text(nombre);
+        
+        let detallesHtml = `
+            <dt class="col-sm-4">Valor Medido:</dt>
+            <dd class="col-sm-8">${valorMedido}</dd>
+            
+            <dt class="col-sm-4">Rango Permitido:</dt>
+            <dd class="col-sm-8">${rango}</dd>
+            
+            <dt class="col-sm-4">Unidad:</dt>
+            <dd class="col-sm-8">${unidad}</dd>
+            
+            <dt class="col-sm-4">Estado:</dt>
+            <dd class="col-sm-8">
+                <span class="badge ${estado.includes('OK') ? 'bg-success' : 'bg-danger'}">
+                    ${estado.includes('OK') ? 'Dentro de especificación' : 'Fuera de especificación'}
+                </span>
+            </dd>
+        `;
+        
+        // Verificar si hay observaciones
+        const observaciones = row.find('td:nth-child(2) small').text().trim();
+        if (observaciones) {
+            detallesHtml += `
+                <dt class="col-sm-4">Observaciones:</dt>
+                <dd class="col-sm-8">${observaciones}</dd>
+            `;
+        }
+        
+        $('#modalParametroDetalles').html(detallesHtml);
+        
+        // Actualizar el enlace de editar en el modal
+        $('#btnEditarDesdeModal').attr('href', `/produccion/parametro-prueba/editar/${parametroId}/`);
+    });
+    
+    // Alternativa para botón de editar con JavaScript
+    $('.btn-editar-parametro').on('click', function() {
+        const parametroId = $(this).data('parametro-id');
+        window.location.href = `/produccion/parametro-prueba/editar/${parametroId}/`;
+    });
+    
+    // Verificar si las URLs existen
+    $('a[href*="editar_parametro_prueba"]').on('click', function(e) {
+        const href = $(this).attr('href');
+        console.log('Intentando acceder a:', href);
+        
+        // Si quieres verificar la URL antes de navegar
+        fetch(href, { method: 'HEAD' })
+            .then(response => {
+                if (!response.ok) {
+                    e.preventDefault();
+                    alert('La URL de edición no está disponible. Contacte al administrador.');
+                    console.error('URL no encontrada:', href);
+                }
+            })
+            .catch(error => {
+                e.preventDefault();
+                alert('Error al acceder a la página de edición.');
+                console.error('Error:', error);
+            });
+    });
+});
+<!-- <script>
+$(document).ready(function() {
+    // ============================================
+    // FUNCIÓN PARA CONSTRUIR URLs CON UUIDs
+    // ============================================
+    
+    // URLs directas usando las variables de template
+    const URLS = {
+        agregarParametros: '{% url "agregar_parametros_prueba" prueba.id %}',
+        calcularResultados: '{% url "calcular_resultados_prueba" prueba.id %}',
+        
+        // Para los parámetros, construiremos dinámicamente
+    };
+    
+    // Función para construir URL de edición con UUID
+    function getEditarUrl(parametroId) {
+        // Si ya tienes la URL en el template, úsala así:
+        return `/produccion/parametro-prueba/${parametroId}/editar/`;
+    }
+    
+    function getEliminarUrl(parametroId) {
+        return `/produccion/parametro-prueba/${parametroId}/eliminar/`;
+    }
+    
+    function getEstadoUrl(estado) {
+        return `/produccion/prueba-quimica/{{ prueba.id }}/estado/${estado}/`;
+    }
+    
+    // ============================================
+    // 1. CONFIGURACIÓN INICIAL
+    // ============================================
+    
+    // Variables globales
+    let contadorParametros = { total_parametros };
+    let contadorAprobados = { parametros_aprobados };
+    let contadorRechazados = { parametros_rechazados };
+    
+    // Obtener token CSRF de forma segura
+    function getCSRFToken() {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]');
+        return token ? token.value : '';
+    }
+    
+    // ============================================
+    // 2. FUNCIONALIDAD PARA EDITAR PARÁMETROS
+    // ============================================
+    
+    // Editar parámetro
+    $(document).on('click', '.btn-editar', function() {
+        const parametroId = $(this).data('id');  // Este es un UUID
+        const $fila = $(`#parametro-${parametroId}`);
+        
+        // Cambiar a modo edición
+        $fila.find('.valor-actual').addClass('d-none');
+        $fila.find('.valor-edit').removeClass('d-none');
+        $(this).addClass('d-none');
+        $fila.find('.btn-guardar, .btn-cancelar').removeClass('d-none');
+    });
+    
+    // Cancelar edición
+    $(document).on('click', '.btn-cancelar', function() {
+        const parametroId = $(this).data('id');
+        const $fila = $(`#parametro-${parametroId}`);
+        
+        // Cancelar edición
+        $fila.find('.valor-edit').addClass('d-none');
+        $fila.find('.valor-actual').removeClass('d-none');
+        $fila.find('.btn-editar').removeClass('d-none');
+        $fila.find('.btn-guardar, .btn-cancelar').addClass('d-none');
+    });
+    
+    // Guardar cambios (con UUID)
+    $(document).on('click', '.btn-guardar', function() {
+        const $btn = $(this);
+        const parametroId = $btn.data('id');  // UUID del parámetro
+        const $fila = $(`#parametro-${parametroId}`);
+        const nuevoValor = $fila.find('.valor-edit').val().trim();
+        
+        if (!nuevoValor) {
+            mostrarMensaje('warning', 'Ingrese un valor para el parámetro');
+            return;
+        }
+        
+        // 1. Usar jQuery.ajax que maneja mejor CSRF
+    $.ajax({
+        url: `/produccion/parametro-prueba/${parametroId}/editar/`,
+        method: 'POST',
+        dataType: 'json',
+        data: {
+            'valor_medido': nuevoValor,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        beforeSend: function(xhr) {
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            console.log('Enviando a:', this.url);
+        },
+        success: function(data) {
+            console.log('Respuesta:', data);
+            
+            if (data.success) {
+                $fila.find('.valor-actual').text(nuevoValor);
+                $fila.find('.valor-actual').removeClass('d-none');
+                $fila.find('.valor-edit').addClass('d-none');
+                
+                if (data.dentro_especificacion) {
+                    $fila.removeClass('table-danger').addClass('table-success');
+                    $fila.find('.estado-badge')
+                        .removeClass('bg-danger')
+                        .addClass('bg-success')
+                        .html('<i class="fas fa-check me-1"></i> OK');
+                } else {
+                    $fila.removeClass('table-success').addClass('table-danger');
+                    $fila.find('.estado-badge')
+                        .removeClass('bg-success')
+                        .addClass('bg-danger')
+                        .html('<i class="fas fa-times me-1"></i> Falla');
+                }
+                
+                alert('¡Actualizado correctamente!');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', status, error);
+            console.error('Response:', xhr.responseText);
+            alert(`Error ${xhr.status}: ${error}\n\nDetalles en consola.`);
+        },
+  
+
+      complete: function() {
+            $fila.find('.btn-editar').removeClass('d-none');
+            $fila.find('.btn-guardar, .btn-cancelar').addClass('d-none');
+            $btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
+        }
+    });
+});
+
+    // ============================================
+    // 3. ELIMINAR PARÁMETROS (con UUID)
+    // ============================================
+    
+    $(document).on('click', '.btn-eliminar', function() {
+        const $btn = $(this);
+        const parametroId = $btn.data('id');  // UUID del parámetro
+        const nombreParametro = $btn.data('nombre');
+        
+        // Confirmación
+        if (!confirm(`¿Está seguro de eliminar el parámetro "${nombreParametro}"?`)) {
+            return;
+        }
+        
+        $btn.prop('disabled', true);
+        
+        // Configurar datos para enviar
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', getCSRFToken());
+        
+        // Hacer petición AJAX con UUID
+        fetch(getEliminarUrl(parametroId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Determinar estado para ajustar contadores
+                const $fila = $(`#parametro-${parametroId}`);
+                const eraAprobado = $fila.hasClass('table-success');
+                
+                // Ajustar contadores
+                if (eraAprobado) {
+                    contadorAprobados = Math.max(0, contadorAprobados - 1);
+                } else {
+                    contadorRechazados = Math.max(0, contadorRechazados - 1);
+                }
+                contadorParametros = Math.max(0, contadorParametros - 1);
+                
+                // Eliminar fila
+                $fila.remove();
+                
+                // Actualizar contadores en la UI
+                actualizarContadores();
+                
+                // Mostrar mensaje
+                mostrarMensaje('success', 'Parámetro eliminado correctamente');
+                
+                // Si no quedan parámetros, mostrar mensaje
+                if ($('#tablaParametros tr').not('#sinParametros').length === 0) {
+                    if (!$('#sinParametros').length) {
+                        $('#tablaParametros').append(`
+                            <tr id="sinParametros">
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-flask fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No hay parámetros registrados</h5>
+                                    <p class="text-muted mb-0">Agregue parámetros para evaluar esta prueba</p>
+                                </td>
+                            </tr>
+                        `);
+                    }
+                    $('#sinParametros').show();
+                }
+            } else {
+                mostrarMensaje('error', 'Error: ' + (data.message || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error en la petición:', error);
+            mostrarMensaje('error', 'Error al eliminar el parámetro');
+        })
+        .finally(() => {
+            $btn.prop('disabled', false);
+        });
+    });
+
+    //=============================================
+    // MOSTRAR PARÁMETROS 
+    //=============================================
+
+    // Configurar el modal cuando se va a mostrar
+    $('#modalDetalleParametro').on('show.bs.modal', function(event) {
+        const button = $(event.modalDetalleParametro); // Botón que disparó el modal
+        const modal = $(this);
+    
+        console.log('🔍 Mostrando modal para parámetro');
+        console.log('Botón data:', button.data());
+    
+        // Obtener datos del botón
+        const nombre = button.data('nombre') || 'Parámetro';
+        const valor = button.data('valor') || 'No especificado';
+        const min = button.data('min');
+        const max = button.data('max');
+        const unidad = button.data('unidad') || '-';
+        const estado = button.data('estado') || 'Desconocido';
+        const observaciones = button.data('observaciones') || 'Sin observaciones';
+        
+        console.log('Datos extraídos:', { nombre, valor, min, max, unidad, estado });
+    
+        // Llenar el modal con los datos
+        modal.find('#modalParametroNombre').text(nombre);
+        modal.find('#modalParametroValor').text(valor);
+    
+        // Formatear rango permitido
+        let rangoTexto = 'N/A';
+        if (min !== '' && max !== '') {
+            rangoTexto = `${min} - ${max}`;
+        } else if (min !== '') {
+            rangoTexto = `Mínimo: ${min}`;
+        } else if (max !== '') {
+            rangoTexto = `Máximo: ${max}`;
+        }
+        modal.find('#modalParametroRango').text(rangoTexto);
+        
+        modal.find('#modalParametroUnidad').text(unidad);
+    
+        // Configurar estado con color apropiado
+        const estadoElement = modal.find('#modalParametroEstado');
+        const esOk = estado === 'OK';
+        estadoElement.text(estado);
+        estadoElement.removeClass('bg-success bg-danger bg-warning');
+    
+        if (esOk) {
+            estadoElement.addClass('bg-success');
+            estadoElement.html('<i class="fas fa-check me-1"></i> OK');
+        } else if (estado === 'Falla') {
+            estadoElement.addClass('bg-danger');
+            estadoElement.html('<i class="fas fa-times me-1"></i> Falla');
+        } else {
+            estadoElement.addClass('bg-warning');
+            estadoElement.html('<i class="fas fa-question me-1"></i> ' + estado);
+        }
+    
+        // Observaciones
+        modal.find('#modalParametroObservaciones').text(observaciones);
+    });
+
+    // También puedes agregar esto si quieres resetear el modal cuando se cierra
+    $('#modalDetalleParametro').on('hidden.bs.modal', function() {
+        const modal = $(this);
+    
+        // Resetear todos los campos
+        modal.find('#modalParametroNombre').text('');
+        modal.find('#modalParametroValor').text('');
+        modal.find('#modalParametroRango').text('');
+        modal.find('#modalParametroUnidad').text('');
+        modal.find('#modalParametroEstado').text('').removeClass('bg-success bg-danger bg-warning');
+        modal.find('#modalParametroObservaciones').text('');
+    });
+                        -->
+    
+    <!--
+    // ============================================
+    // 5. CALCULAR RESULTADOS
+    // ============================================
+    
+    $('#btnCalcularResultados').on('click', function() {
+        const $btn = $(this);
+        $btn.prop('disabled', true)
+            .html('<i class="fas fa-spinner fa-spin me-1"></i> Calculando...');
+        
+        fetch(URLS.calcularResultados, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({
+                'csrfmiddlewaretoken': getCSRFToken()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Actualizar contadores globales
+                contadorAprobados = data.aprobados;
+                contadorRechazados = data.rechazados;
+                actualizarContadores();
+                
+                // Actualizar cada parámetro en la tabla
+                data.parametros.forEach(parametro => {
+                    const $fila = $(`#parametro-${parametro.id}`);
+                    if ($fila.length) {
+                        if (parametro.dentro_especificacion) {
+                            $fila.removeClass('table-danger').addClass('table-success');
+                            $fila.find('.estado-badge')
+                                .removeClass('bg-danger')
+                                .addClass('bg-success')
+                                .html('<i class="fas fa-check me-1"></i> OK');
+                        } else {
+                            $fila.removeClass('table-success').addClass('table-danger');
+                            $fila.find('.estado-badge')
+                                .removeClass('bg-success')
+                                .addClass('bg-danger')
+                                .html('<i class="fas fa-times me-1"></i> Falla');
+                        }
+                    }
+                });
+                
+                mostrarMensaje('success', 'Resultados calculados correctamente');
+            } else {
+                mostrarMensaje('error', data.message || 'Error al calcular resultados');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarMensaje('error', 'Error de conexión al servidor');
+        })
+        .finally(() => {
+            $btn.prop('disabled', false)
+                .html('<i class="fas fa-calculator me-1"></i> Calcular Resultados');
+        });
+    });
+    
+    // ============================================
+    // 6. FUNCIONES AUXILIARES
+    // ============================================
+    
+    function actualizarContadores() {
+        const total = contadorParametros;
+        const aprobados = contadorAprobados;
+        const rechazados = contadorRechazados;
+        const porcentaje = total > 0 ? Math.round((aprobados / total) * 100) : 0;
+        
+        // Actualizar tarjetas de resumen
+        $('#totalParametros').text(total);
+        $('#parametrosAprobados').text(aprobados);
+        $('#parametrosRechazados').text(rechazados);
+        $('#porcentajeAprobacion').text(porcentaje + '%');
+        
+        // Actualizar contadores en la tabla
+        $('#contadorTotal').text(total);
+        $('#contadorAprobados').text(aprobados);
+        $('#contadorTotalFooter').text(total);
+        
+        // Actualizar modal de conclusión
+        $('#modalTotalParametros').text(total);
+        $('#modalAprobados').text(aprobados);
+        $('#modalPorcentaje').text(porcentaje + '%');
+        
+        // Actualizar gráfico si existe
+        if (window.graficoPrueba && window.graficoPrueba.data) {
+            window.graficoPrueba.data.datasets[0].data = [aprobados, rechazados];
+            window.graficoPrueba.update();
+        }
+    }
+    
+    function mostrarMensaje(tipo, mensaje) {
+        // Eliminar mensajes anteriores
+        $('.alert-flotante').remove();
+        
+        const iconos = {
+            'success': 'check-circle',
+            'error': 'exclamation-circle',
+            'warning': 'exclamation-triangle',
+            'info': 'info-circle'
+        };
+        
+        const $alert = $(`
+            <div class="alert alert-${tipo} alert-dismissible fade show alert-flotante" 
+                 style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas fa-${iconos[tipo] || 'info-circle'} me-2"></i>
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+        
+        $('body').append($alert);
+        
+        // Auto-eliminar después de 5 segundos
+        setTimeout(() => {
+            $alert.alert('close');
+        }, 5000);
+    }
+    
+    // ============================================
+    // 7. INICIALIZACIÓN DE GRÁFICO
+    // ============================================
+    
+    if (total_parametros > 0){
+    const ctx = document.getElementById('graficoPrueba').getContext('2d');
+    window.graficoPrueba = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Aprobados', 'Rechazados'],
+            datasets: [{
+                data: [{ parametros_aprobados }, { parametros_rechazados }],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(40, 167, 69)',
+                    'rgb(220, 53, 69)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            const value = context.raw;
+                            const total = {{ total_parametros }};
+                            const percentage = Math.round((value / total) * 100);
+                            return '${label}${value} (${percentage}%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    }
+    
+    // Inicializar tooltips de Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script> -->
+</script>
+
+<style>
+.card-hover:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+}
+</style>
+{% endblock %}

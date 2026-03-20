@@ -7,14 +7,14 @@
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de formato de envases</h4>
                     
-                    <form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
+                    <!--<form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
                     {% csrf_token %}
                         <div> 
                             <h6 style="display: inline-block;"> Buscar por: </h6> 
                             {{ filter.form }}                
                             <button type="submit" class="btn btn-primary" style="display: inline-block;"> <i class="fas fa-search mr-0"> </i> Filtrar</button>
                         </div>   
-                    </form>
+                    </form>-->
 
                     {% if messages %}
                         <script>
@@ -29,7 +29,8 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <a href="{% url 'formato:crear' %}" class="btn btn-success">Crear formato de envase</a>
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th style="width: 50%;">Formato</th>
@@ -46,9 +47,10 @@
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'formato:actualizar' capacidad.pk %}"
                                            title="Editar formato" class="btn far fa-edit"></a>
-                                        <a href="{% url 'formato:eliminar' capacidad.pk %}"
+                                        <!--<a href="{% url 'formato:eliminar' capacidad.pk %}"
                                            title="Eliminar formato"
-                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a></div>
+                                           class="btn far fa-trash-alt" style="color: #ed1010;"></a>-->
+                                    </div>
                                 </td>
                             </tr>
 

@@ -7,14 +7,14 @@
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de Almacenes</h4>
                     
-                    <form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
+                    <!--<form enctype="multipart/form-data" method="GET" style="display: inline-block;">                    
                     {% csrf_token %}
                         <div> 
                             <h6 style="display: inline-block;"> Buscar por </h6> 
                             {{ filter.form }}                
                             <button type="submit" class="btn btn-primary" style="display: inline-block;"> <i class="fas fa-search mr-0"> </i> Filtrar</button>
                         </div>   
-                    </form>
+                    </form>-->
 
                     {% if messages %}
                         <script>
@@ -29,14 +29,16 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th style="width: 25%">Nombre</th>
                             <th style="width: 25%">Ubicación</th>
                             <th style="width: 10%">Propio</th>
                             <th style="width: 15%">Concepto</th>
-                            <th style="width: 25%">Acciones</th>
+                            <th style="width: 15%">Responsable</th>
+                            <th style="width: 10%">Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -50,6 +52,7 @@
                                     <td>No</td>
                                 {% endif %}
                                 <td>{{ almacen.concepto }}</td>
+                                <td>{{ almacen.responsable }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'almacen_editar' almacen.pk %}" title="Editar almacén"
@@ -67,14 +70,17 @@
                             <th style="width: 25%">Ubicación</th>
                             <th style="width: 10%">Propio</th>
                             <th style="width: 15%">Concepto</th>
-                            <th style="width: 25%">Acciones</th>
+                            <th style="width: 15%">Responsable</th>
+                            <th style="width: 10%">Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
                     <a href="{% url 'almacen_crear' %}" class="btn btn-success">Crear Nuevo Almacén</a>
+                    {% if user.is_superuser %}
                     <a href="{% url 'importarAlmacenes' %}" class="btn btn-success">
                         Importar almacén desde archivo
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -6,9 +6,7 @@
             <div class="container-fluid">
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de adquisiciones de insumos</h4>
-                    <a href="{% url 'nueva_compra_insumo' %}" class="btn btn-success">Registrar nueva adquisición</a>
-                    <br>
-                    <br>
+                    
                     {% if messages %}
                         <script>
                             {% for message in messages %}
@@ -22,7 +20,8 @@
                     {% endif %}
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
+                    <a href="{% url 'nueva_compra_insumo' %}" class="btn btn-success">Registrar nueva adquisición</a>
+                    <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th style="width: 50%">Fecha</th>

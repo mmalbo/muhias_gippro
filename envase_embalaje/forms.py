@@ -6,7 +6,6 @@ from nomencladores.almacen.models import Almacen
 from .models import EnvaseEmbalaje
 from django.apps import apps
 
-
 class EnvaseEmbalajeForm(forms.ModelForm):
     tipo_envase_embalaje = forms.ModelChoiceField(queryset=TipoEnvaseEmbalaje.objects.all(),
                                                   label='Tipo de envase o embalaje',
@@ -33,19 +32,18 @@ class EnvaseEmbalajeForm(forms.ModelForm):
         model = EnvaseEmbalaje
         fields = [
             # 'codigo_envase',
-            'cantidad',
             'tipo_envase_embalaje',
             'formato',
             'almacen',
         ]
-        widgets = {
+"""         widgets = {
             # 'codigo_envase': forms.TextInput(attrs={'class': 'form-control'}),
             'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
         }
         labels = {
             # 'codigo_envase': 'Código de envace:',
             'cantidad': 'Cantidad:',
-        }
+        } """
 
 
 class EnvaseEmbalajeUpdateForm(forms.ModelForm):
@@ -74,10 +72,8 @@ class EnvaseEmbalajeUpdateForm(forms.ModelForm):
         model = EnvaseEmbalaje
         fields = [
             'codigo_envase',
-            'cantidad',
             'tipo_envase_embalaje',
             'formato',
-            'almacen',
         ]
         widgets = {
             'codigo_envase': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),

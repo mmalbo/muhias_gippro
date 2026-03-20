@@ -21,12 +21,31 @@
                         <h2>Datos de la Producción</h2>
                         <form id="produccionForm">
                         {% csrf_token %}
+
+                        {% if produccion_base %}
+                        <div class="alert alert-warning">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-recycle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Reutilizando producción: {{ produccion_base.lote }}
+                                    </h5>
+                                    <p class="mb-0">
+                                        <strong>Producto:</strong> {{ produccion_base.catalogo_producto.nombre_comercial }} |
+                                        <strong>Cantidad:</strong> {{ produccion_base.cantidad_estimada|floatformat:2 }}L |
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo oculto para producción base -->
+                        <input type="hidden" name="produccion_base" value="{{ produccion_base.id }}">
+                        <input type="hidden" name="observaciones_reutilizacion" value="Reutilizando {{ produccion_base.lote }}">
+                        {% endif %}
+
             
                         <div class="form-row">                        
-                            <div class="col-md-3 mb-3">
-                                {{ produccion_form.lote.label_tag }}
-                                {{ produccion_form.lote }}
-                            </div>
                             <!-- Selección de producto -->
                             <div class="card mb-3">
                                 <div class="card-header bg-light">
@@ -68,50 +87,42 @@
                                 {{ produccion_form.prod_result.label_tag }}
                                 {{ produccion_form.prod_result }}
                             </div>
-
                         </div>
                         <div class="form-row">
-                        
                             <div class="col-md-3 mb-3">
                                 {{ produccion_form.cantidad_estimada.label_tag }}
                                 {{ produccion_form.cantidad_estimada }}
                             </div>
-                            <div class="col-md-3 mb-3">
+                            <!--<div class="col-md-3 mb-3">
                                 {{ produccion_form.costo.label_tag }}
                                 {{ produccion_form.costo }}
-                            </div>
+                            </div>-->
                             <div class="col-md-6 mb-3">
                                 {{ produccion_form.planta.label_tag }}
                                 {{ produccion_form.planta }}
                             </div>
-
                         </div>
-
                         </form>
-        
                         <div class="navigation-buttons">
                             <button type="button" class="btn-secondary" disabled>Anterior</button>
                             <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
                         </div>
-                </div>
-
-                <!-- Paso 2: Materias primas -->
-                <div class="step" id="step2">
-                    <h2>Materias Primas Necesarias</h2>
-        
-                    <button type="button" class="add-btn" onclick="agregarMateriaPrima()">
-                        + Agregar Materia Prima
-                    </button>
-        
-                    <div id="materiasPrimasContainer">
-                        <!-- Las materias primas se agregarán aquí dinámicamente -->
                     </div>
-                    
-                    
-                    <div class="navigation-buttons">
-                        <button type="button" class="btn-secondary" onclick="prevStep(1)">Anterior</button>
-                        <button type="button" class="add-btn" onclick="agregarMateriaPrima()">+ Agregar Materia Prima</button>
-                        <button type="button" class="btn-primary" onclick="enviarProduccion()">Finalizar Producción</button>
+
+                    <!-- Paso 2: Materias primas -->
+                    <div class="step" id="step2">
+                        <h2>Materias Primas Necesarias</h2>
+                        <button type="button" class="add-btn" onclick="agregarMateriaPrima()">
+                            + Agregar Materia Prima
+                        </button>
+                        <div id="materiasPrimasContainer">
+                            <!-- Las materias primas se agregarán aquí dinámicamente -->
+                        </div>
+                        <div class="navigation-buttons">
+                            <button type="button" class="btn-secondary" onclick="prevStep(1)">Anterior</button>
+                            <button type="button" class="add-btn" onclick="agregarMateriaPrima()">+ Agregar Materia Prima</button>
+                            <button type="button" class="btn-primary" onclick="enviarProduccion()">Finalizar Planificación</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -122,14 +133,14 @@
 <!-- Template para materia prima (hidden) -->
 <template id="materiaPrimaTemplate">
     <div class="materia-prima-item">
-        <h4>Materia Prima #<span class="item-number"></span></h4>
+        <h4>Materia Prima #<span class="item-number"></span>0</h4>
         <div class="form-group">
-            <label>Materia Prima:</label>
+            <label>Materia Prima - Almacen:</label>
             <select class="materia-prima-select" name="materia_prima" required>
                 <option value="">Seleccionar materia prima...</option>
                 {% for mp in materia_prima_form.fields.materia_prima.queryset %}
                 <option value="{{ mp.id }}" data-costo="{{ mp.costo }}" data-unidad="{{ mp.unidad_medida }}">
-                    {{ mp.nombre }} ({{ mp.conformacion }} - {{ mp.unidad_medida }})
+                    {{ mp.materia_prima.nombre }}({{ mp.materia_prima.conformacion }}-{{ mp.materia_prima.unidad_medida }}) - {{ mp.almacen}}
                 </option>
                 {% endfor %}
             </select>
@@ -141,7 +152,7 @@
             <span class="unidad-text"></span>
         </div>
         
-        <div class="form-group">
+        <!--<div class="form-group">
             <label>Almacén:</label>
             <select class="almacen-select" name="almacen" required>
                 <option value="">Seleccionar almacén...</option>
@@ -149,7 +160,7 @@
                 <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
                 {% endfor %}
             </select>
-        </div>
+        </div>-->
         
         <div class="form-group">
             <label>Costo estimado:</label>
@@ -241,6 +252,15 @@ function agregarMateriaPrima() {
     
     materiaPrimaDiv.id = `materia-prima-${materiaPrimaCount}`;
     materiaPrimaDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+
+    /*const elemento = materiaPrimaDiv.querySelector('.item-number');
+    const valor = materiaPrimaCount;
+
+    if (!isNaN(valor) && valor !== null && valor !== undefined) {
+        elemento.textContent = valor+1;
+    } else {
+        elemento.textContent = '0'; // o 'N/A', o ''
+    }*/
     
     // Agregar event listeners
     const select = materiaPrimaDiv.querySelector('.materia-prima-select');
@@ -353,11 +373,11 @@ function enviarPaso2(items) {
     items.forEach((item, index) => {
         const materiaPrima = item.querySelector('.materia-prima-select').value;
         const cantidad = item.querySelector('.cantidad-input').value;
-        const almacen = item.querySelector('.almacen-select').value;
+        //const almacen = item.querySelector('.almacen-select').value;
         
         formData.append(`materias_primas[${index}][materia_prima]`, materiaPrima);
         formData.append(`materias_primas[${index}][cantidad]`, cantidad);
-        formData.append(`materias_primas[${index}][almacen]`, almacen);
+        //formData.append(`materias_primas[${index}][almacen]`, almacen);
     });
     
     // Mostrar loading
@@ -391,7 +411,7 @@ function enviarPaso2(items) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al registrar la producción');
+        alert('Cantidad de materia prima insuficiente en almacén. Verifique disponibilidad'+ JSON.stringify(error));
     })
     .finally(() => {
         submitBtn.textContent = originalText;
@@ -405,14 +425,185 @@ function validarMateriasPrimas() {
     for (let item of items) {
         const materiaPrima = item.querySelector('.materia-prima-select').value;
         const cantidad = item.querySelector('.cantidad-input').value;
-        const almacen = item.querySelector('.almacen-select').value;
+        //const almacen = item.querySelector('.almacen-select').value;
         
-        if (!materiaPrima || !cantidad || !almacen) {
+        if (!materiaPrima || !cantidad ) {
             return false;
         }
     }
     return true;
 }
+</script>
+
+<script>
+    // Depuración
+console.log('Elemento item-number:', document.querySelector('.item-number'));
+console.log('Contenido actual:', document.querySelector('.item-number')?.textContent);
+$(document).ready(function() {
+    // Función para actualizar el contador
+    function actualizarContadorMateriasPrimas() {
+        // Cuenta cuántas filas de materias primas hay
+        var cantidad = $('.materia-prima-fila').length; // Ajusta el selector según tu clase
+        
+        // Si no hay filas, contar de otra manera (inputs, etc)
+        if (cantidad === 0) {
+            cantidad = $('input[name^="materias_primas"]').length; // Cuenta inputs relacionados
+        }
+        
+        // Actualizar el span asegurando que sea un número
+        $('.item-number').text(cantidad || 0);
+    }
+    
+    // Llamar al cargar la página
+    actualizarContadorMateriasPrimas();
+    
+    // Actualizar cuando se agregue o elimine una materia prima
+    $(document).on('click', '.agregar-materia-prima', function() {
+        // Después de agregar, actualizar contador
+        setTimeout(actualizarContadorMateriasPrimas, 100);
+    });
+    
+    $(document).on('click', '.eliminar-materia-prima', function() {
+        // Después de eliminar, actualizar contador
+        setTimeout(actualizarContadorMateriasPrimas, 100);
+    });
+    
+    // Opcional: Observar cambios en el DOM si es dinámico
+    const observer = new MutationObserver(actualizarContadorMateriasPrimas);
+    observer.observe(document.getElementById('contenedor-materias-primas'), { 
+        childList: true, 
+        subtree: true 
+    });
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-completar formulario si hay datos pre-cargados
+        const urlParams = new URLSearchParams(window.location.search);
+        const produccionBaseId = urlParams.get('produccion_base_id');
+        
+        if (produccionBaseId) {
+            // Auto-seleccionar planta si viene en URL
+            const plantaId = urlParams.get('planta_id');
+            if (plantaId && document.getElementById('id_planta')) {
+                document.getElementById('id_planta').value = plantaId;
+            }
+            
+            // Auto-seleccionar producto
+            const productoId = urlParams.get('catalogo_producto_id');
+            if (productoId && document.getElementById('id_catalogo_producto')) {
+                document.getElementById('id_catalogo_producto').value = productoId;
+            }
+            
+            // Auto-completar cantidad
+            const cantidad = urlParams.get('cantidad_estimada');
+            if (cantidad && document.getElementById('id_cantidad_estimada')) {
+                document.getElementById('id_cantidad_estimada').value = cantidad;
+            }
+            
+            // Auto-marcar producto base si corresponde
+            const prodResult = urlParams.get('prod_result');
+            if (prodResult === 'on' && document.getElementById('id_prod_result')) {
+                document.getElementById('id_prod_result').checked = true;
+            }
+        }
+        
+        // Mostrar materias primas pre-cargadas como sugerencia
+        const materiasPrecargadas = {{ materias_primas_precargadas|safe|default:"[]" }};
+        if (materiasPrecargadas.length > 0) {
+            mostrarMateriasPrimasSugeridas(materiasPrecargadas);
+        }
+    });
+    
+    function mostrarMateriasPrimasSugeridas(materias) {
+        // Crear un contenedor para las sugerencias
+        const container = document.createElement('div');
+        container.className = 'card mt-3';
+        container.innerHTML = `
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Materias Primas Sugeridas (de la producción base)
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Estas son las materias primas utilizadas en la producción base.
+                    Puede usarlas como referencia o hacer clic para agregarlas automáticamente.
+                </p>
+                <div id="materias-sugeridas-list"></div>
+                <button type="button" class="btn btn-sm btn-outline-info mt-2" 
+                        onclick="agregarTodasMateriasSugeridas()">
+                    <i class="fas fa-plus-circle me-1"></i>Agregar Todas
+                </button>
+            </div>
+        `;
+        
+        // Insertar después del formulario de materias primas
+        const formMaterias = document.querySelector('.card.mb-4');
+        if (formMaterias) {
+            formMaterias.parentNode.insertBefore(container, formMaterias.nextSibling);
+        }
+        
+        // Llenar la lista
+        const listContainer = document.getElementById('materias-sugeridas-list');
+        materias.forEach((mp, index) => {
+            const item = document.createElement('div');
+            item.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
+            item.innerHTML = `
+                <div>
+                    <strong>${mp.materia_prima_nombre}</strong>
+                    <br>
+                    <small class="text-muted">
+                        ${mp.cantidad} ${mp.unidad_medida} • 
+                        Almacén: ${mp.almacen_nombre} • 
+                        Costo: $${mp.costo}
+                    </small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-success" 
+                        onclick="agregarMateriaSugerida(${index})">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            `;
+            listContainer.appendChild(item);
+            
+            // Guardar en data attribute para uso posterior
+            item.setAttribute('data-materia-data', JSON.stringify(mp));
+        });
+    }
+    
+    function agregarMateriaSugerida(index) {
+        // Obtener datos de la materia prima
+        const items = document.querySelectorAll('#materias-sugeridas-list > div');
+        const item = items[index];
+        const mpData = JSON.parse(item.getAttribute('data-materia-data'));
+        
+        // Llamar a la función que agrega materias primas (debes tenerla en tu JS)
+        if (typeof agregarMateriaPrima === 'function') {
+            agregarMateriaPrima({
+                materia_prima: mpData.materia_prima_id,
+                cantidad: mpData.cantidad,
+                almacen: mpData.almacen_id
+            });
+            
+            // Cambiar botón a agregado
+            const btn = item.querySelector('button');
+            btn.innerHTML = '<i class="fas fa-check"></i> Agregada';
+            btn.className = 'btn btn-sm btn-success';
+            btn.disabled = true;
+        }
+    }
+    
+    function agregarTodasMateriasSugeridas() {
+        const items = document.querySelectorAll('#materias-sugeridas-list > div');
+        items.forEach((item, index) => {
+            const btn = item.querySelector('button');
+            if (!btn.disabled) {
+                agregarMateriaSugerida(index);
+            }
+        });
+    }
 </script>
 
 <style>

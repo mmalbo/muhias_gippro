@@ -7,6 +7,7 @@ from envase_embalaje.models import EnvaseEmbalaje
 from envase_embalaje.tipo_envase_embalaje.models import TipoEnvaseEmbalaje
 from envase_embalaje.formato.models import Formato
 from InsumosOtros.models import InsumosOtros 
+from producto.models import Producto
 
 """ Genérico para todos """
 class CompraForm(forms.ModelForm):
@@ -30,9 +31,9 @@ class CompraForm(forms.ModelForm):
 class CantidadMateriasForm(forms.Form):
     cantidad = forms.IntegerField(
         min_value=1,
-        max_value=20,
+        max_value=200,
         label="¿Cuántas materias primas deseas registrar?",
-        help_text="Máximo 20 materias por compra",
+        help_text="Máximo 200 materias por compra",
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'placeholder': 'Número de materias primas'
@@ -59,7 +60,19 @@ class MateriaPrimaForm(forms.Form):
         label="Seleccionar materia prima existente",
         widget=forms.Select(attrs={'class': 'form-select materia-select'})
     )
-    
+
+    nuevo_costo = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nuevo costo (opcional)'
+        }),
+        label='Actualizar costo'
+    )
+
+    # Campo cantidad para la compra
     cantidad = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -69,12 +82,6 @@ class MateriaPrimaForm(forms.Form):
     )
     
     # Campos para nueva materia prima
-    """ codigo = forms.CharField(
-        max_length=20, 
-        required=False, 
-        label="Código",
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    ) """
     nombre = forms.CharField(
         max_length=100, 
         required=False, 
@@ -105,11 +112,6 @@ class MateriaPrimaForm(forms.Form):
         label="Concentración",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    """ cantidad_almacen = forms.IntegerField( 
-        required=False, 
-        label="Cantidad en almacen",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
-    ) """
     costo = forms.FloatField(
         required=False,
         label="Costo",
@@ -130,10 +132,17 @@ class MateriaPrimaForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         opcion = cleaned_data.get('opcion')
-        print(cleaned_data.get('nombre'))
+
         if opcion == self.EXISTING:
-            if not cleaned_data.get('materia_existente'):
-                self.add_error('materia_existente', 'Debes seleccionar una materia prima existente')
+            materia = cleaned_data.get('materia_existente')
+            if not materia:
+                raise forms.ValidationError('Debe seleccionar una materia prima existente')
+            
+            # Si se proporciona nuevo_costo, asegurarse de que sea válido
+            nuevo_costo = cleaned_data.get('nuevo_costo')
+            if nuevo_costo is not None and nuevo_costo < 0:
+                raise forms.ValidationError('El costo no puede ser negativo')
+
         elif opcion == self.NEW:
             if not cleaned_data.get('nombre'):
                 self.add_error('nombre', 'El nombre es obligatorio para nuevas materias primas')
@@ -154,9 +163,9 @@ class MateriaPrimaForm(forms.Form):
 class CantidadEnvasesForm(forms.Form):
     cantidad = forms.IntegerField(
         min_value=1,
-        max_value=20,
+        max_value=200,
         label="¿Cuántos envases o embalajes deseas registrar?",
-        help_text="Máximo 20 por compra",
+        help_text="Máximo 200 por compra",
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'placeholder': 'Número de envases o embalajes'
@@ -176,6 +185,17 @@ class EnvasesForm(forms.Form):
         widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
         initial=EXISTING
     )
+
+    nuevo_costo = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nuevo costo (opcional)'
+        }),
+        label='Actualizar costo'
+    )
     
     envase_existente = forms.ModelChoiceField(
         queryset=EnvaseEmbalaje.objects.all(),
@@ -191,13 +211,7 @@ class EnvasesForm(forms.Form):
         label="Cantidad adquirida",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    """ almacen = forms.ModelChoiceField(
-        queryset=Almacen.objects.all(),
-        required=False,
-        label="Almacen para su ubicación",
-        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
-    ) """
-    
+   
     # Campos para nuevo envase
     tipo_envase_embalaje = forms.ModelChoiceField(
         queryset=TipoEnvaseEmbalaje.objects.all(),
@@ -226,29 +240,27 @@ class EnvasesForm(forms.Form):
         if opcion == self.EXISTING:
             if not cleaned_data.get('envase_existente'):
                 self.add_error('envase_existente', 'Debes seleccionar un envase existente')
+
+            # Si se proporciona nuevo_costo, asegurarse de que sea válido
+            nuevo_costo = cleaned_data.get('nuevo_costo')
+            if nuevo_costo is not None and nuevo_costo < 0:
+                raise forms.ValidationError('El costo no puede ser negativo')
+            
         elif opcion == self.NEW:
             if not cleaned_data.get('tipo_envase_embalaje'):
                 self.add_error('tipo_envase_embalaje', 'El tipo de envase es obligatorio para nuevos evases o embalajes')
             if not cleaned_data.get('formato'):
                 self.add_error('formato', 'El formato es obligatorio para nuevos eases o embalajes')
-            
-            """ # Validar que no exista una materia prima con el mismo nombre
-            nombre = cleaned_data.get('nombre')
-            codigo = cleaned_data.get('codigo')
-            if nombre and MateriaPrima.objects.filter(nombre=nombre).exists():
-                self.add_error('nombre', 'Ya existe una materia prima con este nombre')
-            if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
-                self.add_error('codigo', 'Ya existe una materia prima con este código') """
-        
+                    
         return cleaned_data
     
 """ Para insumos y otros """
 class CantidadInsumosForm(forms.Form):
     cantidad = forms.IntegerField(
         min_value=1,
-        max_value=20,
+        max_value=200,
         label="¿Cuántos insumos deseas registrar?",
-        help_text="Máximo 20 por compra",
+        help_text="Máximo 200 por compra",
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'placeholder': 'Número de insumos'
@@ -283,15 +295,8 @@ class InsumosForm(forms.Form):
         label="Cantidad adquirida",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    """ almacen = forms.ModelChoiceField(
-        queryset=Almacen.objects.all(),
-        required=False,
-        label="Almacen para su ubicación",
-        widget=forms.Select(attrs={'class': 'form-select almacen-select'})
-    ) """
-    
-    # Campos para nuevo insumo
 
+    # Campos para nuevo insumo
     codigo = forms.CharField(
         max_length=20, 
         required=False, 
@@ -318,6 +323,16 @@ class InsumosForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
 
+    nuevo_costo = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nuevo costo (opcional)'
+        }),
+        label='Actualizar costo'
+    )
     
     def clean(self):
         cleaned_data = super().clean()
@@ -326,6 +341,12 @@ class InsumosForm(forms.Form):
         if opcion == self.EXISTING:
             if not cleaned_data.get('insumo_existente'):
                 self.add_error('insumo_existente', 'Debes seleccionar un insumo existente')
+
+            # Si se proporciona nuevo_costo, asegurarse de que sea válido
+            nuevo_costo = cleaned_data.get('nuevo_costo')
+            if nuevo_costo is not None and nuevo_costo < 0:
+                raise forms.ValidationError('El costo no puede ser negativo')
+            
         elif opcion == self.NEW:
             if not cleaned_data.get('codigo'):
                 self.add_error('codigo', 'El código es obligatorio para nuevos insumo')
@@ -341,3 +362,116 @@ class InsumosForm(forms.Form):
                 self.add_error('codigo', 'Ya existe un insumo con este código')
         
         return cleaned_data
+
+""" Para productos """
+class CantidadProductosForm(forms.Form):
+    cantidad = forms.IntegerField(
+        min_value=1,
+        max_value=200,
+        label="¿Cuántos productos deseas registrar?",
+        help_text="Máximo 200 por compra",
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Número de productos'
+        })
+    )
+
+class ProductosForm(forms.Form):
+    EXISTING = 'existing'
+    NEW = 'new'
+    PRODUCTOS_CHOICES = [
+        (EXISTING, 'Usar producto existente'),
+        (NEW, 'Registrar nuevo producto')
+    ]
+    
+    opcion = forms.ChoiceField(
+        choices=PRODUCTOS_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=EXISTING
+    )
+    
+    producto_existente = forms.ModelChoiceField(
+        queryset=Producto.objects.all(),
+        required=False,
+        label="Seleccionar producto existente",
+        widget=forms.Select(attrs={'class': 'form-select producto-select'})
+    )
+    
+    cantidad = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0.01,
+        label="Cantidad adquirida",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    nuevo_costo = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nuevo costo (opcional)'
+        }),
+        label='Actualizar costo'
+    )
+    # Campos para nuevo producto
+    codigo_producto = forms.CharField(
+        max_length=20, 
+        required=False, 
+        label="Código",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    nombre_comercial = forms.CharField(
+        max_length=255, 
+        required=False, 
+        label="Nombre",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    
+    formato = forms.ModelChoiceField(
+        queryset=Formato.objects.all(),
+        required=False,
+        label="Seleccionar formato",
+        widget=forms.Select(attrs={'class': 'form-select formato-select'})
+    )
+
+    costo = forms.FloatField(
+        required=False,
+        label="Costo",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        opcion = cleaned_data.get('opcion')
+        
+        if opcion == self.EXISTING:
+            if not cleaned_data.get('producto_existente'):
+                self.add_error('producto_existente', 'Debes seleccionar un producto existente')
+
+            # Si se proporciona nuevo_costo, asegurarse de que sea válido
+            nuevo_costo = cleaned_data.get('nuevo_costo')
+            if nuevo_costo is not None and nuevo_costo < 0:
+                raise forms.ValidationError('El costo no puede ser negativo')
+            
+        elif opcion == self.NEW:
+            if not cleaned_data.get('codigo_producto'):
+                self.add_error('codigo', 'El código es obligatorio para nuevos productos')
+            if not cleaned_data.get('nombre_comercial'):
+                self.add_error('nombre', 'El nombre es obligatorio para nuevos productos')
+            if not cleaned_data.get('formato'):
+                self.add_error('formato', 'El formato es obligatorio para nuevos productos')
+            
+            # Validar que no exista un producto con el mismo código o nombre
+            nombre_comercial = cleaned_data.get('nombre_comercial')
+            codigo_producto = cleaned_data.get('codigo_producto')
+            if nombre_comercial and Producto.objects.filter(nombre_comercial=nombre_comercial).exists():
+                self.add_error('nombre_comercial', 'Ya existe un producto con este nombre')
+            if codigo_producto and Producto.objects.filter(codigo_producto=codigo_producto).exists():
+                self.add_error('codigo_producto', 'Ya existe un producto con este código')
+        
+        return cleaned_data
+    

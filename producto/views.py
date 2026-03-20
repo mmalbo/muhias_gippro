@@ -4,16 +4,131 @@ from django.shortcuts import redirect, render
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from tablib import Dataset
-
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse, Http404, HttpResponse
+import decimal
 from ficha_tecnica.models import FichaTecnica
 from nomencladores.almacen.models import Almacen
 from .models import Producto
 from .forms import ProductoForm
+from inventario.models import Inv_Producto
+from envase_embalaje.formato.models import Formato
+from datetime import date, datetime, timezone
+import decimal
+import openpyxl
+from openpyxl.styles import Font
+from utils.utils import eliminar_tildes
 
+@login_required
+def exportar_productos_excel(request):
+    # Crear el libro y la hoja
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Productos"
 
-class ListaProductoView(ListView):
+    # Definir los encabezados
+    encabezados = ["Código", "Nombre", "Formato", "Cantidad", "Costo"]
+    ws.append(encabezados)
+
+    # Dar formato a los encabezados (negrita)
+    for col in range(1, 6):
+        celda = ws.cell(row=1, column=col)
+        celda.font = Font(bold=True)
+
+    # Obtener los datos (mismo queryset que usas en la tabla)
+    productos = Producto.objects.all()  # Ajusta si hay filtros
+
+    # Agregar los datos fila por fila
+    for prod in productos:
+        print(prod.formato)
+        formato = str(prod.formato.capacidad) + ' ' + prod.formato.unidad_medida
+        ws.append([
+            prod.codigo_producto,
+            prod.nombre_comercial,
+            formato,
+            prod.cantidad_total,
+            prod.costo,
+        ])
+
+    # Ajustar ancho de columnas automáticamente (opcional)
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[col_letter].width = adjusted_width
+
+    # Preparar la respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=productos.xlsx'
+    wb.save(response)
+    return response
+
+@login_required
+def listProductos(request):
+    almacen_id = request.GET.get('almacen')
+    producto_id = request.GET.get('producto')
+    
+    almacen = None
+    if request.user.groups.filter(name='Almaceneros').exists():
+        almacen = Almacen.objects.filter(responsable=request.user).first()
+
+    inv_productos = Inv_Producto.objects.select_related('producto', 'almacen')
+    
+    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
+        if almacen_id and almacen_id != 'todos':
+            inv_productos = inv_productos.filter(almacen=almacen_id)
+    else:
+        if almacen:
+            inv_productos = inv_productos.filter(almacen=almacen)
+        else:
+            inv_productos = Inv_Producto.objects.none()
+
+    if producto_id:
+        inv_productos = inv_productos.filter(producto=producto_id)
+
+    inv_productos = inv_productos.order_by('producto__nombre_comercial', 'almacen__nombre')
+    almacenes = Almacen.objects.all()
+    productos = Producto.objects.all()
+    total_productos = productos.count()
+
+    context = {
+        'inv_productos':inv_productos,
+        'almacenes':almacenes,
+        'productos':productos,
+        'almacen_id':almacen_id,
+        'producto_id':producto_id,
+        'almacen':almacen,
+        'total_productos':total_productos,
+        'es_admin': request.user.groups.filter(name='Presidencia-Admin').exists(),
+        'es_almacenero': request.user.groups.filter(name='Almaceneros').exists(),
+    }
+
+    return render(request, 'producto/producto_list.html', context)
+
+@login_required
+def get_productos(request, pk):
+    try:
+        almacen = Almacen.objects.get(pk=pk)
+        productos = almacen.inventarios_prod.all()
+        productos_data = [{'nombre': producto.nombre_comercial, 'nombre_almacen': almacen.nombre} for producto in
+                                productos]
+
+        return JsonResponse(productos_data, safe=False)
+    except Almacen.DoesNotExist:
+        raise Http404("Producto no encontrado")
+    
+class ListaProductoView(LoginRequiredMixin, ListView):
     model = Producto
-    template_name = 'producto_final/lista_producto_final.html'
+    template_name = 'producto/producto_cat.html'
     context_object_name = 'productos_finales'
 
     def get_context_data(self, **kwargs):
@@ -29,35 +144,37 @@ class ListaProductoView(ListView):
             messages.success(self.request, self.request.session.pop('mensaje_succes'))
         return context
 
-class CrearProductoView(CreateView):
+class CrearProductoView(LoginRequiredMixin, CreateView):
     model = Producto
     form_class = ProductoForm
-    template_name = 'producto_final/form.html'
+    template_name = 'producto/form.html'
     success_url = reverse_lazy('producto_final_list')
 
-class ActualizarProductoView(UpdateView):
+class ActualizarProductoView(LoginRequiredMixin, UpdateView):
     model = Producto
     form_class = ProductoForm
-    template_name = 'producto_final/form.html'
+    template_name = 'producto/form.html'
+    success_url = reverse_lazy('list_producto')
+
+class EliminarProductoView(LoginRequiredMixin, DeleteView):
+    model = Producto
+    template_name = 'producto/eliminar_producto_final.html'
     success_url = reverse_lazy('producto_final_list')
 
-class EliminarProductoView(DeleteView):
+class DetalleProductoView(LoginRequiredMixin, DetailView):
     model = Producto
-    template_name = 'producto_final/eliminar_producto_final.html'
-    success_url = reverse_lazy('producto_final_list')
+    template_name = 'producto/detalle_producto_final.html'
 
-class DetalleProductoView(DetailView):
-    model = Producto
-    template_name = 'producto_final/detalle_producto_final.html'
-
-class CreateImportView(CreateView):
+class CreateImportView(LoginRequiredMixin, CreateView):
     model = Producto
     form_class = ProductoForm
-    template_name = 'producto_final/import_form.html'
-    success_url = '/producto_final/'
+    template_name = 'producto/import_form.html'
+    success_url = '/producto/'
     success_message = "Se ha importado correctamente."
 
+@login_required
 def importar(request):
+    print("En el import")
     if request.method == 'POST':
         file = request.FILES.get('excel')
         No_fila = 0
@@ -71,97 +188,146 @@ def importar(request):
             with (transaction.atomic()):
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
-                Col_Coddigo = 0
+                Col_Codigo = 0
                 Col_Nombre = 1
-                Col_FichaTecnica = 2
+                Col_3l = 2
                 Col_Almacen = 3
                 Col_Cantidad = 4
-                Col_Producto = 5
+                Col_Formato = 5
+                Col_Costo = 6
                 i = 0
-                while i <= len(imported_data):
-                    data = imported_data[i]
-                    codigo = str(data[Col_Coddigo]).strip() if data[Col_Coddigo] is not None else None
 
-                    i += 1
-
-                    nombre = str(data[Col_Nombre]).strip() if data[
-                                                                  Col_Nombre] is not None else None  # Asegúrate de que sea un string
+                for data in imported_data:
+                    codigo = str(data[Col_Codigo]).strip() if data[Col_Codigo] is not None else None
+                    nombre = str(data[Col_Nombre]).strip() if data[Col_Nombre] is not None else None  # Asegúrate de que sea un string
+                    codigo_3l = str(data[Col_3l]).strip() if data[Col_3l] is not None else None
                     cantidad = str(data[Col_Cantidad]).strip() if data[Col_Cantidad] is not None else None
-                    ficha_tecnica = str(data[Col_FichaTecnica]).strip() if data[
-                                                                               Col_FichaTecnica] is not None else None
                     almacen = str(data[Col_Almacen]).strip() if data[Col_Almacen] is not None else None
-                    es_final = str(data[Col_Producto]).strip().lower()  # Convertir a minúsculas
-                    # Validar el campo 'propio'
-                    if es_final not in ['si', 'no']:
-                        messages.error(request,
-                                       f'En la fila {No_fila + 2} el valor para "Producto final" debe ser "si" o "no". Valor '
-                                       f'recibido: {data[5] if data[5] is not None else "Ninguno"}')
-                        return redirect('importarProducto')
-
-                    es_final = True if es_final == 'sí' or es_final=='si' else False
-                    existe = Producto.objects.filter(codigo_producto__iexact=codigo, product_final=es_final).first()
-                    if existe:
-                        producto_existentes.append(codigo)
-                        No_fila += 1  # Incrementa solo si se guarda correctamente
-                        continue  # Si ya existe, saltamos a la siguiente fila
-
+                    formato = str(data[Col_Formato]).strip() if data[Col_Formato] is not None else None  # Convertir a minúsculas
+                    costo = str(data[Col_Costo]).strip() if data[Col_Costo] is not None else None
+                    
                     # Validaciones de los datos
                     if not all(
-                            [codigo, nombre, cantidad, ficha_tecnica, almacen]):
-                        messages.error(request, f"Fila {No_fila + 2}: Todos los campos son obligatorios.")
+                            [codigo, nombre, codigo_3l, almacen, formato, costo]):
+                        print(f"Fila {i}: Todos los campos son obligatorios.")
+                        messages.error(request, f"Fila {i}: Todos los campos son obligatorios.")
                         return redirect('importarProducto')
 
-                    ficha_tecnica = FichaTecnica.objects.filter(nombre_quimico__iexact=ficha_tecnica).first()
-                    if ficha_tecnica is None:
+                    almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
+                    if almacen_obj is None:
+                        print("No existe el almacen")
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: No existe el nombre de la ficha técnica "
-                                       f"'{str(data[Col_FichaTecnica]).strip()}' en el nomenclador")
+                                       f"Fila {i}: No existe el almacén  '{str(data[Col_Almacen]).strip()}' en el nomenclador")
                         return redirect('importarProducto')
-                    ficha_tecnica_producto= Producto.objects.filter(ficha_tecnica_folio=ficha_tecnica).first()
-                    if ficha_tecnica_producto:
-                        messages.error(request,
-                                       f"Fila {No_fila + 2}: Ya existe un producto registrado con la ficha técnica "
-                                       f"'{str(data[Col_FichaTecnica]).strip()}'.")
-                        return redirect('importarProducto')
-                    almacen = Almacen.objects.filter(nombre__iexact=almacen).first()
-                    if almacen is None:
-                        messages.error(request,
-                                       f"Fila {No_fila + 2}: No existe el almacén  '{str(data[Col_Almacen]).strip()}' en el nomenclador")
-                        return redirect('importarProducto')
+                    else:
+                        print(f"Almacen {almacen_obj.nombre}")
 
                     if len(nombre) > 255:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: El nombre de la materia prima no puede exceder 255 caracteres.")
+                                       f"Fila {i}: El nombre del producto no puede exceder 255 caracteres.")
                         return redirect('importarProducto')
+                    else: print(nombre)
 
                     if len(codigo) > 20:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: El código no puede exceder 20 caracteres.")
+                                       f"Fila {i}: El código no puede exceder 20 caracteres.")
                         return redirect('importarProducto')
+                    else: print(codigo)
 
-                    if not cantidad.isdigit() or int(cantidad) <= 0:
+                    if len(codigo_3l) > 3:
                         messages.error(request,
-                                       f"Fila {No_fila + 2}: 'Cantidad' debe ser un número entero mayor que cero.")
+                                       f"Fila {i}: El código corto solo debe tener 3 letras.")
                         return redirect('importarProducto')
+                    else: print(codigo_3l)
 
-                    cantidad = int(cantidad)  # Convertimos a entero después de la validación
+                    if decimal.Decimal(cantidad) < 0:
+                        messages.error(request,
+                                       f"Fila {i}: 'Cantidad' debe ser un número positivo.")
+                        return redirect('importarProducto')
+                    else: print(cantidad)
 
+                    print(costo)
+
+                    print("Estoy luego de validaciones")
+                    cap_str = ''
+					          
+                    for j in formato:
+                        try:
+                            if int(j) or j == '0':
+                                cap_str = cap_str + j
+                            else:
+                                break
+                        except:
+                            break
+
+                    if cap_str == '':
+                        capacidad = 0
+                    else:
+                        capacidad = int(cap_str)
+                    if 'kg' in formato.lower():
+                        um = 'KG'
+                    elif 'ml' in formato.lower():
+                        um = 'ML'
+                    elif 'l' in formato.lower():
+                        um = 'L'
+                    elif 'granel' in formato.lower():
+                        capacidad = 0
+                        um = 'L'
+                    else:
+                        um = 'U'
+
+                    print(f"UM: {um} capacidad: {capacidad}")
+
+                    formato_o = Formato.objects.filter(unidad_medida=um, capacidad=capacidad).first()
+                    if not formato_o:
+                        formato_o = Formato.objects.create(unidad_medida=um, capacidad=capacidad)
+                    print(f"Formato: {formato_o}")
+
+                    #cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
+                    
                     try:
-                        producto = Producto(
-                            codigo_producto=codigo,
-                            nombre_comercial=nombre,
-                            ficha_tecnica_folio=ficha_tecnica,
-                            almacen=almacen,  # Asumiendo que este es el ID
-                            cantidad_alm=cantidad,
-                            product_final=es_final
-                        )
-                        producto.clean()  # Valida los datos antes de guardar
+                        producto, created_prod = Producto.objects.update_or_create(
+                                nombre_comercial=nombre,
+                                formato=formato_o,
+                                defaults={"codigo_producto": codigo,
+                                          "costo": costo,
+                                          "codigo_3l": codigo_3l}
+                            )
+
+                        print(producto)
+
+                        producto.clean()  
                         producto.save()
-                        No_fila += 1  # Incrementa solo si se guarda correctamente
+
+                        #Ahora a actualizar inventario
+                        if producto:
+                            print('preparando inventario')
+                            fecha_actual = datetime.now()
+                            fecha_codigo = fecha_actual.strftime('%y%m%d')
+                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
+                            
+                        inventario_prod, created_inv = Inv_Producto.objects.update_or_create(
+                            producto=producto, 
+                            almacen=almacen_obj, 
+                            lote=lote,
+                            defaults={"cantidad": decimal.Decimal(cantidad)} 
+                        )
+                        inventario_prod.save()
+                        if created_inv:
+                            print(f"Creado: {inventario_prod}")
+                        else:
+                            print(f"Actualizado: {inventario_prod}")
+                            
+                        
+
+                        No_fila += 1   #Incrementa solo si se guarda correctamente
 
                     except Exception as e:
-                        messages.error(request, f"Error al procesar la fila {No_fila + 2}: {str(e)}")
+                        print(f"Error al procesar la fila {i + 1}: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila {i + 1}: {str(e)}")
                         return redirect('importarProducto')
+
+                    i += 1
 
                 # Mensajes finales
                 if No_fila > 0:
@@ -189,4 +355,4 @@ def importar(request):
         except Exception as e:
             messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
             return redirect('producto_list')
-    return render(request, 'producto_final/import_form.html')
+    return render(request, 'producto/import_form.html')

@@ -172,3 +172,87 @@
                                             <i class="las la-minus"></i><span>Listar</span>
                                         </a>
                                     </li>-->
+
+                            <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const showAlmacenesLinks = document.querySelectorAll('.show_materias_primas');
+            const modal = document.getElementById('materia_prima_modal');
+            const closeButton = document.getElementsByClassName('close-button')[0];
+
+            showAlmacenesLinks.forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const pk = this.dataset.pk;
+                    fetch(`/materia_prima/materias_primas/${pk}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const almacenesList = document.getElementById('almacenes-list');
+                            const modalCodigoMateriaPrima = document.getElementById('modalCodigoMateriaPrima');
+                            modalCodigoMateriaPrima.innerHTML = '';
+                            almacenesList.innerHTML = '';
+                            const codigo = document.createElement('codigo');
+                            if (data.length > 0) {
+                                data.forEach(almacen => {
+                                    const li = document.createElement('li');
+                                    li.textContent = almacen.nombre;
+                                    codigo.textContent = almacen.nombre_almacen;
+                                    almacenesList.appendChild(li);
+                                });
+                                modalCodigoMateriaPrima.appendChild(codigo);
+                            } else {
+                                almacenesList.innerHTML = 'No hay materias primas asociadas';
+                            }
+                            modal.style.display = 'block';
+                        });
+                });
+            });
+            window.addEventListener('click', function (event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        function closeModal() {
+            var modal = document.getElementById("materia_prima_modal");
+            modal.style.display = "none";
+        }
+    </script>
+
+    <!-- Agrega este código en la sección donde quieras mostrar el modal -->
+        <div id="materia_prima_modal" class="modal" style="text-align: left" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <span class="close-button">&times;</span>
+                    <div class="modal-header">
+                        <h2>Almacén: <strong><span id="modalCodigoMateriaPrima"></span></strong></h2>
+                    </div>
+                    <div style="margin-left: 1rem;">
+                        <strong><p>Listado de materias primas asociadas:</p></strong>
+                    </div>
+                    <ul id="almacenes-list"></ul>
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeModal()"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+                                {#                                 <td>#}
+                                {#                                    <a href="#" class="show_materias_primas" data-pk="{{ almacen.pk }}">Ver#}
+                                {#                                        materias primas</a>#}
+                                {#                                </td> #}
+
+                                 
+                                <code class="ms-2">{{ valor }}</code>
+
+<div class="mb-3">
+                    {{ wizard.form.codigo.label_tag }}
+                    {{ wizard.form.codigo }}
+                </div>
+                
