@@ -60,7 +60,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Obtener todos los envases disponibles (a través de Inv_Envase)
+        # Obtener todos los envases disponibles (a travÃ©s de Inv_Envase)
         context['envases_disponibles'] = Inv_Envase.objects.filter(
             cantidad__gt=0
         ).select_related('envase', 'almacen').order_by('envase__nombre')
@@ -86,7 +86,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
 # API endpoints para AJAX
 @login_required
 def obtener_detalle_lote(request):
-    """Obtener detalles de un lote específico"""
+    """Obtener detalles de un lote especifico"""
     lote_id = request.GET.get('lote_id')
     if lote_id:
         try:
@@ -105,7 +105,7 @@ def obtener_detalle_lote(request):
 
 @login_required
 def obtener_detalle_envase(request):
-    """Obtener detalles de un envase específico"""
+    """Obtener detalles de un envase especÃ­fico"""
     envase_id = request.GET.get('envase_id')
     if envase_id:
         try:
@@ -126,7 +126,7 @@ def obtener_detalle_envase(request):
 
 @login_required
 def obtener_detalle_insumo(request):
-    """Obtener detalles de un insumo específico"""
+    """Obtener detalles de un insumo especÃ­fico"""
     insumo_id = request.GET.get('insumo_id')
     if insumo_id:
         try:
@@ -161,7 +161,7 @@ def iniciar_envasado(request, pk):
     solicitud = get_object_or_404(SolicitudEnvasado, pk=pk)
     
     if solicitud.estado != 'Planificada':
-        messages.error(request, 'Esta solicitud no está preparada para iniciar.')
+        messages.error(request, 'Esta solicitud no estÃ¡ preparada para iniciar.')
         return redirect('detalle_solicitud_envasado', pk=pk)
     
     solicitud.estado = 'en_proceso'
@@ -192,7 +192,7 @@ def registrar_lote_envasado(request, solicitud_pk):
                         **insumo_data
                     )
                 
-                # Verificar si ya se completó toda la cantidad solicitada
+                # Verificar si ya se completÃ³ toda la cantidad solicitada
                 """Definir el form para establecer el cierre del envasado y registrar la cantidad real"""
                 
                 messages.success(request, 'Lote registrado exitosamente.')

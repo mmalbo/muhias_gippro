@@ -49,3 +49,4 @@ htmlcov/
 *.pyc
 *.pyc
 *.pyc
+/static_root

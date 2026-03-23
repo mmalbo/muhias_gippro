@@ -152,16 +152,6 @@
             <span class="unidad-text"></span>
         </div>
         
-        <!--<div class="form-group">
-            <label>Almacén:</label>
-            <select class="almacen-select" name="almacen" required>
-                <option value="">Seleccionar almacén...</option>
-                {% for almacen in materia_prima_form.fields.almacen.queryset %}
-                <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>-->
-        
         <div class="form-group">
             <label>Costo estimado:</label>
             <span class="costo-text">$0.00</span>
@@ -402,16 +392,19 @@ function enviarPaso2(items) {
                 window.location.href = data.redirect_url;
             }
         } else {
-            alert('Error: ' + JSON.stringify(data.errors));
+            //alert('Error: ' + JSON.stringify(data.errors));
             // Si el error es por datos de producción perdidos, volver al paso 1
-            if (data.errors && data.errors.includes('no encontrados')) {
-                prevStep(1);
-            }
+            //if (data.errors && data.errors.includes('no encontrados')) {
+              //  prevStep(1);
+            //}
+            // ¡AQUÍ YA ESTÁ EL MENSAJE CORRECTO!
+            alert('Error: ' + (data.errors || 'Error desconocido'));
+            // data.errors ya contiene "Cantidad insuficiente de [NOMBRE_MP]"
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Cantidad de materia prima insuficiente en almacén. Verifique disponibilidad'+ JSON.stringify(error));
+        console.error('Error de red:', error);
+        alert('Error al procesar la solicitud: ' + error.message);
     })
     .finally(() => {
         submitBtn.textContent = originalText;

@@ -434,37 +434,44 @@ def salida_produccion(request, prod_id):
             vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
                 origen = almacen.nombre,
-                destino = Produccion.planta.nombre,
+                destino = produccion.planta.nombre,
                 entrada = False,
-                tipo = 'Entrega'
+                tipo = 'Entrega',
+                lote_No = produccion.lote
             )
-        # Procesar cada mp
-        for mp in mp_prod:
-            try:
-                field_name = str(mp.inv_materia_prima.id)
-                print(field_name)
-                cantidad = decimal.Decimal('0.00')
-                cantidad = decimal.Decimal(float(request.POST.get(field_name)))
-                print(request.POST.get(field_name))
-                Movimiento_MP.objects.create(
+            # Procesar cada mp
+            for mp in mp_prod:
+                try:
+                    field_name = str(mp.inv_materia_prima.id)
+                    print(field_name)
+                    cantidad = decimal.Decimal('0.00')
+                    cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+                    print(request.POST.get(field_name))
+                    Movimiento_MP.objects.create(
                         materia_prima=mp.inv_materia_prima,
                         vale=vale,  # Ejemplo: atributo fijo
                         cantidad=cantidad                        
                     )
-                print(mp.inv_materia_prima.id)
-                print(almacen.id)
-                inventario_mp = get_object_or_404(Inv_Mat_Prima,
-                    materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
-                inventario_mp.cantidad = inventario_mp.cantidad - cantidad
-                inventario_mp.save()  
-                return redirect('materia_prima:materia_prima_list')
-            except Exception as e: #(ValueError, TypeError):
+                    print(mp.inv_materia_prima.id)
+                    print(almacen.id)
+                    inventario_mp = get_object_or_404(Inv_Mat_Prima,
+                        materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
+                    inventario_mp.cantidad = inventario_mp.cantidad - cantidad
+                    inventario_mp.save()
+                except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}")
-                    pass         
+                    pass
+            return redirect('movimiento_list')  # Redirigir a página de éxito                               
         return render(request, 'movimientos/salida_mp.html', {
         'materias_primas': mp_prod, 'produccion': produccion
         })
-
+    else:
+        messages.info(request, 'La producción no está en estado Planificada')    
+    
+    return render(request, 'movimientos/salida_mp.html', {
+        'materias_primas': mp_prod, 'produccion': produccion
+        })
+    
 def recepcion_materia_prima(request, adq_id):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
     inv_mat = DetallesAdquisicion.objects.filter(adquisicion__id=adq_id)
