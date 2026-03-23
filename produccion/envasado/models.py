@@ -48,7 +48,7 @@ class SolicitudEnvasado(ModeloBase):
     
     def save(self, *args, **kwargs):
         if not self.folio:
-            # Generar folio automï¿½tico
+            # Generar folio automático
             year = timezone.now().year
             month = timezone.now().month
             last_solicitud = SolicitudEnvasado.objects.filter(

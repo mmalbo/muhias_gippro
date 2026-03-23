@@ -459,7 +459,7 @@ class ProductosForm(forms.Form):
             
         elif opcion == self.NEW:
             if not cleaned_data.get('codigo_producto'):
-                self.add_error('codigo', 'El código es obligatorio para nuevos productos')
+                self.add_error('codigo', 'El codigo es obligatorio para nuevos productos')
             if not cleaned_data.get('nombre_comercial'):
                 self.add_error('nombre', 'El nombre es obligatorio para nuevos productos')
             if not cleaned_data.get('formato'):

@@ -1,0 +1,386 @@
+{ 
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`Error HTTP ${response.status}: ${text.substring(0, 100)}`);
+            });
+        }
+        return 
+    })
+
+
+<template id="materiaPrimaTemplate">
+    <div class="materia-prima-item">
+        <h4>Materia Prima #<span class="item-number"></span>0</h4>
+        <div class="form-group">
+            <label>Materia Prima - Almacen:</label>
+            <select class="materia-prima-select" name="materia_prima" required>
+                <option value="">Seleccionar materia prima...</option>
+                {% for mp in materia_prima_form.fields.materia_prima.queryset %}
+                <option value="{{ mp.id }}" data-costo="{{ mp.costo }}" data-unidad="{{ mp.unidad_medida }}">
+                    {{ mp.materia_prima.nombre }}({{ mp.materia_prima.conformacion }}-{{ mp.materia_prima.unidad_medida }}) - {{ mp.almacen}}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Cantidad:</label>
+            <input type="number" class="cantidad-input" name="cantidad" step="0.001" required>
+            <span class="unidad-text"></span>
+        </div>
+        
+        <!--<div class="form-group">
+            <label>Almacén:</label>
+            <select class="almacen-select" name="almacen" required>
+                <option value="">Seleccionar almacén...</option>
+                {% for almacen in materia_prima_form.fields.almacen.queryset %}
+                <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>-->
+        
+        <div class="form-group">
+            <label>Costo estimado:</label>
+            <span class="costo-text">$0.00</span>
+        </div>
+        
+        <button type="button" class="remove-btn" onclick="removerMateriaPrima(this)">Eliminar</button>
+    </div>
+</template>
+
+const materiasPrimasData = {{ materias_primas_json|safe }};
+var materiaPrimaCount = 0;
+
+function nextStep(step) {
+    if (step === 2 && !validarPaso1()) {
+        alert('Por favor, complete todos los campos requeridos del paso 1.');
+        return;
+    }
+    
+    document.querySelector('.step.active').classList.remove('active');
+    document.querySelector('.step-indicator.active').classList.remove('active');
+    
+    document.getElementById(`step${step}`).classList.add('active');
+    document.querySelector(`.step-indicator[data-step="${step}"]`).classList.add('active');
+}
+
+function agregarMateriaPrima_Old() {
+    materiaPrimaCount++;
+    
+    const template = document.getElementById('materiaPrimaTemplate');
+    const clone = template.content.cloneNode(true);
+    const materiaPrimaDiv = clone.querySelector('.materia-prima-item');
+    
+    materiaPrimaDiv.id = `materia-prima-${materiaPrimaCount}`;
+    materiaPrimaDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+
+    /*const elemento = materiaPrimaDiv.querySelector('.item-number');
+    const valor = materiaPrimaCount;
+
+    if (!isNaN(valor) && valor !== null && valor !== undefined) {
+        elemento.textContent = valor+1;
+    } else {
+        elemento.textContent = '0'; // o 'N/A', o ''
+    }*/
+    
+    // Agregar event listeners
+    const select = materiaPrimaDiv.querySelector('.materia-prima-select');
+    const cantidadInput = materiaPrimaDiv.querySelector('.cantidad-input');
+    
+    select.addEventListener('change', function() {
+        actualizarInfoMateriaPrima(this);
+    });
+    
+    cantidadInput.addEventListener('input', function() {
+        calcularCostoMateriaPrima(this.closest('.materia-prima-item'));
+    });
+    
+    document.getElementById('materiasPrimasContainer').appendChild(materiaPrimaDiv);
+}
+
+
+function llenarSelectMateriasPrimas_old(selectElement) {
+    // Limpiar opciones existentes (excepto la primera)
+    while (selectElement.options.length > 1) {
+        selectElement.remove(1);
+    }
+    
+    // Agregar materias primas ordenadas (ya vienen ordenadas del backend)
+    materiasPrimasData.forEach(mp => {
+        const option = document.createElement('option');
+        option.value = mp.id;  // Este es el ID de Inv_Mat_Prima
+        option.textContent = mp.select_text || mp.nombre_completo;
+        option.dataset.costo = mp.costo;
+        option.dataset.unidad = mp.unidad_medida;
+        option.dataset.almacenId = mp.almacen_id;
+        option.dataset.almacenNombre = mp.almacen_nombre;
+        option.dataset.stock = mp.stock_disponible;
+        option.dataset.materiaPrimaId = mp.materia_prima_id;
+        selectElement.appendChild(option);
+    });
+}
+
+function agregarMateriaPrima_Old() {
+    materiaPrimaCount++;
+    
+    const template = document.getElementById('materiaPrimaTemplate');
+    const clone = template.content.cloneNode(true);
+    const materiaPrimaDiv = clone.querySelector('.materia-prima-item');
+    
+    materiaPrimaDiv.id = `materia-prima-${materiaPrimaCount}`;
+    materiaPrimaDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+
+    /*const elemento = materiaPrimaDiv.querySelector('.item-number');
+    const valor = materiaPrimaCount;
+
+    if (!isNaN(valor) && valor !== null && valor !== undefined) {
+        elemento.textContent = valor+1;
+    } else {
+        elemento.textContent = '0'; // o 'N/A', o ''
+    }*/
+    
+    // Agregar event listeners
+    const select = materiaPrimaDiv.querySelector('.materia-prima-select');
+    const cantidadInput = materiaPrimaDiv.querySelector('.cantidad-input');
+    
+    select.addEventListener('change', function() {
+        actualizarInfoMateriaPrima(this);
+    });
+    
+    cantidadInput.addEventListener('input', function() {
+        calcularCostoMateriaPrima(this.closest('.materia-prima-item'));
+    });
+    
+    document.getElementById('materiasPrimasContainer').appendChild(materiaPrimaDiv);
+}
+
+function actualizarInfoMateriaPrima_old(select) {
+    const item = select.closest('.materia-prima-item');
+    const selectedOption = select.options[select.selectedIndex];
+    const unidadSpan = item.querySelector('.unidad-text');
+    
+    if (selectedOption.value) {
+        const unidad = selectedOption.getAttribute('data-unidad');
+        unidadSpan.textContent = unidad;
+    } else {
+        unidadSpan.textContent = '';
+    }
+    
+    calcularCostoMateriaPrima(item);
+}
+
+function calcularCostoMateriaPrima_old(item) {
+    const select = item.querySelector('.materia-prima-select');
+    const cantidadInput = item.querySelector('.cantidad-input');
+    const costoSpan = item.querySelector('.costo-text');
+    
+    const selectedOption = select.options[select.selectedIndex];
+    const cantidad = parseFloat(cantidadInput.value) || 0;
+    const costoUnitario = parseFloat(selectedOption.getAttribute('data-costo')) || 0;
+    
+    const costoTotal = cantidad * costoUnitario;
+    costoSpan.textContent = `$${costoTotal.toFixed(2)}`;
+}
+<script>
+    // Depuración
+console.log('Elemento item-number:', document.querySelector('.item-number'));
+console.log('Contenido actual:', document.querySelector('.item-number')?.textContent);
+$(document).ready(function() {
+    // Función para actualizar el contador
+    function actualizarContadorMateriasPrimas() {
+        // Cuenta cuántas filas de materias primas hay
+        var cantidad = $('.materia-prima-fila').length; // Ajusta el selector según tu clase
+        
+        // Si no hay filas, contar de otra manera (inputs, etc)
+        if (cantidad === 0) {
+            cantidad = $('input[name^="materias_primas"]').length; // Cuenta inputs relacionados
+        }
+        
+        // Actualizar el span asegurando que sea un número
+        $('.item-number').text(cantidad || 0);
+    }
+    
+    // Llamar al cargar la página
+    actualizarContadorMateriasPrimas();
+    
+    // Actualizar cuando se agregue o elimine una materia prima
+    $(document).on('click', '.agregar-materia-prima', function() {
+        // Después de agregar, actualizar contador
+        setTimeout(actualizarContadorMateriasPrimas, 100);
+    });
+    
+    $(document).on('click', '.eliminar-materia-prima', function() {
+        // Después de eliminar, actualizar contador
+        setTimeout(actualizarContadorMateriasPrimas, 100);
+    });
+    
+    // Opcional: Observar cambios en el DOM si es dinámico
+    const observer = new MutationObserver(actualizarContadorMateriasPrimas);
+    observer.observe(document.getElementById('contenedor-materias-primas'), { 
+        childList: true, 
+        subtree: true 
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Alternar entre producto existente y nuevo
+    const productoExistente = document.getElementById('{{ form.catalogo_producto.id_for_label }}');
+    const nuevoProductoNombre = document.getElementById('{{ form.nuevo_producto_nombre.id_for_label }}');
+    
+    function toggleCamposProducto() {
+        const nuevoProductoSection = nuevoProductoNombre.closest('.border-start');
+        
+        if (productoExistente.value) {
+            // Si hay producto seleccionado, deshabilitar campos de nuevo producto
+            nuevoProductoNombre.value = '';
+            nuevoProductoNombre.disabled = true;
+            nuevoProductoSection.style.opacity = '0.6';
+        } else if (nuevoProductoNombre.value) {
+            // Si hay nombre de nuevo producto, deshabilitar selección existente
+            productoExistente.value = '';
+            productoExistente.disabled = true;
+        } else {
+            // Si ambos están vacíos, habilitar ambos
+            nuevoProductoNombre.disabled = false;
+            productoExistente.disabled = false;
+            nuevoProductoSection.style.opacity = '1';
+        }
+    }
+    
+    productoExistente.addEventListener('change', toggleCamposProducto);
+    nuevoProductoNombre.addEventListener('input', toggleCamposProducto);
+    
+    // Inicializar estado
+    toggleCamposProducto();
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-completar formulario si hay datos pre-cargados
+        const urlParams = new URLSearchParams(window.location.search);
+        const produccionBaseId = urlParams.get('produccion_base_id');
+        
+        if (produccionBaseId) {
+            // Auto-seleccionar planta si viene en URL
+            const plantaId = urlParams.get('planta_id');
+            if (plantaId && document.getElementById('id_planta')) {
+                document.getElementById('id_planta').value = plantaId;
+            }
+            
+            // Auto-seleccionar producto
+            const productoId = urlParams.get('catalogo_producto_id');
+            if (productoId && document.getElementById('id_catalogo_producto')) {
+                document.getElementById('id_catalogo_producto').value = productoId;
+            }
+            
+            // Auto-completar cantidad
+            const cantidad = urlParams.get('cantidad_estimada');
+            if (cantidad && document.getElementById('id_cantidad_estimada')) {
+                document.getElementById('id_cantidad_estimada').value = cantidad;
+            }
+            
+            // Auto-marcar producto base si corresponde
+            const prodResult = urlParams.get('prod_result');
+            if (prodResult === 'on' && document.getElementById('id_prod_result')) {
+                document.getElementById('id_prod_result').checked = true;
+            }
+        }
+        
+        // Mostrar materias primas pre-cargadas como sugerencia
+        const materiasPrecargadas = {{ materias_primas_precargadas|safe|default:"[]" }};
+        if (materiasPrecargadas.length > 0) {
+            mostrarMateriasPrimasSugeridas(materiasPrecargadas);
+        }
+    });
+    
+    function mostrarMateriasPrimasSugeridas(materias) {
+        // Crear un contenedor para las sugerencias
+        const container = document.createElement('div');
+        container.className = 'card mt-3';
+        container.innerHTML = `
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Materias Primas Sugeridas (de la producción base)
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Estas son las materias primas utilizadas en la producción base.
+                    Puede usarlas como referencia o hacer clic para agregarlas automáticamente.
+                </p>
+                <div id="materias-sugeridas-list"></div>
+                <button type="button" class="btn btn-sm btn-outline-info mt-2" 
+                        onclick="agregarTodasMateriasSugeridas()">
+                    <i class="fas fa-plus-circle me-1"></i>Agregar Todas
+                </button>
+            </div>
+        `;
+        
+        // Insertar después del formulario de materias primas
+        const formMaterias = document.querySelector('.card.mb-4');
+        if (formMaterias) {
+            formMaterias.parentNode.insertBefore(container, formMaterias.nextSibling);
+        }
+        
+        // Llenar la lista
+        const listContainer = document.getElementById('materias-sugeridas-list');
+        materias.forEach((mp, index) => {
+            const item = document.createElement('div');
+            item.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
+            item.innerHTML = `
+                <div>
+                    <strong>${mp.materia_prima_nombre}</strong>
+                    <br>
+                    <small class="text-muted">
+                        ${mp.cantidad} ${mp.unidad_medida} • 
+                        Almacén: ${mp.almacen_nombre} • 
+                        Costo: $${mp.costo}
+                    </small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-success" 
+                        onclick="agregarMateriaSugerida(${index})">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            `;
+            listContainer.appendChild(item);
+            
+            // Guardar en data attribute para uso posterior
+            item.setAttribute('data-materia-data', JSON.stringify(mp));
+        });
+    }
+    
+    function agregarMateriaSugerida(index) {
+        // Obtener datos de la materia prima
+        const items = document.querySelectorAll('#materias-sugeridas-list > div');
+        const item = items[index];
+        const mpData = JSON.parse(item.getAttribute('data-materia-data'));
+        
+        // Llamar a la función que agrega materias primas (debes tenerla en tu JS)
+        if (typeof agregarMateriaPrima === 'function') {
+            agregarMateriaPrima({
+                materia_prima: mpData.materia_prima_id,
+                cantidad: mpData.cantidad,
+                almacen: mpData.almacen_id
+            });
+            
+            // Cambiar botón a agregado
+            const btn = item.querySelector('button');
+            btn.innerHTML = '<i class="fas fa-check"></i> Agregada';
+            btn.className = 'btn btn-sm btn-success';
+            btn.disabled = true;
+        }
+    }
+    
+    function agregarTodasMateriasSugeridas() {
+        const items = document.querySelectorAll('#materias-sugeridas-list > div');
+        items.forEach((item, index) => {
+            const btn = item.querySelector('button');
+            if (!btn.disabled) {
+                agregarMateriaSugerida(index);
+            }
+        });
+    }
+</script>
