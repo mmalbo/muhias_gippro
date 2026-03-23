@@ -108,7 +108,7 @@ class ProduccionForm(forms.ModelForm):
 
 class MateriaPrimaForm(forms.Form):
     materia_prima = forms.ModelChoiceField(
-        queryset=Inv_Mat_Prima.objects.filter(cantidad__gt=0),
+        queryset=Inv_Mat_Prima.objects.filter(cantidad__gt=0).order_by('materia_prima__nombre'),
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=True
     )

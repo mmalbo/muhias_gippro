@@ -145,7 +145,7 @@ def detalle_materia_prima(request, pk):
     """Ver detalle completo de un parámetro"""
     materia_prima = get_object_or_404(MateriaPrima, id=pk)
     
-    return render(request, 'materia_prima\detalle_materia_prima.html', {
+    return render(request, 'materia_prima/detalle_materia_prima.html', {
         'materia_prima': materia_prima,
     })
 

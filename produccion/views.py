@@ -1,6 +1,7 @@
 # views.py
 import os
 from django.conf import settings
+from django.contrib.auth.models import User, Group
 from django.core.files.storage import FileSystemStorage
 from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy, reverse
@@ -13,14 +14,16 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, FloatField
 from django.db import transaction
+from django.db.models.functions import Coalesce
 from decimal import Decimal, InvalidOperation
 import datetime
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 import urllib.parse
-
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin
 from collections import OrderedDict
 from .models import Planta
 from .models import Produccion, Prod_Inv_MP, PruebaQuimica, ParametroPrueba, DetallePruebaQuimica
@@ -33,22 +36,22 @@ from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod
 from .forms import (ProduccionForm, MateriaPrimaForm, 
     SubirPruebasQuimicasForm, CancelarProduccionForm, PruebaQuimicaForm, 
     DetallePruebaForm, AprobarPruebaForm, ParametroPruebaForm, BuscarParametroForm)
+from utils.models import Notification
 
-
-class ProduccionListView(ListView):
+class ProduccionListView(LoginRequiredMixin, ListView):
     model = Produccion
     template_name = 'produccion/list.html'
     context_object_name = 'produccions'
     # Opción A: Usando ordering en la vista
     ordering = ['-fecha_creacion']
 
-class ProduccionDeleteView(DeleteView):
+class ProduccionDeleteView(LoginRequiredMixin, DeleteView):
     model = Produccion
     template_name = 'produccion/confirm_delete.html'
     success_url = reverse_lazy('produccion_list')
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CrearProduccionView(View):
+class CrearProduccionView(LoginRequiredMixin, View):
     template_name = 'produccion/crear_produccion.html'
     
     def get(self, request):
@@ -164,7 +167,7 @@ class CrearProduccionView(View):
         produccion_form = ProduccionForm(request.POST)
         if produccion_form.is_valid():
             # Procesar producto (existente o nuevo)
-            catalogo_producto_id = self.procesar_producto(request)
+            """catalogo_producto_id = self.procesar_producto(request)
             if not catalogo_producto_id:
                 return JsonResponse({
                     'success': False, 
@@ -173,14 +176,24 @@ class CrearProduccionView(View):
             
             # Extraer solo datos primitivos para la sesión
             session_data = {
-                #'lote': request.POST.get('lote'),
                 'catalogo_producto_id': str(catalogo_producto_id),  # Guardar como string
                 'cantidad_estimada': request.POST.get('cantidad_estimada'),
                 'prod_result': request.POST.get('prod_result'),
                 'planta_id': request.POST.get('planta'),  # Guardar el ID como string
-            }            
+            }"""
+            # Guardar en sesión, NO en base de datos
+            catalogo_producto_id = self.procesar_producto_en_sesion(request)
+        
+            session_data = {
+                'catalogo_producto_id': str(catalogo_producto_id) if catalogo_producto_id else None,
+                'cantidad_estimada': request.POST.get('cantidad_estimada'),
+                'prod_result': request.POST.get('prod_result'),
+                'planta_id': request.POST.get('planta'),
+                'nuevo_producto_nombre': request.POST.get('nuevo_producto_nombre'),  # Guardar nombre
+                'producto_creado': False  # Bandera para saber si ya se creó
+            }
+                    
             # Guardar en sesión
-            #request.session['produccion_data'] = session_data
             request.session['produccion_data'].update(session_data)
             request.session.modified = True
             return JsonResponse({'success': True, 'step': 2})
@@ -188,34 +201,44 @@ class CrearProduccionView(View):
             print("Errores en formulario:", produccion_form.errors)
             return JsonResponse({'success': False, 'errors': produccion_form.errors})
 
+    def procesar_producto_en_sesion(self, request):
+        """Similar a procesar_producto pero sin guardar en BD"""
+        nuevo_producto_nombre = request.POST.get('nuevo_producto_nombre')
+        catalogo_producto_id = request.POST.get('catalogo_producto')
+    
+        if nuevo_producto_nombre:
+            # NO crear en BD, solo devolver el nombre para guardar en sesión
+            return None  # Indicar que es un producto nuevo aún no creado
+        elif catalogo_producto_id:
+            return catalogo_producto_id
+        return None
+
     def procesar_producto(self, request):
         """Procesa el producto (existente o nuevo) y retorna el ID"""
+        print("Entro a procesar producto")
         nuevo_producto_nombre = request.POST.get('nuevo_producto_nombre')
         catalogo_producto_id = request.POST.get('catalogo_producto')
         prod_base = request.POST.get('prod_result')
 
         if nuevo_producto_nombre:
+            print(nuevo_producto_nombre.strip())
             # Crear nuevo producto en el catálogo
             try:
                 formato_agranel = Formato.objects.filter(capacidad=0).first()
-                if prod_base:
-                    materia_base = MateriaPrima.objects.create(
-                        tipo_materia_prima = 'bases',
-                        nombre = nuevo_producto_nombre,
-                        unidad_medida = 'L',
-                        conformacion = 'Tanques',
-                        costo=0                  
-                    )
-                    return materia_base.id
+                if prod_base == None:
+                    val_prod_base = False
                 else:
-                    # Crear en CatalogoProducto (no en Producto)
-                    catalogo_producto = Producto.objects.create( 
+                    val_prod_base = True
+                # Crear en CatalogoProducto (no en Producto)
+                #print(prod_base + "vs" + val_prod_base)
+                catalogo_producto = Producto.objects.create( 
                                 nombre_comercial=nuevo_producto_nombre.strip(), 
                                 formato=formato_agranel, 
-                                estado="produccion", 
+                                estado="produccion",
+                                prod_base=val_prod_base,
                                 costo=0
                                 )
-                    return catalogo_producto.id
+                return catalogo_producto.id
                 
             except Exception as e:
                 print(f"Error al crear producto: {e}")
@@ -234,9 +257,8 @@ class CrearProduccionView(View):
             print("No esta el producto ni producto existente")
             return None
 
-    def procesar_paso_2(self, request):
+    def procesar_paso_2_t(self, request):
         # Recuperar datos del paso 1 de la sesión
-        
         produccion_data = request.session.get('produccion_data', {})
         if not produccion_data:
             return JsonResponse({
@@ -277,21 +299,37 @@ class CrearProduccionView(View):
                     # Intentar convertir a dict de alguna otra manera
                     post_data = dict(request.POST) if hasattr(request.POST, '__dict__') else {}
         except Exception as e:
-            post_data = {}
+            return JsonResponse({
+                'success': False, 
+                'errors': str(e)  
+            })
     
-        # Procesar materias primas
-        materias_primas = self.procesar_materias_primas(post_data)
-        # materias_primas = self.procesar_materias_primas(request.POST)
+                # Procesar materias primas - AHORA CAPTURAMOS ERRORES AQUÍ
+
+        # Procesar materias primas - AHORA CAPTURAMOS ERRORES AQUI
+        try:
+            materias_primas = self.procesar_materias_primas(request.POST)
+        except ValueError as e:
+            # Este es el error de validacion (cantidad insuficiente)
+            return JsonResponse({
+                'success': False,
+                'errors': str(e)  # Esto ya tiene el nombre de la MP
+            })
+        except Exception as e:
+            # Otros errores al procesar materias primas
+            return JsonResponse({
+                'success': False,
+                'errors': f'Error al procesar materias primas: {str(e)}'
+            })
+
         if not materias_primas:
-            return JsonResponse({'success': False, 'errors': 'Debe agregar al menos una materia prima'})
-        
+            return JsonResponse({'success': False, 
+                                 'errors': 'Debe agregar al menos una materia prima'})
+
         try:
             # Obtener la instancia de Planta
             planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
-            print(planta_instance.nombre)
             catalogo_producto_instance = Producto.objects.filter(id=produccion_data['catalogo_producto_id']).first()
-            if not catalogo_producto_instance:
-                catalogo_producto_instance = MateriaPrima.objects.filter(id=produccion_data['catalogo_producto_id']).first()
             # GENERAR LOTE CON EL NUEVO FORMATO
             cantidad_estimada = float(produccion_data['cantidad_estimada'])
             lote_generado = Produccion.generar_lote(
@@ -299,8 +337,7 @@ class CrearProduccionView(View):
                 planta=planta_instance,
                 cantidad_estimada=cantidad_estimada
             )
-            print(lote_generado)
-
+            
             if produccion_data['prod_result']: 
                 product=True
             else:
@@ -326,7 +363,6 @@ class CrearProduccionView(View):
             else:
                 print("No esta llegando la produccion base")
 
-            print(produccion_base)
             # Guardar producción
             produccion = Produccion.objects.create(
                 lote=lote_final,
@@ -340,24 +376,21 @@ class CrearProduccionView(View):
                 produccion_base=produccion_base,
                 observaciones_reutilizacion=produccion_data.get('observaciones_reutilizacion', '')
             )
-            print(produccion.lote)
             
-            #generar un vale de almacen tipo solicitud costo_mp = mp_data['costo']
+            #generar un vale de almacen tipo solicitud 
             id_almacen = materias_primas[0]['almacen']
             almacen_obj = Almacen.objects.get(id=id_almacen)
-            print(almacen_obj.nombre)
-            print(planta_instance.nombre)
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Solicitud',
                 entrada = False,
                 origen = almacen_obj.nombre,
-                destino = planta_instance.nombre
+                destino = planta_instance.nombre,
+                lote_No = produccion.lote,
+                estado = 'confirmado'
             )
             print(vale)
             # Guardar relación con materias primas
-            
             for mp_data in materias_primas:
-                print(mp_data)
                 almacen_o=Almacen.objects.get(id=mp_data['almacen'])
                 mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
                 if not vale.almacen:
@@ -369,7 +402,6 @@ class CrearProduccionView(View):
                     almacen=almacen_o,
                     vale = vale
                 )
-                print(mat_pri_o.nombre)
                 
             # Limpiar sesión
             if 'produccion_data' in request.session:
@@ -389,17 +421,219 @@ class CrearProduccionView(View):
                 'redirect_url': reverse('produccion_list')  # Ajusta esta URL
             })
             
-        #except Planta.DoesNotExist:
-            #return JsonResponse({'success': False, 'errors': 'La planta seleccionada no existe'})
+        except ValueError as e:
+            # Errores de validación (como cantidad insuficiente)
+            # return JsonResponse({
+            #     'success': False, 
+            #     'errors': str(e)  # Esto ya tiene el nombre de la MP
+            # })
+            raise ValueError(str(e))
         except Exception as e:
             return JsonResponse({'success': False, 'errors': f'Error al guardar: {str(e)}'})
+
+    def procesar_paso_2(self, request):
+        try:
+            produccion_data = request.session.get('produccion_data', {})
+        
+            # VERIFICAR SI ES PRODUCTO NUEVO Y CREARLO AHORA
+            catalogo_producto_id = produccion_data.get('catalogo_producto_id')
+            nuevo_producto_nombre = produccion_data.get('nuevo_producto_nombre')
+        
+            if not catalogo_producto_id and nuevo_producto_nombre:
+                # Crear el producto AHORA, en el paso 2
+                try:
+                    formato_agranel = Formato.objects.filter(capacidad=0).first()
+                    catalogo_producto = Producto.objects.create(
+                        nombre_comercial=nuevo_producto_nombre.strip(),
+                        formato=formato_agranel,
+                        estado="produccion",
+                        prod_base=produccion_data.get('prod_result') == 'on',
+                        costo=0
+                    )
+                    catalogo_producto_id = catalogo_producto.id
+                    # Actualizar sesión con el ID creado
+                    produccion_data['catalogo_producto_id'] = str(catalogo_producto_id)
+                    produccion_data['producto_creado'] = True
+                    request.session.modified = True
+                except Exception as e:
+                    return JsonResponse({
+                        'success': False,
+                        'errors': f'Error al crear el producto: {str(e)}'
+                    })
+        
+            # Ahora procesar materias primas
+            try:
+                materias_primas = self.procesar_materias_primas(request.POST)
+            except ValueError as e:
+                # Si hay error y se creó un producto nuevo, ELIMINARLO
+                if produccion_data.get('producto_creado') and catalogo_producto_id:
+                    try:
+                        Producto.objects.filter(id=catalogo_producto_id).delete()
+                        produccion_data['catalogo_producto_id'] = None
+                        produccion_data['producto_creado'] = False
+                        request.session.modified = True
+                    except:
+                        pass
+                return JsonResponse({'success': False, 'errors': str(e)})
+
+            try:
+                # Obtener la instancia de Planta
+                planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
+                catalogo_producto_instance = Producto.objects.filter(id=produccion_data['catalogo_producto_id']).first()
+                # GENERAR LOTE CON EL NUEVO FORMATO
+                cantidad_estimada = float(produccion_data['cantidad_estimada'])
+                lote_generado = Produccion.generar_lote(
+                    catalogo_producto=catalogo_producto_instance,
+                    planta=planta_instance,
+                    cantidad_estimada=cantidad_estimada
+                )
+            
+                if produccion_data['prod_result']: 
+                    product=True
+                else:
+                    product=False
+
+                # Verificar que el lote no exista (por si acaso)
+                intentos = 0
+                lote_final = lote_generado
+            
+                while Produccion.objects.filter(lote=lote_final).exists() and intentos < 10:
+                    intentos += 1
+                    # Si por alguna rareza existe, añadir un sufijo
+                    lote_final = f"{lote_generado}-{intentos:02d}"
+            
+                costo_prod = 0
+                for mp_data in materias_primas:
+                    costo_prod += Decimal(mp_data['costo'])
+
+                # Obtener producción base si existe
+                produccion_base = None
+                if produccion_data.get('produccion_base_id'):
+                    produccion_base = Produccion.objects.get(id=produccion_data['produccion_base_id'])
+                else:
+                    print("No esta llegando la produccion base")
+
+                # Guardar producción
+                produccion = Produccion.objects.create(
+                    lote=lote_final,
+                    catalogo_producto=catalogo_producto_instance,
+                    prod_result=product,
+                    cantidad_estimada=Decimal(produccion_data['cantidad_estimada']),
+                    costo=costo_prod,#Decimal(produccion_data['costo']),                
+                    planta=planta_instance,
+                    estado='Planificada',
+                    # ESTABLECER RELACIÓN CON PRODUCCIÓN BASE
+                    produccion_base=produccion_base,
+                    observaciones_reutilizacion=produccion_data.get('observaciones_reutilizacion', '')
+                )
+            
+                #generar un vale de almacen tipo solicitud 
+                id_almacen = materias_primas[0]['almacen']
+                almacen_obj = Almacen.objects.get(id=id_almacen)
+                vale = Vale_Movimiento_Almacen.objects.create(
+                    tipo = 'Solicitud',
+                    entrada = False,
+                    origen = almacen_obj.nombre,
+                    destino = planta_instance.nombre
+                )
+            
+                # Guardar relación con materias primas
+                for mp_data in materias_primas:
+                    almacen_o=Almacen.objects.get(id=mp_data['almacen'])
+                    mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
+                    if not vale.almacen:
+                        vale.almacen = almacen_o
+                    Prod_Inv_MP.objects.create(
+                        lote_prod=produccion,
+                        inv_materia_prima=mat_pri_o,
+                        cantidad_materia_prima=mp_data['cantidad'],
+                        almacen=almacen_o,
+                        vale = vale
+                    )
+                
+                # Limpiar sesión
+                if 'produccion_data' in request.session:
+                    del request.session['produccion_data']
+                    request.session.modified = True
+
+                # Mensaje específico para reutilización
+                if produccion.produccion_base:
+                    message = f'Produccion creada reutilizando {produccion_base.lote} como base'
+                else:
+                    message = 'Produccion creada exitosamente'
+            
+                return JsonResponse({
+                    'success': True, 
+                    'message': message, 
+                    'produccion_id': produccion.id,
+                    'redirect_url': reverse('produccion_list')  # Ajusta esta URL
+                })
+            
+            except ValueError as e:
+                # Errores de validación (como cantidad insuficiente)
+                # return JsonResponse({
+                #     'success': False, 
+                #     'errors': str(e)  # Esto ya tiene el nombre de la MP
+                # })
+                raise ValueError(str(e))
+            except Exception as e:
+                return JsonResponse({'success': False, 'errors': f'Error al guardar: {str(e)}'})
+
+        except Exception as e:
+            # Si hay error, limpiar producto creado si existe
+            if 'catalogo_producto_id' in locals() and produccion_data.get('producto_creado'):
+                Producto.objects.filter(id=catalogo_producto_id).delete()
+            return JsonResponse({'success': False, 'errors': str(e)})
 
     def get_materias_primas_json(self):
         materias_primas = MateriaPrima.objects.all().values(
             'id', 'nombre', 'tipo_materia_prima', 'conformacion', 'unidad_medida', 'concentracion', 'costo'
         )
+        # Debug: imprime los primeros 10 nombres para verificar
+        for mp in list(materias_primas)[:10]:
+            print(f"MP ordenada: {mp['nombre']}")
         return list(materias_primas)
 
+    def get_materias_primas_json_n(self):
+        #Versión optimizada usando annotate para calcular stocks
+        materias_primas = MateriaPrima.objects.all().order_by('nombre').annotate(
+            stock_total=Coalesce(
+                Sum('inv_mat_prima__cantidad', output_field=FloatField()),
+                0.0
+            )
+        ).select_related().prefetch_related('inv_mat_prima_set__almacen')
+    
+        data = []
+        for mp in materias_primas:
+            # Obtener almacenes con stock
+            almacenes = []
+            for inv in mp.inv_mat_prima_set.all():
+                if inv.cantidad > 0:
+                    almacenes.append({
+                        'id': inv.almacen.id,
+                        'nombre': inv.almacen.nombre,
+                        'cantidad': float(inv.cantidad),
+                        'inv_id': inv.id  # ID del inventario específico
+                    })
+        
+            data.append({
+                'id': mp.id,
+                'nombre': mp.nombre,
+                'nombre_display': f"{mp.nombre} ({mp.unidad_medida})",
+                'tipo': mp.get_tipo_materia_prima_display(),
+                'conformacion': mp.conformacion,
+                'unidad': mp.unidad_medida,
+                'concentracion': float(mp.concentracion) if mp.concentracion else 0,
+                'costo': float(mp.costo) if mp.costo else 0,
+                'stock_total': float(mp.stock_total),
+                'almacenes': almacenes,
+                'tiene_stock': mp.stock_total > 0,
+                # Para el select en el template
+                'select_text': f"{mp.nombre} ({mp.unidad_medida}) - Stock: {mp.stock_total:.2f}"
+            })
+    
+        return data
+    
     def procesar_materias_primas(self, post_data):
         materias_primas = []
          
@@ -452,7 +686,6 @@ class CrearProduccionView(View):
                 break
         
             cantidad_str = get_value(post_data, f'materias_primas[{i}][cantidad]')
-            #almacen_id = get_value(post_data, f'materias_primas[{i}][almacen]')
         
             # Validar que todos los campos estén presentes
             if not all([materia_prima_id, cantidad_str]):
@@ -469,39 +702,47 @@ class CrearProduccionView(View):
                 almacen_obj = Almacen.objects.get(id=inv_materia_prima_obj.almacen.id)
                 
                 # Verificar inventarioInv_Mat_Prima.objects.get(materia_prima=materia_prima_obj, almacen=almacen_obj)
-                if inv_materia_prima_obj:
-                    try:
-                        print(inv_materia_prima_obj.cantidad)
-                        if cantidad > inv_materia_prima_obj.cantidad:
-                            error_msg = f"Cantidad insuficiente de de {inv_materia_prima_obj.materia_prima.nombre}"
-                            print(f" {error_msg}")
-                            raise ValueError(error_msg)
+                #if inv_materia_prima_obj:
+                    #try:
+                if cantidad > inv_materia_prima_obj.cantidad:
+                    # Obtener el nombre para el mensaje de error
+                    nombre_mp = inv_materia_prima_obj.materia_prima.nombre
+                    cantidad_disponible = inv_materia_prima_obj.cantidad
+                    unidad = inv_materia_prima_obj.materia_prima.unidad_medida
+                
+                    # Crear mensaje de error detallado
+                    error_msg = (f"Cantidad insuficiente de '{nombre_mp}'. "
+                           f"Requerido: {cantidad} {unidad}, "
+                           f"Disponible: {cantidad_disponible} {unidad}")
+                
+                    # IMPORTANTE: Relanzar la excepción para que la capture procesar_paso_2
+                    raise ValueError(error_msg)
             
-                        # Calcular costo
-                        costo_mp = Decimal(str(inv_materia_prima_obj.materia_prima.costo)) * cantidad
+                # Calcular costo
+                costo_mp = Decimal(str(inv_materia_prima_obj.materia_prima.costo)) * cantidad
             
-                        materias_primas.append({
-                            'materia_prima': inv_materia_prima_obj.materia_prima.id,
-                            'cantidad': cantidad,
-                            'almacen': almacen_obj.id,
-                            'costo': costo_mp,
-                            'materia_prima_obj': inv_materia_prima_obj.materia_prima,
-                            'almacen_obj': almacen_obj
-                        })
-                    except (Inv_Mat_Prima.DoesNotExist, ValueError) as e:
-                        print(f"Error con MP {i}: {e}")
-                        # Relanzar para que sea capturado por procesar_paso_2
-                        raise ValueError(f"Materia prima {i}: {str(e)}")
-
-
-            except (MateriaPrima.DoesNotExist, Almacen.DoesNotExist, 
-                    Inv_Mat_Prima.DoesNotExist, ValueError) as e:
-                print(f"Error Fuera con MP {i}: {e}")
+                materias_primas.append({
+                    'materia_prima': inv_materia_prima_obj.materia_prima.id,
+                    'cantidad': cantidad,
+                    'almacen': almacen_obj.id,
+                    'costo': costo_mp,
+                    'materia_prima_obj': inv_materia_prima_obj.materia_prima,
+                    'almacen_obj': almacen_obj
+                })
+            except (Inv_Mat_Prima.DoesNotExist, ValueError) as e:
+                print(f"Error con MP {i}: {e}")
                 # Relanzar para que sea capturado por procesar_paso_2
-                raise ValueError(f"Materia prima {i}: {str(e)}")
+                raise #ValueError(f"Materia prima {i}: {str(e)}")
+
             except Exception as e:
                 print(f"Error inesperado con MP {i}: {e}")
                 raise
+
+            """except (MateriaPrima.DoesNotExist, Almacen.DoesNotExist, 
+                    Inv_Mat_Prima.DoesNotExist, ValueError) as e:
+                print(f"Error Fuera con MP {i}: {e}")
+                # Relanzar para que sea capturado por procesar_paso_2
+                raise ValueError(f"Materia prima {i}: {str(e)}")"""
         
             i += 1
     
@@ -599,7 +840,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         if estado_actual == 'Planificada':
             estados = ['En proceso: Iniciando mezcla', 'Cancelada']
         elif estado_actual == 'En proceso: Iniciando mezcla':
-            estados = ['En proceso: Agitado', 'Cancelada']
+            estados = ['En proceso: Agitado']
         elif estado_actual == 'En proceso: Agitado':
             estados = ['En proceso: Validación']
         elif estado_actual == 'En proceso: Validación':
@@ -612,6 +853,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         estados_editables = ['Planificada', 'En proceso: Iniciando mezcla']
         return produccion.estado in estados_editables and self.request.user.has_perm('app.change_produccion')
 
+@login_required
 def reutilizar_produccion(request, pk):
     """
     Redirige a crear nueva producción con datos de la producción base
@@ -629,7 +871,6 @@ def reutilizar_produccion(request, pk):
         
         # Pre-cargar datos de la producción base
         'planta_id': str(produccion_base.planta.id),
-        
         'prod_result': 'on' if produccion_base.prod_result else '',
         
         # Materias primas para pre-cargar (opcional)
@@ -644,6 +885,7 @@ def reutilizar_produccion(request, pk):
     url = f"{reverse('crear_produccion')}?{query_string}"
     return redirect(url)
 
+@login_required
 def _obtener_materias_primas_precargadas(produccion_base):
     """Obtiene las materias primas para pre-cargar en el formulario"""
     materias = Prod_Inv_MP.objects.filter(lote_prod=produccion_base)
@@ -656,6 +898,7 @@ def _obtener_materias_primas_precargadas(produccion_base):
         for mp in materias
     ]
 
+@login_required
 def get_materias_primas_data(request):
     """API para obtener datos de materias primas en JSON"""
     materias_primas = MateriaPrima.objects.all().values(
@@ -664,6 +907,7 @@ def get_materias_primas_data(request):
     return JsonResponse(list(materias_primas), safe=False)
 
 #Flujo básico de la producción
+@login_required
 def iniciar_produccion(request, pk):
     """View para iniciar una producción específica"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -677,20 +921,20 @@ def iniciar_produccion(request, pk):
     
     return redirect('produccion_list')
 
+@login_required
 def agita_produccion(request, pk):
     produccion_p = get_object_or_404(Produccion, pk=pk)
         
     if produccion_p.estado == 'En proceso: Iniciando mezcla':
         produccion_p.estado = 'En proceso: Agitado'
         produccion_p.save()
-            
         messages.success(request, f'✅ Producción {produccion_p.lote} actualizada correctamente')
-            
     else:
         messages.warning(request, f'⚠️ La producción {produccion_p.lote} ya está en estado: {produccion_p.estado}')
     
     return redirect('produccion_list')
 
+@login_required
 def concluir_produccion(request, pk):
     """View para mostrar formulario de conclusión"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -707,7 +951,6 @@ def concluir_produccion(request, pk):
                     produccion.fecha_actualizacion = datetime.datetime.now()
                     produccion.save()
 
-                    
                     messages.success(request, f'✅ Producción {produccion.lote} completada. Cantidad obtenida: {cantidad_real}')
                     return redirect('produccion_list')
                 else:
@@ -719,6 +962,7 @@ def concluir_produccion(request, pk):
     
     return render(request, 'produccion/concluir_produccion.html', { 'produccion': produccion })
 
+@login_required
 def cancelar_produccion(request, pk):
     """View para cancelar una producción con observaciones"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -735,6 +979,24 @@ def cancelar_produccion(request, pk):
             form.save()
             messages.success(request, f'✅ Producción {produccion.lote} cancelada correctamente')
             
+            # Notificar a admin, verificar si las materias primas ya salieron de almacen
+            target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+            vale_salida = Vale_Movimiento_Almacen.objects.filter(lote_No = produccion.lote)
+            # Crear notificaciones para cada usuario en ese grupo
+            for group in target_groups:
+                for user in group.customuser_set.all():
+                    # Notificación en base de datos
+                    Notification.objects.create(
+                        user=user,
+                        message=f"Cancelación de la producción: {produccion.lote}.",
+                        link=f'/produccion/'  # ¡.  
+                    )
+            
+            #Falta verificar cuando ya se sacaron las materias primas del almacen
+            for vale in vale_salida:
+                vale.estado = 'cancelado'
+                vale.save()
+
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': True,
@@ -754,6 +1016,7 @@ def cancelar_produccion(request, pk):
     })
 
 # View para ver detalles de cancelación
+@login_required
 def detalle_cancelacion(request, pk):
     """View para ver los detalles de una producción cancelada"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -766,14 +1029,12 @@ def detalle_cancelacion(request, pk):
         'produccion': produccion
     })
 
-class EditarProduccionView(View):
+class EditarProduccionView(LoginRequiredMixin, View):
     template_name = 'produccion/editar_produccion.html'
     
     def get(self, request, pk):
         # Obtener la producción existente
-        print('En el get')
         produccion = get_object_or_404(Produccion, id=pk)
-        print(produccion)
     
         # Inicializar sesión con los datos actuales
         request.session['editar_produccion_data'] = {
@@ -792,7 +1053,6 @@ class EditarProduccionView(View):
         # Necesitas obtener los objetos completos con la información necesaria
         materias_disponibles = Inv_Mat_Prima.objects.select_related('materia_prima', 'almacen').filter(
             cantidad__gt=0,  # Solo las que tienen stock
-            #materia_prima__activo=True   Asumiendo que tienes este campo
         )[:50]  # Limitar para evitar problemas de rendimiento
     
         # Formatear para el template - estructura que espera el frontend
@@ -828,8 +1088,7 @@ class EditarProduccionView(View):
     def _obtener_materias_primas_json(self, materias_primas_actuales):
         """Convierte las materias primas actuales a JSON para el frontend"""
         materias = []
-        print("🔍 En obtener materias primas existentes")
-    
+            
         for mp in materias_primas_actuales:
             # Obtener inventario actual
             inventario = Inv_Mat_Prima.objects.filter(
@@ -855,7 +1114,6 @@ class EditarProduccionView(View):
                 'inventario_disponible': float(inventario.cantidad) if inventario else 0,
             }
         
-            print(f"  ➕ Materia prima existente: {materia_data}")
             materias.append(materia_data)
         
         return materias
@@ -868,8 +1126,6 @@ class EditarProduccionView(View):
         editar_data = request.session.get('editar_produccion_data', {})
         
         step = request.POST.get('step')
-        print(f"🔍 POST recibido - step: {step}")
-        print(f"🔍 POST data: {request.POST}")
         
         if step == '1':
             return self.procesar_paso_1(request, produccion)
@@ -881,9 +1137,6 @@ class EditarProduccionView(View):
     def procesar_paso_1(self, request, produccion):
         """Actualizar cantidad estimada"""
         cantidad_estimada = request.POST.get('cantidad_estimada')
-    
-        print(f"🔍 procesar_paso_1 - POST data: {request.POST}")
-        print(f"🔍 cantidad_estimada recibida: {cantidad_estimada}")
     
         if not cantidad_estimada:
             return JsonResponse({'success': False, 'errors': 'La cantidad estimada es obligatoria'})
@@ -900,8 +1153,6 @@ class EditarProduccionView(View):
             request.session['editar_produccion_data'] = editar_data
             request.session.modified = True
         
-            print(f"✅ Cantidad estimada guardada en sesión: {cantidad_decimal}")
-        
             return JsonResponse({'success': True, 'step': 2})
         
         except (ValueError, InvalidOperation) as e:
@@ -912,17 +1163,12 @@ class EditarProduccionView(View):
     def procesar_paso_2(self, request, produccion):
         """Actualizar materias primas"""
         # Procesar materias primas enviadas
-        print(f"🔍 procesar_paso_2 - POST data: {request.POST}")
         try:
             materias_primas_nuevas = self.procesar_materias_primas(request.POST)
         except ValueError as e:
             return JsonResponse({'success': False, 'errors': str(e)})
-        
-        #if not materias_primas_nuevas:
-        #    return JsonResponse({'success': False, 'errors': 'Debe agregar al menos una materia prima'})
-        
+
         try:
-            
             with transaction.atomic():
                 # 1. Actualizar cantidad estimada
                 editar_data = request.session.get('editar_produccion_data', {})
@@ -1001,7 +1247,8 @@ class EditarProduccionView(View):
                             vale = Vale_Movimiento_Almacen.objects.create(
                                 tipo='Solicitud',
                                 entrada=False,
-                                almacen=almacen_obj
+                                almacen=almacen_obj,
+                                lote_No = produccion.lote
                             )
                         
                         Prod_Inv_MP.objects.create(
@@ -1094,6 +1341,7 @@ class EditarProduccionView(View):
         return materias_primas
 
 #funcionalidades para insertar pruebas químicas externas, emitidas por archivo.
+@login_required
 def subir_pruebas_quimicas(request, pk):
     """View para subir archivo de pruebas químicas"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -1129,6 +1377,7 @@ def subir_pruebas_quimicas(request, pk):
         'form': form
     })
 
+@login_required
 def descargar_pruebas_quimicas(request, pk):
     """View para descargar el archivo de pruebas químicas"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -1142,6 +1391,7 @@ def descargar_pruebas_quimicas(request, pk):
     response['Content-Disposition'] = f'attachment; filename="{produccion.nombre_archivo_pruebas()}"'
     return response
 
+@login_required
 def eliminar_pruebas_quimicas(request, pk):
     """View para eliminar el archivo de pruebas químicas"""
     produccion = get_object_or_404(Produccion, pk=pk)
@@ -1162,316 +1412,9 @@ def eliminar_pruebas_quimicas(request, pk):
     
     return redirect('produccion_list')
 
-###---Registro de pruebas químicas---###
-def crear_prueba_quimicaV(request, pk):
-    produccion = get_object_or_404(Produccion, pk=pk)
-    parametros_existentes = ParametroPrueba.objects.filter(activo=True)
+###---Registro de pruebas quimicas---###
 
-    if produccion.pruebas_quimicas.exists():
-        return redirect('detalle_prueba_quimica', pk=pk)
-        
-    if request.method == 'POST':
-        # Capturar datos del formulario principal
-        fecha_prueba = request.POST.get('fecha_prueba')
-        fecha_vencimiento = request.POST.get('fecha_vencimiento') or None
-        observaciones = request.POST.get('observaciones', '')
-        
-        # Validar fecha de prueba
-        if not fecha_prueba:
-            messages.error(request, 'La fecha de prueba es obligatoria')
-            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-                'produccion': produccion,
-                'parametros_existentes': parametros_existentes,
-            })
-        
-        # Validar que haya al menos un parámetro
-        tiene_parametros = False
-        for key in request.POST.keys():
-            if key.startswith('parametro_'):
-                tiene_parametros = True
-                break
-        
-        if not tiene_parametros:
-            messages.error(request, 'Debe agregar al menos un parámetro para la prueba')
-            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-                'produccion': produccion,
-                'parametros_existentes': parametros_existentes,
-            })
-
-        if tiene_parametros:
-            print("Confirmar parámetros")
-        
-        try:
-            print("-----")
-            # Usar transacción para asegurar consistencia
-            with transaction.atomic():
-                # Crear la prueba química
-                prueba = PruebaQuimica.objects.create(
-                    nomenclador_prueba=f"{produccion.lote}-{produccion.catalogo_producto.nombre_comercial}",
-                    produccion=produccion,
-                    fecha_prueba=fecha_prueba,
-                    fecha_vencimiento=fecha_vencimiento,
-                    observaciones=observaciones,
-                    estado="En Proceso",  # Establecer estado aquí
-                    # usuario=request.user
-                )
-                print("-----")
-                print(f"✓ Prueba creada: {prueba.nomenclador_prueba} (ID: {prueba.id})")
-                print("--XXX--")
-                
-                # Contador de parámetros procesados
-                parametros_procesados = 0
-                errores_validacion = []
-                
-                # Procesar parámetros dinámicos
-                print("\n=== Procesando parámetros ===")
-                # Procesar parámetros dinámicos - MÉTODO CORRECTO
-                for key in request.POST.keys():
-                    if key.startswith('parametro_'):
-                        print(f"\n📋 Procesando campo: {key}")
-                        # Extraer el índice del nombre del campo
-                        try:
-                            index = key.split('_')[1]
-                            print(f"  Índice extraído: {index}")
-                        except IndexError:
-                            continue
-                        
-                        # Obtener valores usando el índice
-                        parametro_id = request.POST.get(f'parametro_{index}')
-                        valor_medido = request.POST.get(f'valor_medido_{index}')
-
-                        print(f"  parametro_{index}: {parametro_id}")
-                        print(f"  valor_medido_{index}: {valor_medido}")
-                        
-                        # Validar que tenga valores
-                        if not parametro_id or not valor_medido:
-                            errores_validacion.append(f'Parámetro {index}: Faltan datos')
-                            continue
-                        else:
-                            print(f"  ✓ Datos completos para índice {index}")
-                            
-                        parametro = ParametroPrueba.objects.filter(id=parametro_id).first()
-                        print(f"  ✓ Parámetro encontrado: {parametro.nombre} (ID: {parametro.id})")
-                        
-                        try:
-                            parametro = ParametroPrueba.objects.get(id=parametro_id)
-                            print("Dentro del TRY")
-                            print(parametro.nombre)
-                        except ParametroPrueba.DoesNotExist:
-                            errores_validacion.append(f'Parámetro {index}: No existe o está inactivo')
-                            continue
-
-                        print(parametro.tipo)
-                        # Validar valor según tipo si es numérico.tipo in ['fisico', 'quimico', 'microbiologico']
-                        if parametro.tipo in ['fisico', 'quimico', 'microbiologico']:
-                            print(f"✓ Parametro no Organoléptico")
-                            try:
-                                valor_decimal = Decimal(str(valor_medido).replace(',', '.'))
-                                
-                                # Validar rangos si existen
-                                if parametro.valor_minimo is not None and valor_decimal < parametro.valor_minimo:
-                                    mensaje = f'Parámetro {parametro.nombre}: Valor {valor_medido} debajo del mínimo ({parametro.valor_minimo})'
-                                    errores_validacion.append(mensaje)
-                                    # Puedes decidir si continuar o no
-                                
-                                if parametro.valor_maximo is not None and valor_decimal > parametro.valor_maximo:
-                                    mensaje = f'Parámetro {parametro.nombre}: Valor {valor_medido} sobre el máximo ({parametro.valor_maximo})'
-                                    errores_validacion.append(mensaje)
-                                    # Puedes decidir si continuar o no
-                                    
-                            except (InvalidOperation, ValueError):
-                                errores_validacion.append(f'Parámetro {parametro.nombre}: Valor "{valor_medido}" no es numérico válido')
-                                continue
-                        else:
-                            print(f"No entró al if porque es Organole...")
-                        # Crear detalle de prueba química
-                        if parametro.tipo in ['fisico', 'quimico', 'microbiologico']:
-                            DetallePruebaQuimica.objects.create( 
-                                                                prueba=prueba, 
-                                                                parametro=parametro, 
-                                                                valor_medido=Decimal(valor_medido), 
-                                                                )
-                        else:
-                            DetallePruebaQuimica.objects.create( 
-                                                                prueba=prueba,
-                                                                parametro=parametro, 
-                                                                valor_medido=valor_medido, 
-                                                                cumplimiento=False,  
-                                                                )
-                        
-                        parametros_procesados += 1
-                
-                # Verificar que se procesaron parámetros
-                if parametros_procesados == 0:
-                    raise ValueError('No se pudieron procesar parámetros. Verifique los datos.')
-                
-                # Mostrar errores de validación como advertencias
-                if errores_validacion:
-                    for error in errores_validacion:
-                        messages.warning(request, error)
-                
-                # Mensaje de éxito
-                messages.success(request, f'Prueba química creada exitosamente con {parametros_procesados} parámetros')
-                
-                # Redirigir al detalle de la prueba o a la lista
-                return redirect('detalle_prueba_quimica', pk=pk)
-                # O si prefieres volver a la lista de producciones:
-                # return redirect('produccion_list')
-                
-        except Exception as e:
-            messages.error(request, f'Error al crear la prueba: {str(e)}')
-            # Log del error
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f'Error crear_prueba_quimica: {str(e)}', exc_info=True)
-            
-            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-                'produccion': produccion,
-                'parametros_existentes': parametros_existentes,
-            })
-    
-    # GET request - mostrar formulario
-    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-        'produccion': produccion,
-        'parametros_existentes': parametros_existentes,
-    })
-
-#Salva del crear prueba quimica
-def crear_prueba_quimicaO(request, pk):
-    produccion = get_object_or_404(Produccion, pk=pk)
-    parametros_existentes = ParametroPrueba.objects.filter(activo=True)
-
-    if produccion.pruebas_quimicas.exists():
-        return redirect('detalle_prueba_quimica', pk=pk)
-        
-    if request.method == 'POST':
-        # Capturar datos del formulario principal
-        fecha_prueba = request.POST.get('fecha_prueba')
-        fecha_vencimiento = request.POST.get('fecha_vencimiento') or None
-        observaciones = request.POST.get('observaciones', '')
-        
-        # Validar fecha de prueba
-        if not fecha_prueba:
-            messages.error(request, 'La fecha de prueba es obligatoria')
-            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-                'produccion': produccion,
-                'parametros_existentes': parametros_existentes,
-            })
-        
-        # Validar que haya al menos un parámetro
-        tiene_parametros = False
-        for key in request.POST.keys():
-            if key.startswith('parametro_'):
-                tiene_parametros = True
-                break
-        
-        if not tiene_parametros:
-            messages.error(request, 'Debe agregar al menos un parámetro para la prueba')
-            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-                'produccion': produccion,
-                'parametros_existentes': parametros_existentes,
-            })
-
-        try:
-            # Usar transacción para asegurar consistencia
-            with transaction.atomic():
-                # Crear la prueba química
-                prueba = PruebaQuimica.objects.create(
-                    nomenclador_prueba=f"{produccion.lote}-{produccion.catalogo_producto.nombre_comercial}",
-                    produccion=produccion,
-                    fecha_prueba=fecha_prueba,
-                    fecha_vencimiento=fecha_vencimiento,
-                    observaciones=observaciones,
-                    estado="En Proceso",
-                )
-                
-                # Contador de parámetros procesados
-                parametros_procesados = 0
-                errores_validacion = []
-                
-                # Procesar parámetros dinámicos
-                for key in request.POST.keys():
-                    if key.startswith('parametro_'):
-                        # Extraer el índice
-                        index = key.split('_')[1]
-                        
-                        # Obtener valores
-                        parametro_id = request.POST.get(f'parametro_{index}')
-                        valor_medido = request.POST.get(f'valor_medido_{index}')
-                        
-                        if not parametro_id or not valor_medido:
-                            errores_validacion.append(f'Parámetro {index}: Faltan datos')
-                            continue
-                        
-                        try:
-                            parametro = ParametroPrueba.objects.get(id=parametro_id)
-                            
-                        except ParametroPrueba.DoesNotExist:
-                            errores_validacion.append(f'Parámetro {index}: No existe')
-                            continue
-
-                        # Procesar según el tipo de parámetro
-                        if parametro.tipo == 'organoleptico':
-                            # Para organolépticos, el valor será 'true' o 'false'
-                            cumplimiento = valor_medido.lower() == 'true'
-                            
-                            DetallePruebaQuimica.objects.create(
-                                prueba=prueba,
-                                parametro=parametro,
-                                valor_medido=str(cumplimiento),
-                                cumplimiento=cumplimiento,
-                            )
-                            
-                        else:
-                            # Para otros tipos
-                            try:
-                                valor_decimal = Decimal(str(valor_medido).replace(',', '.'))
-                                
-                                # Validar rangos si existen
-                                if parametro.valor_minimo is not None and valor_decimal < parametro.valor_minimo:
-                                    errores_validacion.append(f'{parametro.nombre}: Valor debajo del mínimo')
-                                
-                                if parametro.valor_maximo is not None and valor_decimal > parametro.valor_maximo:
-                                    errores_validacion.append(f'{parametro.nombre}: Valor sobre el máximo')
-                                    
-                            except (InvalidOperation, ValueError):
-                                errores_validacion.append(f'{parametro.nombre}: Valor no es numérico válido')
-                                continue
-                            
-                            DetallePruebaQuimica.objects.create(
-                                prueba=prueba,
-                                parametro=parametro,
-                                valor_medido=valor_medido,
-                            )
-                        
-                        parametros_procesados += 1
-                
-                # Verificar que se procesaron parámetros
-                if parametros_procesados == 0:
-                    raise ValueError('No se pudieron procesar parámetros')
-                
-                # Mostrar errores de validación
-                if errores_validacion:
-                    for error in errores_validacion:
-                        messages.warning(request, error)
-                
-                # Mensaje de éxito
-                messages.success(request, f'Prueba creada con {parametros_procesados} parámetros')
-                return redirect('detalle_prueba_quimica', pk=pk)
-                
-        except Exception as e:
-            messages.error(request, f'Error al crear la prueba: {str(e)}')
-            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-                'produccion': produccion,
-                'parametros_existentes': parametros_existentes,
-            })
-    
-    # GET request
-    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
-        'produccion': produccion,
-        'parametros_existentes': parametros_existentes,
-    })
-
+@login_required
 def crear_prueba_quimica(request, pk):
     produccion = get_object_or_404(Produccion, pk=pk)
     parametros_existentes = ParametroPrueba.objects.filter(activo=True)

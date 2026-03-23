@@ -48,7 +48,7 @@ class SolicitudEnvasado(ModeloBase):
     
     def save(self, *args, **kwargs):
         if not self.folio:
-            # Generar folio automático
+            # Generar folio automÃ¡tico
             year = timezone.now().year
             month = timezone.now().month
             last_solicitud = SolicitudEnvasado.objects.filter(
@@ -69,7 +69,7 @@ class SolicitudEnvasado(ModeloBase):
         return f"{self.folio} - {self.lote_produccion_origen.producto.nombre_comercial}"
 
 class DetalleEnvasado(ModeloBase):
-    """Detalle de qué envases se van a utilizar"""
+    """Detalle de que envases se van a utilizar"""
     solicitud = models.ForeignKey(SolicitudEnvasado, on_delete=models.CASCADE)
     presentacion = models.ForeignKey(Inv_Envase, on_delete=models.PROTECT)
     cantidad_unidades = models.PositiveIntegerField(validators=[MinValueValidator(1)])
