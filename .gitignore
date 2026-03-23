@@ -46,3 +46,4 @@ logs/
 htmlcov/
 .coverage
 .coverage.*
+*.pyc
