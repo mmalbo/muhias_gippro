@@ -11,6 +11,7 @@ from .models import *
 from .forms import *
 from produccion.choices import ESTADOS_ENV
 from inventario.models import Inv_Producto, Producto, Inv_Envase, Inv_Insumos
+from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod
 
 # Create your views here.
 @login_required
@@ -28,24 +29,6 @@ def lista_solicitudes_envasado(request):
         'estados': ESTADOS_ENV
     })
 
-"""def crear_solicitud_envasado(request):
-    Crear nueva solicitud de envasado
-    if request.method == 'POST':
-        form = SolicitudEnvasadoForm(request.POST)
-        if form.is_valid():
-            solicitud = form.save(commit=False)
-            solicitud.solicitante = request.user
-            solicitud.save()
-            form.save_m2m()  # Guardar las presentaciones
-            
-            messages.success(request, 'Solicitud de envasado creada exitosamente.')
-            return redirect('detalle_solicitud_envasado', pk=solicitud.pk)
-    else:
-        form = SolicitudEnvasadoForm()
-    
-    return render(request, 'produccion/envasado/crear_solicitud.html', {'form': form})
-"""
-
 class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
     model = SolicitudEnvasado
     form_class = SolicitudEnvasadoForm
@@ -61,27 +44,78 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         
         # Obtener todos los envases disponibles (a través de Inv_Envase)
-        context['envases_disponibles'] = Inv_Envase.objects.filter(
-            cantidad__gt=0
-        ).select_related('envase', 'almacen').order_by('envase__nombre')
+        envases_disponibles = []
+        for inv_envase in Inv_Envase.objects.filter(cantidad__gt=0).select_related('envase', 'almacen'):
+            if inv_envase.envase:  # Verificar que la relación existe
+                envases_disponibles.append({
+                    'id': inv_envase.id,
+                    'nombre': inv_envase.envase.nombre,
+                    'codigo': inv_envase.envase.codigo_envase,
+                    'tipo': inv_envase.envase.tipo_envase_embalaje,
+                    'cantidad': inv_envase.cantidad,
+                    'almacen': inv_envase.almacen.nombre if inv_envase.almacen else 'N/A'
+                })
+        context['envases_disponibles'] = envases_disponibles
         
         # Obtener todos los insumos disponibles
-        context['insumos_disponibles'] = Inv_Insumos.objects.filter(
+        """inv_insumo = Inv_Insumos.objects.filter(
             cantidad__gt=0
-        ).select_related('insumos', 'almacen').order_by('insumos__nombre')
-        
-        #context['hoy'] = timezone.now().date()
+        ).select_related('insumos', 'almacen').order_by('insumos__nombre')"""
+        insumos_disponibles = []
+        for inv_insumo in Inv_Insumos.objects.filter(cantidad__gt=0).select_related('insumos', 'almacen'):
+            if inv_insumo.insumos:  # Verificar que la relación existe
+                insumos_disponibles.append({
+                    'id': inv_insumo.id,
+                    'nombre': inv_insumo.insumos.nombre,
+                    'cantidad': inv_insumo.cantidad,
+                    #'unidad': inv_insumo.insumos.unidad_medida,
+                    'almacen': inv_insumo.almacen.nombre if inv_insumo.almacen else 'N/A'
+                })
+        context['insumos_disponibles'] = insumos_disponibles
+
+        # Debug
+        print(f"Envases disponibles: {len(envases_disponibles)}")
+        print(f"Insumos disponibles: {len(insumos_disponibles)}")
+
         return context
 
     def form_valid(self, form):
         messages.success(self.request, 'Solicitud de envasado creada exitosamente.')
         return super().form_valid(form)
 
-    def form_invalid(self, form):
-        print(form.errors)
-        messages.error(self.request, 'Por favor corrige los errores en el formulario.')
-        return super().form_invalid(form)
+    """def form_valid(self, form):
+        try:
+            with transaction.atomic():
+               response = super().form_valid(form)
 
+               # Crear vale de solicitud
+               id_almacen = self.object.lote_produccion_origen.almacen
+               print(id_almacen)
+               almacen_obj = Almacen.objects.get(id=id_almacen)
+               vale = Vale_Movimiento_Almacen.objects.create(
+                   tipo = 'Solicitud a envasado',
+                   entrada = False,
+                   origen = almacen_obj.nombre,
+                   destino = 'Planta'
+                   lote_No = self.object.folio,
+                   estado = 'confirmado'
+               )
+                
+        messages.success(self.request, 'Solicitud de envasado creada exitosamente.')
+        return """
+
+    def form_invalid(self, form):
+        # Imprimir errores en consola
+        print("=== ERRORES DEL FORMULARIO ===")
+        print(form.errors)
+        print(form.non_field_errors())
+    
+        # Para ver también los errores específicos de cada campo
+        for field, errors in form.errors.items():
+            print(f"Campo {field}: {errors}")
+    
+        messages.error(self.request, f'Por favor corrige los errores en el formulario: {form.errors}')
+        return super().form_invalid(form)
 
 # API endpoints para AJAX
 @login_required
@@ -102,7 +136,6 @@ def obtener_detalle_lote(request):
             return JsonResponse({'success': False, 'error': 'Lote no encontrado'})
     return JsonResponse({'success': False, 'error': 'ID de lote no proporcionado'})
 
-
 @login_required
 def obtener_detalle_envase(request):
     """Obtener detalles de un envase específico"""
@@ -122,7 +155,6 @@ def obtener_detalle_envase(request):
         except Inv_Envase.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Envase no encontrado'})
     return JsonResponse({'success': False, 'error': 'ID de envase no proporcionado'})
-
 
 @login_required
 def obtener_detalle_insumo(request):
@@ -170,6 +202,28 @@ def iniciar_envasado(request, pk):
     
     messages.success(request, 'Proceso de envasado iniciado.')
     return redirect('registrar_lote_envasado', solicitud_pk=pk)
+
+@login_required
+def cancelar_solicitud(request, pk):
+    """Cancelar una solicitud pendiente"""
+    solicitud = get_object_or_404(SolicitudEnvasado, pk=pk)
+    
+    # Verificar que el usuario sea el solicitante
+    if solicitud.solicitante != request.user:
+        messages.error(request, 'No tiene permiso para cancelar esta solicitud')
+        return redirect('envasado:detalle_solicitud', pk=pk)
+    
+    # Verificar que esté pendiente
+    if solicitud.estado != 'Planificada':
+        messages.error(request, 'Solo se pueden cancelar solicitudes planificadas')
+        return redirect('envasado:detalle_solicitud', pk=pk)
+    
+    with transaction.atomic():
+        solicitud.estado = 'cancelada'
+        solicitud.save()
+        messages.success(request, 'Solicitud cancelada exitosamente')
+    
+    return redirect('envasado:lista_solicitudes')
 
 @login_required
 def registrar_lote_envasado(request, solicitud_pk):

@@ -1,0 +1,423 @@
+<!-- produccion/envasado/templates/envasado/detalle_solicitud.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>Detalle de Solicitud de Envasado</h3>
+                    <div>
+                        <span class="badge 
+                            {% if solicitud.estado == 'Planificada' %}badge-warning
+                            {% elif solicitud.estado == 'en_proceso' %}badge-primary
+                            {% elif solicitud.estado == 'completada' %}badge-success
+                            {% elif solicitud.estado == 'cancelada' %}badge-danger
+                            {% endif %}" 
+                            style="font-size: 14px; padding: 8px 12px;">
+                            {{ solicitud.get_estado_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Información General -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5>Información General</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <strong>Folio:</strong>
+                                    <p class="mt-1">{{ solicitud.folio }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Fecha Solicitud:</strong>
+                                    <p class="mt-1">{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Fecha Estimada Inicio:</strong>
+                                    <p class="mt-1">{{ solicitud.fecha_inicio|date:"d/m/Y"|default:"No definida" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Solicitante:</strong>
+                                    <p class="mt-1">{{ solicitud.solicitante.get_full_name|default:solicitud.solicitante.username }}</p>
+                                </div>
+                            </div>
+                            {% if solicitud.observaciones %}
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <strong>Observaciones:</strong>
+                                    <p class="mt-1">{{ solicitud.observaciones }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Producto a Envasar -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5>Producto a Envasar</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Producto:</strong>
+                                    <p class="mt-1">{{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Lote Origen:</strong>
+                                    <p class="mt-1">{{ solicitud.lote_produccion_origen }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Cantidad a Envasar:</strong>
+                                    <p class="mt-1">{{ solicitud.cantidad_solicitada }} L/kg</p>
+                                </div>
+                                <div class="col-md-2">
+                                    <strong>Disponible:</strong>
+                                    <p class="mt-1 {% if disponible %}text-success{% else %}text-danger{% endif %}">
+                                        {{ solicitud.lote_produccion_origen.cantidad }} L/kg
+                                        {% if not disponible %}
+                                            <br><small class="text-danger">¡Insuficiente!</small>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Envases a Utilizar -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning">
+                            <h5>Envases a Utilizar</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Envase</th>
+                                            <th>Código</th>
+                                            <th>Tipo</th>
+                                            <th>Unidades Requeridas</th>
+                                            <th>Disponible en Inventario</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detalle in solicitud.detalleenvasado_set.all %}
+                                        <tr>
+                                            <td>{{ detalle.presentacion.envase.nombre }}</td>
+                                            <td>{{ detalle.presentacion.envase.codigo_envase }}</td>
+                                            <td>{{ detalle.presentacion.envase.tipo_envase_embalaje }}</td>
+                                            <td>{{ detalle.cantidad_unidades }}</td>
+                                            <td>{{ detalle.presentacion.cantidad }}</td>
+                                            <td>
+                                                {% if detalle.cantidad_unidades <= detalle.presentacion.cantidad %}
+                                                    <span class="badge badge-success">Disponible</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">Insuficiente</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center">No se han definido envases</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Insumos Necesarios -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-secondary text-white">
+                            <h5>Insumos Necesarios</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Insumo</th>
+                                            <th>Cantidad Requerida</th>
+                                            <th>Disponible en Inventario</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for consumo in solicitud.consumos.all %}
+                                        <tr>
+                                            <td>{{ consumo.insumo.insumos.nombre }}</td>
+                                            <td>{{ consumo.cantidad_unidades }}</td>
+                                            <td>{{ consumo.insumo.cantidad }}</td>
+                                            <td>
+                                                {% if consumo.cantidad_unidades <= consumo.insumo.cantidad %}
+                                                    <span class="badge badge-success">Disponible</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">Insuficiente</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">No se han definido insumos</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resultados del Envasado (solo si está completada) -->
+                    {% if solicitud.estado == 'completada' %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5>Resultados del Envasado</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <strong>Producto Destino:</strong>
+                                    <p class="mt-1">{{ solicitud.producto_destino.nombre_comercial|default:"No definido" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Lote Destino:</strong>
+                                    <p class="mt-1">{{ solicitud.lote_destino.lote_produccion|default:"No definido" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Unidades Producidas:</strong>
+                                    <p class="mt-1">{{ solicitud.unidades_producidas|default:"0" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Cantidad Perdida:</strong>
+                                    <p class="mt-1 text-danger">{{ solicitud.cantidad_perdida|default:"0" }} L/kg</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Fecha Vencimiento:</strong>
+                                    <p class="mt-1">{{ solicitud.fecha_vencimiento|date:"d/m/Y"|default:"No definida" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Fecha Inicio:</strong>
+                                    <p class="mt-1">{{ solicitud.fecha_inicio|date:"d/m/Y H:i"|default:"No registrada" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Fecha Finalización:</strong>
+                                    <p class="mt-1">{{ solicitud.fecha_fin|date:"d/m/Y H:i"|default:"No registrada" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Responsable Ejecución:</strong>
+                                    <p class="mt-1">{{ solicitud.responsable_ejecucion.get_full_name|default:"No registrado" }}</p>
+                                </div>
+                            </div>
+                            {% if solicitud.observaciones_proceso %}
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <strong>Observaciones del Proceso:</strong>
+                                    <p class="mt-1">{{ solicitud.observaciones_proceso }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Consumos Reales -->
+                            {% if solicitud.consumos_reales %}
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <strong>Consumos Reales:</strong>
+                                    <div class="table-responsive mt-2">
+                                        <table class="table table-sm table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Insumo</th>
+                                                    <th>Cantidad Requerida</th>
+                                                    <th>Cantidad Real</th>
+                                                    <th>Diferencia</th>
+                                                    <th>Observaciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for consumo_real in solicitud.consumos_reales %}
+                                                <tr>
+                                                    <td>{{ consumo_real.insumo_nombre }}</td>
+                                                    <td>{{ consumo_real.cantidad_requerida }} {{ consumo_real.unidad_medida }}</td>
+                                                    <td>{{ consumo_real.cantidad_utilizada }} {{ consumo_real.unidad_medida }}</td>
+                                                    <td class="{% if consumo_real.diferencia > 0 %}text-danger{% elif consumo_real.diferencia < 0 %}text-success{% endif %}">
+                                                        {{ consumo_real.diferencia }} {{ consumo_real.unidad_medida }}
+                                                    </td>
+                                                    <td>{{ consumo_real.observaciones|default:"-" }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Timeline del Proceso -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-dark text-white">
+                            <h5>Línea de Tiempo</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="timeline">
+                                <li>
+                                    <i class="fa fa-plus-circle bg-primary"></i>
+                                    <div class="timeline-item">
+                                        <span class="time">{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</span>
+                                        <h6>Solicitud Creada</h6>
+                                        <p>Por: {{ solicitud.solicitante.get_full_name|default:solicitud.solicitante.username }}</p>
+                                    </div>
+                                </li>
+                                {% if solicitud.supervisor_aprueba %}
+                                <li>
+                                    <i class="fa fa-check-circle bg-success"></i>
+                                    <div class="timeline-item">
+                                        <span class="time">{{ solicitud.updated_at|date:"d/m/Y" }}</span>
+                                        <h6>Solicitud Aprobada</h6>
+                                        <p>Por: {{ solicitud.supervisor_aprueba.get_full_name|default:solicitud.supervisor_aprueba.username }}</p>
+                                    </div>
+                                </li>
+                                {% endif %}
+                                {% if solicitud.fecha_inicio %}
+                                <li>
+                                    <i class="fa fa-play-circle bg-info"></i>
+                                    <div class="timeline-item">
+                                        <span class="time">{{ solicitud.fecha_inicio|date:"d/m/Y" }}</span>
+                                        <h6>Proceso Iniciado</h6>
+                                        <p>Inicio del envasado</p>
+                                    </div>
+                                </li>
+                                {% endif %}
+                                {% if solicitud.fecha_fin %}
+                                <li>
+                                    <i class="fa fa-flag-checkered bg-success"></i>
+                                    <div class="timeline-item">
+                                        <span class="time">{{ solicitud.fecha_fin|date:"d/m/Y" }}</span>
+                                        <h6>Proceso Finalizado</h6>
+                                        <p>Envasado completado</p>
+                                    </div>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="form-group text-center mt-4">
+                        <a href="{% url 'envasado:lista_solicitudes' %}" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left"></i> Volver
+                        </a>
+                        
+                        {% if solicitud.estado == 'Planificada' and perms.envasado.ejecutar_envasado %}
+                            <a href="{% url 'envasado:iniciar_envasado' solicitud.pk %}" class="btn btn-primary">
+                                <i class="fa fa-play"></i> Ejecutar Envasado
+                            </a>
+                        {% endif %}
+                        
+                        {% if solicitud.estado == 'Planificada' and solicitud.solicitante == user %}
+                            <button type="button" class="btn btn-danger" onclick="cancelarSolicitud()">
+                                <i class="fa fa-times"></i> Cancelar Solicitud
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos para el timeline */
+.timeline {
+    position: relative;
+    padding: 0;
+    list-style: none;
+}
+.timeline:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+    left: 30px;
+    margin-left: -1.5px;
+}
+.timeline > li {
+    position: relative;
+    margin-bottom: 30px;
+    min-height: 50px;
+}
+.timeline > li:before, .timeline > li:after {
+    content: " ";
+    display: table;
+}
+.timeline > li:after {
+    clear: both;
+}
+.timeline > li .timeline-item {
+    margin-left: 60px;
+    background: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+.timeline > li .timeline-item .time {
+    color: #6c757d;
+    font-size: 12px;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+.timeline > li i {
+    position: absolute;
+    left: 20px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-size: 12px;
+    color: #fff;
+    z-index: 1;
+}
+.bg-primary { background-color: #007bff; }
+.bg-success { background-color: #28a745; }
+.bg-info { background-color: #17a2b8; }
+.bg-warning { background-color: #ffc107; }
+.bg-danger { background-color: #dc3545; }
+.bg-secondary { background-color: #6c757d; }
+.badge {
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+.badge-success { background-color: #28a745; color: white; }
+.badge-danger { background-color: #dc3545; color: white; }
+.badge-warning { background-color: #ffc107; color: #212529; }
+.badge-info { background-color: #17a2b8; color: white; }
+.badge-primary { background-color: #007bff; color: white; }
+</style>
+
+<script>
+function cancelarSolicitud() {
+    if (confirm('¿Está seguro que desea cancelar esta solicitud?')) {
+        // Implementar la lógica de cancelación
+        window.location.href = "{% url 'envasado:cancelar_solicitud' solicitud.pk %}";
+    }
+}
+</script>
+{% endblock %}
