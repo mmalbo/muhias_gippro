@@ -32,7 +32,7 @@ from inventario.models import Inv_Mat_Prima, Inv_Producto
 from producto.models import Producto
 from envase_embalaje.models import Formato
 from nomencladores.almacen.models import Almacen
-from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod
+from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod, Movimiento_MP
 from .forms import (ProduccionForm, MateriaPrimaForm, 
     SubirPruebasQuimicasForm, CancelarProduccionForm, PruebaQuimicaForm, 
     DetallePruebaForm, AprobarPruebaForm, ParametroPruebaForm, BuscarParametroForm)
@@ -388,7 +388,9 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 lote_No = produccion.lote,
                 estado = 'confirmado'
             )
+            vale.save()
             print(vale)
+            print(vale.estado)
             # Guardar relación con materias primas
             for mp_data in materias_primas:
                 almacen_o=Almacen.objects.get(id=mp_data['almacen'])
@@ -534,7 +536,9 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     tipo = 'Solicitud',
                     entrada = False,
                     origen = almacen_obj.nombre,
-                    destino = planta_instance.nombre
+                    destino = planta_instance.nombre,
+                    lote_No = produccion.lote,
+                    estado = 'confirmado'
                 )
             
                 # Guardar relación con materias primas
@@ -1184,25 +1188,31 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 
                 # 4. Identificar IDs de materias primas nuevas
                 ids_nuevos = [mp.get('id') for mp in materias_primas_nuevas if mp.get('id')]
-                
-                # 5. Eliminar las que ya no están
+
+                vale_s = None
+                vale_d = None
+                # 5. Eliminar las que ya no están, se crea un vale de devolución
                 for mp_actual in materias_actuales:
                     if str(mp_actual.id) not in ids_nuevos:
-                        mp_actual_obj=MateriaPrima.objects.get(id=mp_actual.inv_materia_prima.id)
-                        # Devolver al inventario antes de eliminar
-                        inventario = Inv_Mat_Prima.objects.filter(
-                            materia_prima=mp_actual_obj,
-                            almacen=mp_actual.almacen
-                        ).first()
-                        
-                        if inventario:
-                            inventario.cantidad -= mp_actual.cantidad_materia_prima
-                            inventario.save()
-                        
-                        mp_actual.delete()
+                        if not vale_d:
+                            vale_d = Vale_Movimiento_Almacen.objects.create(
+                                    tipo='Devolución',
+                                    destino=mp_actual.vale.almacen.nombre,
+                                    origen=produccion.planta.nombre,
+                                    entrada=False,
+                                    almacen=mp_actual.vale.almacen,
+                                    lote_No = produccion.lote,
+                                    estado='confirmado'
+                                )
+                        Movimiento_MP.objects.create(
+                                materia_prima=mp_actual.inv_materia_prima,
+                                cantidad=mp_actual.cantidad_materia_prima,
+                                vale=vale_d
+                            )
+                        mp_actual.cantidad_materia_prima = 0
+                        mp_actual.save()
                 
                 # 6. Actualizar o crear nuevas materias primas
-                vale = None
                 for mp_data in materias_primas_nuevas:
                     materia_prima_obj = get_object_or_404(MateriaPrima, id=mp_data['materia_prima'])
                     almacen_obj = get_object_or_404(Almacen, id=mp_data['almacen'])
@@ -1217,46 +1227,78 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     
                     nueva_cantidad = Decimal(str(mp_data['cantidad']))
                     cantidad_anterior = Decimal('0')
-                    
+                            
                     # Verificar si es una actualización o creación
                     if mp_data.get('id'):  # Actualizar existente
                         mp_existente = Prod_Inv_MP.objects.get(id=mp_data['id'])
                         cantidad_anterior = mp_existente.cantidad_materia_prima
-                        
+                        diferencia = nueva_cantidad - cantidad_anterior
                         # Ajustar inventario
-                        if nueva_cantidad > cantidad_anterior:
-                            diferencia = nueva_cantidad - cantidad_anterior
+                        if diferencia > 0:                           
                             if inventario.cantidad < diferencia:
                                 raise ValueError(f'Inventario insuficiente de {materia_prima_obj.nombre}')
-                            inventario.cantidad -= diferencia
-                        else:
+                            #mp_existente.cantidad_materia_prima -= diferencia
+                                # Crear o reutilizar vale
+                            if not vale_s:
+                                vale_s = Vale_Movimiento_Almacen.objects.create(
+                                    tipo='Solicitud',
+                                    entrada=False,
+                                    almacen=almacen_obj,
+                                    origen=produccion.planta.nombre,
+                                    lote_No = produccion.lote,
+                                    estado='confirmado'
+                                )
+                            Prod_Inv_MP.objects.create(
+                                lote_prod=produccion,
+                                inv_materia_prima=materia_prima_obj,
+                                cantidad_materia_prima=diferencia,
+                                almacen=almacen_obj,
+                                vale=vale_s
+                            )
+                        elif diferencia < 0: 
+                            if not vale_d:
+                                vale_d = Vale_Movimiento_Almacen.objects.create(
+                                    tipo='Devolución',
+                                    destino=almacen_obj.nombre,
+                                    origen=produccion.planta.nombre,
+                                    entrada=False,
+                                    almacen=almacen_obj,
+                                    lote_No = produccion.lote,
+                                    estado='confirmado'
+                                )
+                            Movimiento_MP.objects.create(
+                                materia_prima=materia_prima_obj,
+                                cantidad=-diferencia,
+                                vale=vale_d
+                            )
+                            
                             diferencia = cantidad_anterior - nueva_cantidad
-                            inventario.cantidad += diferencia
+                            mp_existente.cantidad_materia_prima -= diferencia
+                            mp_existente.save()
                         
-                        mp_existente.cantidad_materia_prima = nueva_cantidad
-                        mp_existente.save()
-                        
+                        #mp_existente.cantidad_materia_prima = nueva_cantidad
+                        #mp_existente.save()                        
                     else:  # Crear nueva
                         if inventario.cantidad < nueva_cantidad:
                             raise ValueError(f'Inventario insuficiente de {materia_prima_obj.nombre}')
                         
-                        inventario.cantidad -= nueva_cantidad
+                        #inventario.cantidad -= nueva_cantidad
                         
                         # Crear o reutilizar vale
-                        if not vale:
-                            vale = Vale_Movimiento_Almacen.objects.create(
+                        if not vale_s:
+                            vale_s = Vale_Movimiento_Almacen.objects.create(
                                 tipo='Solicitud',
                                 entrada=False,
                                 almacen=almacen_obj,
-                                lote_No = produccion.lote
+                                lote_No = produccion.lote,
+                                estado='confirmado'
                             )
-                        
                         Prod_Inv_MP.objects.create(
                             lote_prod=produccion,
                             inv_materia_prima=materia_prima_obj,
                             cantidad_materia_prima=nueva_cantidad,
                             almacen=almacen_obj,
-                            vale=vale
+                            vale=vale_s
                         )
                     
                     inventario.save()

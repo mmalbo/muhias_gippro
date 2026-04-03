@@ -4,12 +4,32 @@
 
 {% block contenido %}
 <div class="container-fluid">
+    
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
                     <h3>Nueva Solicitud de Envasado</h3>
                 </div>
+                <!-- Después de <div class="card-body"> y antes del <form> -->
+                {% if form.errors %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error en el formulario:</strong>
+                    <ul>
+                        {% for field in form %}
+                            {% if field.errors %}
+                                <li><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if form.non_field_errors %}
+                            <li><strong>Error general:</strong> {{ form.non_field_errors|striptags }}</li>
+                        {% endif %}
+                    </ul>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endif %}
                 <div class="card-body">
                     <form method="post" id="solicitudForm">
                         {% csrf_token %}
@@ -86,12 +106,14 @@
                                             <option value="">Seleccionar envase...</option>
                                             {% for envase in envases_disponibles %}
                                                 <option value="{{ envase.id }}" 
-                                                        data-nombre="{{ envase.envase.nombre }}"
-                                                        data-codigo="{{ envase.envase.codigo_envase }}"
-                                                        data-tipo="{{ envase.envase.tipo_envase_embalaje }}"
-                                                        data-cantidad="{{ envase.cantidad }}">
-                                                    {{ envase.envase.nombre }} ({{ envase.envase.codigo_envase }})
+                                                    data-nombre="{{ envase.nombre }}"
+                                                    data-codigo="{{ envase.codigo }}"
+                                                    data-tipo="{{ envase.tipo }}"
+                                                    data-cantidad="{{ envase.cantidad }}">
+                                                {{ envase.nombre }} ({{ envase.codigo }}) - Disponible: {{ envase.cantidad }}
                                                 </option>
+                                                {% empty %}
+                                                <option value="" disabled>No hay envases disponibles</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -140,10 +162,10 @@
                                             <option value="">Seleccionar insumo...</option>
                                             {% for insumo in insumos_disponibles %}
                                                 <option value="{{ insumo.id }}" 
-                                                        data-nombre="{{ insumo.insumos.nombre }}"
+                                                        data-nombre="{{ insumo.nombre }}"
                                                         data-cantidad="{{ insumo.cantidad }}"
-                                                        data-unidad="{{ insumo.insumos.unidad_medida }}">
-                                                    {{ insumo.insumos.nombre }}
+                                                        data-unidad="{{ insumo.unidad_medida }}">
+                                                    {{ insumo.nombre }}
                                                 </option>
                                             {% endfor %}
                                         </select>
@@ -176,9 +198,13 @@
                             </div>
                         </div>
 
-                        <!-- Campos ocultos -->
+                        <!-- Campos ocultos 
                         {{ form.envases }}
-                        {{ form.insumos }}
+                        {{ form.insumos }}-->
+
+                        <!-- Reemplaza {{ form.envases }} y {{ form.insumos }} con esto: -->
+                        <input type="hidden" name="envases" id="envases" value="">
+                        <input type="hidden" name="insumos" id="insumos" value="">
 
                         <!-- Botones -->
                         <div class="form-group text-center">
@@ -203,12 +229,84 @@ $(document).ready(function() {
     let envases = [];
     let insumos = [];
 
+    if ($('#envases').length === 0) {
+        console.error("El campo oculto #envases no existe en el DOM");
+        // Crear el campo si no existe
+        $('form').append('<input type="hidden" name="envases" id="envases">');
+    }
+    if ($('#insumos').length === 0) {
+        console.error("El campo oculto #insumos no existe en el DOM");
+        // Crear el campo si no existe
+        $('form').append('<input type="hidden" name="insumos" id="insumos">');
+    }
+
+    // Definir funciones antes de usarlas
+    function actualizarCampoOculto(campo, datos) {
+        $('#' + campo).val(JSON.stringify(datos));
+        console.log(`Campo ${campo} actualizado:`, $('#' + campo).val()); // Debug
+    }
+
+    function actualizarTablaEnvases() {
+        var tbody = $('#envasesBody');
+        tbody.empty();
+        
+        if (envases.length === 0) {
+            tbody.append('<tr><td colspan="6" class="text-center">No hay envases agregados</td></tr>');
+        } else {
+            envases.forEach(function(envase, index) {
+                var row = '<tr>' +
+                    '<td>' + envase.nombre + '</td>' +
+                    '<td>' + envase.codigo + '</td>' +
+                    '<td>' + envase.tipo + '</td>' +
+                    '<td>' + envase.disponible + '</td>' +
+                    '<td>' + envase.cantidad + '</td>' +
+                    '<td>' +
+                    '<button type="button" class="btn btn-danger btn-sm" onclick="eliminarEnvase(' + index + ')">' +
+                    'Eliminar</button>' +
+                    '</td>' +
+                    '</tr>';
+                tbody.append(row);
+            });
+
+            if (envases.length === 0) {
+                tbody.append('<tr><td colspan="6" class="text-center">No hay envases agregados</td></tr>');
+            }
+        }
+    }
+
+    function actualizarTablaInsumos() {
+        var tbody = $('#insumosBody');
+        tbody.empty();
+        
+        if (insumos.length === 0) {
+            tbody.append('<tr><td colspan="5" class="text-center">No hay insumos agregados</td></tr>');
+        } else {
+            insumos.forEach(function(insumo, index) {
+                var row = '<tr>' +
+                    '<td>' + insumo.nombre + '</td>' +
+                    '<td>' + insumo.disponible + '</td>' +
+                    '<td>' + insumo.unidad + '</td>' +
+                    '<td>' + insumo.cantidad + '</td>' +
+                    '<td>' +
+                    '<button type="button" class="btn btn-danger btn-sm" onclick="eliminarInsumo(' + index + ')">' +
+                    'Eliminar</button>' +
+                    '</td>' +
+                    '</tr>';
+                tbody.append(row);
+            });
+
+            if (insumos.length === 0) {
+                tbody.append('<tr><td colspan="5" class="text-center">No hay insumos agregados</td></tr>');
+            }
+        }
+    }  
+
     // Mostrar detalles del lote seleccionado
     $('#id_lote_produccion_origen').change(function() {
         var loteId = $(this).val();
         if (loteId) {
             $.ajax({
-                url: '{% url "envasado:lista_solicitudes" %}',
+                url: '{% url "envasado:detalle_lote" %}',
                 data: {'lote_id': loteId},
                 dataType: 'json',
                 success: function(data) {
@@ -218,7 +316,12 @@ $(document).ready(function() {
                             '<strong>Disponible:</strong> ' + data.cantidad_disponible + ' L/kg<br>' +
                             '<strong>Almacén:</strong> ' + data.almacen
                         ).show();
+                    } else {
+                        $('#detalleLote').hide();
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error al cargar lote:", error);
                 }
             });
         } else {
@@ -231,6 +334,8 @@ $(document).ready(function() {
         var envaseId = $('#envaseSelect').val();
         var cantidad = parseInt($('#cantidadEnvase').val());
         
+        console.log("Agregando envase - ID:", envaseId, "Cantidad:", cantidad);
+
         if (!envaseId) {
             alert('Seleccione un envase');
             return;
@@ -258,9 +363,11 @@ $(document).ready(function() {
             return;
         }
 
+        console.log("Datos del envase:", {nombre, codigo, tipo, disponible});
+
         // Agregar a la lista
         envases.push({
-            id: parseInt(envaseId),
+            id: envaseId,
             nombre: nombre,
             codigo: codigo,
             tipo: tipo,
@@ -269,12 +376,13 @@ $(document).ready(function() {
         });
 
         actualizarTablaEnvases();
+        actualizarCampoOculto('envases', envases);
         
         // Limpiar campos
         $('#envaseSelect').val('');
         $('#cantidadEnvase').val('');
-        
-        actualizarCampoOculto('envases', envases);
+                
+        console.log("Envases actuales:", envases); // Debug
     });
 
     // Agregar insumo
@@ -310,7 +418,7 @@ $(document).ready(function() {
 
         // Agregar a la lista
         insumos.push({
-            id: parseInt(insumoId),
+            id: insumoId,
             nombre: nombre,
             cantidad: cantidad,
             unidad: unidad,
@@ -318,12 +426,13 @@ $(document).ready(function() {
         });
 
         actualizarTablaInsumos();
+        actualizarCampoOculto('insumos', insumos);
         
         // Limpiar campos
         $('#insumoSelect').val('');
-        $('#cantidadInsumo').val('');
-        
-        actualizarCampoOculto('insumos', insumos);
+        $('#cantidadInsumo').val('');        
+       
+        console.log("Insumos actuales:", insumos); // Debug
     });
 
     // Funciones para eliminar
@@ -339,59 +448,14 @@ $(document).ready(function() {
         actualizarCampoOculto('insumos', insumos);
     };
 
-    function actualizarTablaEnvases() {
-        var tbody = $('#envasesBody');
-        tbody.empty();
-        
-        envases.forEach(function(envase, index) {
-            var row = '<tr>' +
-                '<td>' + envase.nombre + '</td>' +
-                '<td>' + envase.codigo + '</td>' +
-                '<td>' + envase.tipo + '</td>' +
-                '<td>' + envase.disponible + '</td>' +
-                '<td>' + envase.cantidad + '</td>' +
-                '<td>' +
-                '<button type="button" class="btn btn-danger btn-sm" onclick="eliminarEnvase(' + index + ')">' +
-                'Eliminar</button>' +
-                '</td>' +
-                '</tr>';
-            tbody.append(row);
-        });
-
-        if (envases.length === 0) {
-            tbody.append('<tr><td colspan="6" class="text-center">No hay envases agregados</td></tr>');
-        }
-    }
-
-    function actualizarTablaInsumos() {
-        var tbody = $('#insumosBody');
-        tbody.empty();
-        
-        insumos.forEach(function(insumo, index) {
-            var row = '<tr>' +
-                '<td>' + insumo.nombre + '</td>' +
-                '<td>' + insumo.disponible + '</td>' +
-                '<td>' + insumo.unidad + '</td>' +
-                '<td>' + insumo.cantidad + '</td>' +
-                '<td>' +
-                '<button type="button" class="btn btn-danger btn-sm" onclick="eliminarInsumo(' + index + ')">' +
-                'Eliminar</button>' +
-                '</td>' +
-                '</tr>';
-            tbody.append(row);
-        });
-
-        if (insumos.length === 0) {
-            tbody.append('<tr><td colspan="5" class="text-center">No hay insumos agregados</td></tr>');
-        }
-    }
-
-    function actualizarCampoOculto(campo, datos) {
-        $('#' + campo).val(JSON.stringify(datos));
-    }
-
     // Validar formulario antes de enviar
     $('#solicitudForm').submit(function(e) {
+        console.log("Validando formulario...");
+        console.log("Envases:", envases);
+        console.log("Insumos:", insumos);
+        console.log("Campos ocultos - envases:", $('#envases').val());
+        console.log("Campos ocultos - insumos:", $('#insumos').val());
+        
         if (envases.length === 0) {
             alert('Debe agregar al menos un envase');
             e.preventDefault();
@@ -411,6 +475,10 @@ $(document).ready(function() {
             e.preventDefault();
             return false;
         }
+
+        // Actualizar campos ocultos antes de enviar
+        actualizarCampoOculto('envases', envases);
+        actualizarCampoOculto('insumos', insumos);
 
         return true;
     });

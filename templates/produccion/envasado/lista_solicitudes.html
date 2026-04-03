@@ -38,8 +38,44 @@
                     </span>
                 </td>
                 <td>
-                    <a href="{% url 'envasado:detalle_solicitud' solicitud.pk %}" 
-                       class="btn btn-sm btn-info">Ver</a>
+                    <div class="button-container" style="display: flex; gap: 10px;">
+                        <a href="{% url 'envasado:detalle_solicitud' solicitud.pk %}" class="btn btn-sm" 
+                            title="Ver detalles de solicitud de envasado">
+                            <i class="fas fa-eye"></i>
+                        </a>
+
+                        <!--{% if solicitud.estado == 'Planificada' or solicitud.estado == 'en_proceso' %}
+                        <a href="#"
+                            class="btn btn-sm"
+                            title="Editar detalles del envasado">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {% endif %}-->
+
+                        {% if solicitud.estado == 'Planificada' %}
+                        <a href="{% url 'envasado:iniciar_envasado' solicitud.id %}"
+                            title="Iniciar envasado" class="btn btn-light btn-sm" fill="currentColor">
+                            <i class="fas fa-play"></i>                                                
+                        </a>
+                        {% endif %}
+
+                        {% if solicitud.estado == 'en_proceso' %}
+                            <a href="{% url 'concluir_produccion' produccion.id %}" 
+                                title="Concluir envasado" class="btn btn-light btn-sm">
+                                <i class="fas fa-blender"></i>
+                            </a>
+                        {% endif %}
+
+                        <!--Cancelar producción--> 
+                        {% if solicitud.estado == 'Planificada'%}
+                        <a href="{% url 'envasado:cancelar_solicitud' solicitud.id %}" 
+                            class="btn btn-danger btn-sm"
+                            title="Cancelar envasado">
+                            <i class="fas fa-ban"></i>
+                        </a>
+                        
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% endfor %}

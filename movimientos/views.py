@@ -426,47 +426,46 @@ class DetalleValeView(DetailView):
         return context
 
 def salida_produccion(request, prod_id):
-    mp_prod = Prod_Inv_MP.objects.filter(lote_prod=prod_id).all()
+    mp_prod = Prod_Inv_MP.objects.filter(lote_prod=prod_id, vale__estado='confirmado').all()
     produccion = get_object_or_404(Produccion, id=prod_id)
-    if produccion.estado == 'Planificada':
-        if request.method == 'POST':
-            almacen = mp_prod[0].almacen
-            vale = Vale_Movimiento_Almacen.objects.create(
+
+    #if produccion.estado == 'Planificada':
+    if request.method == 'POST':
+        almacen = mp_prod[0].almacen
+        vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
                 origen = almacen.nombre,
                 destino = produccion.planta.nombre,
                 entrada = False,
                 tipo = 'Entrega',
-                lote_No = produccion.lote
-            )
-            # Procesar cada mp
-            for mp in mp_prod:
-                try:
-                    field_name = str(mp.inv_materia_prima.id)
-                    print(field_name)
-                    cantidad = decimal.Decimal('0.00')
-                    cantidad = decimal.Decimal(float(request.POST.get(field_name)))
-                    print(request.POST.get(field_name))
-                    Movimiento_MP.objects.create(
+                lote_No = produccion.lote,
+                estado='confirmado'
+        )
+        # Procesar cada mp
+        vale_s = None
+        for mp in mp_prod:
+            if not vale_s:
+                vale_s = mp.vale
+            try:
+                field_name = str(mp.inv_materia_prima.id)
+                cantidad = decimal.Decimal('0.00')
+                cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+                Movimiento_MP.objects.create(
                         materia_prima=mp.inv_materia_prima,
                         vale=vale,  # Ejemplo: atributo fijo
                         cantidad=cantidad                        
-                    )
-                    print(mp.inv_materia_prima.id)
-                    print(almacen.id)
-                    inventario_mp = get_object_or_404(Inv_Mat_Prima,
+                )
+                inventario_mp = get_object_or_404(Inv_Mat_Prima,
                         materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
-                    inventario_mp.cantidad = inventario_mp.cantidad - cantidad
-                    inventario_mp.save()
-                except Exception as e: #(ValueError, TypeError):
+                inventario_mp.cantidad = inventario_mp.cantidad - cantidad
+                inventario_mp.save()
+            except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}")
                     pass
-            return redirect('movimiento_list')  # Redirigir a página de éxito                               
-        return render(request, 'movimientos/salida_mp.html', {
-        'materias_primas': mp_prod, 'produccion': produccion
-        })
-    else:
-        messages.info(request, 'La producción no está en estado Planificada')    
+        vale_s.estado = 'despachado'
+        return redirect('movimiento_list')  # Redirigir a página de éxito                               
+    """ else:
+        messages.info(request, 'La producción no está en estado Planificada') """    
     
     return render(request, 'movimientos/salida_mp.html', {
         'materias_primas': mp_prod, 'produccion': produccion
@@ -930,6 +929,7 @@ def entrada_producto(request, pk):
                         cantidad=cantidad
                     )
                     print(inv.producto)
+                    # if inv.prod
                     inventario_in, created = Inv_Producto.objects.get_or_create(
                         lote=inv.lote, producto=inv.producto, almacen=almacen)
                     if created:
@@ -946,7 +946,7 @@ def entrada_producto(request, pk):
                                 # Notificación en base de datos
                                 Notification.objects.create(
                                     user=user,
-                                    message=f"No coincide la recepción con la adquisición de: {inv.insumo.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
+                                    message=f"No coincide la recepción con la adquisición de: {inv.producto.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
                                     link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
                                 )
                 except Exception as e: #(ValueError, TypeError):
@@ -1024,7 +1024,6 @@ def entrada_producto(request, pk):
         'productos': inv_prod, 'vale': vale_v
     }) """
     
-    
 def movimiento_list(request):
     movimientos = Vale_Movimiento_Almacen.objects.all().order_by('-consecutivo')
     return render(request, 'movimientos/movimientos_list.html', {
@@ -1040,7 +1039,7 @@ def recepciones_pendientes_list(request):
     })
 
 def solicitudes_pendientes_list(request):
-    sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False).all()
+    sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False, estado='confirmado').all()
     return render(request, 'movimientos/solicitudes_list.html', {
         'sol_pendientes': sol_pendientes
     })
@@ -1148,6 +1147,7 @@ def vale_detalle(request, pk):
     tipo_inventario = vale.get_tipo_inventario
     
     print(f'tipo_inventario afuera: {tipo_inventario}')
+    print(f'Estado: {vale.estado}')
     # Obtener todos los items del vale agrupados por tipo
     materias_primas = vale.movimientos.all()
     productos = vale.movimientos_productos.all()
@@ -1341,7 +1341,6 @@ def confirmar_salida(request, pk):
         messages.error(request, f'Error inesperado: {str(e)}')
     
     return redirect('movimiento_list')
-
 
 # Funciones auxiliares para validación
 def validar_disponibilidad_mp(movimiento, almacen):

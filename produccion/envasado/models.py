@@ -25,7 +25,7 @@ class SolicitudEnvasado(ModeloBase):
     fecha_fin = models.DateField(null=True, blank=True)
     
     solicitante = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='solicitudes_envasado')
-    estado = models.CharField(max_length=20, choices=ESTADOS_ENV, default='pendiente')
+    estado = models.CharField(max_length=20, choices=ESTADOS_ENV, default='Planificada')
     
     observaciones = models.TextField(blank=True)
     producto_destino = models.ForeignKey(Producto, on_delete=models.PROTECT,
@@ -48,9 +48,9 @@ class SolicitudEnvasado(ModeloBase):
     
     def save(self, *args, **kwargs):
         if not self.folio:
-            # Generar folio automático
-            year = timezone.now().year
-            month = timezone.now().month
+            # Generar folio automáticotimezone.now()
+            year = self.fecha_inicio.year
+            month = self.fecha_inicio.month
             last_solicitud = SolicitudEnvasado.objects.filter(
                 folio__startswith=f'ENV-{year}{month:02d}'
             ).order_by('folio').last()
