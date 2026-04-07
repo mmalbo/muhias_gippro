@@ -39,7 +39,7 @@
                 </td>
                 <td>
                     <div class="button-container" style="display: flex; gap: 10px;">
-                        <a href="{% url 'envasado:detalle_solicitud' solicitud.pk %}" class="btn btn-sm" 
+                        <a href="{% url 'envasado:detalle_solicitud_envasado' solicitud.pk %}" class="btn btn-sm" 
                             title="Ver detalles de solicitud de envasado">
                             <i class="fas fa-eye"></i>
                         </a>
@@ -60,13 +60,13 @@
                         {% endif %}
 
                         {% if solicitud.estado == 'en_proceso' %}
-                            <a href="{% url 'concluir_produccion' produccion.id %}" 
-                                title="Concluir envasado" class="btn btn-light btn-sm">
-                                <i class="fas fa-blender"></i>
+                            <a href="{% url 'envasado:concluir_envasado' solicitud.id %}" 
+                                title="Concluir envasado" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-clipboard-check"></i>
                             </a>
                         {% endif %}
 
-                        <!--Cancelar producción--> 
+                        <!--Cancelar producciÃ³n--> 
                         {% if solicitud.estado == 'Planificada'%}
                         <a href="{% url 'envasado:cancelar_solicitud' solicitud.id %}" 
                             class="btn btn-danger btn-sm"

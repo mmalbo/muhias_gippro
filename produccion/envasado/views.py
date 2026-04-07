@@ -6,6 +6,8 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse_lazy
 from .models import *
 from .forms import *
@@ -194,14 +196,29 @@ def iniciar_envasado(request, pk):
     
     if solicitud.estado != 'Planificada':
         messages.error(request, 'Esta solicitud no está preparada para iniciar.')
-        return redirect('detalle_solicitud_envasado', pk=pk)
+        return redirect('envasado:detalle_solicitud_envasado', pk=pk)
     
     solicitud.estado = 'en_proceso'
-    solicitud.fecha_inicio = timezone.now().date
+    solicitud.fecha_inicio = timezone.now().date()
     solicitud.save()
     
     messages.success(request, 'Proceso de envasado iniciado.')
-    return redirect('registrar_lote_envasado', solicitud_pk=pk)
+    return redirect('envasado:registrar_lote_envasado', pk=pk)
+
+def concluir_envasado(request, pk):
+    """Iniciar el proceso de envasado"""
+    solicitud = get_object_or_404(SolicitudEnvasado, pk=pk)
+    
+    if solicitud.estado != 'en_proceso':
+        messages.error(request, 'Esta solicitud no está preparada para concluir.')
+        return redirect('envasado:detalle_solicitud_envasado', pk=pk)
+    
+    solicitud.estado = 'completada'
+    solicitud.fecha_fin = timezone.now().date()
+    solicitud.save()
+    
+    messages.success(request, 'Proceso de envasado concluido.')
+    return redirect('envasado:lista_solicitudes')
 
 @login_required
 def cancelar_solicitud(request, pk):
@@ -226,9 +243,9 @@ def cancelar_solicitud(request, pk):
     return redirect('envasado:lista_solicitudes')
 
 @login_required
-def registrar_lote_envasado(request, solicitud_pk):
+def registrar_lote_envasado(request, pk):
     """Registrar un lote de producto envasado"""
-    solicitud = get_object_or_404(SolicitudEnvasado, pk=solicitud_pk)
+    solicitud = get_object_or_404(SolicitudEnvasado, pk=pk)
     
     if request.method == 'POST':
         form = LoteEnvasadoForm(request.POST, solicitud=solicitud)
@@ -250,7 +267,7 @@ def registrar_lote_envasado(request, solicitud_pk):
                 """Definir el form para establecer el cierre del envasado y registrar la cantidad real"""
                 
                 messages.success(request, 'Lote registrado exitosamente.')
-                return redirect('detalle_solicitud_envasado', pk=solicitud_pk)
+                return redirect('detalle_solicitud_envasado', pk=pk)
     else:
         form = LoteEnvasadoForm(solicitud=solicitud)
     
