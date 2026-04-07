@@ -426,7 +426,7 @@ class DetalleValeView(DetailView):
         return context
 
 def salida_produccion(request, prod_id):
-    mp_prod = Prod_Inv_MP.objects.filter(lote_prod=prod_id, vale__estado='confirmado').all()
+    mp_prod = Prod_Inv_MP.objects.filter(lote_prod=prod_id, vale__estado='confirmado', vale__tipo = 'Solicitud').all()
     produccion = get_object_or_404(Produccion, id=prod_id)
 
     #if produccion.estado == 'Planificada':
@@ -462,7 +462,10 @@ def salida_produccion(request, prod_id):
             except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}")
                     pass
+            mp.vale.estado = 'despachado'
+            mp.vale.save()
         vale_s.estado = 'despachado'
+        vale_s.save()
         return redirect('movimiento_list')  # Redirigir a página de éxito                               
     """ else:
         messages.info(request, 'La producción no está en estado Planificada') """    
@@ -1032,7 +1035,7 @@ def movimiento_list(request):
 
 def recepciones_pendientes_list(request):
     rec_pendientes = Adquisicion.objects.filter(registrada=False).all()
-    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado')
+    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado', tipo__in=['Producción terminada', 'Vale de devolución'])
     return render(request, 'movimientos/recepciones_list.html', {
         'rec_pendientes': rec_pendientes,
         'mov_pendientes': mov_pendientes

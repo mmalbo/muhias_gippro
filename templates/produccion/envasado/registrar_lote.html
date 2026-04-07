@@ -1,0 +1,446 @@
+<!-- produccion/envasado/templates/envasado/registrar_lote.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>Registrar Producción de Envasado</h3>
+                    <h5>Solicitud: {{ solicitud.folio }}</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Información de la solicitud -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5>Información de la Solicitud</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Producto granel:</strong>
+                                    <p>{{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Cantidad solicitada:</strong>
+                                    <p>{{ solicitud.cantidad_solicitada }} L/kg</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Fecha inicio:</strong>
+                                    <p>{{ solicitud.fecha_inicio|date:"d/m/Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Envases utilizados -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5>Envases Utilizados</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Envase</th>
+                                            <th>Código</th>
+                                            <th>Cantidad Solicitada</th>
+                                            <th>Cantidad Real Producida</th>
+                                            <th>Observaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detalle in solicitud.detalleenvasado_set.all %}
+                                        <tr>
+                                            <td>{{ detalle.presentacion.envase.nombre }}</td>
+                                            <td>{{ detalle.presentacion.envase.codigo_envase }}</td>
+                                            <td>{{ detalle.cantidad_unidades }}</td>
+                                            <td>
+                                                <input type="number" 
+                                                       class="form-control cantidad-real" 
+                                                       data-envase-id="{{ detalle.presentacion.id }}"
+                                                       data-envase-nombre="{{ detalle.presentacion.envase.nombre }}"
+                                                       data-envase-capacidad="{{ detalle.presentacion.envase.capacidad|default:1 }}"
+                                                       value="{{ detalle.cantidad_unidades }}" 
+                                                       min="0" 
+                                                       step="1">
+                                            </td>
+                                            <td>
+                                                <input type="text" 
+                                                       class="form-control obs-envase"
+                                                       data-envase-id="{{ detalle.presentacion.id }}"
+                                                       placeholder="Observaciones por envase">
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen y cálculos -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning">
+                            <h5>Resumen de Producción</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Total unidades producidas:</label>
+                                        <input type="number" id="total_unidades" class="form-control" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Total litros/kg producidos:</label>
+                                        <input type="number" id="total_producido" class="form-control" readonly step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Cantidad perdida (L/kg):</label>
+                                        <input type="number" id="cantidad_perdida" class="form-control" readonly step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Rendimiento (%):</label>
+                                        <input type="number" id="rendimiento" class="form-control" readonly step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Fecha de vencimiento:</label>
+                                        <input type="date" id="fecha_vencimiento" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Lote de producción:</label>
+                                        <input type="text" id="lote_produccion" class="form-control" 
+                                               placeholder="Ej: L-2024-001" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Observaciones del proceso:</label>
+                                        <textarea id="observaciones_proceso" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Producto destino -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-secondary text-white">
+                            <h5>Producto Destino</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info">
+                                        <strong>Formato del producto:</strong> 
+                                        {% for detalle in solicitud.detalleenvasado_set.all %}
+                                            {{ detalle.presentacion.envase.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="opcion_producto" id="productoExistente" value="existente" checked>
+                                        <label class="form-check-label" for="productoExistente">
+                                            Usar producto existente en catálogo
+                                        </label>
+                                    </div>
+                                    <div id="div_producto_existente" class="mt-2">
+                                        <select id="producto_existente_select" class="form-control">
+                                            <option value="">Seleccionar producto...</option>
+                                            {% for producto in productos_existentes %}
+                                            <option value="{{ producto.id }}" 
+                                                    data-nombre="{{ producto.nombre_comercial }}"
+                                                    data-codigo="{{ producto.codigo_producto }}">
+                                                {{ producto.nombre_comercial }} ({{ producto.codigo_producto }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="opcion_producto" id="productoNuevo" value="nuevo">
+                                        <label class="form-check-label" for="productoNuevo">
+                                            Crear nuevo producto en catálogo
+                                        </label>
+                                    </div>
+                                    <div id="div_producto_nuevo" class="mt-2" style="display:none;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <input type="text" id="nuevo_codigo" class="form-control" placeholder="Código del producto">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="text" id="nuevo_codigo_3l" class="form-control" placeholder="Código 3L">
+                                            </div>
+                                            <div class="col-md-12 mt-2">
+                                                <input type="text" id="nuevo_nombre" class="form-control" placeholder="Nombre comercial">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="form-group text-center">
+                        <button type="button" class="btn btn-success btn-lg" id="btnConcluir" data-toggle="modal" data-target="#modalConfirmacion">
+                            <i class="fas fa-check-double"></i> Concluir Envasado
+                        </button>
+                        <a href="{% url 'envasado:detalle_solicitud' solicitud.pk %}" class="btn btn-secondary btn-lg">
+                            <i class="fa fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Confirmar Conclusión de Envasado</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Total unidades:</strong>
+                        <p id="modal_total_unidades">0</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Total producido (L/kg):</strong>
+                        <p id="modal_total_producido">0</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Cantidad perdida (L/kg):</strong>
+                        <p id="modal_cantidad_perdida">0</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Rendimiento:</strong>
+                        <p id="modal_rendimiento">0%</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Detalle por envase:</strong>
+                        <div id="modal_detalle_envases"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarConcluir">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Calcular resumen en tiempo real
+    function calcularResumen() {
+        let totalUnidades = 0;
+        let totalProducido = 0;
+        
+        $('.cantidad-real').each(function() {
+            let cantidad = parseFloat($(this).val()) || 0;
+            let capacidad = parseFloat($(this).data('envase-capacidad')) || 1;
+            totalUnidades += cantidad;
+            totalProducido += cantidad * capacidad;
+        });
+        
+        let cantidadSolicitada = parseFloat('{{ solicitud.cantidad_solicitada }}');
+        let cantidadPerdida = cantidadSolicitada - totalProducido;
+        let rendimiento = (totalProducido / cantidadSolicitada) * 100;
+        
+        $('#total_unidades').val(totalUnidades);
+        $('#total_producido').val(totalProducido.toFixed(2));
+        $('#cantidad_perdida').val(cantidadPerdida.toFixed(2));
+        $('#rendimiento').val(rendimiento.toFixed(2));
+        
+        return {
+            totalUnidades: totalUnidades,
+            totalProducido: totalProducido,
+            cantidadPerdida: cantidadPerdida,
+            rendimiento: rendimiento
+        };
+    }
+    
+    $('.cantidad-real').on('input', function() {
+        calcularResumen();
+    });
+    
+    // Mostrar/ocultar opciones de producto destino
+    $('input[name="opcion_producto"]').change(function() {
+        if ($(this).val() === 'existente') {
+            $('#div_producto_existente').show();
+            $('#div_producto_nuevo').hide();
+        } else {
+            $('#div_producto_existente').hide();
+            $('#div_producto_nuevo').show();
+        }
+    });
+    
+    // Preparar modal de confirmación
+    $('#btnConcluir').click(function() {
+        let resumen = calcularResumen();
+        
+        $('#modal_total_unidades').text(resumen.totalUnidades);
+        $('#modal_total_producido').text(resumen.totalProducido.toFixed(2) + ' L/kg');
+        $('#modal_cantidad_perdida').text(resumen.cantidadPerdida.toFixed(2) + ' L/kg');
+        $('#modal_rendimiento').text(resumen.rendimiento.toFixed(2) + '%');
+        
+        // Detalle por envase
+        let detalleHtml = '<table class="table table-sm mt-2"><thead><tr><th>Envase</th><th>Solicitado</th><th>Producido</th><th>Observaciones</th></tr></thead><tbody>';
+        $('.cantidad-real').each(function() {
+            let envaseNombre = $(this).data('envase-nombre');
+            let solicitado = $(this).attr('value');
+            let producido = $(this).val();
+            let observaciones = $(this).closest('tr').find('.obs-envase').val() || '';
+            detalleHtml += `<tr>
+                <td>${envaseNombre}</td>
+                <td>${solicitado}</td>
+                <td>${producido}</td>
+                <td>${observaciones}</td>
+            </tr>`;
+        });
+        detalleHtml += '</tbody></table>';
+        $('#modal_detalle_envases').html(detalleHtml);
+    });
+    
+    // Confirmar y enviar datos
+    $('#btnConfirmarConcluir').click(function() {
+        let resumen = calcularResumen();
+        let fechaVencimiento = $('#fecha_vencimiento').val();
+        let loteProduccion = $('#lote_produccion').val();
+        let observacionesProceso = $('#observaciones_proceso').val();
+        
+        if (!fechaVencimiento) {
+            alert('Debe seleccionar una fecha de vencimiento');
+            return;
+        }
+        if (!loteProduccion) {
+            alert('Debe ingresar el lote de producción');
+            return;
+        }
+        
+        // Recopilar datos de envases
+        let envasesData = [];
+        $('.cantidad-real').each(function() {
+            let envaseId = $(this).data('envase-id');
+            let cantidadProducida = parseFloat($(this).val()) || 0;
+            let observaciones = $(this).closest('tr').find('.obs-envase').val() || '';
+            envasesData.push({
+                envase_id: envaseId,
+                cantidad_producida: cantidadProducida,
+                observaciones: observaciones
+            });
+        });
+        
+        // Recopilar datos del producto destino
+        let productoDestino = {};
+        if ($('#productoExistente').is(':checked')) {
+            let productoSelect = $('#producto_existente_select');
+            if (!productoSelect.val()) {
+                alert('Debe seleccionar un producto existente');
+                return;
+            }
+            productoDestino = {
+                opcion: 'existente',
+                id: productoSelect.val(),
+                nombre: productoSelect.find('option:selected').data('nombre'),
+                codigo: productoSelect.find('option:selected').data('codigo')
+            };
+        } else {
+            let nuevoCodigo = $('#nuevo_codigo').val();
+            let nuevoNombre = $('#nuevo_nombre').val();
+            if (!nuevoCodigo || !nuevoNombre) {
+                alert('Debe completar código y nombre del nuevo producto');
+                return;
+            }
+            productoDestino = {
+                opcion: 'nuevo',
+                codigo: nuevoCodigo,
+                codigo_3l: $('#nuevo_codigo_3l').val(),
+                nombre: nuevoNombre
+            };
+        }
+        
+        // Enviar datos por AJAX
+        $.ajax({
+            url: "{% url 'envasado:registrar_lote' solicitud.pk %}",
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            contentType: 'application/json',
+            data: JSON.stringify({
+                total_unidades: resumen.totalUnidades,
+                total_producido: resumen.totalProducido,
+                cantidad_perdida: resumen.cantidadPerdida,
+                rendimiento: resumen.rendimiento,
+                fecha_vencimiento: fechaVencimiento,
+                lote_produccion: loteProduccion,
+                observaciones_proceso: observacionesProceso,
+                envases: envasesData,
+                producto_destino: productoDestino
+            }),
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = "{% url 'envasado:detalle_solicitud' solicitud.pk %}";
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Error al guardar: ' + error);
+            }
+        });
+    });
+    
+    // Calcular al cargar
+    calcularResumen();
+    
+    // Fecha de vencimiento por defecto (6 meses desde hoy)
+    let fechaDefault = new Date();
+    fechaDefault.setMonth(fechaDefault.getMonth() + 6);
+    $('#fecha_vencimiento').val(fechaDefault.toISOString().split('T')[0]);
+});
+</script>
+
+<style>
+.card-header h5 {
+    margin-bottom: 0;
+    color: #fff;
+}
+.table th {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

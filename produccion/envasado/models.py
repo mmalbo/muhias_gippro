@@ -1,4 +1,4 @@
-from datetime import timezone
+from django.utils import timezone
 import os
 from django.core.validators import FileExtensionValidator
 from django.db import models

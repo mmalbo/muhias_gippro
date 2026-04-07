@@ -535,6 +535,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 vale = Vale_Movimiento_Almacen.objects.create(
                     tipo = 'Solicitud',
                     entrada = False,
+                    almacen = almacen_obj,
                     origen = almacen_obj.nombre,
                     destino = planta_instance.nombre,
                     lote_No = produccion.lote,
@@ -995,10 +996,28 @@ def cancelar_produccion(request, pk):
                         message=f"Cancelación de la producción: {produccion.lote}.",
                         link=f'/produccion/'  # ¡.  
                     )
-            
+                    
             #Falta verificar cuando ya se sacaron las materias primas del almacen
             for vale in vale_salida:
-                vale.estado = 'cancelado'
+                if vale.estado == 'confirmado':
+                    vale.estado = 'cancelado'
+                elif vale.estado == 'despachado':
+                    vale_d = Vale_Movimiento_Almacen.objects.create(
+                                    tipo='Devolución',
+                                    destino=vale.almacen.nombre,
+                                    origen=produccion.planta.nombre,
+                                    entrada=False,
+                                    almacen=vale.almacen,
+                                    lote_No = produccion.lote,
+                                    estado='confirmado'
+                                )
+                    materias_primas = Prod_Inv_MP.objects.filter(vale=vale)
+                    for mp in materias_primas:
+                        Movimiento_MP.objects.create(
+                                materia_prima=mp.inv_materia_prima,
+                                cantidad=mp.cantidad_materia_prima,
+                                vale=vale_d
+                            )
                 vale.save()
 
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
