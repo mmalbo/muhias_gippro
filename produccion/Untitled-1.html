@@ -12,3 +12,35 @@
                                     {% elif produccion.estado == 'En proceso: Validación' %} 80%
                                     {% endif %}
                                 </span></td>
+
+                                // Recopilar datos del producto destino
+        let productoDestino = {};
+        if ($('#productoExistente').is(':checked')) {
+            let productoSelect = $('#producto_existente_select');
+            if (!productoSelect.val()) {
+                alert('Debe seleccionar un producto existente o crear uno nuevo');
+                $('#producto_existente_select').focus();
+                return;
+            }
+            productoDestino = {
+                opcion: 'existente',
+                id: productoSelect.val(),
+                nombre: productoSelect.find('option:selected').data('nombre'),
+                codigo: productoSelect.find('option:selected').data('codigo')
+            };
+        } else {
+            let nuevoCodigo = $('#nuevo_codigo').val();
+            let nuevoNombre = $('#nuevo_nombre').val();
+            if (!nuevoCodigo || !nuevoNombre) {
+                alert('Debe completar código y nombre del nuevo producto');
+                if (!nuevoCodigo) $('#nuevo_codigo').focus();
+                if (!nuevoNombre) $('#nuevo_nombre').focus();
+                return;
+            }
+            productoDestino = {
+                opcion: 'nuevo',
+                codigo: nuevoCodigo,
+                codigo_3l: $('#nuevo_codigo_3l').val(),
+                nombre: nuevoNombre
+            };
+        }

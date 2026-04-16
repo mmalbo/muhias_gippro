@@ -1,0 +1,163 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>Concluir Envasado: {{ solicitud.folio }}</h4>
+        </div>
+        <div class="card-body">          
+
+            <!-- Producto a granel utilizado -->
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">Producto a granel utilizado</div>
+                <div class="row card-body">
+                    <!-- Información general -->
+                    <div class="mb-3 col-md-6">
+                        <div><strong>Producto granel:</strong> {{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</div>
+                        <div><strong>Lote destino:</strong> {{ solicitud.lote_destino.lote }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label><strong>Cantidad real envasada (L/kg):</strong></label>
+                        <input type="number" id="granel_real" class="form-control" step="0.01" min="0" value="{{ granel_solicitado }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Envases producidos (reales) -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">Envases utilizados (reales)</div>
+                <div class="card-body">
+                    <table class="table table-bordered" id="tablaEnvases">
+                        <thead>
+                            <tr><th>Envase</th><th>Capacidad (L/kg)</th><th>Cantidad real utilizada</th><th>Observaciones</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for env in envases_planificados %}
+                            <tr>
+                                <td>{{ env.nombre }} (Cap. {{ env.capacidad }})</td>
+                                <td>{{ env.capacidad }}</td>
+                                <td><input type="number" class="form-control cantidad-real" data-id="{{ env.id }}" data-capacidad="{{ env.capacidad }}" value="0" step="1" min="0"></td>
+                                <td><input type="text" class="form-control obs-envase" data-id="{{ env.id }}" placeholder="Observaciones"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Insumos consumidos (reales) -->
+            <div class="card mb-3">
+                <div class="card-header bg-warning">Insumos consumidos (reales)</div>
+                <div class="card-body">
+                    <table class="table table-bordered" id="tablaInsumos">
+                        <thead><tr><th>Insumo</th><th>Cantidad real consumida</th><th>Observaciones</th></tr></thead>
+                        <tbody>
+                            {% for ins in insumos_planificados %}
+                            <tr>
+                                <td>{{ ins.nombre }} </td>
+                                <td><input type="number" class="form-control cantidad-insumo" data-id="{{ ins.id }}" value="0" step="0.01" min="0"></td>
+                                <td><input type="text" class="form-control obs-insumo" data-id="{{ ins.id }}" placeholder="Observaciones"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Resumen dinámico -->
+            <div class="card mb-3">
+                <div class="card-header bg-secondary text-white">Resumen</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4"><strong>Total producido (L/kg):</strong> <span id="totalProducido">0</span></div>
+                        <div class="col-md-4"><strong>Pérdida (L/kg):</strong> <span id="perdida">0</span></div>
+                        <div class="col-md-4"><strong>Rendimiento:</strong> <span id="rendimiento">0</span>%</div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label>Observaciones finales</label>
+                            <textarea id="observacionesFinales" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button id="btnConcluir" class="btn btn-success btn-lg">Confirmar y concluir</button>
+                <a href="{% url 'envasado:detalle_solicitud_envasado' solicitud.pk %}" class="btn btn-secondary btn-lg">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    var granelSolicitado = parseFloat($('#datos-envasado').data('granel-solicitado')) || 0;
+    var urlConcluir = $('#datos-envasado').data('url-concluir');
+    var csrfToken = $('#datos-envasado').data('csrf');
+
+    function calcularResumen() {
+        let totalVolumen = 0;
+        $('#tablaEnvases tbody tr').each(function() {
+            let cantidad = parseFloat($(this).find('.cantidad-real').val()) || 0;
+            let capacidad = parseFloat($(this).find('.cantidad-real').data('capacidad')) || 1;
+            totalVolumen += cantidad * capacidad;
+        });
+        let perdida = granelSolicitado - totalVolumen;
+        if (perdida < 0) perdida = 0;
+        let rendimiento = granelSolicitado > 0 ? (totalVolumen / granelSolicitado * 100) : 0;
+        $('#totalProducido').text(totalVolumen.toFixed(2));
+        $('#perdida').text(perdida.toFixed(2));
+        $('#rendimiento').text(rendimiento.toFixed(2));
+    }
+
+    $('.cantidad-real, .cantidad-insumo').on('input', calcularResumen);
+    calcularResumen();
+
+    $('#btnConcluir').click(function() {
+        console.log("Botón clickeado");
+        let envases = [];
+        $('#tablaEnvases tbody tr').each(function() {
+            let id = $(this).find('.cantidad-real').data('id');
+            let cantidad = parseFloat($(this).find('.cantidad-real').val()) || 0;
+            let obs = $(this).find('.obs-envase').val() || '';
+            envases.push({ id: id, cantidad_real: cantidad, observaciones: obs });
+        });
+        let insumos = [];
+        $('#tablaInsumos tbody tr').each(function() {
+            let id = $(this).find('.cantidad-insumo').data('id');
+            let cantidad = parseFloat($(this).find('.cantidad-insumo').val()) || 0;
+            let obs = $(this).find('.obs-insumo').val() || '';
+            insumos.push({ id: id, cantidad_real: cantidad, observaciones: obs });
+        });
+        let observacionesFinales = $('#observacionesFinales').val();
+
+        $.ajax({
+            url: urlConcluir,
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            contentType: 'application/json',
+            data: JSON.stringify({
+                envases: envases,
+                insumos: insumos,
+                observaciones_finales: observacionesFinales
+            }),
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = response.redirect_url;
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX:", error);
+                alert('Error al concluir envasado: ' + error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -29,7 +29,7 @@ class ProduccionForm(forms.ModelForm):
 
     # Campo para seleccionar producto existente
     catalogo_producto = forms.ModelChoiceField(
-        queryset=Producto.objects.filter(formato__capacidad=0),
+        queryset=Producto.objects.all(),
         required=False,
         label="Seleccionar Producto Existente",
         widget=forms.Select(attrs={'class': 'form-control'}),

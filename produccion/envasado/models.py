@@ -15,29 +15,31 @@ import uuid
 
 class SolicitudEnvasado(ModeloBase):
     """Modelo para solicitudes de envasado"""
+    # Datos de planificacion
     folio = models.CharField(max_length=20, unique=True, editable=False)
     lote_produccion_origen = models.ForeignKey(Inv_Producto, on_delete=models.PROTECT,
                                               related_name='solicitudes_envasado')
     cantidad_solicitada = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-
     fecha_solicitud = models.DateField(auto_now_add=True)
-    fecha_inicio = models.DateField(null=True, blank=True)
-    fecha_fin = models.DateField(null=True, blank=True)
-    
     solicitante = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='solicitudes_envasado')
     estado = models.CharField(max_length=20, choices=ESTADOS_ENV, default='Planificada')
-    
     observaciones = models.TextField(blank=True)
+    
+    # Datos de inicio 
+    fecha_inicio = models.DateField(null=True, blank=True)
     producto_destino = models.ForeignKey(Producto, on_delete=models.PROTECT,
                                         null=True, blank=True,
                                         related_name='solicitudes_envasado_destino')
     lote_destino = models.ForeignKey(Inv_Producto, on_delete=models.PROTECT,
                                     null=True, blank=True,
                                     related_name='solicitudes_envasado_destino')
+    fecha_vencimiento = models.DateField(null=True, blank=True)
+
+    # Datos de conclusión
     unidades_producidas = models.PositiveIntegerField(null=True, blank=True)
     cantidad_perdida = models.DecimalField(max_digits=10, decimal_places=2, 
                                           null=True, blank=True)
-    fecha_vencimiento = models.DateField(null=True, blank=True)
+    fecha_fin = models.DateField(null=True, blank=True)
      
     class Meta:
         ordering = ['-fecha_solicitud']
@@ -70,9 +72,10 @@ class SolicitudEnvasado(ModeloBase):
 
 class DetalleEnvasado(ModeloBase):
     """Detalle de que envases se van a utilizar"""
-    solicitud = models.ForeignKey(SolicitudEnvasado, on_delete=models.CASCADE)
+    solicitud = models.ForeignKey(SolicitudEnvasado, on_delete=models.CASCADE, related_name='envases')
     presentacion = models.ForeignKey(Inv_Envase, on_delete=models.PROTECT)
     cantidad_unidades = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    cantidad_consumida = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
     class Meta:
         unique_together = ['solicitud', 'presentacion']
@@ -85,6 +88,7 @@ class ConsumoInsumoEnvasado(ModeloBase):
     solicitud = models.ForeignKey(SolicitudEnvasado, on_delete=models.CASCADE, related_name='consumos')
     insumo = models.ForeignKey(Inv_Insumos, on_delete=models.PROTECT)
     cantidad_unidades = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    cantidad_consumida = models.IntegerField(validators=[MinValueValidator(0)], default=0)
 
     class Meta:
         unique_together = ['solicitud', 'insumo']

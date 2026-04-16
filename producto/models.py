@@ -2,8 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from bases.bases.models import ModeloBase
 from ficha_tecnica.models import FichaTecnica
-from materia_prima.choices import ESTADOS
-from envase_embalaje.formato.models import Formato
+
 from django.db.models import Sum
 from utils.utils import eliminar_tildes
 
@@ -20,10 +19,6 @@ class Producto(ModeloBase):
         blank=False 
     )
 
-    estado = models.CharField( choices=ESTADOS, max_length=255, null=False, default='inventario',
-        verbose_name='Estado'
-    )
-
     costo = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     
     ficha_tecnica_folio = models.FileField(upload_to='fichas_tecnicas/', null=True, blank=True, 
@@ -34,8 +29,6 @@ class Producto(ModeloBase):
         null=True, blank=True,  # Cambiar a False si es obligatorio
         verbose_name="Ficha de costo" )
 
-    formato = models.ForeignKey(Formato, on_delete=models.PROTECT, default=None, verbose_name="Formato")
-
     prod_base = models.BooleanField(default=False, verbose_name="Producto base")
     
     class Meta:
@@ -44,12 +37,10 @@ class Producto(ModeloBase):
         ordering = ['codigo_producto']
         indexes = [
             models.Index(fields=['codigo_producto']),
-            models.Index(fields=['estado']),
-            models.Index(fields=['formato']),
         ]
     
     def __str__(self):
-        return f"{self.codigo_producto} - {self.nombre_comercial} {self.formato}"
+        return f"{self.codigo_producto} - {self.nombre_comercial}"
 
     @property
     def cantidad_total(self):
@@ -64,16 +55,12 @@ class Producto(ModeloBase):
     def clean(self):
         """Validaciones a nivel de modelo"""
         super().clean()
-
         errors = {}
-
         # Validar unicidad del nombre comercial por formato
         if Producto.objects.filter(
             nombre_comercial=self.nombre_comercial,
-            formato=self.formato,
-            estado='inventario'
         ).exclude(pk=self.pk).exists():
-            errors['nombre_comercial'] = 'Ya existe un producto en inventario con este nombre y formato'
+            errors['nombre_comercial'] = 'Ya existe un producto en inventario con este nombre'
 
         if errors:
             raise ValidationError(errors)
