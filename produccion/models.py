@@ -229,7 +229,47 @@ class Prod_Inv_MP(ModeloBase):
     def __str__(self):
         return f"{self.inv_materia_prima.nombre} para {self.lote_prod.catalogo_producto.nombre_comercial}"
 
+class Prod_Inv_Producto(ModeloBase):
+    lote_prod = models.ForeignKey(
+        Produccion,
+        on_delete=models.DO_NOTHING,
+        verbose_name="Lote producto",
+        related_name='productos_consumidos'
+    )
+    producto = models.ForeignKey(
+        Producto,   # Ajusta el import según tu proyecto
+        on_delete=models.DO_NOTHING,
+        verbose_name="Producto"
+    )
+    almacen = models.ForeignKey(
+        Almacen,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        verbose_name="Almacén del producto"
+    )
+    cantidad_producto = models.DecimalField(
+        max_digits=10, decimal_places=4,
+        null=True, blank=True,
+        verbose_name="Cantidad del producto"
+    )
+    estado = models.CharField(
+        verbose_name='Estado',
+        default='Solicitada',
+        max_length=50,
+        choices=CHOICE_ESTADO_SOL,
+        blank=False, null=False
+    )
+    vale = models.ForeignKey(
+        Vale_Movimiento_Almacen,
+        on_delete=models.PROTECT,
+        verbose_name="Vale de solicitud asociado",
+        null=True, blank=True,
+        related_name="productos_produccion"
+    )
 
+    def __str__(self):
+        return f"{self.producto.nombre_comercial} para {self.lote_prod.lote}"
+    
 class ParametroPrueba(models.Model):
     """Catálogo de parámetros que se miden en las pruebas químicas"""
     UNIDADES_MEDIDA = [

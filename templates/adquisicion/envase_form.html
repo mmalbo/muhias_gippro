@@ -56,6 +56,10 @@
                     {{ wizard.form.costo.label_tag }}
                     {{ wizard.form.costo }}
                 </div>
+                <div class="mb-3">
+                    {{ wizard.form.codigo_envase.label_tag }}
+                    {{ wizard.form.codigo_envase }}
+                </div>
             </div>
         </div>
         
@@ -88,95 +92,97 @@
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
    
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const prefix = "{{ wizard.form.prefix }}";
-        const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
-        const existingSection = document.getElementById('existing-section');
-        const newSection = document.getElementById('new-section');
-        const detailsCard = document.getElementById('envase-details');
-        const selectEnvase = document.querySelector(`select[name="${prefix}-envase_existente"]`);
-        const costoUpdateSection = document.getElementById('costo-update-section');
-        const costoActualSpan = document.getElementById('costo-actual');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const prefix = "{{ wizard.form.prefix }}";
+    const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
+    const existingSection = document.getElementById('existing-section');
+    const newSection = document.getElementById('new-section');
+    const detailsCard = document.getElementById('envase-details');
+    const selectEnvase = document.querySelector(`select[name="${prefix}-envase_existente"]`);
+    const costoUpdateSection = document.getElementById('costo-update-section');
+    const costoActualSpan = document.getElementById('costo-actual');
+    
+    // Referencia al campo código (asumiendo que su id se genera con el prefijo)
+    const codigoField = document.querySelector(`input[name="${prefix}-codigo"]`);
 
-        // Función para mostrar/ocultar secciones
-        function toggleSections() {
-            const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
+    function toggleSections() {
+        const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
+        
+        if (selectedValue === 'existing') {
+            existingSection.style.display = 'block';
+            newSection.style.display = 'none';
+            detailsCard.style.display = 'block';
             
-            if (selectedValue === 'existing') {
-                existingSection.style.display = 'block';
-                newSection.style.display = 'none';
-                detailsCard.style.display = 'block';
-                // Mostrar sección de actualización de costo si hay una materia seleccionada
-                if (selectEnvase && selectEnvase.value) {
-                    costoUpdateSection.style.display = 'block';
-                } else {
-                    costoUpdateSection.style.display = 'none';
-                }
+            // Limpiar el campo código cuando se usa uno existente
+            if (codigoField) {
+                codigoField.value = '';
+                codigoField.disabled = true;  // opcional: deshabilitar para evitar confusión
+            }
+            
+            if (selectEnvase && selectEnvase.value) {
+                costoUpdateSection.style.display = 'block';
             } else {
-                existingSection.style.display = 'none';
-                newSection.style.display = 'block';
-                detailsCard.style.display = 'none';
                 costoUpdateSection.style.display = 'none';
             }
-        }
-        
-        // Inicializar estado
-        toggleSections();
-        
-        // Escuchar cambios en los radios
-        opcionRadios.forEach(radio => {
-            radio.addEventListener('change', toggleSections);
-        });
-        
-        // Cargar detalles cuando se selecciona un envase
-        if (selectEnvase) {
-            selectEnvase.addEventListener('change', function() {
-                const envaseId = this.value;
-                
-                if (envaseId) {
-                    fetch(`/adquisiciones/api/envases/${envaseId}/`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Error en la respuesta');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            document.getElementById('detail-codigo').textContent = data.codigo || '-';
-                            document.getElementById('detail-formato').textContent = data.formato || '-';
-                            document.getElementById('detail-tipo').textContent = data.tipo || '-';
-                            document.getElementById('detail-costo').textContent = data.costo ? `$${data.costo}` : '-';
-                            
-                            // Actualizar el span con el costo actual
-                            costoActualSpan.textContent = data.costo || '-';
-                            
-                            // Mostrar sección de actualización de costo
-                            costoUpdateSection.style.display = 'block';
-                        })
-                        .catch(error => {
-                            console.error('Error al obtener detalles:', error);
-                            alert('Error al cargar los detalles de los envases');
-                        });
-                } else {
-                    // Limpiar detalles si no hay selección
-                    document.getElementById('detail-codigo').textContent = '-';
-                    document.getElementById('detail-formato').textContent = '-';
-                    document.getElementById('detail-tipo').textContent = '-';
-                    document.getElementById('detail-costo').textContent = '-';
-                    costoActualSpan.textContent = '-';
-                    
-                    // Ocultar sección de actualización de costo
-                    costoUpdateSection.style.display = 'none';
-                }
-            });
+        } else {
+            existingSection.style.display = 'none';
+            newSection.style.display = 'block';
+            detailsCard.style.display = 'none';
+            costoUpdateSection.style.display = 'none';
             
-            // Cargar detalles iniciales si hay una selección
-            if (selectEnvase.value) {
-                selectEnvase.dispatchEvent(new Event('change'));
+            // Habilitar y enfocar el campo código para nuevo registro
+            if (codigoField) {
+                codigoField.disabled = false;
+                codigoField.focus();
             }
         }
+    }
+    
+    toggleSections();
+    
+    opcionRadios.forEach(radio => {
+        radio.addEventListener('change', toggleSections);
     });
-    </script>
+    
+    // El resto del código para cargar detalles del envase existente se mantiene igual...
+    if (selectEnvase) {
+        selectEnvase.addEventListener('change', function() {
+            const envaseId = this.value;
+            
+            if (envaseId) {
+                fetch(`/adquisiciones/api/envases/${envaseId}/`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Error en la respuesta');
+                        return response.json();
+                    })
+                    .then(data => {
+                        document.getElementById('detail-codigo').textContent = data.codigo || '-';
+                        document.getElementById('detail-formato').textContent = data.formato || '-';
+                        document.getElementById('detail-tipo').textContent = data.tipo || '-';
+                        document.getElementById('detail-costo').textContent = data.costo ? `$${data.costo}` : '-';
+                        costoActualSpan.textContent = data.costo || '-';
+                        costoUpdateSection.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error al obtener detalles:', error);
+                        alert('Error al cargar los detalles del envase');
+                    });
+            } else {
+                document.getElementById('detail-codigo').textContent = '-';
+                document.getElementById('detail-formato').textContent = '-';
+                document.getElementById('detail-tipo').textContent = '-';
+                document.getElementById('detail-costo').textContent = '-';
+                costoActualSpan.textContent = '-';
+                costoUpdateSection.style.display = 'none';
+            }
+        });
+        
+        if (selectEnvase.value) {
+            selectEnvase.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>
 
     {% endblock %}

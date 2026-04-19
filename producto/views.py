@@ -303,7 +303,7 @@ def importar(request):
                             print('preparando inventario')
                             fecha_actual = datetime.now()
                             fecha_codigo = fecha_actual.strftime('%y%m%d')
-                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
+                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(formato)}"
                             
                         inventario_prod, created_inv = Inv_Producto.objects.update_or_create(
                             producto=producto, 

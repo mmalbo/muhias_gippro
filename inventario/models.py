@@ -74,7 +74,7 @@ class Inv_Producto(ItemInventarioBase):
     estado = models.CharField( choices=ESTADOS, max_length=255, null=False, default='inventario',
         verbose_name='Estado'
     )
-    formato = models.ForeignKey(Formato, on_delete=models.PROTECT, default=None, verbose_name="Formato")
+    formato = models.ForeignKey(Formato, on_delete=models.PROTECT, null=True, verbose_name="Formato")
 
     
     def save(self, *args, **kwargs):

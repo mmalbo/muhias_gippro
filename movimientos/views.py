@@ -214,7 +214,7 @@ def buscar_items_almacen(request):
             'nombre': item.producto.nombre_comercial,
             'codigo': item.producto.codigo_producto,
             'cantidad_disponible': float(item.cantidad),
-            'unidad': getattr(str(item.producto.formato), 'formato', ''),
+            'unidad': getattr(str(item.formato), 'formato', ''),
             'lote': item.lote
         } for item in query[:50]])  # Limitar resultados
 
@@ -1035,14 +1035,14 @@ def movimiento_list(request):
 
 def recepciones_pendientes_list(request):
     rec_pendientes = Adquisicion.objects.filter(registrada=False).all()
-    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado', tipo__in=['Producción terminada', 'Vale de devolución'])
+    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado', tipo__in=['Producción terminada', 'Devolución', 'Transferencia'])
     return render(request, 'movimientos/recepciones_list.html', {
         'rec_pendientes': rec_pendientes,
         'mov_pendientes': mov_pendientes
     })
 
 def solicitudes_pendientes_list(request):
-    sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False, estado='confirmado').all()
+    sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False, estado='confirmado')
     return render(request, 'movimientos/solicitudes_list.html', {
         'sol_pendientes': sol_pendientes
     })

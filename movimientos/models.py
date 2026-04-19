@@ -176,14 +176,17 @@ class Vale_Movimiento_Almacen(ModeloBase):
 
     @property
     def produccion_asociada(self):
-        from produccion.models import Prod_Inv_MP
+        from produccion.models import Prod_Inv_MP,Prod_Inv_Producto
         if Prod_Inv_MP.objects.filter(vale=self).exists():
             mp = Prod_Inv_MP.objects.filter(vale=self).first()
             return mp.lote_prod.id
+        if Prod_Inv_Producto.objects.filter(vale=self).exists():
+            prod=Prod_Inv_Producto.objects.filter(vale=self).first()
+            return prod.lote_prod.id   
         if Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).exists():
             mp = Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).first()
             return mp.solicitud_produccion.id
-
+        
     def confirmar(self, usuario):
         """Confirma y despacha el vale"""
         if self.estado != 'borrador':
