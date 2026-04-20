@@ -288,7 +288,6 @@ def importar(request):
                     try:
                         producto, created_prod = Producto.objects.update_or_create(
                                 nombre_comercial=nombre,
-                                formato=formato_o,
                                 defaults={"codigo_producto": codigo,
                                           "costo": costo,
                                           "codigo_3l": codigo_3l}
@@ -304,29 +303,27 @@ def importar(request):
                             print('preparando inventario')
                             fecha_actual = datetime.now()
                             fecha_codigo = fecha_actual.strftime('%y%m%d')
-                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
+                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(formato)}"
                             
                         inventario_prod, created_inv = Inv_Producto.objects.update_or_create(
                             producto=producto, 
                             almacen=almacen_obj, 
                             lote=lote,
-                            defaults={"cantidad": decimal.Decimal(cantidad)} 
+                            formato=formato_o,
+                            estado="inventario",
+                            defaults={"cantidad": decimal.Decimal(cantidad)}  
                         )
                         inventario_prod.save()
                         if created_inv:
                             print(f"Creado: {inventario_prod}")
                         else:
                             print(f"Actualizado: {inventario_prod}")
-                            
-                        
-
                         No_fila += 1   #Incrementa solo si se guarda correctamente
 
                     except Exception as e:
                         print(f"Error al procesar la fila {i + 1}: {str(e)}")
                         messages.error(request, f"Error al procesar la fila {i + 1}: {str(e)}")
                         return redirect('importarProducto')
-
                     i += 1
 
                 # Mensajes finales

@@ -1,0 +1,152 @@
+<!-- produccion/envasado/templates/envasado/iniciar_envasado.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Iniciar Proceso de Envasado Solicitud: {{ solicitud.folio }}</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Información de la solicitud -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5>Información de la Solicitud</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Producto granel:</strong>
+                                    <p>{{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Cantidad solicitada:</strong>
+                                    <p>{{ solicitud.cantidad_solicitada }} L/kg</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Envases a utilizar:</strong>
+                                    <ul class="mb-0">
+                                        {% for detalle in solicitud.detalleenvasado_set.all %}
+                                            <li>{{ detalle.presentacion.envase.nombre }}: {{ detalle.cantidad_unidades }} und</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% if solicitud.consumos.all %}
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <strong>Insumos requeridos:</strong>
+                                    <ul>
+                                        {% for consumo in solicitud.consumos.all %}
+                                            <li>{{ consumo.insumo.insumos.nombre }}: {{ consumo.cantidad_unidades }} {{ consumo.insumo.insumos.unidad_medida }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Datos del lote de envasado -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning">
+                            <h5>Configuración del Envasado</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Lote de producción destino:</label>
+                                        <input type="text" id="lote_produccion" class="form-control" 
+                                               value="{{ lote_destino }}" readonly>
+                                        <small class="text-muted">Lote generado automáticamente</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Fecha de vencimiento:</label>
+                                        <input type="date" id="fecha_vencimiento" class="form-control" required>
+                                        <small class="text-muted">Fecha en que expira el producto envasado</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Observaciones del proceso:</label>
+                                        <textarea id="observaciones_proceso" class="form-control" rows="3" 
+                                                  placeholder="Notas sobre el proceso de envasado..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="form-group text-center">
+                        <button type="button" class="btn btn-success btn-lg" id="btnIniciar">
+                            <i class="fas fa-play"></i> Iniciar Envasado
+                        </button>
+                        <a href="{% url 'envasado:detalle_solicitud_envasado' solicitud.pk %}" class="btn btn-secondary btn-lg">
+                            <i class="fa fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Fecha de vencimiento por defecto (6 meses desde hoy)
+    let fechaDefault = new Date();
+    fechaDefault.setMonth(fechaDefault.getMonth() + 6);
+    $('#fecha_vencimiento').val(fechaDefault.toISOString().split('T')[0]);
+
+    $('#btnIniciar').click(function() {
+        let fechaVencimiento = $('#fecha_vencimiento').val();
+        let observaciones = $('#observaciones_proceso').val();
+
+        if (!fechaVencimiento) {
+            alert('Debe seleccionar la fecha de vencimiento');
+            $('#fecha_vencimiento').focus();
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'envasado:iniciar_envasado' solicitud.pk %}",
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            contentType: 'application/json',
+            data: JSON.stringify({
+                fecha_vencimiento: fechaVencimiento,
+                observaciones_proceso: observaciones
+            }),
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = response.redirect_url;
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Error al iniciar envasado: ' + error);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.card-header h5 {
+    margin-bottom: 0;
+    color: #fff;
+}
+</style>
+{% endblock %}

@@ -26,7 +26,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from collections import OrderedDict
 from .models import Planta
-from .models import Produccion, Prod_Inv_MP, PruebaQuimica, ParametroPrueba, DetallePruebaQuimica
+from .models import Produccion, Prod_Inv_MP, PruebaQuimica, ParametroPrueba, DetallePruebaQuimica, Prod_Inv_Producto
 from materia_prima.models import MateriaPrima
 from inventario.models import Inv_Mat_Prima, Inv_Producto
 from producto.models import Producto
@@ -57,7 +57,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
     def get(self, request):
         produccion_form = ProduccionForm()
         materia_prima_form = MateriaPrimaForm()
-        
+    
         # Inicializar sesión si no existe
         if 'produccion_data' not in request.session:
             request.session['produccion_data'] = {}
@@ -76,25 +76,50 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 f'Reutilizando produccion {datos_precargados.get("produccion_base_lote", "")}. '
                 'Los datos han sido pre-cargados.'
             )
-            
+    
+        # --- PRODUCTOS PARA INSUMOS (catálogo) ---
+        # Filtramos productos en estado 'aprobado' (disponibles para consumir como insumo)
+        # También se podría incluir 'terminado' según tu flujo
+        productos = Inv_Producto.objects.all().values(
+            'id', 'producto__nombre_comercial', 'producto__costo', 'formato__unidad_medida', 'formato__capacidad'
+        )
+        productos_data = []
+        for prod in productos:
+            # Determinar unidad de medida según el formato
+            if prod.get('formato__capacidad') and prod['formato__capacidad'] > 0:
+                unidad = 'L'          # Litros
+            else:
+                unidad = 'unidades'
+
+            print("revisando valores")
+            print(prod['id'])
+            productos_data.append({
+                'id': prod['id'],
+                'nombre_comercial': prod['producto__nombre_comercial'],
+                'costo': float(prod['producto__costo']) if prod['producto__costo'] else 0,
+                'unidad_medida': unidad,
+                'formato': prod.get('formato__unidad_medida', 'A Granel')
+            })
+    
         context = {
             'produccion_form': produccion_form,
             'materia_prima_form': materia_prima_form,
             'materias_primas_json': self.get_materias_primas_json(),
+            'productos_data': productos_data,                     
             'produccion_base': self._obtener_produccion_base(request),
             'materias_primas_precargadas': datos_precargados.get('materias_primas_precargadas', []) if datos_precargados else [],
+            'productos_precargados': datos_precargados.get('productos_precargados', []) if datos_precargados else [],  # <--- Clave corregida
         }
         return render(request, self.template_name, context)
 
     def _obtener_datos_precargados(self, request):
         """Extrae datos pre-cargados de query parameters o sesion"""
         datos = {}
-        
-        # 1. Verificar query parameters (viene de reutilizar_produccion)
+    
         if 'produccion_base_id' in request.GET:
             try:
                 produccion_base = Produccion.objects.get(id=request.GET.get('produccion_base_id'))
-                
+            
                 datos = {
                     'produccion_base_id': str(produccion_base.id),
                     'produccion_base_lote': produccion_base.lote,
@@ -103,21 +128,43 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     'cantidad_estimada': str(produccion_base.cantidad_estimada),
                     'prod_result': 'on' if produccion_base.prod_result else '',
                     'observaciones_reutilizacion': request.GET.get('referencia', f'Reutilizando {produccion_base.lote}'),
-                    
-                    # Materias primas (para mostrar como sugerencia)
+                
+                    # Materias primas precargadas
                     'materias_primas_precargadas': self._obtener_materias_primas_precargadas(produccion_base),
+                
+                    # Productos precargados (NUEVO)
+                    'productos_precargados': self._obtener_productos_precargados(produccion_base),
                 }
             except Produccion.DoesNotExist:
                 pass
-        
-        # 2. También verificar si ya hay datos en sesión
+    
         elif 'produccion_data' in request.session:
             session_data = request.session['produccion_data']
             if 'produccion_base_id' in session_data:
                 datos.update(session_data)
-        
-        return datos
     
+        return datos
+
+    def _obtener_productos_precargados(self, produccion_base):
+        """Obtiene los productos consumidos en la producción base para precargar"""
+        # Asegúrate de importar Prod_Inv_Producto
+        from produccion.models import Prod_Inv_Producto
+    
+        productos = Prod_Inv_Producto.objects.filter(lote_prod=produccion_base)
+        return [
+            {
+                'id': str(p.id),
+                'producto_id': str(p.producto.id),
+                'nombre': p.producto.nombre_comercial,
+                'cantidad': str(p.cantidad_producto),
+                'almacen_id': str(p.almacen.id),
+                'almacen_nombre': p.almacen.nombre,
+                'unidad_medida': 'unidades',  # Ajusta según la unidad real de tu producto
+                'costo': str(p.producto.costo),
+            }
+            for p in productos
+        ]
+
     def _obtener_materias_primas_precargadas(self, produccion_base):
         """Obtiene materias primas para pre-cargar"""
         materias = Prod_Inv_MP.objects.filter(lote_prod=produccion_base)
@@ -134,7 +181,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
             }
             for mp in materias
         ]
-    
+
     def _obtener_produccion_base(self, request):
         """Obtiene la produccion base si existe"""
         produccion_base_id = None
@@ -221,10 +268,9 @@ class CrearProduccionView(LoginRequiredMixin, View):
         prod_base = request.POST.get('prod_result')
 
         if nuevo_producto_nombre:
-            print(nuevo_producto_nombre.strip())
             # Crear nuevo producto en el catálogo
             try:
-                formato_agranel = Formato.objects.filter(capacidad=0).first()
+                #formato_agranel = Formato.objects.filter(capacidad=0).first()
                 if prod_base == None:
                     val_prod_base = False
                 else:
@@ -233,8 +279,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 #print(prod_base + "vs" + val_prod_base)
                 catalogo_producto = Producto.objects.create( 
                                 nombre_comercial=nuevo_producto_nombre.strip(), 
-                                formato=formato_agranel, 
-                                estado="produccion",
+                                #formato=formato_agranel, 
+                                #estado="produccion",
                                 prod_base=val_prod_base,
                                 costo=0
                                 )
@@ -257,182 +303,6 @@ class CrearProduccionView(LoginRequiredMixin, View):
             print("No esta el producto ni producto existente")
             return None
 
-    def procesar_paso_2_t(self, request):
-        # Recuperar datos del paso 1 de la sesión
-        produccion_data = request.session.get('produccion_data', {})
-        if not produccion_data:
-            return JsonResponse({
-                'success': False, 
-                'errors': 'Datos de produccion no encontrados. Por favor, complete el paso 1 nuevamente.'
-            })
-           
-        # Verificar que'lote',  los datos minimos esten presentes
-        required_fields = ['catalogo_producto_id', 'cantidad_estimada', 'planta_id']
-        missing_fields = [field for field in required_fields if not produccion_data.get(field)]
-        
-        if missing_fields:
-            return JsonResponse({
-                'success': False, 
-                'errors': f'Campos requeridos faltantes: {", ".join(missing_fields)}'
-            })
-
-        # SOLUCION: Asegurar que post_data sea un diccionario, no bytes
-        try:
-            # Verificar si es un QueryDict (lo normal en Django)
-            if hasattr(request.POST, 'dict'):
-                post_data = request.POST.dict()  # Convertir a dict regular
-            else:
-                # Si no es QueryDict, podría ser bytes (caso del error)
-                if isinstance(request.body, bytes):
-                    # Intentar decodificar como JSON
-                    try:
-                        post_data = json.loads(request.body.decode('utf-8'))
-                    except json.JSONDecodeError:
-                        # Si no es JSON, podría ser form-urlencoded
-                        from urllib.parse import parse_qs
-                        parsed = parse_qs(request.body.decode('utf-8'))
-                        post_data = {}
-                        for key, values in parsed.items():
-                            if values:
-                                post_data[key] = values[0]
-                else:
-                    # Intentar convertir a dict de alguna otra manera
-                    post_data = dict(request.POST) if hasattr(request.POST, '__dict__') else {}
-        except Exception as e:
-            return JsonResponse({
-                'success': False, 
-                'errors': str(e)  
-            })
-    
-                # Procesar materias primas - AHORA CAPTURAMOS ERRORES AQUÍ
-
-        # Procesar materias primas - AHORA CAPTURAMOS ERRORES AQUI
-        try:
-            materias_primas = self.procesar_materias_primas(request.POST)
-        except ValueError as e:
-            # Este es el error de validacion (cantidad insuficiente)
-            return JsonResponse({
-                'success': False,
-                'errors': str(e)  # Esto ya tiene el nombre de la MP
-            })
-        except Exception as e:
-            # Otros errores al procesar materias primas
-            return JsonResponse({
-                'success': False,
-                'errors': f'Error al procesar materias primas: {str(e)}'
-            })
-
-        if not materias_primas:
-            return JsonResponse({'success': False, 
-                                 'errors': 'Debe agregar al menos una materia prima'})
-
-        try:
-            # Obtener la instancia de Planta
-            planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
-            catalogo_producto_instance = Producto.objects.filter(id=produccion_data['catalogo_producto_id']).first()
-            # GENERAR LOTE CON EL NUEVO FORMATO
-            cantidad_estimada = float(produccion_data['cantidad_estimada'])
-            lote_generado = Produccion.generar_lote(
-                catalogo_producto=catalogo_producto_instance,
-                planta=planta_instance,
-                cantidad_estimada=cantidad_estimada
-            )
-            
-            if produccion_data['prod_result']: 
-                product=True
-            else:
-                product=False
-
-            # Verificar que el lote no exista (por si acaso)
-            intentos = 0
-            lote_final = lote_generado
-            
-            while Produccion.objects.filter(lote=lote_final).exists() and intentos < 10:
-                intentos += 1
-                # Si por alguna rareza existe, añadir un sufijo
-                lote_final = f"{lote_generado}-{intentos:02d}"
-            
-            costo_prod = 0
-            for mp_data in materias_primas:
-                costo_prod += Decimal(mp_data['costo'])
-
-            # Obtener producción base si existe
-            produccion_base = None
-            if produccion_data.get('produccion_base_id'):
-                produccion_base = Produccion.objects.get(id=produccion_data['produccion_base_id'])
-            else:
-                print("No esta llegando la produccion base")
-
-            # Guardar producción
-            produccion = Produccion.objects.create(
-                lote=lote_final,
-                catalogo_producto=catalogo_producto_instance,
-                prod_result=product,
-                cantidad_estimada=Decimal(produccion_data['cantidad_estimada']),
-                costo=costo_prod,#Decimal(produccion_data['costo']),                
-                planta=planta_instance,
-                estado='Planificada',
-                # ESTABLECER RELACIÓN CON PRODUCCIÓN BASE
-                produccion_base=produccion_base,
-                observaciones_reutilizacion=produccion_data.get('observaciones_reutilizacion', '')
-            )
-            
-            #generar un vale de almacen tipo solicitud 
-            id_almacen = materias_primas[0]['almacen']
-            almacen_obj = Almacen.objects.get(id=id_almacen)
-            vale = Vale_Movimiento_Almacen.objects.create(
-                tipo = 'Solicitud',
-                entrada = False,
-                origen = almacen_obj.nombre,
-                destino = planta_instance.nombre,
-                lote_No = produccion.lote,
-                estado = 'confirmado'
-            )
-            vale.save()
-            print(vale)
-            print(vale.estado)
-            # Guardar relación con materias primas
-            for mp_data in materias_primas:
-                almacen_o=Almacen.objects.get(id=mp_data['almacen'])
-                mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
-                if not vale.almacen:
-                    vale.almacen = almacen_o
-                Prod_Inv_MP.objects.create(
-                    lote_prod=produccion,
-                    inv_materia_prima=mat_pri_o,
-                    cantidad_materia_prima=mp_data['cantidad'],
-                    almacen=almacen_o,
-                    vale = vale
-                )
-                
-            # Limpiar sesión
-            if 'produccion_data' in request.session:
-                del request.session['produccion_data']
-                request.session.modified = True
-
-            # Mensaje específico para reutilización
-            if produccion.produccion_base:
-                message = f'Produccion creada reutilizando {produccion_base.lote} como base'
-            else:
-                message = 'Produccion creada exitosamente'
-            
-            return JsonResponse({
-                'success': True, 
-                'message': message, 
-                'produccion_id': produccion.id,
-                'redirect_url': reverse('produccion_list')  # Ajusta esta URL
-            })
-            
-        except ValueError as e:
-            # Errores de validación (como cantidad insuficiente)
-            # return JsonResponse({
-            #     'success': False, 
-            #     'errors': str(e)  # Esto ya tiene el nombre de la MP
-            # })
-            raise ValueError(str(e))
-        except Exception as e:
-            return JsonResponse({'success': False, 'errors': f'Error al guardar: {str(e)}'})
-
     def procesar_paso_2(self, request):
         try:
             produccion_data = request.session.get('produccion_data', {})
@@ -444,11 +314,11 @@ class CrearProduccionView(LoginRequiredMixin, View):
             if not catalogo_producto_id and nuevo_producto_nombre:
                 # Crear el producto AHORA, en el paso 2
                 try:
-                    formato_agranel = Formato.objects.filter(capacidad=0).first()
+                    #formato_agranel = Formato.objects.filter(capacidad=0).first()
                     catalogo_producto = Producto.objects.create(
                         nombre_comercial=nuevo_producto_nombre.strip(),
-                        formato=formato_agranel,
-                        estado="produccion",
+                        #formato=formato_agranel,
+                        #estado="produccion",
                         prod_base=produccion_data.get('prod_result') == 'on',
                         costo=0
                     )
@@ -463,20 +333,28 @@ class CrearProduccionView(LoginRequiredMixin, View):
                         'errors': f'Error al crear el producto: {str(e)}'
                     })
         
-            # Ahora procesar materias primas
+            # Procesar materias primas
             try:
                 materias_primas = self.procesar_materias_primas(request.POST)
+                productos = self.procesar_productos(request.POST)
             except ValueError as e:
                 # Si hay error y se creó un producto nuevo, ELIMINARLO
-                if produccion_data.get('producto_creado') and catalogo_producto_id:
+                """if produccion_data.get('producto_creado') and catalogo_producto_id:
                     try:
                         Producto.objects.filter(id=catalogo_producto_id).delete()
                         produccion_data['catalogo_producto_id'] = None
                         produccion_data['producto_creado'] = False
                         request.session.modified = True
                     except:
-                        pass
+                        pass"""
                 return JsonResponse({'success': False, 'errors': str(e)})
+            
+            # Calcular costo total
+            costo_total = Decimal('0')
+            for mp in materias_primas:
+                costo_total += mp['costo']
+            for prod in productos:
+                costo_total += prod['costo']
 
             try:
                 # Obtener la instancia de Planta
@@ -504,9 +382,9 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     # Si por alguna rareza existe, añadir un sufijo
                     lote_final = f"{lote_generado}-{intentos:02d}"
             
-                costo_prod = 0
+                """costo_prod = 0
                 for mp_data in materias_primas:
-                    costo_prod += Decimal(mp_data['costo'])
+                    costo_prod += Decimal(mp_data['costo'])"""
 
                 # Obtener producción base si existe
                 produccion_base = None
@@ -521,7 +399,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     catalogo_producto=catalogo_producto_instance,
                     prod_result=product,
                     cantidad_estimada=Decimal(produccion_data['cantidad_estimada']),
-                    costo=costo_prod,#Decimal(produccion_data['costo']),                
+                    costo=costo_total,#Decimal(produccion_data['costo']),                
                     planta=planta_instance,
                     estado='Planificada',
                     # ESTABLECER RELACIÓN CON PRODUCCIÓN BASE
@@ -529,33 +407,65 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     observaciones_reutilizacion=produccion_data.get('observaciones_reutilizacion', '')
                 )
             
-                #generar un vale de almacen tipo solicitud 
-                id_almacen = materias_primas[0]['almacen']
-                almacen_obj = Almacen.objects.get(id=id_almacen)
-                vale = Vale_Movimiento_Almacen.objects.create(
-                    tipo = 'Solicitud',
-                    entrada = False,
-                    almacen = almacen_obj,
-                    origen = almacen_obj.nombre,
-                    destino = planta_instance.nombre,
-                    lote_No = produccion.lote,
-                    estado = 'confirmado'
-                )
-            
-                # Guardar relación con materias primas
-                for mp_data in materias_primas:
-                    almacen_o=Almacen.objects.get(id=mp_data['almacen'])
-                    mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
-                    if not vale.almacen:
-                        vale.almacen = almacen_o
-                    Prod_Inv_MP.objects.create(
-                        lote_prod=produccion,
-                        inv_materia_prima=mat_pri_o,
-                        cantidad_materia_prima=mp_data['cantidad'],
-                        almacen=almacen_o,
-                        vale = vale
+                #generar un vale de almacen tipo solicitud de materia prima 
+                if materias_primas:
+                    id_almacen = materias_primas[0]['almacen']
+                    almacen_obj = Almacen.objects.get(id=id_almacen)
+                    vale = Vale_Movimiento_Almacen.objects.create(
+                        tipo = 'Solicitud',
+                        entrada = False,
+                        almacen = almacen_obj,
+                        origen = almacen_obj.nombre,
+                        destino = planta_instance.nombre,
+                        lote_No = produccion.lote,
+                        estado = 'confirmado'
                     )
+            
+                    # Guardar relación con materias primas
+                    for mp_data in materias_primas:
+                        almacen_o=Almacen.objects.get(id=mp_data['almacen'])
+                        mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
+                        if not vale.almacen:
+                            vale.almacen = almacen_o
+                        Prod_Inv_MP.objects.create(
+                            lote_prod=produccion,
+                            inv_materia_prima=mat_pri_o,
+                            cantidad_materia_prima=mp_data['cantidad'],
+                            almacen=almacen_o,
+                            vale = vale
+                        )
                 
+                # --- Crear vale para productos ---
+                if productos:
+                    print("productos")
+                    #primer_almacen_prod = productos[0]['almacen_obj']
+                    vale_prod = Vale_Movimiento_Almacen.objects.create(
+                        tipo='Solicitud',
+                        entrada=False,
+                        almacen=almacen_obj,
+                        origen=almacen_obj.nombre,
+                        destino=planta_instance.nombre,
+                        lote_No=produccion.lote,
+                        estado='confirmado'
+                    )
+                    for prod_data in productos:
+                        print(prod_data)
+                        print("Entre prod 1")
+                        almacen_o=Almacen.objects.get(id=prod_data['almacen'])
+                        prod_o=Producto.objects.get(id=prod_data['producto'])
+                        print(prod_o)
+                        print("Entre prod")
+                        print(prod_data['producto_obj'])
+                        if not vale_prod.almacen:
+                            vale_prod.almacen = almacen_o
+                        Prod_Inv_Producto.objects.create(
+                            lote_prod=produccion,
+                            producto=prod_data['producto_obj'],
+                            cantidad_producto=prod_data['cantidad'],
+                            almacen=almacen_o,
+                            vale=vale_prod
+                        )
+
                 # Limpiar sesión
                 if 'produccion_data' in request.session:
                     del request.session['produccion_data']
@@ -598,46 +508,6 @@ class CrearProduccionView(LoginRequiredMixin, View):
         for mp in list(materias_primas)[:10]:
             print(f"MP ordenada: {mp['nombre']}")
         return list(materias_primas)
-
-    def get_materias_primas_json_n(self):
-        #Versión optimizada usando annotate para calcular stocks
-        materias_primas = MateriaPrima.objects.all().order_by('nombre').annotate(
-            stock_total=Coalesce(
-                Sum('inv_mat_prima__cantidad', output_field=FloatField()),
-                0.0
-            )
-        ).select_related().prefetch_related('inv_mat_prima_set__almacen')
-    
-        data = []
-        for mp in materias_primas:
-            # Obtener almacenes con stock
-            almacenes = []
-            for inv in mp.inv_mat_prima_set.all():
-                if inv.cantidad > 0:
-                    almacenes.append({
-                        'id': inv.almacen.id,
-                        'nombre': inv.almacen.nombre,
-                        'cantidad': float(inv.cantidad),
-                        'inv_id': inv.id  # ID del inventario específico
-                    })
-        
-            data.append({
-                'id': mp.id,
-                'nombre': mp.nombre,
-                'nombre_display': f"{mp.nombre} ({mp.unidad_medida})",
-                'tipo': mp.get_tipo_materia_prima_display(),
-                'conformacion': mp.conformacion,
-                'unidad': mp.unidad_medida,
-                'concentracion': float(mp.concentracion) if mp.concentracion else 0,
-                'costo': float(mp.costo) if mp.costo else 0,
-                'stock_total': float(mp.stock_total),
-                'almacenes': almacenes,
-                'tiene_stock': mp.stock_total > 0,
-                # Para el select en el template
-                'select_text': f"{mp.nombre} ({mp.unidad_medida}) - Stock: {mp.stock_total:.2f}"
-            })
-    
-        return data
     
     def procesar_materias_primas(self, post_data):
         materias_primas = []
@@ -752,6 +622,72 @@ class CrearProduccionView(LoginRequiredMixin, View):
             i += 1
     
         return materias_primas
+
+    def procesar_productos(self, post_data):
+        """Procesa los productos enviados desde el formulario"""
+        productos = []
+        i = 0
+
+        def get_value(data, key):
+            if isinstance(data, dict):
+                return data.get(key)
+            return data.get(key) if hasattr(data, 'get') else None
+
+        while True:
+            producto_key = f'productos[{i}][producto]'
+            producto_id = get_value(post_data, producto_key)
+            print("Product_post_data")
+            print(producto_id)
+            if not producto_id:
+                break
+
+            cantidad_str = get_value(post_data, f'productos[{i}][cantidad]')
+            if not cantidad_str:
+                i += 1
+                continue
+
+            try:
+                cantidad = Decimal(cantidad_str)
+                # Obtener el registro de inventario del producto
+                inv_producto_obj = Inv_Producto.objects.get(id=producto_id)
+                print("Inventario")
+                print(inv_producto_obj)
+
+                almacen_obj = Almacen.objects.get(id=inv_producto_obj.almacen.id)
+                # (Ajusta según tu modelo real: puede ser un queryset con filtro por almacén)
+                # Aquí asumimos que el formulario también envía el almacén o se deduce del producto.
+                # Para simplificar, puedes obtener el almacén del producto o pedirlo en el formulario.
+                # Ejemplo: almacen_id = get_value(post_data, f'productos[{i}][almacen]')
+                """ almacen_id = get_value(post_data, f'productos[{i}][almacen]')
+                if not almacen_id:
+                    raise ValueError("Debe seleccionar un almacén para el producto") 
+
+                almacen_obj = Almacen.objects.get(id=almacen_id)"""
+                # Verificar disponibilidad
+                if cantidad > inv_producto_obj.cantidad:
+                    nombre_prod = inv_producto_obj.producto.nombre_comercial
+                    raise ValueError(
+                        f"Cantidad insuficiente de '{nombre_prod}'. "
+                        f"Requerido: {cantidad}, Disponible: {inv_producto_obj.cantidad}"
+                    )
+
+                costo_total = Decimal(str(inv_producto_obj.producto.costo)) * cantidad
+                productos.append({
+                    'producto': inv_producto_obj.producto.id,
+                    'cantidad': cantidad,
+                    'almacen': almacen_obj.id,
+                    'costo': costo_total,
+                    'producto_obj': inv_producto_obj.producto,
+                    'almacen_obj': almacen_obj,
+                    'inv_producto_obj': inv_producto_obj
+                })
+            except (Inv_Producto.DoesNotExist, ValueError) as e:
+                raise ValueError(f"Producto {i}: {str(e)}")
+            except Exception as e:
+                raise
+            i += 1
+
+        return productos
 
 class ProduccionDetailView(LoginRequiredMixin, DetailView):
     model = Produccion
@@ -997,7 +933,6 @@ def cancelar_produccion(request, pk):
                         link=f'/produccion/'  # ¡.  
                     )
                     
-            #Falta verificar cuando ya se sacaron las materias primas del almacen
             for vale in vale_salida:
                 if vale.estado == 'confirmado':
                     vale.estado = 'cancelado'
@@ -1093,7 +1028,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
             })
     
             # Obtener almacenes para el selector
-            almacenes = Almacen.objects.all()  # Asumiendo que tienes este filtro
+            almacenes = Almacen.objects.all()  
             almacenes_list = [{'id': a.id, 'nombre': a.nombre} for a in almacenes]
     
             context = {

@@ -226,6 +226,13 @@ class EnvasesForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select formato-select'})
     )
 
+    codigo_envase = forms.CharField(
+        max_length=20, 
+        required=False, 
+        label="Código",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
     costo = forms.FloatField(
         required=False,
         label="Costo",

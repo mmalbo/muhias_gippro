@@ -208,7 +208,7 @@
                         <button type="button" class="btn btn-success btn-lg" id="btnConcluir" data-toggle="modal" data-target="#modalConfirmacion">
                             <i class="fas fa-check-double"></i> Concluir Envasado
                         </button>
-                        <a href="{% url 'envasado:detalle_solicitud' solicitud.pk %}" class="btn btn-secondary btn-lg">
+                        <a href="{% url 'envasado:detalle_solicitud_envasado' solicitud.pk %}" class="btn btn-secondary btn-lg">
                             <i class="fa fa-times"></i> Cancelar
                         </a>
                     </div>
@@ -394,7 +394,7 @@ $(document).ready(function() {
         
         // Enviar datos por AJAX
         $.ajax({
-            url: "{% url 'envasado:registrar_lote' solicitud.pk %}",
+            url: "{% url 'envasado:registrar_lote_envasado' solicitud.pk %}",
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}'
@@ -413,7 +413,7 @@ $(document).ready(function() {
             }),
             success: function(response) {
                 if (response.success) {
-                    window.location.href = "{% url 'envasado:detalle_solicitud' solicitud.pk %}";
+                    window.location.href = "{% url 'envasado:detalle_solicitud_envasado' solicitud.pk %}";
                 } else {
                     alert('Error: ' + response.error);
                 }

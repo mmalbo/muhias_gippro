@@ -129,11 +129,11 @@ def importar_productos_desde_api(request):
                     print('Ya encontro formato') """
                 nomb_prod = producto_data.get('gname', '')
                 producto = Producto.objects.filter(                    
-                    nombre_comercial= nomb_prod, formato = formato
+                    nombre_comercial= nomb_prod
                 ).first()
                 if not producto:
                     try:
-                        producto = Producto.objects.create(nombre_comercial = nomb_prod, formato = formato, costo=0.00)
+                        producto = Producto.objects.create(nombre_comercial = nomb_prod, costo=0.00)
                         created_prod = True
                     except Exception as e:
                         continue
@@ -156,12 +156,11 @@ def importar_productos_desde_api(request):
                         inventario_prod, created_inv = Inv_Producto.objects.get_or_create(
                             producto=producto, almacen=almacen)
                         if created_inv:
-                            print('Creado inventario')
-                            print(inventario_prod.almacen)
                             fecha_actual = datetime.now()
                             fecha_codigo = fecha_actual.strftime('%y%m%d')
-                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(producto.formato)}"
+                            lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(formato)}"
                             inventario_prod.lote = lote
+                            inventario_prod.formato = formato
                         else:
                             print('No fue ceado el inventario')
                             print(inventario_prod.almacen)

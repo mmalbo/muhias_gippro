@@ -394,6 +394,7 @@ class CompraEnvaseWizard(LoginRequiredMixin, SessionWizardView):
                         tipo_envase_embalaje=data['tipo_envase_embalaje'],
                         formato=data['formato'],
                         costo=data['costo'],
+                        codigo_envase=data['codigo_envase'],
                     )
                 
                 DetallesAdquisicionEnvase.objects.create(

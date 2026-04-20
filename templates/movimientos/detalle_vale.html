@@ -157,7 +157,7 @@
             </div>
             
             <!-- Relaciones especiales -->
-            {% if sol_prod %}
+            {% if sol_mp_prod or sol_prod_prod %}
             <div class="card mb-3">
                 <div class="card-header bg-info text-white">
                     <i class="bi bi-gear"></i> Relacionado con Producción
@@ -174,6 +174,7 @@
             </div>
             {% endif %}
             
+
             {% if relacion_envasado %}
             <div class="card mb-3">
                 <div class="card-header bg-info text-white">
