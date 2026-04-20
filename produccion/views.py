@@ -408,31 +408,32 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 )
             
                 #generar un vale de almacen tipo solicitud de materia prima 
-                id_almacen = materias_primas[0]['almacen']
-                almacen_obj = Almacen.objects.get(id=id_almacen)
-                vale = Vale_Movimiento_Almacen.objects.create(
-                    tipo = 'Solicitud',
-                    entrada = False,
-                    almacen = almacen_obj,
-                    origen = almacen_obj.nombre,
-                    destino = planta_instance.nombre,
-                    lote_No = produccion.lote,
-                    estado = 'confirmado'
-                )
-            
-                # Guardar relación con materias primas
-                for mp_data in materias_primas:
-                    almacen_o=Almacen.objects.get(id=mp_data['almacen'])
-                    mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
-                    if not vale.almacen:
-                        vale.almacen = almacen_o
-                    Prod_Inv_MP.objects.create(
-                        lote_prod=produccion,
-                        inv_materia_prima=mat_pri_o,
-                        cantidad_materia_prima=mp_data['cantidad'],
-                        almacen=almacen_o,
-                        vale = vale
+                if materias_primas:
+                    id_almacen = materias_primas[0]['almacen']
+                    almacen_obj = Almacen.objects.get(id=id_almacen)
+                    vale = Vale_Movimiento_Almacen.objects.create(
+                        tipo = 'Solicitud',
+                        entrada = False,
+                        almacen = almacen_obj,
+                        origen = almacen_obj.nombre,
+                        destino = planta_instance.nombre,
+                        lote_No = produccion.lote,
+                        estado = 'confirmado'
                     )
+            
+                    # Guardar relación con materias primas
+                    for mp_data in materias_primas:
+                        almacen_o=Almacen.objects.get(id=mp_data['almacen'])
+                        mat_pri_o=MateriaPrima.objects.get(id=mp_data['materia_prima'])
+                        if not vale.almacen:
+                            vale.almacen = almacen_o
+                        Prod_Inv_MP.objects.create(
+                            lote_prod=produccion,
+                            inv_materia_prima=mat_pri_o,
+                            cantidad_materia_prima=mp_data['cantidad'],
+                            almacen=almacen_o,
+                            vale = vale
+                        )
                 
                 # --- Crear vale para productos ---
                 if productos:

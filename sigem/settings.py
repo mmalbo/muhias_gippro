@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'formtools',
     'widget_tweaks',
     'django_bootstrap5',
+    'django_select2',
     
     'envase_embalaje.apps.EnvaseEmbalajeConfig',
     'envase_embalaje.caja.apps.EnvaseCajaConfig',
