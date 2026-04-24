@@ -796,20 +796,18 @@ class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
                 if data['opcion'] == ProductosForm.EXISTING:
                     producto = data['producto_existente']
                     
-                    # Actualizar costo si se proporcionó uno nuevo
+                    # Actualizar costo si se proporcionó uno nuevo 
                     nuevo_costo = data.get('nuevo_costo')
                     if nuevo_costo is not None and nuevo_costo != producto.costo:
                         producto.costo = nuevo_costo
                         producto.save()
                 else:
-                    print("A crear producto")
+                    # print("A crear producto") formato=data['formato'],
                     producto = Producto.objects.create(
                         codigo_producto=data['codigo_producto'],
-                        nombre_comercial=data['nombre_comercial'],
-                        formato=data['formato'],
+                        nombre_comercial=data['nombre_comercial'],                        
                         costo=data['costo']
-                    )
-                    print("Creado el producto")                
+                    )                
                 DetallesAdquisicionProducto.objects.create(
                     adquisicion=compra,
                     producto=producto,
@@ -829,11 +827,11 @@ class ProductoDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             producto = Producto.objects.get(pk=pk)
-            format = str(producto.formato.capacidad) + ' ' + producto.formato.unidad_medida
+            # format = str(producto.formato.capacidad) + ' ' + producto.formato.unidad_medida
             return JsonResponse({
                 'codigo_producto': producto.codigo_producto,
                 'nombre_comercial': producto.nombre_comercial or '',
-                'formato': format or '',
+                # 'formato': format or '',
                 'costo': producto.costo or '',
             })
         except Producto.DoesNotExist:

@@ -38,6 +38,8 @@ class Vale_Movimiento_Almacen(ModeloBase):
                       ('Producción terminada','Producción terminada'),
                       ('Conduce','Conduce'),
                       ('Venta','Venta'),
+                      ('I+D','I+D'),
+                      ('No conforme','No conforme'),
                       ('Consumo interno','Consumo interno'),
                       ('Adquisición','Adquisición'),
     )

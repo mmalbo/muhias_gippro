@@ -28,10 +28,10 @@
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
+                            <th>Tipo/Nombre</th>
                             <th>Formato</th>
-                            <th>Tipo</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
+                            <th>Proveedor</th>
+                            <th>Costo promedio</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -39,13 +39,13 @@
                         {% for ee in envase_embalaje %}
                             <tr>
                                 <td>{{ ee.codigo_envase }}</td>
+                                <td>{{ ee.tipo_envase_embalaje }} - {{ ee.nombre}}</td>
                                 {% if ee.formato %}
                                     <td>{{ ee.formato }}</td>
                                 {% else %}
                                     <td> --- </td>
                                 {% endif %}
-                                <td>{{ ee.tipo_envase_embalaje }} - {{ ee.nombre}}</td>
-                                <td>{{ ee.cantidad_total }}</td>
+                                <td>{{ ee.formato }}</td>
                                 <td>{{ ee.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -64,10 +64,10 @@
                         <tfoot>
                         <tr>
                             <th>Código</th>
-                            <th>Capacidad</th>
-                            <th>Tipo</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
+                            <th>Tipo/Nombre</th>
+                            <th>Formato</th>
+                            <th>Proveedor</th>
+                            <th>Costo promedio</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

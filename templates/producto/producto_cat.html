@@ -31,21 +31,17 @@
                     <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
-                            <th>Código</th>
+                            <th>Código/Código 3L</th>
                             <th>Nombre</th>
-                            <th>Formato</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
+                            <th>Costo Promedio</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for prod in productos_finales %}
                             <tr>
-                                <td>{{ prod.codigo_producto }}</td>
+                                <td>{{ prod.codigo_producto }}/{{ prod.codigo_3l }}</td>
                                 <td>{{ prod.nombre_comercial }}</td>
-                                <td>{{ prod.formato}}</td>
-                                <td>{{ prod.cantidad_total }}</td>
                                 <td>{{ prod.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -63,11 +59,9 @@
                         </tbody>
                         <tfoot>
                         <tr>
-                            <th>Código</th>
+                            <th>Código/Código 3L</th>
                             <th>Nombre</th>
-                            <th>Formato</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
+                            <th>Costo Promedio</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>
