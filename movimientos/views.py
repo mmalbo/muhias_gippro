@@ -10,7 +10,7 @@ import decimal
 from django.contrib.auth.models import Group
 from utils.models import Notification
 from adquisiciones.models import Adquisicion
-from produccion.models import Prod_Inv_MP, Produccion
+from produccion.models import Prod_Inv_MP, Produccion, Prod_Inv_Producto
 from django.views.generic import CreateView, UpdateView, DetailView
 from django.db import transaction
 from django.http import JsonResponse
@@ -51,6 +51,7 @@ class CrearSalidaView(CreateView):
             ('Venta', 'Venta'),
             ('Consumo interno', 'Consumo interno'),
             ('I+D', 'I+D'),
+            ('No conforme','No conforme'),
             ('Conduce', 'Conduce'),
         ]
         context['tipos_salida'] = tipos_salida
@@ -425,13 +426,17 @@ class DetalleValeView(DetailView):
         
         return context
 
-def salida_produccion(request, prod_id):
-    mp_prod = Prod_Inv_MP.objects.filter(lote_prod=prod_id, vale__estado='confirmado', vale__tipo = 'Solicitud').all()
-    produccion = get_object_or_404(Produccion, id=prod_id)
-
+def salida_produccion(request, vale_id):
+    mp_prod = Prod_Inv_MP.objects.filter(vale__id=vale_id, vale__estado='confirmado', vale__tipo = 'Solicitud')
+    prod_prod = Prod_Inv_Producto.objects.filter(vale__id=vale_id, vale__estado='confirmado', vale__tipo = 'Solicitud')
+    if mp_prod:
+        produccion = get_object_or_404(Produccion, lote=mp_prod[0].lote_prod.lote)
+        almacen = mp_prod[0].almacen
+    elif prod_prod:
+        produccion = get_object_or_404(Produccion, lote=prod_prod[0].lote_prod.lote)
+        almacen = prod_prod[0].almacen
     #if produccion.estado == 'Planificada':
     if request.method == 'POST':
-        almacen = mp_prod[0].almacen
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
                 origen = almacen.nombre,
@@ -443,35 +448,62 @@ def salida_produccion(request, prod_id):
         )
         # Procesar cada mp
         vale_s = None
-        for mp in mp_prod:
-            if not vale_s:
-                vale_s = mp.vale
-            try:
-                field_name = str(mp.inv_materia_prima.id)
-                cantidad = decimal.Decimal('0.00')
-                cantidad = decimal.Decimal(float(request.POST.get(field_name)))
-                Movimiento_MP.objects.create(
+        if mp_prod:
+            for mp in mp_prod:
+                if not vale_s:
+                    vale_s = mp.vale
+                try:
+                    field_name = str(mp.inv_materia_prima.id)
+                    cantidad = decimal.Decimal('0.00')
+                    cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+                    Movimiento_MP.objects.create(
                         materia_prima=mp.inv_materia_prima,
                         vale=vale,  # Ejemplo: atributo fijo
                         cantidad=cantidad                        
-                )
-                inventario_mp = get_object_or_404(Inv_Mat_Prima,
+                    )
+                    inventario_mp = get_object_or_404(Inv_Mat_Prima,
                         materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
-                inventario_mp.cantidad = inventario_mp.cantidad - cantidad
-                inventario_mp.save()
-            except Exception as e: #(ValueError, TypeError):
+                    inventario_mp.cantidad = inventario_mp.cantidad - cantidad
+                    inventario_mp.save()
+                except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}")
                     pass
-            mp.vale.estado = 'despachado'
-            mp.vale.save()
+                mp.vale.estado = 'despachado'
+                mp.vale.save()
+        if prod_prod:
+            for p in prod_prod:
+                if not vale_s:
+                    vale_s = p.vale
+                try:
+                    field_name = str(p.producto.id)
+                    cantidad = decimal.Decimal('0.00')
+                    cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+                    Movimiento_Prod.objects.create(
+                        producto=p.producto,
+                        vale=vale,  # Ejemplo: atributo fijo
+                        cantidad=cantidad                        
+                    )
+                    inventario_p = get_object_or_404(Inv_Producto,
+                        producto=p.producto.id, almacen=almacen.id)
+                    inventario_p.cantidad = inventario_p.cantidad - cantidad
+                    inventario_p.save()
+                except Exception as e: #(ValueError, TypeError):
+                    print(f"Error...{e}")
+                    pass
+                p.vale.estado = 'despachado'
+                p.vale.save()    
         vale_s.estado = 'despachado'
         vale_s.save()
         return redirect('movimiento_list')  # Redirigir a página de éxito                               
     """ else:
         messages.info(request, 'La producción no está en estado Planificada') """    
-    
-    return render(request, 'movimientos/salida_mp.html', {
-        'materias_primas': mp_prod, 'produccion': produccion
+    if mp_prod:
+        return render(request, 'movimientos/salida_mp.html', {
+            'materias_primas': mp_prod, 'produccion': produccion
+        })
+    else:
+        return render(request, 'movimientos/salida_prod.html', {
+            'productos': prod_prod, 'produccion': produccion
         })
     
 def recepcion_materia_prima(request, adq_id):

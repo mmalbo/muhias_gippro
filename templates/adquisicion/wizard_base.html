@@ -24,14 +24,16 @@
                         
                         <div class="card-footer">
                             <div class="d-flex justify-content-between">
-                                <!-- {% if wizard.steps.prev %}
-                                    <button name="wizard_prev_step" value="{{ wizard.steps.prev }}" 
+                                {% if wizard.steps.prev %}
+                                    <button type="submit" name="wizard_prev_step" value="{{ wizard.steps.prev }}" 
                                             class="btn btn-secondary">
                                         ← Anterior
-                                    </button>
-                                {% else %}
-                                    <div></div>
-                                {% endif %} -->
+                                    </button>                                
+                                {% endif %} 
+
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
                                 
                                 <button type="submit" class="btn btn-primary">
                                     {% if wizard.steps.next %}
@@ -48,4 +50,24 @@
     </div>
     </div>
     </div>
+
+<!-- Modal de confirmación para cancelar -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancelar proceso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas cancelar el proceso de compra?</p>
+                <p class="text-muted">Se perderán todos los datos ingresados.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir registrando</button>
+                <a href="{% url 'compras_mp_list' %}" class="btn btn-danger">Sí, cancelar</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
