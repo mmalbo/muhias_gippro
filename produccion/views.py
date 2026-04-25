@@ -310,7 +310,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
             # VERIFICAR SI ES PRODUCTO NUEVO Y CREARLO AHORA
             catalogo_producto_id = produccion_data.get('catalogo_producto_id')
             nuevo_producto_nombre = produccion_data.get('nuevo_producto_nombre')
-        
+            
             if not catalogo_producto_id and nuevo_producto_nombre:
                 # Crear el producto AHORA, en el paso 2
                 try:
@@ -339,14 +339,14 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 productos = self.procesar_productos(request.POST)
             except ValueError as e:
                 # Si hay error y se creó un producto nuevo, ELIMINARLO
-                """if produccion_data.get('producto_creado') and catalogo_producto_id:
+                if produccion_data.get('producto_creado') and catalogo_producto_id:
                     try:
                         Producto.objects.filter(id=catalogo_producto_id).delete()
                         produccion_data['catalogo_producto_id'] = None
                         produccion_data['producto_creado'] = False
                         request.session.modified = True
                     except:
-                        pass"""
+                        pass
                 return JsonResponse({'success': False, 'errors': str(e)})
             
             # Calcular costo total
