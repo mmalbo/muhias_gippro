@@ -133,7 +133,6 @@ class CompraWizard(LoginRequiredMixin, SessionWizardView):
             'step_title': self.get_step_title(),
             'form_list_keys': list(form_list.keys()),
         })
-        
         return context
     
     def get_step_title(self):

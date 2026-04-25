@@ -224,9 +224,9 @@
                         <a href="{% url 'planta_lista' %}" class="nav-link">
                             <span>Planta de producción</span>
                         </a>
-                        <a href="{% url 'formato:listar' %}" class="nav-link">
+                        <!--<a href="{% url 'formato:listar' %}" class="nav-link">
                             <span>Formato de envases</span>
-                        </a>
+                        </a>-->
                         
                         <!-- Sub-submenú para Tipos de embalajes -->
                         <a href="#submenuEmbalajes" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
@@ -335,9 +335,9 @@
                     </a>
                     <div class="submenu collapse" id="submenuInventarios">
                         {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
-                        <a href="{% url 'importar_tienda' %}" class="nav-link">
+                        <!--<a href="{% url 'importar_tienda' %}" class="nav-link">
                             <span>Sincronizar con tienda</span>
-                        </a>
+                        </a>-->
                         {% endif %}
                         <a href="{% url 'materia_prima:materia_prima_list' %}" class="nav-link">
                             <span>Materia prima</span>
