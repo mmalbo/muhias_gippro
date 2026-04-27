@@ -7,6 +7,7 @@ from produccion.choices import ESTADOS_ENV
 from producto.models import Producto
 from inventario.models import Inv_Producto, Inv_Envase, Inv_Insumos
 from envase_embalaje.models import EnvaseEmbalaje
+from movimientos.models import Vale_Movimiento_Almacen
 from usuario.models import CustomUser
 from django.core.validators import MinValueValidator
 import uuid
@@ -76,6 +77,9 @@ class DetalleEnvasado(ModeloBase):
     presentacion = models.ForeignKey(Inv_Envase, on_delete=models.PROTECT)
     cantidad_unidades = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     cantidad_consumida = models.IntegerField(validators=[MinValueValidator(0)], default=0)
+    vale = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
+        verbose_name="Vale de solicitud asociado a este envasado",
+        null=True, blank=False, related_name="env_envasado")
     
     class Meta:
         unique_together = ['solicitud', 'presentacion']
@@ -89,7 +93,10 @@ class ConsumoInsumoEnvasado(ModeloBase):
     insumo = models.ForeignKey(Inv_Insumos, on_delete=models.PROTECT)
     cantidad_unidades = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     cantidad_consumida = models.IntegerField(validators=[MinValueValidator(0)], default=0)
-
+    vale = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
+        verbose_name="Vale de solicitud asociado a este envasado",
+        null=True, blank=False, related_name="ins_envasado")
+    
     class Meta:
         unique_together = ['solicitud', 'insumo']
     

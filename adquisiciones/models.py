@@ -23,6 +23,13 @@ def factura_upload_to(instance, filename):
     return os.path.join('facturas', folder_name, filename)
 
 class Adquisicion(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente de Recepción'),
+        ('recibido_parcial', 'Recibido Parcialmente'),
+        ('completado', 'Completamente Recibido'),
+        ('cancelado', 'Cancelado'),
+    ]
+    
     fecha_compra = models.DateField(
         verbose_name="Fecha de la compra",
         null=True,
@@ -48,7 +55,9 @@ class Adquisicion(models.Model):
         related_name='adquisiciones'
     )
     creado_en = models.DateTimeField(auto_now_add=True, null=True)
-
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    observaciones = models.TextField(blank=True, null=True)
     registrada = models.BooleanField(
         verbose_name="Recibida en almacén",
         null=False, default=False
@@ -80,6 +89,24 @@ class Adquisicion(models.Model):
         cantidad = 0
         cantidad = cantidad + DetallesAdquisicionProducto.objects.filter(adquisicion=self.id).count()
         return cantidad
+
+    def puede_editarse(self):
+        """Verifica si la compra puede ser editada"""
+        return self.estado in ['pendiente', 'recibido_parcial']
+    
+    def progreso_recepcion(self):
+        """Calcula el porcentaje de recepción"""
+        detalles = self.detalles_adquisicion.all()
+        if not detalles:
+            return 0
+        
+        total_recibido = sum(d.cantidad_recibida or 0 for d in detalles)
+        total_pedido = sum(d.cantidad for d in detalles)
+        
+        if total_pedido == 0:
+            return 0
+        
+        return (total_recibido / total_pedido) * 100
     
 class DetallesAdquisicion(models.Model):
     adquisicion = models.ForeignKey(Adquisicion, on_delete=models.CASCADE, null=True, related_name='detalles')
@@ -93,7 +120,20 @@ class DetallesAdquisicion(models.Model):
         verbose_name="Recibida en almacén",
         null=False, default=False
     )
+    cantidad_recibida = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Nueva
+    costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    observaciones = models.TextField(blank=True, null=True)
 
+    @property
+    def cantidad_pendiente(self):
+        """Cantidad que aún falta por recibir"""
+        return self.cantidad - (self.cantidad_recibida or 0)
+    
+    @property
+    def esta_completo(self):
+        """Verifica si ya se recibió todo"""
+        return self.cantidad_pendiente <= 0
+    
     def __str__(self):
         return f"{self.materia_prima.nombre} - {self.adquisicion.fecha_compra}"
     

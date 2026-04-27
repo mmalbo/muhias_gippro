@@ -120,6 +120,23 @@
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
     
+    {% block extra_js %}
+        <!-- Luego Select2 JS -->
+        <link href="{% static 'django_select2/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+        <script src="{% static 'django_select2/vendor/select2/dist/js/select2.min.js' %}"></script>
+        <script src="{% static 'django_select2/js/django_select2.js' %}"></script>
+    {% endblock %}
+        <!-- Luego tu script de inicialización -->
+    <script>
+    $(document).ready(function() {   
+            // Apply the django-select2 plugin to your select element
+            // Use the specific class 'django-select2' used by the library.
+            $('select[name$="materia_existente"]').djangoSelect2({
+                placeholder: 'Buscar o seleccionar materia prima...',
+                allowClear: true
+            });
+    });
+    </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const prefix = "{{ wizard.form.prefix }}";

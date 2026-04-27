@@ -1,5 +1,6 @@
 from django import forms
 from .models import Adquisicion
+from django_select2.forms import Select2Widget
 from materia_prima.models import MateriaPrima
 from materia_prima.choices import obtener_tipos_materia_prima
 from nomencladores.almacen.models import Almacen
@@ -58,7 +59,7 @@ class MateriaPrimaForm(forms.Form):
         queryset=MateriaPrima.objects.all(),
         required=False,
         label="Seleccionar materia prima existente",
-        widget=forms.Select(attrs={'class': 'form-select materia-select'})
+        widget=Select2Widget(attrs={'class': 'form-control select2'})
     )
 
     nuevo_costo = forms.DecimalField(
