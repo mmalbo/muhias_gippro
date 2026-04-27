@@ -35,6 +35,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
                       ('Recepción','Recepción'),
                       ('Vale de devolución','Vale de devolución'),
                       ('Solicitud','Solicitud'),
+                      ('Solicitud envasado','Solicitud envasado'),
                       ('Producción terminada','Producción terminada'),
                       ('Conduce','Conduce'),
                       ('Venta','Venta'),
@@ -112,6 +113,8 @@ class Vale_Movimiento_Almacen(ModeloBase):
             return 'Productos'
         if self.salidas_produccion.exists():
             return 'Salida a producción'
+        if self.salidas_envasado.exists():
+            return 'Salida a envasado'
         if self.mp_produccion.exists():
             return 'Solicitud materia prima para producción'
         if self.productos_produccion.exists():
@@ -128,9 +131,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
     @property
     def tipo_inventario(self):
         from produccion.models import Prod_Inv_MP, Prod_Inv_Producto
-        print('tipo inventario')
         if Movimiento_MP.objects.filter(vale=self).exists():
-            print('Materias primas')
             return 'Materias primas'
         if Movimiento_EE.objects.filter(vale=self).exists():
             return 'Envases y embalajes'
@@ -140,8 +141,8 @@ class Vale_Movimiento_Almacen(ModeloBase):
             return 'Productos'
         if Vale_Salida_Almacen_Produccion.objects.filter(vale_movimiento=self).exists():
             return 'Salida a producción'
-        """ if Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).exists():
-            return 'Salida a envasado' """
+            """  if Vale_Salida_Almacen_Envasado.objects.filter(vale_movimiento= self).exists():
+            return 'Salida a envasado'     """     
         if Prod_Inv_MP.objects.filter(vale=self).exists():
             return 'Solicitud de materia prima desde producción'
         if Prod_Inv_Producto.objects.filter(vale=self).exists():
@@ -280,14 +281,15 @@ class Vale_Salida_Almacen_Produccion(ModeloBase):
     )
 
 #Relación mucho a mucho de movimiento con envasado
-"""class Vale_Salida_Almacen_Envasado(ModeloBase):
+""" class Vale_Salida_Almacen_Envasado(ModeloBase):
+    from produccion.envasado.models import SolicitudEnvasado
     fecha_solicitud = models.DateField(
         auto_now=True, null=True,
         verbose_name="Fecha de solicitud"
     )
 
     solicitud_envasado = models.ForeignKey(
-        Envasado, on_delete=models.DO_NOTHING,
+        SolicitudEnvasado, on_delete=models.DO_NOTHING,
         null=True,
         verbose_name="Envasado"
     )
@@ -295,9 +297,10 @@ class Vale_Salida_Almacen_Produccion(ModeloBase):
     vale_movimiento = models.ForeignKey(
         Vale_Movimiento_Almacen, on_delete=models.DO_NOTHING,
         null=True, blank=True,
+        related_name='salidas_envasado',
         verbose_name="Movimiento"
-    )
-"""
+    ) """
+
 #Relación mucho a mucho de vale con materia prima 
 class Movimiento_MP(MovimientoBase):
     materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.PROTECT,

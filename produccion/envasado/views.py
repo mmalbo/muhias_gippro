@@ -80,19 +80,71 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, 'Solicitud de envasado creada exitosamente.')
-        return super().form_valid(form)
+        try:
+            with transaction.atomic():
+                # Guardar la solicitud (aún no tiene detalles)
+                self.object = form.save()
+                solicitud = self.object
+
+                vale = self.crear_vale_solicitud(solicitud)
+                                
+                envases_data = self.request.POST.get('envases')
+                if envases_data:
+                    envases_list = json.loads(envases_data)
+                    for env in envases_list:
+                        # env tiene: id, nombre, codigo, tipo, cantidad, disponible
+                        inv_envase = Inv_Envase.objects.get(id=env['id'])
+                        DetalleEnvasado.objects.create(
+                            solicitud=solicitud,
+                            presentacion=inv_envase,
+                            cantidad_unidades=env['cantidad'],
+                            vale = vale
+                        )
+
+                # 2. Procesar insumos desde el campo oculto 'insumos'
+                insumos_data = self.request.POST.get('insumos')
+                if insumos_data:
+                    insumos_list = json.loads(insumos_data)
+                    for ins in insumos_list:
+                        # ins tiene: id, nombre, cantidad, unidad, disponible
+                        inv_insumo = Inv_Insumos.objects.get(id=ins['id'])
+                        ConsumoInsumoEnvasado.objects.create(
+                            solicitud=solicitud,
+                            insumo=inv_insumo,
+                            cantidad_unidades=ins['cantidad'],
+                            vale = vale
+                        )
+
+                messages.success(
+                    self.request,
+                    f'Solicitud de envasado creada exitosamente. Vale de solicitud #{vale.consecutivo} generado.'
+                )
+                return redirect(self.get_success_url())
+
+        except Exception as e:
+            messages.error(self.request, f'Error al crear la solicitud: {str(e)}')
+            return self.form_invalid(form)
+
+    def crear_vale_solicitud(self, solicitud):
+        """Crea un vale de solicitud para los materiales necesarios"""
+    
+        # Crear el vale de movimiento tipo 'Solicitud'
+        vale = Vale_Movimiento_Almacen.objects.create(
+            tipo='Solicitud',
+            almacen=solicitud.lote_produccion_origen.almacen,
+            fecha_movimiento=solicitud.fecha_inicio or timezone.now().date(),
+            suministrador=self.request.user,
+            origen=solicitud.lote_produccion_origen.almacen.nombre,
+            destino='Área de Envasado',
+            descripcion=f'Solicitud de materiales para envasado - Folio: {solicitud.folio}',
+            entrada=False,  # Es una salida/solicitud
+            estado='confirmado',  
+            lote_No=solicitud.lote_produccion_origen.lote
+        )
+        return vale
 
     def form_invalid(self, form):
-        # Imprimir errores en consola
-        print("=== ERRORES DEL FORMULARIO ===")
-        print(form.errors)
-        print(form.non_field_errors())
-    
-        # Para ver también los errores específicos de cada campo
-        for field, errors in form.errors.items():
-            print(f"Campo {field}: {errors}")
-    
+           
         messages.error(self.request, f'Por favor corrige los errores en el formulario: {form.errors}')
         return super().form_invalid(form)
 
@@ -109,7 +161,7 @@ def obtener_detalle_lote(request):
                 'producto': lote.producto.nombre_comercial,
                 'cantidad_disponible': float(lote.cantidad),
                 'almacen': lote.almacen.nombre if lote.almacen else 'N/A',
-                'lote': lote.lote_produccion
+                'lote': lote.lote
             })
         except Inv_Producto.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Lote no encontrado'})

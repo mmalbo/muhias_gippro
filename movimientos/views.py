@@ -942,7 +942,7 @@ def entrada_producto(request, pk):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen.nombre,
+                origen = vale_v.almacen.nombre if vale_v.almacen else '',
                 destino = almacen.nombre,
                 estado = 'confirmado',
                 entrada=True,
@@ -1075,8 +1075,9 @@ def recepciones_pendientes_list(request):
 
 def solicitudes_pendientes_list(request):
     sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False, estado='confirmado')
+    sol_envasado = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud envasado', despachado=False, estado='confirmado')
     return render(request, 'movimientos/solicitudes_list.html', {
-        'sol_pendientes': sol_pendientes
+        'sol_pendientes': sol_pendientes, 'sol_envasado': sol_envasado
     })
     
 #Este debe llamarse desde los tipos de movimientos: recepciones, salidas a produccion, ventas, ajustes de inventario  

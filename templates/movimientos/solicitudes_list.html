@@ -44,6 +44,20 @@
                                 </td>
                             </tr>
                         {% endfor %}
+                         {% for se in sol_envasados %}
+                            <tr>
+                                <td>{{ se.fecha_movimiento }}</td>
+                                <td>{{ se.tipo_inventario }}</td>
+                                <td>{{ se.lote_No }}</td>
+                                <td>{{ se.cantidad_elementos}}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'movimiento_update' se.id %}" class="btn btn-success">Detalles</a>                                    
+                                        <a href="{% url 'salida_env' se.id %}" class="btn btn-success">Entregar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
                         </tbody>
                         <tfoot>
                         <tr class="ligth">

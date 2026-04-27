@@ -64,13 +64,13 @@ class SolicitudEnvasadoForm(forms.ModelForm):
         cantidad = cleaned_data.get('cantidad_solicitada')
         envases_data = cleaned_data.get('envases')
         insumos_data = cleaned_data.get('insumos')
-
+        
         # Validar disponibilidad en inventario
         if lote and cantidad:
             if lote.cantidad < cantidad:
                 raise ValidationError({
                     'cantidad_solicitada': f'El lote {lote.lote} solo tiene {lote.cantidad} disponibles'
-                })
+                })               
 
         # Validar que haya al menos un envase
         if envases_data:
@@ -94,7 +94,7 @@ class SolicitudEnvasadoForm(forms.ModelForm):
         if commit:
             instance.save()
             
-            # Procesar envases
+            """ # Procesar envases
             if self.cleaned_data.get('envases'):
                 envases = json.loads(self.cleaned_data['envases'])
                 for envase_data in envases:
@@ -113,7 +113,7 @@ class SolicitudEnvasadoForm(forms.ModelForm):
                         insumo_id=insumo_data['id'],
                         cantidad_unidades=insumo_data['cantidad']
                     )
-        
+         """
         return instance
 
 class LoteEnvasadoForm(forms.ModelForm):
