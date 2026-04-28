@@ -91,7 +91,31 @@
         {{ wizard.form.cantidad }}
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
-   
+{% block javascript %}
+    {{ block.super }}
+    <script>
+    $(document).ready(function() {
+        const prefix = "{{ wizard.form.prefix }}";
+        // Busca el select cuyo nombre termine en '-envase_existente'
+        const $select = $(`select[name$="-envase_existente"]`);
+        if ($select.length) {
+            $select.select2({
+                theme: 'bootstrap-5',   // si usas Bootstrap 5 y el tema
+                width: '100%',
+                placeholder: 'Escriba para buscar...',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return "No se encontraron materias primas";
+                    }
+                }
+            });
+        } else {
+            console.warn('No se encontró el select con nombre terminado en -materia_existente');
+        }
+    });
+    </script>
+{% endblock %}   
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const prefix = "{{ wizard.form.prefix }}";

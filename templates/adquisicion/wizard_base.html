@@ -73,3 +73,9 @@
     </div>
 </div>
 {% endblock %}
+
+{# Asegúrate de que exista el bloque javascript #}
+{% block javascript %}
+    {{ block.super }}
+    
+{% endblock %}

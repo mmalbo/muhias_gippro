@@ -120,23 +120,32 @@
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
     
-    {% block extra_js %}
-        <!-- Luego Select2 JS -->
-        <link href="{% static 'django_select2/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet">
-        <script src="{% static 'django_select2/vendor/select2/dist/js/select2.min.js' %}"></script>
-        <script src="{% static 'django_select2/js/django_select2.js' %}"></script>
-    {% endblock %}
-        <!-- Luego tu script de inicialización -->
+    <!-- Luego tu script de inicialización -->
+    {% block javascript %}
+    {{ block.super }}
     <script>
-    $(document).ready(function() {   
-            // Apply the django-select2 plugin to your select element
-            // Use the specific class 'django-select2' used by the library.
-            $('select[name$="materia_existente"]').djangoSelect2({
-                placeholder: 'Buscar o seleccionar materia prima...',
-                allowClear: true
+    $(document).ready(function() {
+        const prefix = "{{ wizard.form.prefix }}";
+        // Busca el select cuyo nombre termine en '-materia_existente'
+        const $select = $(`select[name$="-materia_existente"]`);
+        if ($select.length) {
+            $select.select2({
+                theme: 'bootstrap-5',   // si usas Bootstrap 5 y el tema
+                width: '100%',
+                placeholder: 'Escriba para buscar...',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return "No se encontraron materias primas";
+                    }
+                }
             });
+        } else {
+            console.warn('No se encontró el select con nombre terminado en -materia_existente');
+        }
     });
     </script>
+    {% endblock %}
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const prefix = "{{ wizard.form.prefix }}";

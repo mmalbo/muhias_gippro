@@ -55,11 +55,18 @@ class MateriaPrimaForm(forms.Form):
         initial=EXISTING
     )
     
-    materia_existente = forms.ModelChoiceField(
+    """materia_existente = forms.ModelChoiceField(
         queryset=MateriaPrima.objects.all(),
         required=False,
         label="Seleccionar materia prima existente",
         widget=Select2Widget(attrs={'class': 'form-control select2'})
+    )"""
+
+    materia_existente = forms.ModelChoiceField(
+        queryset=MateriaPrima.objects.all(),
+        required=False,
+        label="Seleccionar materia prima existente",
+        widget=forms.Select(attrs={'class': 'form-control select2'})   # ← solo con la clase
     )
 
     nuevo_costo = forms.DecimalField(
@@ -202,7 +209,7 @@ class EnvasesForm(forms.Form):
         queryset=EnvaseEmbalaje.objects.all(),
         required=False,
         label="Seleccionar envase o embalaje existente",
-        widget=forms.Select(attrs={'class': 'form-select envase-select'})
+        widget=forms.Select(attrs={'class': 'form-control select2'})
     )
     
     cantidad = forms.DecimalField(
@@ -293,7 +300,7 @@ class InsumosForm(forms.Form):
         queryset=InsumosOtros.objects.all(),
         required=False,
         label="Seleccionar insumo existente",
-        widget=forms.Select(attrs={'class': 'form-select insumo-select'})
+        widget=forms.Select(attrs={'class': 'form-control select2'})
     )
     
     cantidad = forms.DecimalField(
@@ -402,7 +409,7 @@ class ProductosForm(forms.Form):
         queryset=Producto.objects.all(),
         required=False,
         label="Seleccionar producto existente",
-        widget=forms.Select(attrs={'class': 'form-select producto-select'})
+        widget=forms.Select(attrs={'class': 'form-control select2'})
     )
     
     cantidad = forms.DecimalField(
