@@ -144,7 +144,17 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
         return vale
 
     def form_invalid(self, form):
-           
+        # Imprimir errores en consola
+        print("=== ERRORES DEL FORMULARIO ===")
+        for field, errors in form.errors.items():
+            print(f"Campo {field}: {errors}")
+        print(form.errors)
+        print(form.non_field_errors())
+    
+        # Para ver también los errores específicos de cada campo
+        for field, errors in form.errors.items():
+            print(f"Campo {field}: {errors}")
+    
         messages.error(self.request, f'Por favor corrige los errores en el formulario: {form.errors}')
         return super().form_invalid(form)
 

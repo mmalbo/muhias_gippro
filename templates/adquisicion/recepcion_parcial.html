@@ -1,0 +1,66 @@
+<!-- adquisicion/recepcion_parcial.html -->
+{% extends "base/base.html" %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>Recepción de Mercancía - Compra #{{ compra.id }}</h3>
+            <p class="mb-0">Proveedor: {{ compra.almacen.nombre }} | Fecha: {{ compra.fecha_compra }}</p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Materia Prima</th>
+                                <th>Cantidad Pedida</th>
+                                <th>Cantidad Recibida</th>
+                                <th>Pendiente</th>
+                                <th>Por Recibir Ahora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in detalles %}
+                            <tr>
+                                <td>{{ detalle.materia_prima.nombre }}</td>
+                                <td>{{ detalle.cantidad }}</td>
+                                <td class="text-success">{{ detalle.cantidad_recibida|default:"0" }}</td>
+                                <td class="{% if detalle.cantidad_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ detalle.cantidad_pendiente }}
+                                </td>
+                                <td>
+                                    <input type="number" 
+                                           name="cantidad_recibida_{{ detalle.id }}" 
+                                           class="form-control"
+                                           step="any"
+                                           placeholder="Cantidad a recibir"
+                                           max="{{ detalle.cantidad_pendiente }}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>Progreso total:</strong> {{ compra.progreso_recepcion|floatformat:1 }}% completado
+                    <div class="progress mt-2">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ compra.progreso_recepcion }}%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Registrar Recepción</button>
+                <a href="{% url 'compras_mp_list' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

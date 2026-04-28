@@ -2032,6 +2032,7 @@ def concluir_prueba(request, pk):
                 almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
                 vale = Vale_Movimiento_Almacen.objects.create(
                     origen = prueba.produccion.planta.nombre,
+                    almacen = almacen_destino,
                     destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,
                     tipo = 'Producción terminada',
