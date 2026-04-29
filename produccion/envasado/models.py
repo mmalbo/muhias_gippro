@@ -1,4 +1,4 @@
-from django.utils import timezone
+from datetime import timezone
 import os
 from django.core.validators import FileExtensionValidator
 from django.db import models
@@ -7,7 +7,6 @@ from produccion.choices import ESTADOS_ENV
 from producto.models import Producto
 from inventario.models import Inv_Producto, Inv_Envase, Inv_Insumos
 from envase_embalaje.models import EnvaseEmbalaje
-from movimientos.models import Vale_Movimiento_Almacen
 from usuario.models import CustomUser
 from django.core.validators import MinValueValidator
 import uuid
@@ -16,31 +15,29 @@ import uuid
 
 class SolicitudEnvasado(ModeloBase):
     """Modelo para solicitudes de envasado"""
-    # Datos de planificacion
     folio = models.CharField(max_length=20, unique=True, editable=False)
     lote_produccion_origen = models.ForeignKey(Inv_Producto, on_delete=models.PROTECT,
                                               related_name='solicitudes_envasado')
     cantidad_solicitada = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
     fecha_solicitud = models.DateField(auto_now_add=True)
-    solicitante = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='solicitudes_envasado')
-    estado = models.CharField(max_length=20, choices=ESTADOS_ENV, default='Planificada')
-    observaciones = models.TextField(blank=True)
-    
-    # Datos de inicio 
     fecha_inicio = models.DateField(null=True, blank=True)
+    fecha_fin = models.DateField(null=True, blank=True)
+    
+    solicitante = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='solicitudes_envasado')
+    estado = models.CharField(max_length=20, choices=ESTADOS_ENV, default='pendiente')
+    
+    observaciones = models.TextField(blank=True)
     producto_destino = models.ForeignKey(Producto, on_delete=models.PROTECT,
                                         null=True, blank=True,
                                         related_name='solicitudes_envasado_destino')
     lote_destino = models.ForeignKey(Inv_Producto, on_delete=models.PROTECT,
                                     null=True, blank=True,
                                     related_name='solicitudes_envasado_destino')
-    fecha_vencimiento = models.DateField(null=True, blank=True)
-
-    # Datos de conclusión
     unidades_producidas = models.PositiveIntegerField(null=True, blank=True)
     cantidad_perdida = models.DecimalField(max_digits=10, decimal_places=2, 
                                           null=True, blank=True)
-    fecha_fin = models.DateField(null=True, blank=True)
+    fecha_vencimiento = models.DateField(null=True, blank=True)
      
     class Meta:
         ordering = ['-fecha_solicitud']
@@ -51,9 +48,9 @@ class SolicitudEnvasado(ModeloBase):
     
     def save(self, *args, **kwargs):
         if not self.folio:
-            # Generar folio automáticotimezone.now()
-            year = self.fecha_inicio.year
-            month = self.fecha_inicio.month
+            # Generar folio automático
+            year = timezone.now().year
+            month = timezone.now().month
             last_solicitud = SolicitudEnvasado.objects.filter(
                 folio__startswith=f'ENV-{year}{month:02d}'
             ).order_by('folio').last()
@@ -72,14 +69,10 @@ class SolicitudEnvasado(ModeloBase):
         return f"{self.folio} - {self.lote_produccion_origen.producto.nombre_comercial}"
 
 class DetalleEnvasado(ModeloBase):
-    """Detalle de que envases se van a utilizar"""
-    solicitud = models.ForeignKey(SolicitudEnvasado, on_delete=models.CASCADE, related_name='envases')
+    """Detalle de qué envases se van a utilizar"""
+    solicitud = models.ForeignKey(SolicitudEnvasado, on_delete=models.CASCADE)
     presentacion = models.ForeignKey(Inv_Envase, on_delete=models.PROTECT)
     cantidad_unidades = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    cantidad_consumida = models.IntegerField(validators=[MinValueValidator(0)], default=0)
-    vale = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
-        verbose_name="Vale de solicitud asociado a este envasado",
-        null=True, blank=False, related_name="env_envasado")
     
     class Meta:
         unique_together = ['solicitud', 'presentacion']
@@ -92,11 +85,7 @@ class ConsumoInsumoEnvasado(ModeloBase):
     solicitud = models.ForeignKey(SolicitudEnvasado, on_delete=models.CASCADE, related_name='consumos')
     insumo = models.ForeignKey(Inv_Insumos, on_delete=models.PROTECT)
     cantidad_unidades = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    cantidad_consumida = models.IntegerField(validators=[MinValueValidator(0)], default=0)
-    vale = models.ForeignKey(Vale_Movimiento_Almacen, on_delete=models.PROTECT,
-        verbose_name="Vale de solicitud asociado a este envasado",
-        null=True, blank=False, related_name="ins_envasado")
-    
+
     class Meta:
         unique_together = ['solicitud', 'insumo']
     

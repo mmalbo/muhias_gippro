@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CompraWizard, MateriaPrimaDetalleView, CompraEditWizard, RecepcionParcialView, compra_exitosa, EnvaseDetalleView, CompraEnvaseWizard, CompraInsumoWizard, InsumoDetalleView, list_mp_adquisiciones, list_env_adquisiciones, list_ins_adquisiciones, list_detalles_mp_adquisicion, list_detalles_env_adquisicion, list_detalles_ins_adquisicion, list_detalles_prod_adquisicion, list_prod_adquisiciones, ProductoDetalleView, CompraProductoWizard
+from .views import CompraWizard, MateriaPrimaDetalleView, compra_exitosa, EnvaseDetalleView, CompraEnvaseWizard, CompraInsumoWizard, InsumoDetalleView, list_mp_adquisiciones, list_env_adquisiciones, list_ins_adquisiciones, list_detalles_mp_adquisicion, list_detalles_env_adquisicion, list_detalles_ins_adquisicion, list_detalles_prod_adquisicion, list_prod_adquisiciones, ProductoDetalleView, CompraProductoWizard
 
 urlpatterns = [
      path('compras/mp-list/', list_mp_adquisiciones, name='compras_mp_list'),
@@ -22,7 +22,5 @@ urlpatterns = [
      path('compras/nuevo-producto/', CompraProductoWizard.as_view(), name='nueva_compra_producto'),
      path('api/producto/<uuid:pk>/', ProductoDetalleView.as_view(), name='producto_detalle'),
      
-     path('compra/editar/<int:pk>/', CompraEditWizard.as_view(), name='compra_edit'),
-     path('compra/recepcion/<int:pk>/', RecepcionParcialView.as_view(), name='recepcion_parcial'),
      path('compras/exito/', compra_exitosa, name='compra_exitosa'),
 ]

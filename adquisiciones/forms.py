@@ -1,6 +1,5 @@
 from django import forms
 from .models import Adquisicion
-from django_select2.forms import Select2Widget
 from materia_prima.models import MateriaPrima
 from materia_prima.choices import obtener_tipos_materia_prima
 from nomencladores.almacen.models import Almacen
@@ -55,18 +54,11 @@ class MateriaPrimaForm(forms.Form):
         initial=EXISTING
     )
     
-    """materia_existente = forms.ModelChoiceField(
-        queryset=MateriaPrima.objects.all(),
-        required=False,
-        label="Seleccionar materia prima existente",
-        widget=Select2Widget(attrs={'class': 'form-control select2'})
-    )"""
-
     materia_existente = forms.ModelChoiceField(
         queryset=MateriaPrima.objects.all(),
         required=False,
         label="Seleccionar materia prima existente",
-        widget=forms.Select(attrs={'class': 'form-control select2'})   # ← solo con la clase
+        widget=forms.Select(attrs={'class': 'form-select materia-select'})
     )
 
     nuevo_costo = forms.DecimalField(
@@ -209,7 +201,7 @@ class EnvasesForm(forms.Form):
         queryset=EnvaseEmbalaje.objects.all(),
         required=False,
         label="Seleccionar envase o embalaje existente",
-        widget=forms.Select(attrs={'class': 'form-control select2'})
+        widget=forms.Select(attrs={'class': 'form-select envase-select'})
     )
     
     cantidad = forms.DecimalField(
@@ -300,7 +292,7 @@ class InsumosForm(forms.Form):
         queryset=InsumosOtros.objects.all(),
         required=False,
         label="Seleccionar insumo existente",
-        widget=forms.Select(attrs={'class': 'form-control select2'})
+        widget=forms.Select(attrs={'class': 'form-select insumo-select'})
     )
     
     cantidad = forms.DecimalField(
@@ -409,7 +401,7 @@ class ProductosForm(forms.Form):
         queryset=Producto.objects.all(),
         required=False,
         label="Seleccionar producto existente",
-        widget=forms.Select(attrs={'class': 'form-control select2'})
+        widget=forms.Select(attrs={'class': 'form-select producto-select'})
     )
     
     cantidad = forms.DecimalField(

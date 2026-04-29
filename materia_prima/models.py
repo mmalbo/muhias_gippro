@@ -18,7 +18,7 @@ class MateriaPrima(ModeloBase):
         choices=ESTADOS,
         max_length=255,
         null=False,
-        default='adquirida',
+        default='comprado',
         verbose_name='Estado'
     )
 

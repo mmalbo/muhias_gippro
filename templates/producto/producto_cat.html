@@ -23,25 +23,25 @@
                 <div class="col-sm-12 col-lg-12">
                     {% if user.is_superuser %}
                     <a href="{% url 'importarProd' %}" class="btn btn-success"> Importar datos desde archivo </a>
-                    <!-- Botón de exportar a Excel (visible para todos los usuarios autenticados) -->
-                    <a href="{% url 'exportar_productos_excel' %}" class="btn btn-primary">
-                        <i class="fas fa-file-excel"></i> Exportar a Excel
-                    </a>
                     {% endif %}
                     <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
-                            <th>Código/Código 3L</th>
+                            <th>Código</th>
                             <th>Nombre</th>
-                            <th>Costo Promedio</th>
+                            <th>Formato</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for prod in productos_finales %}
                             <tr>
-                                <td>{{ prod.codigo_producto }}/{{ prod.codigo_3l }}</td>
+                                <td>{{ prod.codigo_producto }}</td>
                                 <td>{{ prod.nombre_comercial }}</td>
+                                <td>{{ prod.formato}}</td>
+                                <td>{{ prod.cantidad_total }}</td>
                                 <td>{{ prod.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -49,7 +49,7 @@
                                         <a href="{% url 'actualizar_producto' prod.pk %}"
                                            title="Editar envase o embalaje" class="btn far fa-edit"></a>
                                         {% endif %}                                        
-                                        <a href="{% url 'detalle_producto' prod.pk %}"
+                                        <a href="{% url 'get_productos' prod.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
@@ -59,16 +59,18 @@
                         </tbody>
                         <tfoot>
                         <tr>
-                            <th>Código/Código 3L</th>
+                            <th>Código</th>
                             <th>Nombre</th>
-                            <th>Costo Promedio</th>
+                            <th>Formato</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>
                     </table>
                     
                     {% if user.is_superuser %}
-                    <a href="{% url 'importarProd' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    <a href="{% url 'importarEnvaseEmbalaje' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                 </div>
             </div>

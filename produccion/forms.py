@@ -29,7 +29,7 @@ class ProduccionForm(forms.ModelForm):
 
     # Campo para seleccionar producto existente
     catalogo_producto = forms.ModelChoiceField(
-        queryset=Producto.objects.all(),
+        queryset=Producto.objects.filter(formato__capacidad=0),
         required=False,
         label="Seleccionar Producto Existente",
         widget=forms.Select(attrs={'class': 'form-control'}),
@@ -108,15 +108,11 @@ class ProduccionForm(forms.ModelForm):
 
 class MateriaPrimaForm(forms.Form):
     materia_prima = forms.ModelChoiceField(
-        queryset=Inv_Mat_Prima.objects.filter(cantidad__gt=0).order_by('materia_prima__nombre'),
+        queryset=Inv_Mat_Prima.objects.filter(cantidad__gt=0),
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=True
     )
-    producto = forms.ModelChoiceField(
-        queryset=Inv_Producto.objects.filter(cantidad__gt=0).order_by('producto__nombre_comercial'),
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        required=True
-    )
+    # MateriaPrima
     cantidad = forms.DecimalField(
         max_digits=10,
         decimal_places=3,
@@ -133,7 +129,6 @@ class MateriaPrimaForm(forms.Form):
         super().__init__(*args, **kwargs)
         # Personalizar la representación de las materias primas
         self.fields['materia_prima'].label_from_instance = lambda obj: f"{obj.nombre} ({obj.conformacion} - {obj.unidad_medida})"
-        self.fields['producto'].label_from_instance = lambda obj: f"{obj.nombre} ({obj.conformacion} - {obj.unidad_medida})"
 
 class SubirPruebasQuimicasForm(forms.ModelForm):
     class Meta:

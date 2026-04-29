@@ -31,17 +31,6 @@
                     <label class="form-label">Seleccionar producto:</label>
                     {{ wizard.form.producto_existente }}
                 </div>
-                <!-- Nuevo campo para actualizar costo -->
-                <div class="mb-3" id="costo-update-section" style="display: none;">
-                    <label class="form-label">Actualizar costo:</label>
-                    <div class="input-group">
-                        {{ wizard.form.nuevo_costo }}
-                        <span class="input-group-text" id="costo-actual-label">
-                            Costo actual: <span id="costo-actual">-</span>
-                        </span>
-                    </div>
-                    <div class="form-text">Si desea actualizar el costo de la materia prima, ingrese el nuevo valor</div>
-                </div>
             </div>
             <div id="new-section" style="{% if wizard.form.initial.opcion == 'new' %}display: block;{% else %}display: none;{% endif %}">
                 <div class="mb-3">
@@ -77,9 +66,6 @@
                         <dt class="col-sm-4">Formato:</dt>
                         <dd class="col-sm-8" id="detail-formato">-</dd>
 
-                        <dt class="col-sm-4">Costo actual:</dt>
-                        <dd class="col-sm-8" id="detail-costo">-</dd>
-
                     </dl>
                 </div>
             </div>
@@ -91,31 +77,7 @@
         {{ wizard.form.cantidad }}
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
-    {% block javascript %}
-    {{ block.super }}
-    <script>
-    $(document).ready(function() {
-        const prefix = "{{ wizard.form.prefix }}";
-        // Busca el select cuyo nombre termine en '-materia_existente'
-        const $select = $(`select[name$="-producto_existente"]`);
-        if ($select.length) {
-            $select.select2({
-                theme: 'bootstrap-5',   // si usas Bootstrap 5 y el tema
-                width: '100%',
-                placeholder: 'Escriba para buscar...',
-                allowClear: true,
-                language: {
-                    noResults: function() {
-                        return "No se encontraron materias primas";
-                    }
-                }
-            });
-        } else {
-            console.warn('No se encontró el select con nombre terminado en -materia_existente');
-        }
-    });
-    </script>
-    {% endblock %}
+    
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const prefix = "{{ wizard.form.prefix }}";
@@ -124,8 +86,6 @@
         const newSection = document.getElementById('new-section');
         const detailsCard = document.getElementById('producto-details');
         const selectProducto = document.querySelector(`select[name="${prefix}-producto_existente"]`);
-        const costoUpdateSection = document.getElementById('costo-update-section');
-        const costoActualSpan = document.getElementById('costo-actual');
         
         // Función para mostrar/ocultar secciones
         function toggleSections() {
@@ -135,17 +95,10 @@
                 existingSection.style.display = 'block';
                 newSection.style.display = 'none';
                 detailsCard.style.display = 'block';
-                // Mostrar sección de actualización de costo si hay una materia seleccionada
-                if (selectProducto && selectProducto.value) {
-                    costoUpdateSection.style.display = 'block';
-                } else {
-                    costoUpdateSection.style.display = 'none';
-                }
             } else {
                 existingSection.style.display = 'none';
                 newSection.style.display = 'block';
                 detailsCard.style.display = 'none';
-                costoUpdateSection.style.display = 'none';
             }
         }
         
@@ -174,13 +127,6 @@
                             document.getElementById('detail-codigo').textContent = data.codigo_producto || '-';
                             document.getElementById('detail-formato').textContent = data.formato || '-';
                             document.getElementById('detail-nombre').textContent = data.nombre_comercial || '-';
-                            document.getElementById('detail-costo').textContent = data.costo ? `$${data.costo}` : '-';
-
-                            // Actualizar el span con el costo actual
-                            costoActualSpan.textContent = data.costo || '-';
-                            
-                            // Mostrar sección de actualización de costo
-                            costoUpdateSection.style.display = 'block';
                         })
                         .catch(error => {
                             console.error('Error al obtener detalles:', error);
@@ -191,11 +137,6 @@
                     document.getElementById('detail-codigo').textContent = '-';
                     document.getElementById('detail-formato').textContent = '-';
                     document.getElementById('detail-nombre').textContent = '-';
-                    document.getElementById('detail-costo').textContent = '-';
-                    costoActualSpan.textContent = '-';
-                    
-                    // Ocultar sección de actualización de costo
-                    costoUpdateSection.style.display = 'none';
                 }
             });
             

@@ -133,6 +133,7 @@ class CompraWizard(LoginRequiredMixin, SessionWizardView):
             'step_title': self.get_step_title(),
             'form_list_keys': list(form_list.keys()),
         })
+        
         return context
     
     def get_step_title(self):
@@ -795,18 +796,20 @@ class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
                 if data['opcion'] == ProductosForm.EXISTING:
                     producto = data['producto_existente']
                     
-                    # Actualizar costo si se proporcionó uno nuevo 
+                    # Actualizar costo si se proporcionó uno nuevo
                     nuevo_costo = data.get('nuevo_costo')
                     if nuevo_costo is not None and nuevo_costo != producto.costo:
                         producto.costo = nuevo_costo
                         producto.save()
                 else:
-                    # print("A crear producto") formato=data['formato'],
+                    print("A crear producto")
                     producto = Producto.objects.create(
                         codigo_producto=data['codigo_producto'],
-                        nombre_comercial=data['nombre_comercial'],                        
+                        nombre_comercial=data['nombre_comercial'],
+                        formato=data['formato'],
                         costo=data['costo']
-                    )                
+                    )
+                    print("Creado el producto")                
                 DetallesAdquisicionProducto.objects.create(
                     adquisicion=compra,
                     producto=producto,
@@ -826,11 +829,11 @@ class ProductoDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             producto = Producto.objects.get(pk=pk)
-            # format = str(producto.formato.capacidad) + ' ' + producto.formato.unidad_medida
+            format = str(producto.formato.capacidad) + ' ' + producto.formato.unidad_medida
             return JsonResponse({
                 'codigo_producto': producto.codigo_producto,
                 'nombre_comercial': producto.nombre_comercial or '',
-                # 'formato': format or '',
+                'formato': format or '',
                 'costo': producto.costo or '',
             })
         except Producto.DoesNotExist:
@@ -855,178 +858,3 @@ def list_detalles_prod_adquisicion(request, id, template_name="adquisicion/detal
 @login_required
 def compra_exitosa(request):
     return render(request, 'adquisicion/exito.html')
-
-class CompraEditWizard(LoginRequiredMixin, SessionWizardView):
-    """Wizard para editar una compra existente"""
-    file_storage = file_storage
-    
-    template_dict = {
-        'compra': 'adquisicion/compra_form.html',
-        'cantidad': 'adquisicion/cantidad_form.html',
-        'materia': 'adquisicion/materia_form.html',
-    }
-    form_list = [
-        ('compra', CompraForm),
-        ('cantidad', CantidadMateriasForm),
-    ]
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.compra = None
-    
-    def dispatch(self, request, *args, **kwargs):
-        self.compra = get_object_or_404(Adquisicion, pk=kwargs['pk'])
-        
-        # Verificar permisos
-        if not self.compra.puede_editarse():
-            messages.error(request, 'Esta compra no puede ser editada porque ya está completada o cancelada.')
-            return redirect('compras_mp_list')
-        
-        return super().dispatch(request, *args, **kwargs)
-    
-    def get_form_initial(self, step):
-        initial = super().get_form_initial(step)
-        
-        if step == 'compra':
-            initial.update({
-                'fecha_compra': self.compra.fecha_compra,
-                'importada': self.compra.importada,
-                'almacen': self.compra.almacen,
-                'observaciones': self.compra.observaciones,
-            })
-        elif step == 'cantidad':
-            # Para edición, mostrar la cantidad actual de materias
-            initial['cantidad'] = self.compra.detalles_adquisicion.count()
-        
-        return initial
-    
-    def get_form_list(self):
-        """Genera los pasos dinámicos basados en la compra existente"""
-        form_list = OrderedDict([
-            ('compra', CompraForm),
-            ('cantidad', CantidadMateriasForm),
-        ])
-        
-        # Para edición, siempre usar la cantidad actual
-        cantidad_detalles = self.compra.detalles_adquisicion.count()
-        for i in range(cantidad_detalles):
-            form_list[f'materia_{i}'] = MateriaPrimaForm
-        
-        return form_list
-    
-    def get_form(self, step=None, data=None, files=None):
-        """Inyectar la instancia de materia prima en los formularios de edición"""
-        form = super().get_form(step, data, files)
-        
-        if step and step.startswith('materia_') and hasattr(self, 'compra'):
-            index = int(step.split('_')[1])
-            detalles = list(self.compra.detalles_adquisicion.all())
-            if index < len(detalles):
-                detalle = detalles[index]
-                form.instance = detalle.materia_prima
-                form.detalle = detalle
-                
-                # Pre-cargar datos existentes
-                form.initial.update({
-                    'cantidad': detalle.cantidad,
-                    'cantidad_recibida': detalle.cantidad_recibida,
-                    'costo': detalle.costo_unitario or detalle.materia_prima.costo,
-                })
-        
-        return form
-    
-    def done(self, form_list, **kwargs):
-        """Guardar los cambios en la compra existente"""
-        try:
-            # Actualizar datos de compra
-            compra_form = [f for f in form_list if isinstance(f, CompraForm)][0]
-            for key, value in compra_form.cleaned_data.items():
-                if key != 'observaciones':  # Manejar observaciones por separado
-                    setattr(self.compra, key, value)
-            
-            self.compra.observaciones = compra_form.cleaned_data.get('observaciones', '')
-            self.compra.save()
-            
-            # Actualizar o crear detalles
-            materia_forms = [f for f in form_list if isinstance(f, MateriaPrimaForm)]
-            
-            # Actualizar detalles existentes
-            existing_detalles = list(self.compra.detalles_adquisicion.all())
-            
-            for i, form in enumerate(materia_forms):
-                data = form.cleaned_data
-                
-                if i < len(existing_detalles):
-                    # Actualizar detalle existente
-                    detalle = existing_detalles[i]
-                    detalle.cantidad = data['cantidad']
-                    
-                    # Solo actualizar costo si se proporcionó
-                    if data.get('costo'):
-                        detalle.costo_unitario = data['costo']
-                    
-                    detalle.save()
-                else:
-                    # Crear nuevo detalle (si se aumentó la cantidad)
-                    # Similar a la creación original
-                    pass
-            
-            # Actualizar estado basado en recepciones
-            self.actualizar_estado_compra()
-            
-            self.storage.reset()
-            messages.success(self.request, 'Compra actualizada exitosamente.')
-            return redirect('compras_mp_list')
-            
-        except Exception as e:
-            messages.error(self.request, f'Error al actualizar: {str(e)}')
-            return redirect('compras_mp_list')
-    
-    def actualizar_estado_compra(self):
-        """Actualiza el estado de la compra basado en las cantidades recibidas"""
-        total_pendiente = sum(d.cantidad_pendiente for d in self.compra.detalles_adquisicion.all())
-        
-        if total_pendiente <= 0:
-            self.compra.estado = 'completado'
-        else:
-            # Verificar si ya se recibió algo
-            total_recibido = sum(d.cantidad_recibida or 0 for d in self.compra.detalles_adquisicion.all())
-            if total_recibido > 0:
-                self.compra.estado = 'recibido_parcial'
-            else:
-                self.compra.estado = 'pendiente'
-        
-        self.compra.save()
-
-class RecepcionParcialView(LoginRequiredMixin, View):
-    """Vista para registrar recepción parcial de mercancía"""
-    
-    def get(self, request, pk):
-        compra = get_object_or_404(Adquisicion, pk=pk)
-        
-        if compra.estado == 'completado':
-            messages.warning(request, 'Esta compra ya ha sido completada.')
-            return redirect('compras_mp_list')
-        
-        return render(request, 'adquisicion/recepcion_parcial.html', {
-            'compra': compra,
-            'detalles': compra.detalles_adquisicion.all(),
-        })
-    
-    def post(self, request, pk):
-        compra = get_object_or_404(Adquisicion, pk=pk)
-        
-        # Procesar cantidades recibidas
-        for detalle in compra.detalles_adquisicion.all():
-            cantidad_recibida_key = f'cantidad_recibida_{detalle.id}'
-            if cantidad_recibida_key in request.POST:
-                nueva_cantidad = request.POST[cantidad_recibida_key]
-                if nueva_cantidad:
-                    detalle.cantidad_recibida = float(nueva_cantidad)
-                    detalle.save()
-        
-        # Actualizar estado
-        compra.estado = 'recibido_parcial'
-        compra.save()
-        
-        messages.success(request, 'Recepción registrada exitosamente.')
-        return redirect('compras_mp_list')
