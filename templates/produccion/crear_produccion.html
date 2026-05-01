@@ -13,7 +13,7 @@
                     <!-- Indicadores de pasos -->
                     <div class="step-indicators">
                         <div class="step-indicator active" data-step="1">Datos de Producción</div>
-                        <div class="step-indicator" data-step="2">Insumos</div>
+                        <div class="step-indicator" data-step="2">Formulación</div>
                     </div>
 
                     <!-- Paso 1: Datos de producción -->
@@ -47,7 +47,7 @@
                                         <h5 class="mb-0">Selección del Producto</h5>
                                     </div>
                                     <div class="card-body">
-                                        <div class="mb-3">
+                                        <div class="mb-3" id="select_prod">
                                             <label for="{{ produccion_form.catalogo_producto.id_for_label }}" class="form-label">
                                                 {{ produccion_form.catalogo_producto.label }}
                                             </label>
@@ -94,9 +94,9 @@
                         </div>
                     </div>
 
-                    <!-- Paso 2: Insumos (Materias Primas + Productos) -->
+                    <!-- Paso 2: Formulación (Materias Primas + Productos) -->
                     <div class="step" id="step2">
-                        <h2>Insumos Necesarios</h2>
+                        <h2>Formulación</h2>
 
                         <!-- Sección Materias Primas -->
                         <div class="card mb-4">
@@ -189,14 +189,109 @@
     </div>
 </template>
 
+<style>
+/* Estilos (igual que antes, añadir .insumo-item) */
+.form-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+.step { display: none; }
+.step.active { display: block; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-weight: bold; }
+input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.navigation-buttons { margin-top: 20px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+.btn-primary { background-color: #007bff; color: white; }
+.btn-secondary { background-color: #6c757d; color: white; }
+.add-btn { background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; }
+.remove-btn { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 3px; }
+.insumo-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 4px; background: #fefefe; }
+.step-indicators { display: flex; margin-bottom: 20px; }
+.step-indicator { flex: 1; text-align: center; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; }
+.step-indicator.active { background: #007bff; color: white; }
+.card-header .add-btn { margin: -5px 0; }
+</style>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
 <script>
-// Datos desde Django
-const materiasPrimasData = {{ materias_primas_json|safe }};
-const productosData = {{ productos_data|safe }};
+    console.log("{{ materias_primas_json|escapejs }}");
+// ==================== INICIALIZACIÓN DE SELECT2 ====================
+function inicializarSelect2(selector, placeholder = 'Escriba para buscar...') {
+    if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+        console.warn('jQuery o Select2 no están disponibles');
+        return;
+    }
+    $(selector).each(function() {
+        // Evitar doble inicialización
+        if ($(this).data('select2')) {
+            $(this).select2('destroy');
+        }
+        $(this).select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: placeholder,
+            allowClear: true,
+            language: { noResults: () => placeholder }
+        });
+    });
+}
+
+// Esperar a que el DOM y jQuery estén listos
+$(document).ready(function() {
+    console.log("document ready ejecutado");
+    // Select del producto principal: usar selector por nombre (evita el div con el mismo id)
+    inicializarSelect2('select[name="catalogo_producto"]', 'Buscar producto...');
+    // Inicializar selects dinámicos que ya existan (precargados)
+    inicializarSelect2('.materia-prima-select', 'Buscar materia prima...');
+    inicializarSelect2('.producto-select', 'Buscar producto...');
+});
+
+// ==================== DATOS DESDE DJANGO (seguros) ====================
+const materiasPrimasData = JSON.parse('{{ materias_primas_json|escapejs }}');
+const productosData = JSON.parse('{{ productos_data|escapejs }}');
+
 var materiaPrimaCount = 0;
 var productoCount = 0;
 
-// Funciones de navegación
+// ==================== AGREGAR MATERIA PRIMA ====================
+function agregarMateriaPrima() {
+    materiaPrimaCount++;
+    const template = document.getElementById('materiaPrimaTemplate');
+    const clone = template.content.cloneNode(true);
+    const insumoDiv = clone.querySelector('.insumo-item');
+    insumoDiv.id = `materia-prima-${materiaPrimaCount}`;
+    insumoDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+
+    const select = insumoDiv.querySelector('.materia-prima-select');
+    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
+    select.addEventListener('change', () => actualizarInfoMateriaPrima(select));
+    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
+
+    document.getElementById('materiasPrimasContainer').appendChild(insumoDiv);
+    // Inicializar Select2 en el nuevo select
+    inicializarSelect2(`#${insumoDiv.id} .materia-prima-select`, 'Buscar materia prima...');
+}
+
+// ==================== AGREGAR PRODUCTO ====================
+function agregarProducto() {
+    productoCount++;
+    const template = document.getElementById('productoTemplate');
+    const clone = template.content.cloneNode(true);
+    const insumoDiv = clone.querySelector('.insumo-item');
+    insumoDiv.id = `producto-${productoCount}`;
+    insumoDiv.querySelector('.item-number').textContent = productoCount;
+
+    const select = insumoDiv.querySelector('.producto-select');
+    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
+    select.addEventListener('change', () => actualizarInfoProducto(select));
+    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
+
+    document.getElementById('productosContainer').appendChild(insumoDiv);
+    // Inicializar Select2 en el nuevo select
+    inicializarSelect2(`#${insumoDiv.id} .producto-select`, 'Buscar producto...');
+}
+
+// ==================== FUNCIONES DE NAVEGACIÓN ====================
 function nextStep(step) {
     if (step === 2 && !validarPaso1()) {
         alert('Por favor, complete todos los campos requeridos del paso 1.');
@@ -226,23 +321,7 @@ function validarPaso1() {
     return true;
 }
 
-// ==================== MATERIAS PRIMAS ====================
-function agregarMateriaPrima() {
-    materiaPrimaCount++;
-    const template = document.getElementById('materiaPrimaTemplate');
-    const clone = template.content.cloneNode(true);
-    const insumoDiv = clone.querySelector('.insumo-item');
-    insumoDiv.id = `materia-prima-${materiaPrimaCount}`;
-    insumoDiv.querySelector('.item-number').textContent = materiaPrimaCount;
-
-    const select = insumoDiv.querySelector('.materia-prima-select');
-    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
-    select.addEventListener('change', () => actualizarInfoMateriaPrima(select));
-    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
-
-    document.getElementById('materiasPrimasContainer').appendChild(insumoDiv);
-}
-
+// ==================== ACTUALIZAR INFORMACIÓN DE MATERIA PRIMA ====================
 function actualizarInfoMateriaPrima(select) {
     const item = select.closest('.insumo-item');
     const selectedOption = select.options[select.selectedIndex];
@@ -251,42 +330,20 @@ function actualizarInfoMateriaPrima(select) {
     calcularCostoInsumo(item);
 }
 
-// ==================== PRODUCTOS ====================
-function agregarProducto() {
-    productoCount++;
-    console.log(`[agregarProducto] Creando producto #${productoCount}`);
-
-    const template = document.getElementById('productoTemplate');
-    const clone = template.content.cloneNode(true);
-    const insumoDiv = clone.querySelector('.insumo-item');
-    insumoDiv.id = `producto-${productoCount}`;
-    insumoDiv.querySelector('.item-number').textContent = productoCount;
-
-    const select = insumoDiv.querySelector('.producto-select');
-    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
-    select.addEventListener('change', () => actualizarInfoProducto(select));
-    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
-
-    document.getElementById('productosContainer').appendChild(insumoDiv);
-    console.log(`[agregarProducto] Producto #${productoCount} agregado al DOM`);
-}
-
+// ==================== ACTUALIZAR INFORMACIÓN DE PRODUCTO ====================
 function actualizarInfoProducto(select) {
     const item = select.closest('.insumo-item');
     const selectedOption = select.options[select.selectedIndex];
-    const productoId = selectedOption.value;
-    const productoNombre = selectedOption.text;
     const unidadSpan = item.querySelector('.unidad-text');
-    unidadSpan.textContent = selectedOption.getAttribute('data-unidad') || 'unidades';
-    console.log(`[actualizarInfoProducto] Producto seleccionado:`);
-    console.log(`  - ID (value): "${productoId}" (tipo: ${typeof productoId})`);
-    console.log(`  - Nombre: "${productoNombre.substring(0, 80)}"`);
-    console.log(`  - Unidad: "${unidad}"`);
-    console.log(`  - Costo unitario: ${costoUnitario}`);
+    const unidad = selectedOption.getAttribute('data-unidad') || 'unidades';
+    const costoUnitario = parseFloat(selectedOption.getAttribute('data-costo')) || 0;
+    unidadSpan.textContent = unidad;
+    
+    console.log(`[actualizarInfoProducto] Producto seleccionado: ID=${selectedOption.value}, Unidad=${unidad}, Costo=${costoUnitario}`);
     calcularCostoInsumo(item);
 }
 
-// ==================== COSTOS Y ELIMINACIÓN ====================
+// ==================== CÁLCULO DE COSTO Y ELIMINACIÓN ====================
 function calcularCostoInsumo(item) {
     const select = item.querySelector('select');
     const cantidadInput = item.querySelector('.cantidad-input');
@@ -419,10 +476,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Precargar materias primas sugeridas (si existen)
-    const materiasPrecargadas = {{ materias_primas_precargadas|safe|default:"[]" }};
+    const materiasPrecargadas = JSON.parse('{{ materias_primas_precargadas|escapejs|default:"[]" }}');
     if (materiasPrecargadas.length > 0) mostrarSugerencias('materias', materiasPrecargadas);
-    // Precargar productos sugeridos (si se implementa en la vista)
-    const productosPrecargados = {{ productos_precargados|safe|default:"[]" }};
+    // Precargar productos sugeridos
+    const productosPrecargados = JSON.parse('{{ productos_precargados|escapejs|default:"[]" }}');
     if (productosPrecargados.length > 0) mostrarSugerencias('productos', productosPrecargados);
 });
 
@@ -478,25 +535,4 @@ function agregarSugerido(tipo, idx) {
     item.querySelector('button').disabled = true;
 }
 </script>
-
-<style>
-/* Estilos (igual que antes, añadir .insumo-item) */
-.form-container { max-width: 900px; margin: 0 auto; padding: 20px; }
-.step { display: none; }
-.step.active { display: block; }
-.form-group { margin-bottom: 15px; }
-label { display: block; margin-bottom: 5px; font-weight: bold; }
-input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-.navigation-buttons { margin-top: 20px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-.btn-primary { background-color: #007bff; color: white; }
-.btn-secondary { background-color: #6c757d; color: white; }
-.add-btn { background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; }
-.remove-btn { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 3px; }
-.insumo-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 4px; background: #fefefe; }
-.step-indicators { display: flex; margin-bottom: 20px; }
-.step-indicator { flex: 1; text-align: center; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; }
-.step-indicator.active { background: #007bff; color: white; }
-.card-header .add-btn { margin: -5px 0; }
-</style>
 {% endblock %}
