@@ -7,7 +7,7 @@ from datetime import date, datetime, timezone
 from bases.bases.models import ModeloBase
 from nomencladores.planta.models import Planta
 from produccion.choices import CHOICE_ESTADO_PROD, CHOICE_ESTADO_SOL, TIPOS_PARAMETRO, ESTADOS_PRUEBA
-from inventario.models import Inv_Mat_Prima
+from inventario.models import Inv_Mat_Prima, Inv_Producto
 from movimientos.models import Vale_Movimiento_Almacen
 from producto.models import Producto
 from materia_prima.models import MateriaPrima
@@ -206,7 +206,7 @@ class Prod_Inv_MP(ModeloBase):
     )
 
     inv_materia_prima = models.ForeignKey(
-        MateriaPrima,  # Referencia al modelo completo
+        Inv_Mat_Prima,  # Referencia al modelo completo
         on_delete=models.DO_NOTHING,
         verbose_name="Materia prima",
     )
@@ -237,7 +237,7 @@ class Prod_Inv_Producto(ModeloBase):
         related_name='productos_consumidos'
     )
     producto = models.ForeignKey(
-        Producto,   # Ajusta el import según tu proyecto
+        Inv_Producto,   # Ajusta el import según tu proyecto
         on_delete=models.DO_NOTHING,
         verbose_name="Producto"
     )
