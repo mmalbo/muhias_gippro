@@ -32,7 +32,7 @@ class ProduccionForm(forms.ModelForm):
         queryset=Producto.objects.filter(formato__capacidad=0),
         required=False,
         label="Seleccionar Producto Existente",
-        widget=forms.Select(attrs={'class': 'form-control'}),
+        widget=forms.Select(attrs={'class': 'form-control select2'}),
         help_text="Seleccione un producto del catálogo"
     )
 
@@ -108,8 +108,18 @@ class ProduccionForm(forms.ModelForm):
 
 class MateriaPrimaForm(forms.Form):
     materia_prima = forms.ModelChoiceField(
+<<<<<<< HEAD
         queryset=Inv_Mat_Prima.objects.filter(cantidad__gt=0),
         widget=forms.Select(attrs={'class': 'form-control'}),
+=======
+        queryset=Inv_Mat_Prima.objects.filter(cantidad__gt=0).order_by('materia_prima__nombre'),
+        widget=forms.Select(attrs={'class': 'form-control select2'}),
+        required=True
+    )
+    producto = forms.ModelChoiceField(
+        queryset=Inv_Producto.objects.filter(cantidad__gt=0).order_by('producto__nombre_comercial'),
+        widget=forms.Select(attrs={'class': 'form-control select2'}),
+>>>>>>> b3a13e9d1af2a4ce802bb186d222263e582aeb58
         required=True
     )
     # MateriaPrima
@@ -285,7 +295,7 @@ class DetallePruebaForm(forms.ModelForm):
         model = DetallePruebaQuimica
         fields = ['parametro', 'valor_medido', 'cumplimiento', 'observaciones']
         widgets = {
-            'parametro': forms.Select(attrs={'class': 'form-control'}),
+            'parametro': forms.Select(attrs={'class': 'form-control select2'}),
             'valor_medido': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.001'

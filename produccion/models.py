@@ -7,7 +7,7 @@ from datetime import date, datetime, timezone
 from bases.bases.models import ModeloBase
 from nomencladores.planta.models import Planta
 from produccion.choices import CHOICE_ESTADO_PROD, CHOICE_ESTADO_SOL, TIPOS_PARAMETRO, ESTADOS_PRUEBA
-from inventario.models import Inv_Mat_Prima
+from inventario.models import Inv_Mat_Prima, Inv_Producto
 from movimientos.models import Vale_Movimiento_Almacen
 from producto.models import Producto
 from materia_prima.models import MateriaPrima
@@ -206,7 +206,7 @@ class Prod_Inv_MP(ModeloBase):
     )
 
     inv_materia_prima = models.ForeignKey(
-        MateriaPrima,  # Referencia al modelo completo
+        Inv_Mat_Prima,  # Referencia al modelo completo
         on_delete=models.DO_NOTHING,
         verbose_name="Materia prima",
     )
@@ -226,6 +226,53 @@ class Prod_Inv_MP(ModeloBase):
         verbose_name="Vale de solicitud asociado a esta producción",
         null=True, blank=False, related_name="mp_produccion")
 
+<<<<<<< HEAD
+=======
+    def __str__(self):
+        return f"{self.inv_materia_prima.nombre} para {self.lote_prod.catalogo_producto.nombre_comercial}"
+
+class Prod_Inv_Producto(ModeloBase):
+    lote_prod = models.ForeignKey(
+        Produccion,
+        on_delete=models.DO_NOTHING,
+        verbose_name="Lote producto",
+        related_name='productos_consumidos'
+    )
+    producto = models.ForeignKey(
+        Inv_Producto,   # Ajusta el import según tu proyecto
+        on_delete=models.DO_NOTHING,
+        verbose_name="Producto"
+    )
+    almacen = models.ForeignKey(
+        Almacen,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        verbose_name="Almacén del producto"
+    )
+    cantidad_producto = models.DecimalField(
+        max_digits=10, decimal_places=4,
+        null=True, blank=True,
+        verbose_name="Cantidad del producto"
+    )
+    estado = models.CharField(
+        verbose_name='Estado',
+        default='Solicitada',
+        max_length=50,
+        choices=CHOICE_ESTADO_SOL,
+        blank=False, null=False
+    )
+    vale = models.ForeignKey(
+        Vale_Movimiento_Almacen,
+        on_delete=models.PROTECT,
+        verbose_name="Vale de solicitud asociado",
+        null=True, blank=True,
+        related_name="productos_produccion"
+    )
+
+    def __str__(self):
+        return f"{self.producto.nombre_comercial} para {self.lote_prod.lote}"
+    
+>>>>>>> b3a13e9d1af2a4ce802bb186d222263e582aeb58
 class ParametroPrueba(models.Model):
     """Catálogo de parámetros que se miden en las pruebas químicas"""
     UNIDADES_MEDIDA = [
