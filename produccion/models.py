@@ -268,7 +268,7 @@ class Prod_Inv_Producto(ModeloBase):
     )
 
     def __str__(self):
-        return f"{self.producto.nombre_comercial} para {self.lote_prod.lote}"
+        return f"{self.producto.producto.nombre_comercial} para {self.lote_prod.lote}"
     
 class ParametroPrueba(models.Model):
     """Catálogo de parámetros que se miden en las pruebas químicas"""
