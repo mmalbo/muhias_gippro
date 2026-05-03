@@ -178,7 +178,10 @@ def importar(request):
             with (transaction.atomic()):
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
                 for data in imported_data:
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Asegúrate de que sea un string
                     unidad = str(data[2]).strip() if data[2] is not None else None
@@ -214,11 +217,17 @@ def importar(request):
                                        f"Fila {No_fila + 1}: 'Concentración' debe ser un número entero mayor que cero.")
                         return redirect('materia_prima:importarMateriasPrimas')
                     
-                    if not re.match(r'^-?\d+(\.\d+)?$', costo) or float(costo) <= 0:
+                    if not float(costo) >= 0:
                         messages.error(request,
                                        f"Fila {No_fila + 1}: 'Costo' debe ser un número decimal válido mayor que cero.")
                         return redirect('materia_prima:importarMateriasPrimas')
+<<<<<<< Updated upstream
 
+=======
+                    else:
+                        print("costo es digito y mayor que cero")
+                    
+>>>>>>> Stashed changes
                     almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
                     if almacen_obj is None:
                         print("No existe el almacen")

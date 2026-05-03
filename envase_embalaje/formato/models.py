@@ -11,7 +11,8 @@ class Formato(ModeloBase):
         verbose_name="Unidad de medida",
     )
 
-    capacidad = models.IntegerField(
+    capacidad = models.DecimalField(
+        max_digits=10, decimal_places=2,
         null=False,
         blank=False,
         default=0,
@@ -28,7 +29,7 @@ class Formato(ModeloBase):
     def __unicode__(self):
         return f"{self.capacidad} {self.unidad_medida}"
 
-    def clean(self):
+    """def clean(self):
         if self.capacidad and not str(self.capacidad).isdigit():
             raise ValidationError("El campo 'capacidad' debe ser un entero.")
-        super().clean()
+        super().clean()"""

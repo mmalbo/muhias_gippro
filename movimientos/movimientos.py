@@ -9,12 +9,10 @@ import os
 
 def export_vale(request, id_movimiento):
    data = {}
-   print(id_movimiento)
    #data['date'] = 
    #Diccionario de vale
    current_vale = {}        
    vale = Vale_Movimiento_Almacen.objects.filter(consecutivo=id_movimiento)[0]
-   print(vale.tipo)
    inventarios = Movimiento_MP.objects.filter(vale=vale.id) #vale.movimientos.all()
    if inventarios:
       tipo = 'materias primas'

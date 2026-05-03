@@ -63,7 +63,7 @@ class Inv_Mat_Prima(ItemInventarioBase):
 
 class Inv_Producto(ItemInventarioBase):
     lote = models.CharField(
-        null=True, blank=True, max_length=20, 
+        null=True, blank=True, max_length=50, 
         verbose_name="Lote"
     )
     producto = models.ForeignKey(
