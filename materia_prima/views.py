@@ -179,18 +179,9 @@ def importar(request):
             return redirect('materia_prima:importarMateriasPrimas')
 
         try:
-            print("En el try")
             with (transaction.atomic()):
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-=======
-                print(imported_data)
->>>>>>> main
                 for data in imported_data:
                     print("Estoy en el for")
                     codigo = str(data[0]).strip() if data[0] is not None else None
@@ -243,18 +234,9 @@ def importar(request):
                         messages.error(request,
                                        f"Fila {No_fila + 1}: 'Costo' debe ser un número decimal válido mayor que cero.")
                         return redirect('materia_prima:importarMateriasPrimas')
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-                    else:
-                        print("costo es dígito y mayor que cero")
->>>>>>> main
-
-=======
                     else:
                         print("costo es digito y mayor que cero")
                     
->>>>>>> Stashed changes
                     almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
                     if almacen_obj is None:
                         print("No existe el almacen")
