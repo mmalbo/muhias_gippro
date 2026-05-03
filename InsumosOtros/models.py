@@ -57,7 +57,7 @@ class InsumosOtros(ModeloBase):
     def __str__(self):
         return self.nombre
 
-    @transaction.atomic
+    """ @transaction.atomic
     def save(self, *args, **kwargs):
         print("En el save")
         if self.pk:  # Si el objeto ya tiene un ID (ya existe)
@@ -107,5 +107,5 @@ class InsumosOtros(ModeloBase):
             super().save(*args, **kwargs)
             print("Paso el super save")
         except Exception as e:
-            print(f"{e}")
+            print(f"{e}") """
 

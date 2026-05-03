@@ -1298,7 +1298,7 @@ def vale_detalle(request, pk):
         for prod in productos:
             items_agrupados.append({
                 'tipo': 'Producto',
-                'nombre': prod.producto.nombre_comercial if prod.producto else 'Sin nombre',
+                'nombre': prod.producto.producto.nombre_comercial if prod.producto else 'Sin nombre',
                 'codigo': prod.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
                 'cantidad': prod.cantidad,
                 'unidad': getattr(prod.producto, 'unidad_medida', '') if prod.producto else '',
@@ -1340,12 +1340,12 @@ def vale_detalle(request, pk):
         for mp in sol_mp_prod:
             items_agrupados.append({
                 'tipo': 'Materia Prima',
-                'nombre': mp.inv_materia_prima.nombre if mp.inv_materia_prima else 'Sin nombre',
+                'nombre': mp.inv_materia_prima.materia_prima.nombre if mp.inv_materia_prima else 'Sin nombre',
                 'codigo': mp.inv_materia_prima.codigo if mp.inv_materia_prima and hasattr(mp.inv_materia_prima, 'codigo') else '',
                 'cantidad': mp.cantidad_materia_prima,
                 'unidad': getattr(mp.inv_materia_prima, 'unidad_medida', '') if mp.inv_materia_prima else '',
                 'lote': '',
-                'costo': mp.inv_materia_prima.costo
+                'costo': mp.inv_materia_prima.materia_prima.costo
             })
             total_items += 1
             total_cantidad += float(mp.cantidad_materia_prima)
@@ -1356,12 +1356,12 @@ def vale_detalle(request, pk):
         for prod in sol_prod_prod:
             items_agrupados.append({
                 'tipo': 'Materia Prima',
-                'nombre': prod.producto.nombre_comercial if prod.producto else 'Sin nombre',
+                'nombre': prod.producto.producto.nombre_comercial if prod.producto else 'Sin nombre',
                 'codigo': prod.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
                 'cantidad': prod.cantidad_producto,
                 'unidad': getattr(prod.producto, 'unidad_medida', '') if prod.producto else '',
                 'lote': '',
-                'costo': prod.producto.costo
+                'costo': prod.producto.producto.costo
             })
             total_items += 1
             total_cantidad += float(prod.cantidad_producto)

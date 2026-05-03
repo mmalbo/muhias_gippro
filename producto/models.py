@@ -67,9 +67,11 @@ class Producto(ModeloBase):
 
     def save(self, *args, **kwargs):
         """Validaciones adicionales al guardar"""
+        print("Guardando producto")
         try:
             self.full_clean()
         except ValidationError as e:
-            print(eliminar_tildes(e))
-        print("Guardando producto")
+            print(f"Entro al Validation eliminar tildes de {self.nombre_comercial}")
+            print(eliminar_tildes(self.nombre_comercial))
+        print("Guardado producto")
         super().save(*args, **kwargs)

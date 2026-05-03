@@ -33,6 +33,7 @@ from producto.models import Producto
 from envase_embalaje.models import Formato
 from nomencladores.almacen.models import Almacen
 from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod, Movimiento_MP
+from utils.utils import normalizar_UUID
 from .forms import (ProduccionForm, MateriaPrimaForm, 
     SubirPruebasQuimicasForm, CancelarProduccionForm, PruebaQuimicaForm, 
     DetallePruebaForm, AprobarPruebaForm, ParametroPruebaForm, BuscarParametroForm)
@@ -300,8 +301,9 @@ class CrearProduccionView(LoginRequiredMixin, View):
 
     def procesar_paso_2(self, request):
         try:
+            print("=== INICIO PROCESAR PASO 2 ===")
             produccion_data = request.session.get('produccion_data', {})
-        
+                
             # VERIFICAR SI ES PRODUCTO NUEVO Y CREARLO AHORA
             catalogo_producto_id = produccion_data.get('catalogo_producto_id')
             nuevo_producto_nombre = produccion_data.get('nuevo_producto_nombre')
@@ -329,10 +331,14 @@ class CrearProduccionView(LoginRequiredMixin, View):
             try:
                 materias_primas = self.procesar_materias_primas(request.POST)
                 productos = self.procesar_productos(request.POST)
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
                 
 >>>>>>> Stashed changes
+=======
+                print("Procesados materia y producto")
+>>>>>>> main
             except ValueError as e:
                 # Si hay error y se creó un producto nuevo, ELIMINARLO
                 if produccion_data.get('producto_creado') and catalogo_producto_id:
@@ -344,7 +350,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     except:
                         pass
                 return JsonResponse({'success': False, 'errors': str(e)})
-            
+        
             # Calcular costo total
             costo_total = Decimal('0')
             for mp in materias_primas:
@@ -354,8 +360,10 @@ class CrearProduccionView(LoginRequiredMixin, View):
 
             try:
                 # Obtener la instancia de Planta
-                planta_instance = Planta.objects.get(id=produccion_data['planta_id'])
-                catalogo_producto_instance = Producto.objects.filter(id=produccion_data['catalogo_producto_id']).first()
+                planta_id = normalizar_UUID(produccion_data['planta_id'])
+                planta_instance = Planta.objects.get(id=planta_id)
+                #produccion_data['catalogo_producto_id']
+                catalogo_producto_instance = Producto.objects.filter(id=catalogo_producto_id).first()
             
                 if not catalogo_producto_instance:
                     raise ValueError("No se encontró el producto especificado")
@@ -387,7 +395,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 if produccion_data.get('produccion_base_id'):
                     produccion_base = Produccion.objects.get(id=produccion_data['produccion_base_id'])
                 else:
-                    print("No esta llegando la produccion base")
+                    print("No hay produccion base")
 
                 # Guardar producción
                 produccion = Produccion.objects.create(
@@ -398,11 +406,14 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     costo=costo_total,
                     planta=planta_instance,
                     estado='Planificada',
-                    # ESTABLECER RELACIÓN CON PRODUCCIÓN BASE
                     produccion_base=produccion_base,
                     observaciones_reutilizacion=produccion_data.get('observaciones_reutilizacion', '')
                 )
+<<<<<<< HEAD
 <<<<<<< Updated upstream
+=======
+                print(f"Producción creada: {produccion}")
+>>>>>>> main
             
 =======
                 
@@ -412,7 +423,9 @@ class CrearProduccionView(LoginRequiredMixin, View):
 
                 if materias_primas:
                     id_almacen = materias_primas[0]['almacen']
+                    print(f"Almacen de MP: {id_almacen}")
                     almacen_obj = Almacen.objects.get(id=id_almacen)
+<<<<<<< HEAD
 <<<<<<< Updated upstream
                     vale = Vale_Movimiento_Almacen.objects.create(
                         tipo='Solicitud',
@@ -425,6 +438,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     )
                     print(f"Vale creado: {vale.id}")
 =======
+=======
+>>>>>>> main
                     if not vale_mp:
                         vale_mp = Vale_Movimiento_Almacen.objects.create(
                             tipo='Solicitud',
@@ -435,11 +450,16 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             lote_No=produccion.lote,
                             estado='confirmado'
                         )
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+                        print(f"Vale creado: {vale_mp.id}")
+>>>>>>> main
     
                     for mp_data in materias_primas:
                         try:
                             almacen_o = Almacen.objects.get(id=mp_data['almacen'])
+<<<<<<< HEAD
 <<<<<<< Updated upstream
             
                         # ✅ Usar el objeto que ya tenemos en mp_data
@@ -464,6 +484,27 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             vale_mp.full_clean()
                             
 >>>>>>> Stashed changes
+=======
+                            # ✅ Usar el objeto que ya tenemos en mp_data
+                            inv_materia_prima_obj = mp_data.get('inv_materia_prima_obj')
+                            print(inv_materia_prima_obj)
+                            if not inv_materia_prima_obj:
+                                # Si no vino en mp_data, buscarlo
+                                print("not invmatobj")
+                                inv_materia_prima_obj = Inv_Mat_Prima.objects.get(id=mp_data['inv_materia_prima_id'])
+                            print("inv...")
+                            print(inv_materia_prima_obj)
+                            inv_materia_prima_obj = Inv_Mat_Prima.objects.get(id=inv_materia_prima_obj.id)
+                            produccion.refresh_from_db()  # Recarga el objeto desde la BD
+                            vale_mp.full_clean()
+                            # Verificación explícita de cada clave foránea
+                            print("=== VERIFICANDO CLAVES FORÁNEAS ===")
+                            print(f"1. lote_prod: id={produccion.id}, existe? {Produccion.objects.filter(id=produccion.id).exists()}")
+                            print(f"2. inv_materia_prima: id={inv_materia_prima_obj.id}, existe? {Inv_Mat_Prima.objects.filter(id=inv_materia_prima_obj.id).exists()}")
+                            print(f"3. almacen: id={almacen_o.id}, existe? {Almacen.objects.filter(id=almacen_o.id).exists()}")
+                            print(f"4. vale: id={vale_mp.id}, existe? {Vale_Movimiento_Almacen.objects.filter(id=vale_mp.id).exists()}")
+
+>>>>>>> main
                             # Si alguna no existe, lanzar un error descriptivo
                             if not Produccion.objects.filter(id=produccion.id).exists():
                                 raise ValueError("La producción no se guardó correctamente en BD")
@@ -471,24 +512,26 @@ class CrearProduccionView(LoginRequiredMixin, View):
                                 raise ValueError(f"Inv_Mat_Prima con ID {inv_materia_prima_obj.id} no existe en BD")
                             if not Almacen.objects.filter(id=almacen_o.id).exists():
                                 raise ValueError(f"Almacén con ID {almacen_o.id} no existe")
-                            if not Vale_Movimiento_Almacen.objects.filter(id=vale.id).exists():
-                                raise ValueError(f"Vale con ID {vale.id} no existe")
+                            if not Vale_Movimiento_Almacen.objects.filter(id=vale_mp.id).exists():
+                                raise ValueError(f"Vale con ID {vale_mp.id} no existe")
                 
                             prod_inv= Prod_Inv_MP.objects.create(
                                 lote_prod=produccion,
                                 inv_materia_prima=inv_materia_prima_obj,
                                 cantidad_materia_prima=mp_data['cantidad'],
                                 almacen=almacen_o,
-                                vale=vale
+                                vale=vale_mp
                             )
             
-                    except Exception as e:
-                        raise
-
+                        except Exception as e:
+                            import traceback
+                            traceback.print_exc()
+                            raise ValueError(f"Error al crear Prod_Inv_MP: {str(e)}")
             
                 # --- Crear vale para productos ---
                 vale_prod = None
                 if productos:
+<<<<<<< HEAD
 <<<<<<< Updated upstream
                     # Usar el mismo almacén que las materias primas o crear uno nuevo
                     if vale_mp:
@@ -518,6 +561,19 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             cantidad_producto=prod_data['cantidad'],
                             almacen=almacen_o,
                             vale=vale_prod
+=======
+                    id_almacen = normalizar_UUID(productos[0]['almacen']) 
+                    almacen_obj = Almacen.objects.get(id=id_almacen)
+                    if not vale_prod:
+                        vale_prod = Vale_Movimiento_Almacen.objects.create(
+                            tipo='Solicitud',
+                            entrada=False,
+                            almacen=almacen_obj,
+                            origen=almacen_obj.nombre,
+                            destino=planta_instance.nombre,
+                            lote_No=produccion.lote,
+                            estado='confirmado'
+>>>>>>> main
                         )
 =======
                     id_almacen = normalizar_UUID(productos[0]['almacen']) 
@@ -551,6 +607,25 @@ class CrearProduccionView(LoginRequiredMixin, View):
                         print(f"Error detallado {e}")
 >>>>>>> Stashed changes
 
+                    try:
+                        for prod_data in productos:
+                            print(f"Procesando producto para vale: {prod_data}")
+                            almacen_o_id = normalizar_UUID(prod_data['almacen'])
+                            almacen_o = Almacen.objects.get(id=almacen_o_id)
+                    
+                            inv_prod_obj_id = normalizar_UUID(prod_data['inv_producto_id'])
+                            producto_obj2 = Inv_Producto.objects.get(id=inv_prod_obj_id)
+                            print(f"Producto a agregar: {producto_obj2.producto.nombre_comercial} {producto_obj2.id}/{inv_prod_obj_id}")
+                            Prod_Inv_Producto.objects.create(
+                                producto=producto_obj2,
+                                cantidad_producto=prod_data['cantidad'],
+                                almacen=almacen_o,
+                                vale=vale_prod,
+                                lote_prod=produccion
+                            )
+                    except(ValueError) as e:
+                        print(f"Error detallado {e}")
+
                 # Limpiar sesión
                 if 'produccion_data' in request.session:
                     del request.session['produccion_data']
@@ -558,9 +633,9 @@ class CrearProduccionView(LoginRequiredMixin, View):
 
                 # Mensaje específico para reutilización
                 if produccion.produccion_base:
-                    message = f'Produccion creada reutilizando {produccion_base.lote} como base'
+                    message = f'Producción creada reutilizando {produccion_base.lote} como base'
                 else:
-                    message = 'Produccion creada exitosamente'
+                    message = 'Producción creada exitosamente'
         
                 return JsonResponse({
                     'success': True, 
@@ -595,11 +670,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
         materias_primas = []
      
         if not post_data:
-            print("post_data esta vacio")
             return []
-    
-        print(f"POST data type: {type(post_data)}")
-        print(f"POST data keys: {post_data.keys() if hasattr(post_data, 'keys') else 'No keys'}")
     
         i = 0
     
@@ -614,25 +685,19 @@ class CrearProduccionView(LoginRequiredMixin, View):
             materia_prima_key = f'materias_primas[{i}][materia_prima]'
             materia_prima_id = get_value(post_data, materia_prima_key)
         
-            # Si no hay más materias primas, salir
             if not materia_prima_id:
                 break
-        
+                
+            materia_prima_id = normalizar_UUID(materia_prima_id)    
             cantidad_str = get_value(post_data, f'materias_primas[{i}][cantidad]')
         
             if not all([materia_prima_id, cantidad_str]):
-                print(f" Materia prima {i} incompleta, saltando...")
                 i += 1
                 continue
         
             try:
-                # Convertir y validar
                 cantidad = Decimal(str(cantidad_str))
             
-                # ✅ DEBUG: Mostrar el ID que estamos buscando
-                print(f"Buscando Inv_Mat_Prima con id={materia_prima_id}")
-            
-                # ✅ Intentar obtener de diferentes maneras
                 try:
                     # Primero intentar búsqueda directa
                     inv_materia_prima_obj = Inv_Mat_Prima.objects.get(id=materia_prima_id)
@@ -657,7 +722,6 @@ class CrearProduccionView(LoginRequiredMixin, View):
                        f"Requerido: {cantidad} {unidad}, "
                        f"Disponible: {cantidad_disponible} {unidad}")
                 
-                    # IMPORTANTE: Relanzar la excepción para que la capture procesar_paso_2
                     raise ValueError(error_msg)
         
                 # Calcular costo
@@ -674,26 +738,33 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     'almacen_obj': almacen_obj
                 })
             
-                
             except Inv_Mat_Prima.DoesNotExist as e:
                 raise ValueError(f"Materia prima con ID '{materia_prima_id}' no existe en inventario")
             except ValueError as e:
                 print(f"Error de validación MP {i}: {e}")
                 raise
             except Exception as e:
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
                 print(f"Error inesperado MP {i}: {e}")
 >>>>>>> Stashed changes
+=======
+                print(f"❌ Error inesperado MP {i}: {e}")
+>>>>>>> main
                 raise
         
             i += 1
     
+        print(f"Total materias primas procesadas: {len(materias_primas)}")
         return materias_primas
 
     def procesar_productos(self, post_data):
-        """Procesa los productos enviados desde el formulario"""
         productos = []
+
+        if not post_data:
+            return []
+        
         i = 0
 
         def get_value(data, key):
@@ -704,20 +775,28 @@ class CrearProduccionView(LoginRequiredMixin, View):
         while True:
             producto_key = f'productos[{i}][producto]'
             producto_id = get_value(post_data, producto_key)
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
             
 >>>>>>> Stashed changes
+=======
+            print(f"Buscando producto {i}: key={producto_key}, valor={producto_id}")
+        
+>>>>>>> main
             if not producto_id:
                 break
-
+            
+            producto_id = normalizar_UUID(producto_id)
             cantidad_str = get_value(post_data, f'productos[{i}][cantidad]')
-            if not cantidad_str:
+            
+            if not all([producto_id, cantidad_str]):
                 i += 1
                 continue
 
             try:
                 cantidad = Decimal(cantidad_str)
+<<<<<<< HEAD
 <<<<<<< Updated upstream
             
                 # ✅ Limpiar ID si viene con formato "ID - Nombre"
@@ -741,18 +820,37 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     else:
                         raise
 >>>>>>> Stashed changes
+=======
+
+                try:
+                    print(f"Buscando Inv_Producto con id={producto_id}")
+                    inv_producto_obj = Inv_Producto.objects.get(id=producto_id)
+                    print(f"✅ Inv_Producto encontrado: {inv_producto_obj.id} - {inv_producto_obj.producto.nombre_comercial}")
+                except (Inv_Producto.DoesNotExist, ValueError) as e:
+                    print(f"Error con búsqueda directa: {e}")
+                    # Si tiene formato "ID - Nombre", extraer solo el ID
+                    
+                    if isinstance(producto_id, str) and ' - ' in producto_id:
+                        id_limpio = producto_id.split(' - ')[0]
+                        print(f"Intentando con ID limpio: {id_limpio}")
+                        inv_producto_obj = Inv_Producto.objects.get(id=id_limpio)
+                    else:
+                        raise
+>>>>>>> main
 
                 almacen_obj = inv_producto_obj.almacen
             
                 # Verificar disponibilidad
                 if cantidad > inv_producto_obj.cantidad:
                     nombre_prod = inv_producto_obj.producto.nombre_comercial
-                    raise ValueError(
-                        f"Cantidad insuficiente de '{nombre_prod}'. "
-                        f"Requerido: {cantidad}, Disponible: {inv_producto_obj.cantidad}"
-                    )
+                    cantidad_disponible = inv_producto_obj.cantidad
+                    error_msg = (f"Cantidad insuficiente de '{nombre_prod}'. "
+                       f"Requerido: {cantidad}, "
+                       f"Disponible: {cantidad_disponible}")
+                    raise ValueError(error_msg)
 
                 costo_total = Decimal(str(inv_producto_obj.producto.costo)) * cantidad
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
                 inv_producto_obj_id=normalizar_UUID(inv_producto_obj.id)
@@ -760,22 +858,38 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 almacen_obj_id = normalizar_UUID(almacen_obj.id)
                 
 >>>>>>> Stashed changes
+=======
+                inv_producto_obj_id=normalizar_UUID(inv_producto_obj.id)
+                prod_obj_id = normalizar_UUID(inv_producto_obj.producto.id)
+                almacen_obj_id = normalizar_UUID(almacen_obj.id)
+                print(f"Almacen a agregar: {almacen_obj.id}")
+                #print(f"Producto id normalizado: {prod_obj_id}")
+>>>>>>> main
                 productos.append({
-                    'producto': inv_producto_obj.producto.id,
-                    'inv_producto_id': inv_producto_obj.id,  # Guardar el ID del inventario
+                    'producto': prod_obj_id,
+                    'inv_producto_id': inv_producto_obj_id,  # Guardar el ID del inventario
                     'cantidad': cantidad,
-                    'almacen': almacen_obj.id,
+                    'almacen': almacen_obj_id,
                     'costo': costo_total,
                     'producto_obj': inv_producto_obj.producto,
                     'almacen_obj': almacen_obj,
                     'inv_producto_obj': inv_producto_obj
                 })
+<<<<<<< HEAD
 <<<<<<< Updated upstream
+=======
+            
+                print(f"✅ Producto {i} procesado correctamente")
+            
+>>>>>>> main
             except Inv_Producto.DoesNotExist as e:
+                print(f"❌ Inv_Producto no encontrado para ID {producto_id}: {e}")
                 raise ValueError(f"Producto con ID '{producto_id}' no existe en inventario")
             except ValueError as e:
+                print(f"❌ Error de validación producto {i}: {e}")
                 raise
             except Exception as e:
+<<<<<<< HEAD
 =======
             
             except Inv_Producto.DoesNotExist as e:
@@ -786,9 +900,14 @@ class CrearProduccionView(LoginRequiredMixin, View):
             except Exception as e:
                 print(f"Error inesperado producto {i}: {e}")
 >>>>>>> Stashed changes
+=======
+                print(f"❌ Error inesperado producto {i}: {e}")
+>>>>>>> main
                 raise
+            
             i += 1
 
+        print(f"Total productos procesados: {len(productos)}")
         return productos
 
 class ProduccionDetailView(LoginRequiredMixin, DetailView):

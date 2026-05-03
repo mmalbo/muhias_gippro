@@ -1,0 +1,604 @@
+<!-- templates/produccion/crear_produccion -->
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+            <div class="container mt-4">
+                <div class="form-container">
+                    <h1>Registro de Nueva Producción</h1>
+
+                    <!-- Indicadores de pasos -->
+                    <div class="step-indicators">
+                        <div class="step-indicator active" data-step="1">Datos de Producción</div>
+                        <div class="step-indicator" data-step="2">Formulación</div>
+                    </div>
+
+                    <!-- Paso 1: Datos de producción -->
+                    <div class="step active" id="step1">
+                        <h2>Datos de la Producción</h2>
+                        <form id="produccionForm">
+                            {% csrf_token %}
+                            {% if produccion_base %}
+                            <div class="alert alert-warning">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-recycle fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <i class="fas fa-info-circle"></i> 
+                                            Reutilizando producción: {{ produccion_base.lote }}
+                                        </h5>
+                                        <p class="mb-0">
+                                            <strong>Producto:</strong> {{ produccion_base.catalogo_producto.nombre_comercial }} |
+                                            <strong>Cantidad:</strong> {{ produccion_base.cantidad_estimada|floatformat:2 }}L
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="produccion_base" value="{{ produccion_base.id }}">
+                            <input type="hidden" name="observaciones_reutilizacion" value="Reutilizando {{ produccion_base.lote }}">
+                            {% endif %}
+
+                            <div class="form-row">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">Selección del Producto</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3" id="select_prod">
+                                            <label for="{{ produccion_form.catalogo_producto.id_for_label }}" class="form-label">
+                                                {{ produccion_form.catalogo_producto.label }}
+                                            </label>
+                                            {{ produccion_form.catalogo_producto }}
+                                            {% if produccion_form.catalogo_producto.errors %}
+                                                <div class="text-danger small">{{ produccion_form.catalogo_producto.errors }}</div>
+                                            {% endif %}
+                                            <div class="form-text">{{ produccion_form.catalogo_producto.help_text }}</div>
+                                        </div>
+                                        <div class="text-center my-3"><strong class="text-muted">- O -</strong></div>
+                                        <div class="border-start border-3 border-primary ps-3">
+                                            <div class="mb-3">
+                                                <label for="{{ produccion_form.nuevo_producto_nombre.id_for_label }}" class="form-label">
+                                                    {{ produccion_form.nuevo_producto_nombre.label }}
+                                                </label>
+                                                {{ produccion_form.nuevo_producto_nombre }}
+                                                {% if produccion_form.nuevo_producto_nombre.errors %}
+                                                    <div class="text-danger small">{{ produccion_form.nuevo_producto_nombre.errors }}</div>
+                                                {% endif %}
+                                                <div class="form-text">{{ produccion_form.nuevo_producto_nombre.help_text }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ produccion_form.prod_result.label_tag }}
+                                    {{ produccion_form.prod_result }}
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col-md-3 mb-3">
+                                    {{ produccion_form.cantidad_estimada.label_tag }}
+                                    {{ produccion_form.cantidad_estimada }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ produccion_form.planta.label_tag }}
+                                    {{ produccion_form.planta }}
+                                </div>
+                            </div>
+                        </form>
+                        <div class="navigation-buttons">
+                            <button type="button" class="btn-secondary" disabled>Anterior</button>
+                            <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2: Formulación (Materias Primas + Productos) -->
+                    <div class="step" id="step2">
+                        <h2>Formulación</h2>
+
+                        <!-- Sección Materias Primas -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Materias Primas</h5>
+                                <button type="button" class="add-btn" onclick="agregarMateriaPrima()">+ Agregar Materia Prima</button>
+                            </div>
+                            <div class="card-body">
+                                <div id="materiasPrimasContainer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Productos -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Productos (como insumo)</h5>
+                                <button type="button" class="add-btn" onclick="agregarProducto()">+ Agregar Producto</button>
+                            </div>
+                            <div class="card-body">
+                                <div id="productosContainer"></div>
+                            </div>
+                        </div>
+
+                        <div class="navigation-buttons">
+                            <button type="button" class="btn-secondary" onclick="prevStep(1)">Anterior</button>
+                            <button type="button" class="add-btn" onclick="agregarMateriaPrima()">+ Agregar Materia Prima</button>
+                            <button type="button" class="add-btn" onclick="agregarProducto()">+ Agregar Producto</button>
+                            <button type="button" class="btn-primary" onclick="enviarProduccion()">Finalizar Planificación</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para Materia Prima -->
+<template id="materiaPrimaTemplate">
+    <div class="insumo-item materia-prima-item">
+        <h4>Materia Prima #<span class="item-number"></span></h4>
+        <div class="form-group">
+            <label>Materia Prima - Almacén:</label>
+            <select class="materia-prima-select" name="materia_prima" required>
+                <option value="">Seleccionar materia prima...</option>
+                {% for mp in materia_prima_form.fields.materia_prima.queryset %}
+                <option value="{{ mp.id }}" data-costo="{{ mp.costo }}" data-unidad="{{ mp.unidad_medida }}">
+                    {{ mp.materia_prima.nombre }} ({{ mp.materia_prima.conformacion }} - {{ mp.materia_prima.unidad_medida }}) - {{ mp.almacen }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Cantidad:</label>
+            <input type="number" class="cantidad-input" step="0.001" required>
+            <span class="unidad-text"></span>
+        </div>
+        <div class="form-group">
+            <label>Costo estimado:</label>
+            <span class="costo-text">$0.00</span>
+        </div>
+        <button type="button" class="remove-btn" onclick="removerInsumo(this)">Eliminar</button>
+    </div>
+</template>
+
+<!-- Template para Producto -->
+<template id="productoTemplate">
+    <div class="insumo-item producto-item">
+        <h4>Producto #<span class="item-number"></span></h4>
+        <div class="form-group">
+            <label>Producto - Almacén:</label>
+            <select class="producto-select" name="producto" required>
+                <option value="">Seleccionar producto...</option>
+                {% for prod in materia_prima_form.fields.producto.queryset %}
+                <option value="{{ prod.id }}" data-costo="{{ prod.costo }}" data-unidad="{{ prod.unidad_medida }}">
+                    {{ prod.producto.nombre_comercial }} ({{ prod.lote }} - {{ prod.cantidad }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Cantidad:</label>
+            <input type="number" class="cantidad-input" step="0.001" required>
+            <span class="unidad-text"></span>
+        </div>
+        <div class="form-group">
+            <label>Costo estimado:</label>
+            <span class="costo-text">$0.00</span>
+        </div>
+        <button type="button" class="remove-btn" onclick="removerInsumo(this)">Eliminar</button>
+    </div>
+</template>
+
+{% block javascript %}
+{{ block.super }}
+<script>
+// ==================== INICIALIZACIÓN DE SELECT2 ====================
+
+function inicializarSelect2(selector, placeholder = 'Escriba para buscar...') {
+    if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+        console.warn('jQuery o Select2 no están disponibles');
+        return;
+    }
+    $(selector).each(function() {
+        // Evitar doble inicialización
+        if ($(this).data('select2')) {
+            $(this).select2('destroy');
+        }
+        $(this).select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: placeholder,
+            allowClear: true,
+            language: { noResults: () => placeholder }
+        });
+    });
+}
+
+// Inicializar al cargar la página
+$(document).ready(function() {
+    console.log("document ready ejecutado");
+    // Select del producto principal (Django lo renderiza con id="id_catalogo_producto")
+    inicializarSelect2('select[name="catalogo_producto"]', 'Buscar producto...');
+    
+    // Si ya existen selects dinámicos precargados (por si acaso)
+    inicializarSelect2('.materia-prima-select', 'Buscar materia prima...');
+    inicializarSelect2('.producto-select', 'Buscar producto...');
+});
+
+// Datos desde Django
+const materiasPrimasData = {{ materias_primas_json|safe }};
+const productosData = {{ productos_data|safe }};
+
+var materiaPrimaCount = 0;
+var productoCount = 0;
+// ==================== AGREGAR MATERIA PRIMA (modificado) ====================
+function agregarMateriaPrima() {
+    materiaPrimaCount++;
+    const template = document.getElementById('materiaPrimaTemplate');
+    const clone = template.content.cloneNode(true);
+    const insumoDiv = clone.querySelector('.insumo-item');
+    insumoDiv.id = `materia-prima-${materiaPrimaCount}`;
+    insumoDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+
+    const select = insumoDiv.querySelector('.materia-prima-select');
+    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
+    select.addEventListener('change', () => actualizarInfoMateriaPrima(select));
+    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
+
+    document.getElementById('materiasPrimasContainer').appendChild(insumoDiv);
+    
+    // === INICIALIZAR Select2 en el select recién agregado ===
+    inicializarSelect2(`#${insumoDiv.id} .materia-prima-select`, 'Buscar materia prima...');
+}
+
+// ==================== AGREGAR PRODUCTO (modificado) ====================
+function agregarProducto() {
+    productoCount++;
+    console.log(`[agregarProducto] Creando producto #${productoCount}`);
+
+    const template = document.getElementById('productoTemplate');
+    const clone = template.content.cloneNode(true);
+    const insumoDiv = clone.querySelector('.insumo-item');
+    insumoDiv.id = `producto-${productoCount}`;
+    insumoDiv.querySelector('.item-number').textContent = productoCount;
+
+    const select = insumoDiv.querySelector('.producto-select');
+    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
+    select.addEventListener('change', () => actualizarInfoProducto(select));
+    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
+
+    document.getElementById('productosContainer').appendChild(insumoDiv);
+    console.log(`[agregarProducto] Producto #${productoCount} agregado al DOM`);
+    
+    // === INICIALIZAR Select2 en el select recién agregado ===
+    inicializarSelect2(`#${insumoDiv.id} .producto-select`, 'Buscar producto...');
+}
+
+// ==================== EL RESTO DE TUS FUNCIONES (actualizarInfoMateriaPrima, calcularCostoInsumo, removerInsumo, etc.) ====================
+// Funciones de navegación
+function nextStep(step) {
+    if (step === 2 && !validarPaso1()) {
+        alert('Por favor, complete todos los campos requeridos del paso 1.');
+        return;
+    }
+    document.querySelector('.step.active').classList.remove('active');
+    document.querySelector('.step-indicator.active').classList.remove('active');
+    document.getElementById(`step${step}`).classList.add('active');
+    document.querySelector(`.step-indicator[data-step="${step}"]`).classList.add('active');
+}
+
+function prevStep(step) {
+    document.querySelector('.step.active').classList.remove('active');
+    document.querySelector('.step-indicator.active').classList.remove('active');
+    document.getElementById(`step${step}`).classList.add('active');
+    document.querySelector(`.step-indicator[data-step="${step}"]`).classList.add('active');
+}
+
+function validarPaso1() {
+    const requiredFields = document.querySelectorAll('#step1 input[required], #step1 select[required]');
+    for (let field of requiredFields) {
+        if (!field.value.trim()) {
+            field.focus();
+            return false;
+        }
+    }
+    return true;
+}
+
+// ==================== MATERIAS PRIMAS ====================
+/* function agregarMateriaPrima() {
+    materiaPrimaCount++;
+    const template = document.getElementById('materiaPrimaTemplate');
+    const clone = template.content.cloneNode(true);
+    const insumoDiv = clone.querySelector('.insumo-item');
+    insumoDiv.id = `materia-prima-${materiaPrimaCount}`;
+    insumoDiv.querySelector('.item-number').textContent = materiaPrimaCount;
+
+    const select = insumoDiv.querySelector('.materia-prima-select');
+    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
+    select.addEventListener('change', () => actualizarInfoMateriaPrima(select));
+    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
+
+    document.getElementById('materiasPrimasContainer').appendChild(insumoDiv);
+}
+ */
+function actualizarInfoMateriaPrima(select) {
+    const item = select.closest('.insumo-item');
+    const selectedOption = select.options[select.selectedIndex];
+    const unidadSpan = item.querySelector('.unidad-text');
+    unidadSpan.textContent = selectedOption.getAttribute('data-unidad') || '';
+    calcularCostoInsumo(item);
+}
+
+// ==================== PRODUCTOS ====================
+/* function agregarProducto() {
+    productoCount++;
+    console.log(`[agregarProducto] Creando producto #${productoCount}`);
+
+    const template = document.getElementById('productoTemplate');
+    const clone = template.content.cloneNode(true);
+    const insumoDiv = clone.querySelector('.insumo-item');
+    insumoDiv.id = `producto-${productoCount}`;
+    insumoDiv.querySelector('.item-number').textContent = productoCount;
+
+    const select = insumoDiv.querySelector('.producto-select');
+    const cantidadInput = insumoDiv.querySelector('.cantidad-input');
+    select.addEventListener('change', () => actualizarInfoProducto(select));
+    cantidadInput.addEventListener('input', () => calcularCostoInsumo(insumoDiv));
+
+    document.getElementById('productosContainer').appendChild(insumoDiv);
+    console.log(`[agregarProducto] Producto #${productoCount} agregado al DOM`);
+}
+ */
+function actualizarInfoProducto(select) {
+    const item = select.closest('.insumo-item');
+    const selectedOption = select.options[select.selectedIndex];
+    const productoId = selectedOption.value;
+    const productoNombre = selectedOption.text;
+    const unidadSpan = item.querySelector('.unidad-text');
+    unidadSpan.textContent = selectedOption.getAttribute('data-unidad') || 'unidades';
+    console.log(`[actualizarInfoProducto] Producto seleccionado:`);
+    console.log(`  - ID (value): "${productoId}" (tipo: ${typeof productoId})`);
+    console.log(`  - Nombre: "${productoNombre.substring(0, 80)}"`);
+    console.log(`  - Unidad: "${unidad}"`);
+    console.log(`  - Costo unitario: ${costoUnitario}`);
+    calcularCostoInsumo(item);
+}
+
+// ==================== COSTOS Y ELIMINACIÓN ====================
+function calcularCostoInsumo(item) {
+    const select = item.querySelector('select');
+    const cantidadInput = item.querySelector('.cantidad-input');
+    const costoSpan = item.querySelector('.costo-text');
+    const cantidad = parseFloat(cantidadInput.value) || 0;
+    const selectedOption = select.options[select.selectedIndex];
+    const costoUnitario = parseFloat(selectedOption.getAttribute('data-costo')) || 0;
+
+    const costoTotal = cantidad * costoUnitario;
+    costoSpan.textContent = `$${costoTotal.toFixed(2)}`;
+}
+
+function removerInsumo(button) {
+    button.closest('.insumo-item').remove();
+}
+
+// ==================== VALIDACIÓN Y ENVÍO ====================
+function validarInsumos() {
+    const materias = document.querySelectorAll('#materiasPrimasContainer .insumo-item');
+    const productos = document.querySelectorAll('#productosContainer .insumo-item');
+    for (let item of materias) {
+        if (!item.querySelector('select').value || !item.querySelector('.cantidad-input').value) return false;
+    }
+    for (let item of productos) {
+        if (!item.querySelector('select').value || !item.querySelector('.cantidad-input').value) return false;
+    }
+    return true;
+}
+
+function enviarProduccion() {
+    const materiasItems = document.querySelectorAll('#materiasPrimasContainer .insumo-item');
+    const productosItems = document.querySelectorAll('#productosContainer .insumo-item');
+    if (materiasItems.length === 0 && productosItems.length === 0) {
+        alert('Debe agregar al menos un insumo (materia prima o producto).');
+        return;
+    }
+    if (!validarInsumos()) {
+        alert('Por favor, complete todos los campos de los insumos.');
+        return;
+    }
+    if (!validarPaso1()) {
+        alert('Por favor, complete todos los campos del paso 1.');
+        prevStep(1);
+        return;
+    }
+
+    guardarPaso1().then(() => {
+        enviarPaso2(materiasItems, productosItems);
+    }).catch(error => {
+        console.error('Error al guardar paso 1:', error);
+        alert('Error al guardar los datos de producción');
+    });
+}
+
+function guardarPaso1() {
+    return new Promise((resolve, reject) => {
+        const produccionForm = document.getElementById('produccionForm');
+        const formData = new FormData(produccionForm);
+        formData.append('step', '1');
+        fetch('', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => data.success ? resolve(data) : reject(data.errors))
+        .catch(error => reject(error));
+    });
+}
+
+function enviarPaso2(materiasItems, productosItems) {
+    const formData = new FormData();
+    formData.append('step', '2');
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    // Materias primas
+    materiasItems.forEach((item, idx) => {
+        const mpId = item.querySelector('select').value;
+        const cantidad = item.querySelector('.cantidad-input').value;
+        console.log(`MP[${idx}] - ID: "${mpId}", Cantidad: ${cantidad}`);
+        formData.append(`materias_primas[${idx}][materia_prima]`, mpId);
+        formData.append(`materias_primas[${idx}][cantidad]`, cantidad);
+    });
+
+    // Productos
+    productosItems.forEach((item, idx) => {
+        const prodId = item.querySelector('select').value;
+        const cantidad = item.querySelector('.cantidad-input').value;
+        console.log(`Producto[${idx}] - ID: "${prodId}", Cantidad: ${cantidad}`);
+        formData.append(`productos[${idx}][producto]`, prodId);
+        formData.append(`productos[${idx}][cantidad]`, cantidad);
+    });
+
+    const submitBtn = document.querySelector('#step2 .btn-primary');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Guardando...';
+    submitBtn.disabled = true;
+
+    fetch('', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Intentar parsear JSON incluso si hay error
+        return response.text().then(text => {
+            console.log('Response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                console.error('Error parsing JSON:', e);
+                throw new Error('El servidor devolvió una respuesta inválida: ' + text.substring(0, 200));
+            }
+        });
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            if (data.redirect_url) window.location.href = data.redirect_url;
+        } else {
+            alert('Error: ' + (data.errors || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error de red:', error);
+        alert('Error al procesar la solicitud: ' + error.message);
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// ==================== PRECARGA DE DATOS (reutilización) ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-completar paso 1 desde URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const produccionBaseId = urlParams.get('produccion_base_id');
+    if (produccionBaseId) {
+        if (urlParams.get('planta_id') && document.getElementById('id_planta'))
+            document.getElementById('id_planta').value = urlParams.get('planta_id');
+        if (urlParams.get('catalogo_producto_id') && document.getElementById('id_catalogo_producto'))
+            document.getElementById('id_catalogo_producto').value = urlParams.get('catalogo_producto_id');
+        if (urlParams.get('cantidad_estimada') && document.getElementById('id_cantidad_estimada'))
+            document.getElementById('id_cantidad_estimada').value = urlParams.get('cantidad_estimada');
+        if (urlParams.get('prod_result') === 'on' && document.getElementById('id_prod_result'))
+            document.getElementById('id_prod_result').checked = true;
+    }
+
+    // Precargar materias primas sugeridas (si existen)
+    const materiasPrecargadas = {{ materias_primas_precargadas|safe|default:"[]" }};
+    if (materiasPrecargadas.length > 0) mostrarSugerencias('materias', materiasPrecargadas);
+    // Precargar productos sugeridos (si se implementa en la vista)
+    const productosPrecargados = {{ productos_precargados|safe|default:"[]" }};
+    if (productosPrecargados.length > 0) mostrarSugerencias('productos', productosPrecargados);
+});
+
+function mostrarSugerencias(tipo, lista) {
+    const container = document.createElement('div');
+    container.className = 'card mt-3 bg-light';
+    container.innerHTML = `
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>${tipo === 'materias' ? 'Materias Primas' : 'Productos'} Sugeridos</h6>
+        </div>
+        <div class="card-body" id="sugerencias-${tipo}"></div>`;
+    const target = tipo === 'materias' ? document.querySelector('#materiasPrimasContainer')?.parentElement : document.querySelector('#productosContainer')?.parentElement;
+    if (target) target.after(container);
+
+    const listDiv = document.getElementById(`sugerencias-${tipo}`);
+    lista.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
+        div.innerHTML = `
+            <div><strong>${item.nombre}</strong><br><small>${item.cantidad} ${item.unidad_medida} | Almacén: ${item.almacen_nombre}</small></div>
+            <button class="btn btn-sm btn-outline-success" onclick="agregarSugerido('${tipo}', ${idx})">+ Agregar</button>`;
+        div.setAttribute('data-data', JSON.stringify(item));
+        listDiv.appendChild(div);
+    });
+}
+
+function agregarSugerido(tipo, idx) {
+    const item = document.querySelector(`#sugerencias-${tipo} div[data-data]`);
+    if (!item) return;
+    const data = JSON.parse(item.getAttribute('data-data'));
+    if (tipo === 'materias') {
+        agregarMateriaPrima();
+        const ultimo = document.querySelector('#materiasPrimasContainer .insumo-item:last-child');
+        if (ultimo) {
+            const select = ultimo.querySelector('select');
+            const option = Array.from(select.options).find(opt => opt.value == data.materia_prima_id);
+            if (option) select.value = option.value;
+            ultimo.querySelector('.cantidad-input').value = data.cantidad;
+            actualizarInfoMateriaPrima(select);
+        }
+    } else {
+        agregarProducto();
+        const ultimo = document.querySelector('#productosContainer .insumo-item:last-child');
+        if (ultimo) {
+            const select = ultimo.querySelector('select');
+            const option = Array.from(select.options).find(opt => opt.value == data.producto_id);
+            if (option) select.value = option.value;
+            ultimo.querySelector('.cantidad-input').value = data.cantidad;
+            actualizarInfoProducto(select);
+        }
+    }
+    item.querySelector('button').innerHTML = '<i class="fas fa-check"></i> Agregado';
+    item.querySelector('button').disabled = true;
+}
+</script>
+{% endblock %}
+
+
+<style>
+/* Estilos (igual que antes, añadir .insumo-item) */
+.form-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+.step { display: none; }
+.step.active { display: block; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-weight: bold; }
+input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.navigation-buttons { margin-top: 20px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+.btn-primary { background-color: #007bff; color: white; }
+.btn-secondary { background-color: #6c757d; color: white; }
+.add-btn { background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; }
+.remove-btn { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 3px; }
+.insumo-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 4px; background: #fefefe; }
+.step-indicators { display: flex; margin-bottom: 20px; }
+.step-indicator { flex: 1; text-align: center; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; }
+.step-indicator.active { background: #007bff; color: white; }
+.card-header .add-btn { margin: -5px 0; }
+</style>
+{% endblock %}
