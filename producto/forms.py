@@ -20,22 +20,23 @@ class ProductoForm(forms.ModelForm):
     ) """
 
     class Meta:
-        model = Producto
-        fields = ['codigo_producto', 'codigo_3l', 'nombre_comercial', 'ficha_tecnica_folio', 'formato',
-                  'ficha_costo']
+        model = Producto  #'formato',
+        fields = ['codigo_producto', 'codigo_3l', 'nombre_comercial',  
+                  'ficha_costo', 'ficha_tecnica_folio']
         labels = {
             'codigo_producto': 'Código del producto',
             'codigo_3l': 'Código de 3 dígitos',
             'nombre_comercial': 'Nombre comercial',
             'ficha_costo': 'Ficha costo',
             'ficha_tecnica_folio': 'Ficha técnica folio',
-            'formato': 'Formato',
+            #'formato': 'Formato',
         }
         widgets = {
             'codigo_producto': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_3l': forms.TextInput(attrs={'class': 'form-control'}),
             'nombre_comercial': forms.TextInput(attrs={'class': 'form-control'}),
-            'ficha_tecnica_folio': forms.FileInput(attrs={'class': 'form-control-file'}),
             'ficha_costo': forms.FileInput(attrs={'class': 'form-control-file'}),
-            'formato': forms.Select(attrs={'class': 'form-select'}),            
+            'ficha_tecnica_folio': forms.FileInput(attrs={'class': 'form-control-file'}),
+            #'formato': forms.Select(attrs={'class': 'form-select'}),            
             # 'almacen': forms.SelectMultiple(attrs={'class': 'form-select', 'style': 'width:100%'}),
         }

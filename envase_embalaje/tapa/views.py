@@ -111,7 +111,7 @@ def generar_codigo(codigo_base, ultimo):
 
     return codigo
 
-def importarTapa(request):
+def importarTapaE(request):
     if request.method == 'POST':
         file = request.FILES.get('excel')  # Cambia el nombre de la variable si es necesario
         tapa_existentes = []
@@ -132,9 +132,7 @@ def importarTapa(request):
                     Col_Color = str(data[2]).strip() if data[2] is not None else None  # Col_Color
                     descripcion = str(data[3]).strip() if data[3] is not None else None  # Col_descripcion
                                        
-                    color = Color.objects.filter(nombre__iexact=Col_Color).first()
                     codigo_base = generar_formato_codigo(descripcion, color.nombre)
-                    
                     ultimo = Tapa.objects.filter(codigo__icontains=codigo_base).first()
                     existe = Tapa.objects.filter(color=color,descripcion=descripcion,nombre=nombre).first()
 
@@ -151,10 +149,10 @@ def importarTapa(request):
                                        f"obligatorios.")
                         return redirect('tapa:importarTapa')
                     
-                    if color is None:
+                    """ if color is None:
                         messages.error(request,
                                        f"Fila {No_fila + 1}: No existe el color {Col_Color} en el nomenclador de colores")
-                        return redirect('tapa:importarTapa')
+                        return redirect('tapa:importarTapa') """
 
                     if len(nombre) > 255:
                         messages.error(request, f"Fila {No_fila + 1}: El nombre no puede exceder 255 caracteres.")
@@ -164,7 +162,16 @@ def importarTapa(request):
                         messages.error(request, f"Fila {No_fila + 1}: El tamaño no puede exceder 255 caracteres.")
                         return redirect('tapa:importarTapa')
                     
+                    #TERCERO: Obtener o crear el color (ahora Col_Color está validado)
                     try:
+                        color, created = Color.objects.get_or_create(nombre=Col_Color)
+                    except Exception as e:
+                        messages.error(request, f"Fila {No_fila}: Error al procesar el color '{Col_Color}': {str(e)}")
+                        return redirect('pomo:importarPomo')
+                    #filter(nombre__iexact=Col_Color).first()
+
+                    try:
+                        print(f"Creando el Tapa: {codigo}")
                         tapa = Tapa(
                             codigo=codigo,
                             nombre=nombre,
@@ -197,6 +204,110 @@ def importarTapa(request):
                 return redirect('tapa:listar')
 
         except Exception as e:
+            messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
+            return redirect('tapa:listar')
+
+    return render(request, 'tapa/import_form.html')
+
+def importarTapa(request):
+    if request.method == 'POST':
+        file = request.FILES.get('excel')
+        tapas_importadas = 0  # Contador para tapas importadas
+        tapas_existentes = []
+        fila_actual = 0
+
+        # Validar el archivo
+        if not (file and (file.name.endswith('.xls') or file.name.endswith('.xlsx'))):
+            messages.error(request, 'La extensión del archivo no es correcta, debe ser .xls o .xlsx')
+            return redirect('tapa:importarTapa')
+
+        try:
+            with transaction.atomic():
+                format = 'xls' if file.name.endswith('.xls') else 'xlsx'
+                imported_data = Dataset().load(file.read(), format=format)
+
+                for index, data in enumerate(imported_data):
+                    fila_actual = index + 1
+                    
+                    nombre = str(data[1]).strip() if data[1] is not None else None
+                    Col_Color = str(data[2]).strip() if data[2] is not None else None
+                    descripcion = str(data[3]).strip() if data[3] is not None else None
+                    
+                    # ✅ PRIMERO: Validar campos obligatorios
+                    if not nombre or not descripcion or not Col_Color:
+                        messages.error(request,
+                                       f"Fila {fila_actual}: Los campos 'Nombre', 'Descripción' y 'Color' son obligatorios.")
+                        return redirect('tapa:importarTapa')
+
+                    # ✅ SEGUNDO: Validar longitudes
+                    if len(nombre) > 255:
+                        messages.error(request, f"Fila {fila_actual}: El nombre no puede exceder 255 caracteres.")
+                        return redirect('tapa:importarTapa')
+
+                    if len(descripcion) > 255:
+                        messages.error(request, f"Fila {fila_actual}: La descripción no puede exceder 255 caracteres.")
+                        return redirect('tapa:importarTapa')
+                    
+                    # ✅ TERCERO: Obtener o crear el color
+                    try:
+                        color, created = Color.objects.get_or_create(nombre=Col_Color)
+                    except Exception as e:
+                        messages.error(request, f"Fila {fila_actual}: Error al procesar el color '{Col_Color}': {str(e)}")
+                        return redirect('tapa:importarTapa')
+                    
+                    # ✅ CUARTO: Verificar si la tapa ya existe
+                    existe = Tapa.objects.filter(
+                        color=color,
+                        descripcion=descripcion,
+                        nombre=nombre
+                    ).first()
+
+                    if existe:
+                        tapas_existentes.append(existe.nombre)
+                        print(f"Tapa existente: {existe.nombre}")
+                        continue
+                    
+                    # ✅ QUINTO: Generar código (ahora color ya existe)
+                    codigo_base = generar_formato_codigo(descripcion, color.nombre)
+                    ultimo = Tapa.objects.filter(codigo__icontains=codigo_base).first()
+                    codigo = generar_codigo(codigo_base, ultimo)
+
+                    # ✅ SEXTO: Guardar la nueva tapa
+                    try:
+                        print(f"Creando la Tapa: {codigo}")
+                        tapa = Tapa(
+                            codigo=codigo,
+                            nombre=nombre,
+                            descripcion=descripcion,
+                            color=color
+                        )
+                        tapa.full_clean()
+                        tapa.save()
+                        tapas_importadas += 1
+                        print(f"Tapa '{nombre}' guardada correctamente")
+                        
+                    except Exception as e:
+                        print(f"Error al guardar la tapa: {str(e)}")
+                        messages.error(request, f"Error al procesar la fila {fila_actual}: {str(e)}")
+                        return redirect('tapa:importarTapa')
+
+                # ✅ Mensajes de resultado
+                if tapas_importadas > 0:
+                    messages.success(request, f'Se han importado {tapas_importadas} tapas satisfactoriamente.')
+                    
+                if tapas_existentes:
+                    messages.warning(
+                        request, 
+                        'Las siguientes tapas ya se encontraban registradas: ' + ', '.join(tapas_existentes)
+                    )
+                    
+                if tapas_importadas == 0 and not tapas_existentes:
+                    messages.warning(request, "No se importó ninguna tapa.")
+
+                return redirect('tapa:listar')
+
+        except Exception as e:
+            print(f"Error general: {str(e)}")
             messages.error(request, f"Ocurrió un error durante la importación: {str(e)}")
             return redirect('tapa:listar')
 

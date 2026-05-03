@@ -9,6 +9,8 @@ from materia_prima.models import MateriaPrima
 from producto.models import Producto
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
+from materia_prima.choices import ESTADOS
+from envase_embalaje.formato.models import Formato
 
 # models.py - Agregar esta clase al inicio
 class ItemInventarioBase(ModeloBase):
@@ -58,6 +60,7 @@ class Inv_Mat_Prima(ItemInventarioBase):
 
     def __str__(self):
         return f'{self.materia_prima.nombre} en {self.almacen.nombre}'
+        #return self.id
 
 class Inv_Producto(ItemInventarioBase):
     lote = models.CharField(
@@ -69,6 +72,11 @@ class Inv_Producto(ItemInventarioBase):
         null=False,
         verbose_name="Producto", related_name='inventarios_prod'
     )
+    estado = models.CharField( choices=ESTADOS, max_length=255, null=False, default='inventario',
+        verbose_name='Estado'
+    )
+    formato = models.ForeignKey(Formato, on_delete=models.PROTECT, null=True, verbose_name="Formato")
+
     
     def save(self, *args, **kwargs):
         self.tipo = 'producto'

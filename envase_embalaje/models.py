@@ -50,7 +50,7 @@ class EnvaseEmbalaje(ModeloBase):
         Almacen = apps.get_model('almacen', 'Almacen')
         return Almacen.objects.filter(envases=self)
 
-    @transaction.atomic
+    """ @transaction.atomic
     def save(self, *args, **kwargs):
         # Verificar si el objeto ya existe en la base de datos
        
@@ -75,7 +75,7 @@ class EnvaseEmbalaje(ModeloBase):
                 print(ultimo_consecutivo)
                 nuevo_consecutivo = f"{ultimo_consecutivo + 1:03d}"
 
-                """if ultimo_consecutivo == 1:
+                if ultimo_consecutivo == 1:
                     nuevo_consecutivo = self.codigo_envase[-3:]
                 else:
                     "
@@ -83,12 +83,12 @@ class EnvaseEmbalaje(ModeloBase):
                 print(nuevo_consecutivo)
                 # Extraer el consecutivo del código actual
                 #consecutivo = self.codigo_envase[-3:]  # Los últimos 3 dígitos del código
-                """
+                
                 # Generar el nuevo código
                 self.codigo_envase = f"{tipo_envase_codigo}{proveedor}{nuevo_consecutivo}"
                 print("==========")
                 print(self.codigo_envase)
-                """else:
+                else:
                 # Si el objeto no existe, generar el código como antes
                 if not self.codigo_envase:
                     # Obtener el código del tipo de envase
@@ -107,7 +107,7 @@ class EnvaseEmbalaje(ModeloBase):
 
                     # Generar el código completo
                     self.codigo_envase = f"{tipo_envase_codigo}{proveedor}{nuevo_consecutivo}"
-                    print(f"Nuevo: {self.codigo_envase}")"""
+                    print(f"Nuevo: {self.codigo_envase}")
 
         # Guardar el objeto
-        super().save(*args, **kwargs)
+        super().save(*args, **kwargs) """

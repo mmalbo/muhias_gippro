@@ -30,7 +30,6 @@
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Descripción</th>
-                            <th>Cantidad</th>
                             <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
@@ -41,7 +40,6 @@
                                 <td>{{ ins.codigo }}</td>
                                 <td>{{ ins.nombre }}</td>
                                 <td>{{ ins.descripcion}}</td>
-                                <td>{{ ins.cantidad_total }}</td>
                                 <td>{{ ins.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -49,20 +47,18 @@
                                         <a href="{% url 'insumos_editar' ins.pk %}"
                                            title="Editar insumo" class="btn far fa-edit"></a>
                                         {% endif %}                                        
-                                        <a href="{% url 'get_insumo' ins.pk %}"
+                                        <a href="{% url 'det_insumo' ins.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
                             </tr>
-
                         {% endfor %}
                         </tbody>
                         <tfoot>
                         <tr>
                             <th>Código</th>
-                            <th>Capacidad</th>
-                            <th>Tipo</th>
-                            <th>Cantidad</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
                             <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
@@ -73,8 +69,6 @@
                     {% endif %}
                 </div>
             </div>
-
         </div>
-
     </div>
 {% endblock %}

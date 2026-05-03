@@ -24,6 +24,7 @@
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de solicitud</th>
+                            <th>Lote asociado</th>
                             <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>
@@ -33,12 +34,26 @@
                             <tr>
                                 <td>{{ rp.fecha_movimiento }}</td>
                                 <td>{{ rp.tipo_inventario }}</td>
-                                <td>{{rp.cant_elementos}}</td>
+                                <td>{{ rp.lote_No }}</td>
+                                <td>{{ rp.cantidad_elementos}}</td>
                                 <td>
-
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'movimiento_update' rp.id %}" class="btn btn-success">Detalles</a>                                    
-                                        <a href="{% url 'salida_prod' rp.produccion_asociada %}" class="btn btn-success">Entregar</a>
+                                        <a href="{% url 'salida_prod' rp.id %}" class="btn btn-success">Entregar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                         {% for se in sol_envasados %}
+                            <tr>
+                                <td>{{ se.fecha_movimiento }}</td>
+                                <td>{{ se.tipo_inventario }}</td>
+                                <td>{{ se.lote_No }}</td>
+                                <td>{{ se.cantidad_elementos}}</td>
+                                <td>
+                                    <div class="button-container" style="display: flex; gap: 10px;">
+                                        <a href="{% url 'movimiento_update' se.id %}" class="btn btn-success">Detalles</a>                                    
+                                        <a href="{% url 'salida_env' se.id %}" class="btn btn-success">Entregar</a>
                                     </div>
                                 </td>
                             </tr>
@@ -48,6 +63,7 @@
                         <tr class="ligth">
                             <th>Fecha</th>
                             <th>Tipo de adquisición</th>
+                            <th>Lote asociado</th>
                             <th>Cantidad de productos</th>
                             <th>Acciones</th>
                         </tr>

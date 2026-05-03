@@ -22,16 +22,16 @@
                 
                 <div class="col-sm-12 col-lg-12">
                     {% if user.is_superuser %}
-                    <a href="{% url 'materia_prima:importarMateriasPrimas' %}" class="btn btn-success"> Importar datos desde archivo </a>
+                    <a href="{% url 'importarEnvaseEmbalaje' %}" class="btn btn-success"> Importar datos desde archivo </a>
                     {% endif %}
                     <table id="datatable" class="table datatable table-striped">
                         <thead>
                         <tr class="ligth">
                             <th>Código</th>
-                            <th>Capacidad</th>
-                            <th>Tipo</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
+                            <th>Tipo/Nombre</th>
+                            <th>Formato</th>
+                            <th>Proveedor</th>
+                            <th>Costo promedio</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -39,9 +39,13 @@
                         {% for ee in envase_embalaje %}
                             <tr>
                                 <td>{{ ee.codigo_envase }}</td>
+                                <td>{{ ee.tipo_envase_embalaje }} - {{ ee.nombre}}</td>
+                                {% if ee.formato %}
+                                    <td>{{ ee.formato }}</td>
+                                {% else %}
+                                    <td> --- </td>
+                                {% endif %}
                                 <td>{{ ee.formato }}</td>
-                                <td>{{ ee.tipo_envase_embalaje}}</td>
-                                <td>{{ ee.cantidad_total }}</td>
                                 <td>{{ ee.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
@@ -49,7 +53,7 @@
                                         <a href="{% url 'envase_embalaje_editar' ee.pk %}"
                                            title="Editar envase o embalaje" class="btn far fa-edit"></a>
                                         {% endif %}                                        
-                                        <a href="{% url 'get_envase_embalaje' ee.pk %}"
+                                        <a href="{% url 'detalle_envase_embalaje' ee.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
@@ -60,10 +64,10 @@
                         <tfoot>
                         <tr>
                             <th>Código</th>
-                            <th>Capacidad</th>
-                            <th>Tipo</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
+                            <th>Tipo/Nombre</th>
+                            <th>Formato</th>
+                            <th>Proveedor</th>
+                            <th>Costo promedio</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

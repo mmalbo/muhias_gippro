@@ -77,7 +77,7 @@
                                 <td>{{ ee.envase.codigo_envase }}</td>
                                 <td>{{ ee.envase.formato }}</td>
                                 <td>{{ ee.almacen }}</td>
-                                <td>{{ ee.envase.tipo_envase_embalaje}}</td>
+                                <td>{{ ee.envase.tipo_envase_embalaje}} - {{ ee.envase.nombre}}</td>
                                 <td>{{ ee.cantidad }}</td>
                                 <td>{{ ee.envase.costo }}</td>
                                 <td>
@@ -92,7 +92,7 @@
                                         <a href="{% url 'ajuste_inv_ee' ee.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
-                                        <a href="{% url 'get_envase_embalaje' ee.pk %}"
+                                        <a href="{% url 'detalle_envase_embalaje' ee.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>

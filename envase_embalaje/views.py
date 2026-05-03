@@ -136,7 +136,6 @@ def detalle_envase(request, pk):
         'envase': envase,
     })
 
-
 class CreateImportView(LoginRequiredMixin, CreateView):
     model = EnvaseEmbalaje
     form_class = EnvaseEmbalajeForm
@@ -181,6 +180,7 @@ def importar(request):
                         messages.error(request, f"Fila {No_fila+1}: El archivo debe tener al menos 9 columnas. Tiene {len(data)} columnas.")
                         return redirect('importarEnvaseEmbalaje')
                     print(f"En importar: {data}")
+                    codigo = str(data[0]).strip() if data[0] is not None else None
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Asegúrate de que sea un string
                     tipo = str(data[2]).strip() if data[2] is not None else None
                     formato = str(data[3]).strip() if data[3] is not None else None
@@ -271,6 +271,7 @@ def importar(request):
                             envase_emb, created_ee = EnvaseEmbalaje.objects.update_or_create(                    
                                 nombre=nombre,
                                 defaults={
+                                    'codigo_envase': codigo,
                                     'tipo_envase_embalaje': tipo_obj,
                                     'formato' : formato_o,
                                     'proveedor' : proveedor,
@@ -282,15 +283,13 @@ def importar(request):
                             envase_emb, created_ee = EnvaseEmbalaje.objects.update_or_create(                    
                                 nombre=nombre,
                                 defaults={
+                                    'codigo_envase': codigo,
                                     'tipo_envase_embalaje': tipo_obj,
                                     'proveedor' : proveedor,
                                     'estado' : 'en_almacen',
                                     'costo' : costo,
                                 }
                             )
-
-                        #envase_emb.save()
-                        print("Codigo nuevo"+str(envase_emb.codigo_envase))
 
                         #Ahora a actualizar inventario
                         inventario_ee, created_inv = Inv_Envase.objects.get_or_create(

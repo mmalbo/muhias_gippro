@@ -226,27 +226,27 @@ class Prod_Inv_MP(ModeloBase):
         verbose_name="Vale de solicitud asociado a esta producción",
         null=True, blank=False, related_name="mp_produccion")
 
-<<<<<<< HEAD
-=======
     def __str__(self):
-        return f"{self.inv_materia_prima.nombre} para {self.lote_prod.catalogo_producto.nombre_comercial}"
+        return f"{self.inv_materia_prima.materia_prima.nombre} para {self.lote_prod.catalogo_producto.nombre_comercial}"
 
 class Prod_Inv_Producto(ModeloBase):
     lote_prod = models.ForeignKey(
         Produccion,
         on_delete=models.DO_NOTHING,
         verbose_name="Lote producto",
+        null=True,
         related_name='productos_consumidos'
     )
     producto = models.ForeignKey(
         Inv_Producto,   # Ajusta el import según tu proyecto
         on_delete=models.DO_NOTHING,
+        null=True, blank=True,
         verbose_name="Producto"
     )
     almacen = models.ForeignKey(
         Almacen,
         on_delete=models.DO_NOTHING,
-        null=True,
+        null=True, blank=True,
         verbose_name="Almacén del producto"
     )
     cantidad_producto = models.DecimalField(
@@ -269,10 +269,14 @@ class Prod_Inv_Producto(ModeloBase):
         related_name="productos_produccion"
     )
 
+    def save(self, *args, **kwargs):
+        print(f"En el save: {args} {kwargs}")
+        super().save(*args, **kwargs)
+        print("Despues del super")
+
     def __str__(self):
-        return f"{self.producto.nombre_comercial} para {self.lote_prod.lote}"
+        return f"{self.producto.producto.nombre_comercial} para {self.lote_prod.lote}"
     
->>>>>>> b3a13e9d1af2a4ce802bb186d222263e582aeb58
 class ParametroPrueba(models.Model):
     """Catálogo de parámetros que se miden en las pruebas químicas"""
     UNIDADES_MEDIDA = [

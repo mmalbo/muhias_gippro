@@ -236,3 +236,294 @@ def registrar_lote_envasado(request, solicitud_pk):
         'form': form,
         'solicitud': solicitud
     })
+
+    @login_required
+def crear_prueba_quimicaV(request, pk):
+    produccion = get_object_or_404(Produccion, pk=pk)
+    parametros_existentes = ParametroPrueba.objects.filter(activo=True)
+
+    if produccion.pruebas_quimicas.exists():
+        return redirect('detalle_prueba_quimica', pk=pk)
+        
+    if request.method == 'POST':
+        # Capturar datos del formulario principal
+        fecha_prueba = request.POST.get('fecha_prueba')
+        fecha_vencimiento = request.POST.get('fecha_vencimiento') or None
+        observaciones = request.POST.get('observaciones', '')
+        
+        # Validar fecha de prueba
+        if not fecha_prueba:
+            messages.error(request, 'La fecha de prueba es obligatoria')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
+        
+        # Validar que haya al menos un parametro
+        tiene_parametros = False
+        for key in request.POST.keys():
+            if key.startswith('parametro_'):
+                tiene_parametros = True
+                break
+        
+        if not tiene_parametros:
+            messages.error(request, 'Debe agregar al menos un parámetro para la prueba')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
+
+        try:
+            # Usar transaccion para asegurar consistencia
+            with transaction.atomic():
+                # Crear la prueba quimica
+                prueba = PruebaQuimica.objects.create(
+                    nomenclador_prueba=f"{produccion.lote}-{produccion.catalogo_producto.nombre_comercial}",
+                    produccion=produccion,
+                    fecha_prueba=fecha_prueba,
+                    fecha_vencimiento=fecha_vencimiento,
+                    observaciones=observaciones,
+                    estado="En Proceso",  # Establecer estado aqui
+                    # usuario=request.user
+                )
+
+                # Contador de parametros procesados
+                parametros_procesados = 0
+                errores_validacion = []
+                
+                # Procesar parametros dinamicos - METODO CORRECTO
+                for key in request.POST.keys():
+                    if key.startswith('parametro_'):
+                        # Extraer el indice del nombre del campo
+                        try:
+                            index = key.split('_')[1]
+                        except IndexError:
+                            continue
+                        
+                        # Obtener valores usando el indice
+                        parametro_id = request.POST.get(f'parametro_{index}')
+                        valor_medido = request.POST.get(f'valor_medido_{index}')
+
+                        # Validar que tenga valores
+                        if not parametro_id or not valor_medido:
+                            errores_validacion.append(f'Parametro {index}: Faltan datos')
+                            continue
+                        else:
+                            print(f"  ✓ Datos completos para indice {index}")
+                            
+                        parametro = ParametroPrueba.objects.filter(id=parametro_id).first()
+                        
+                        try:
+                            parametro = ParametroPrueba.objects.get(id=parametro_id)
+                            
+                        except ParametroPrueba.DoesNotExist:
+                            errores_validacion.append(f'Parámetro {index}: No existe o esta inactivo')
+                            continue
+
+                        # Validar valor segun tipo si es numerico.tipo in ['fisico', 'quimico', 'microbiologico']
+                        if parametro.tipo in ['fisico', 'quimico', 'microbiologico']:
+                            print(f"✓ Parametro no Organoleptico")
+                            try:
+                                valor_decimal = Decimal(str(valor_medido).replace(',', '.'))
+                                
+                                # Validar rangos si existen
+                                if parametro.valor_minimo is not None and valor_decimal < parametro.valor_minimo:
+                                    mensaje = f'Parametro {parametro.nombre}: Valor {valor_medido} debajo del minimo ({parametro.valor_minimo})'
+                                    errores_validacion.append(mensaje)
+                                    # Puedes decidir si continuar o no
+                                
+                                if parametro.valor_maximo is not None and valor_decimal > parametro.valor_maximo:
+                                    mensaje = f'Parámetro {parametro.nombre}: Valor {valor_medido} sobre el máximo ({parametro.valor_maximo})'
+                                    errores_validacion.append(mensaje)
+                                    # Puedes decidir si continuar o no
+                                    
+                            except (InvalidOperation, ValueError):
+                                errores_validacion.append(f'Parámetro {parametro.nombre}: Valor "{valor_medido}" no es numérico válido')
+                                continue
+                        
+                        # Crear detalle de prueba química
+                        if parametro.tipo in ['fisico', 'quimico', 'microbiologico']:
+                            DetallePruebaQuimica.objects.create( 
+                                                                prueba=prueba, 
+                                                                parametro=parametro, 
+                                                                valor_medido=Decimal(valor_medido), 
+                                                                )
+                        else:
+                            DetallePruebaQuimica.objects.create( 
+                                                                prueba=prueba,
+                                                                parametro=parametro, 
+                                                                valor_medido=valor_medido, 
+                                                                cumplimiento=False,  
+                                                                )
+                        
+                        parametros_procesados += 1
+                
+                # Verificar que se procesaron parámetros
+                if parametros_procesados == 0:
+                    raise ValueError('No se pudieron procesar parámetros. Verifique los datos.')
+                
+                # Mostrar errores de validación como advertencias
+                if errores_validacion:
+                    for error in errores_validacion:
+                        messages.warning(request, error)
+                
+                # Mensaje de éxito
+                messages.success(request, f'Prueba química creada exitosamente con {parametros_procesados} parámetros')
+                
+                # Redirigir al detalle de la prueba o a la lista
+                return redirect('detalle_prueba_quimica', pk=pk)
+                
+        except Exception as e:
+            messages.error(request, f'Error al crear la prueba: {str(e)}')
+            # Log del error
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Error crear_prueba_quimica: {str(e)}', exc_info=True)
+            
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
+    
+    # GET request - mostrar formulario
+    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+        'produccion': produccion,
+        'parametros_existentes': parametros_existentes,
+    })
+
+#Salva del crear prueba quimica
+@login_required
+def crear_prueba_quimicaO(request, pk):
+    produccion = get_object_or_404(Produccion, pk=pk)
+    parametros_existentes = ParametroPrueba.objects.filter(activo=True)
+
+    if produccion.pruebas_quimicas.exists():
+        return redirect('detalle_prueba_quimica', pk=pk)
+        
+    if request.method == 'POST':
+        # Capturar datos del formulario principal
+        fecha_prueba = request.POST.get('fecha_prueba')
+        fecha_vencimiento = request.POST.get('fecha_vencimiento') or None
+        observaciones = request.POST.get('observaciones', '')
+        
+        # Validar fecha de prueba
+        if not fecha_prueba:
+            messages.error(request, 'La fecha de prueba es obligatoria')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
+        
+        # Validar que haya al menos un parámetro
+        tiene_parametros = False
+        for key in request.POST.keys():
+            if key.startswith('parametro_'):
+                tiene_parametros = True
+                break
+        
+        if not tiene_parametros:
+            messages.error(request, 'Debe agregar al menos un parámetro para la prueba')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
+
+        try:
+            # Usar transacción para asegurar consistencia
+            with transaction.atomic():
+                # Crear la prueba química
+                prueba = PruebaQuimica.objects.create(
+                    nomenclador_prueba=f"{produccion.lote}-{produccion.catalogo_producto.nombre_comercial}",
+                    produccion=produccion,
+                    fecha_prueba=fecha_prueba,
+                    fecha_vencimiento=fecha_vencimiento,
+                    observaciones=observaciones,
+                    estado="En Proceso",
+                )
+                
+                # Contador de parámetros procesados
+                parametros_procesados = 0
+                errores_validacion = []
+                
+                # Procesar parámetros dinámicos
+                for key in request.POST.keys():
+                    if key.startswith('parametro_'):
+                        # Extraer el índice
+                        index = key.split('_')[1]
+                        
+                        # Obtener valores
+                        parametro_id = request.POST.get(f'parametro_{index}')
+                        valor_medido = request.POST.get(f'valor_medido_{index}')
+                        
+                        if not parametro_id or not valor_medido:
+                            errores_validacion.append(f'Parámetro {index}: Faltan datos')
+                            continue
+                        
+                        try:
+                            parametro = ParametroPrueba.objects.get(id=parametro_id)
+                            
+                        except ParametroPrueba.DoesNotExist:
+                            errores_validacion.append(f'Parámetro {index}: No existe')
+                            continue
+
+                        # Procesar según el tipo de parámetro
+                        if parametro.tipo == 'organoleptico':
+                            # Para organolépticos, el valor será 'true' o 'false'
+                            cumplimiento = valor_medido.lower() == 'true'
+                            
+                            DetallePruebaQuimica.objects.create(
+                                prueba=prueba,
+                                parametro=parametro,
+                                valor_medido=str(cumplimiento),
+                                cumplimiento=cumplimiento,
+                            )
+                            
+                        else:
+                            # Para otros tipos
+                            try:
+                                valor_decimal = Decimal(str(valor_medido).replace(',', '.'))
+                                
+                                # Validar rangos si existen
+                                if parametro.valor_minimo is not None and valor_decimal < parametro.valor_minimo:
+                                    errores_validacion.append(f'{parametro.nombre}: Valor debajo del mínimo')
+                                
+                                if parametro.valor_maximo is not None and valor_decimal > parametro.valor_maximo:
+                                    errores_validacion.append(f'{parametro.nombre}: Valor sobre el máximo')
+                                    
+                            except (InvalidOperation, ValueError):
+                                errores_validacion.append(f'{parametro.nombre}: Valor no es numérico válido')
+                                continue
+                            
+                            DetallePruebaQuimica.objects.create(
+                                prueba=prueba,
+                                parametro=parametro,
+                                valor_medido=valor_medido,
+                            )
+                        
+                        parametros_procesados += 1
+                
+                # Verificar que se procesaron parámetros
+                if parametros_procesados == 0:
+                    raise ValueError('No se pudieron procesar parámetros')
+                
+                # Mostrar errores de validación
+                if errores_validacion:
+                    for error in errores_validacion:
+                        messages.warning(request, error)
+                
+                # Mensaje de éxito
+                messages.success(request, f'Prueba creada con {parametros_procesados} parámetros')
+                return redirect('detalle_prueba_quimica', pk=pk)
+                
+        except Exception as e:
+            messages.error(request, f'Error al crear la prueba: {str(e)}')
+            return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+                'produccion': produccion,
+                'parametros_existentes': parametros_existentes,
+            })
+    
+    # GET request
+    return render(request, 'produccion/prueba_quimica/crear_prueba_quimica.html', {
+        'produccion': produccion,
+        'parametros_existentes': parametros_existentes,
+    })

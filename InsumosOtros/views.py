@@ -150,12 +150,13 @@ def importar(request):
                 imported_data = Dataset().load(file.read(), format=format)
 
                 for data in imported_data:
+                    codigo = str(data[0]).strip() if data[0] is not None else None
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Asegúrate de que sea un string
                     descripcion = str(data[2]).strip() if data[2] is not None else None
                     costo = str(data[3]).strip() if data[3] is not None else None
                     almacen = str(data[4]).strip() if data[4] is not None else None
                     cantidad = str(data[5]).strip() if data[5] is not None else None                  
-                    if not all([nombre, descripcion, costo, almacen]):
+                    if not all([codigo, nombre, descripcion, costo, almacen]):
                         print(f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         messages.error(request, f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         return redirect('InsumosOtros:importar_insumos')
@@ -190,11 +191,13 @@ def importar(request):
                         cantidad = 0
                     
                     try:
-                        insumo, created_ins = InsumosOtros.objects.update_or_create(                    
-                            nombre=nombre,
-                            descripcion=descripcion,
-                            costo=costo, 
-                            estado = "en_almacen",
+                        insumo, created_ins = InsumosOtros.objects.update_or_create(
+                                nombre=nombre,
+                                defaults={
+                                    'descripcion':descripcion,
+                                    'costo':costo,
+                                    'codigo': codigo,
+                                }
                         )
                         insumo.clean()
                         insumo.save()

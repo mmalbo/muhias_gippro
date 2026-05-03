@@ -14,8 +14,6 @@
                         <p><strong>Código:</strong> {{ insumo.codigo }}</p>
                         <p><strong>Estado:</strong> {{ insumo.estado }}</p>
                         <p><strong>Nombre:</strong>{{ insumo.nombre }}</p>
-                        <p><strong>Almacén:</strong>{{ insumo.almacen }}</p>
-                        <p><strong>Cantidad alamacenada:</strong> {{ insumo.cantidad_almacen }}</p>
                         <p><strong>Costo:</strong> {{ insumo.costo }}</p>
                         <p><strong>Descripción:</strong> {{ insumo.descripcion }}</p>
 
@@ -24,10 +22,9 @@
                 </div>
                    
                 <div class="button-container" style="margin-top: 20px;text-align: center;">
-                    <a href="{% url 'insumos_update' insumo.pk %}" class="btn btn-warning">Editar</a>
-                    <a href="{% url 'insumos_list' %}" class="btn btn-secondary">Volver a la Lista</a>
+                    <a href="{% url 'insumos_editar' insumo.pk %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'list_insumos' %}" class="btn btn-secondary">Volver</a>
                 </div>
-<br>
             </div> <!-- Cierre de col-sm-12 col-lg-12 -->
         </div> <!-- Cierre de container-fluid -->
     </div> <!-- Cierre de content-page -->
