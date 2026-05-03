@@ -31,8 +31,8 @@ def ajuste_inv_prod(request, inv_prod):
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
-                origen=inv_prod_o.almacen,
-                destino=inv_prod_o.almacen,
+                origen=inv_prod_o.almacen.nombre,
+                destino=inv_prod_o.almacen.nombre,
                 almacen = inv_prod_o.almacen
             )
             print()
@@ -102,8 +102,8 @@ def ajuste_inv_mp(request, inv_mp):
             vale = Vale_Movimiento_Almacen(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
-                origen=inv_mat_prima.almacen,
-                destino=inv_mat_prima.almacen,
+                origen=inv_mat_prima.almacen.nombre,
+                destino=inv_mat_prima.almacen.nombre,
                 almacen = inv_mat_prima.almacen
             )
             form.save()
@@ -168,8 +168,8 @@ def ajuste_inv_env(request, inv_ee):
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
-                origen=inv_env.almacen,
-                destino=inv_env.almacen,
+                origen=inv_env.almacen.nombre,
+                destino=inv_env.almacen.nombre,
                 almacen = inv_env.almacen
             )
             form.save()
@@ -232,8 +232,8 @@ def ajuste_inv_ins(request, inv_ins):
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
-                origen=inv_insT.almacen,
-                destino=inv_insT.almacen,
+                origen=inv_insT.almacen.nombre,
+                destino=inv_insT.almacen.nombre,
                 almacen = inv_insT.almacen
             )
             form.save()

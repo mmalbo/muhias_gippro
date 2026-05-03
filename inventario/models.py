@@ -60,6 +60,7 @@ class Inv_Mat_Prima(ItemInventarioBase):
 
     def __str__(self):
         return f'{self.materia_prima.nombre} en {self.almacen.nombre}'
+        #return self.id
 
 class Inv_Producto(ItemInventarioBase):
     lote = models.CharField(

@@ -47,11 +47,11 @@ class MateriaPrima(ModeloBase):
         null=False
     )
 
-    concentracion = models.IntegerField(
+    concentracion = models.DecimalField(
         null=True,
         blank=True,
         default=0, #Valorar ue  100
-        verbose_name="Concentración",
+        verbose_name="Concentración", decimal_places=2, max_digits=6,
     )
 
     costo = models.FloatField(
@@ -101,7 +101,7 @@ class MateriaPrima(ModeloBase):
     def get_hoja_seguridad_name(self):
         return self.hoja_seguridad.name if self.hoja_seguridad else ''
 
-    def save(self, *args, **kwargs):
+    """ def save(self, *args, **kwargs):
         # Actualizar choices antes de guardar
         #if not self.codigo:
         self._meta.get_field('tipo_materia_prima').choices = obtener_tipos_materia_prima()
@@ -113,7 +113,7 @@ class MateriaPrima(ModeloBase):
             else:
                 self.codigo = codigo
                 break
-        super().save(*args, **kwargs)
+        super().save(*args, **kwargs) """
     
     def clean(self):
         if self.costo < 0:

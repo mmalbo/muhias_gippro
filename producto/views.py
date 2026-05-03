@@ -215,7 +215,7 @@ def importar(request):
 
                     almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
                     if almacen_obj is None:
-                        print("No existe el almacen")
+                        print(f"No existe el almacen {almacen}")
                         messages.error(request,
                                        f"Fila {i}: No existe el almacén  '{str(data[Col_Almacen]).strip()}' en el nomenclador")
                         return redirect('importarProducto')
@@ -284,7 +284,7 @@ def importar(request):
                     print(f"Formato: {formato_o}")
 
                     #cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
-                    
+                    print(f"Datos: {nombre} {codigo} {costo} {codigo_3l}")
                     try:
                         producto, created_prod = Producto.objects.update_or_create(
                                 nombre_comercial=nombre,

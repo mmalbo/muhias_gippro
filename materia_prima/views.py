@@ -54,14 +54,16 @@ class ListMateriaPrimaView(LoginRequiredMixin, ListView):
 
 @login_required
 def listMateriasPrimas(request):
+    print("Estoy en listar")
     almacen_id = request.GET.get('almacen')
     producto_id = request.GET.get('producto')
     
     almacen = None
     if request.user.groups.filter(name='Almaceneros').exists():
         almacen = Almacen.objects.filter(responsable=request.user).first()
-
-    materias_primas = Inv_Mat_Prima.objects.select_related('materia_prima', 'almacen')
+    #select_related('materia_prima', 'almacen')
+    print(f"Llegue a la consulta:")
+    materias_primas = Inv_Mat_Prima.objects.all()
     
     if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
@@ -85,7 +87,7 @@ def listMateriasPrimas(request):
         'almacenes':almacenes,
         'productos':productos,
         'almacen_id':almacen_id,
-        'producto_id':producto_id,
+        #'producto_id':producto_id,
         'almacen':almacen,
         'total_productos':total_productos,
         'es_admin': request.user.groups.filter(name='Presidencia-Admin').exists(),
@@ -158,14 +160,16 @@ class CreateImportView(LoginRequiredMixin, CreateView):
 
 class CreateImportCostoView(LoginRequiredMixin, CreateView):
     model = MateriaPrima
-    form_class = MateriaPrimaCostoForm
+    form_class =MateriaPrimaCostoForm
     template_name = 'materia_prima/import_costo_form.html'
     success_url = '/materia_prima/'
     success_message = "Se ha actualizado correctamente el costo de las materias primas."
 
 @login_required
 def importar(request):
+    print("Importar")
     if request.method == 'POST':
+        print("En post de importar")
         file = request.FILES.get('excel')
         No_fila = 0
         materia_existentes = []
@@ -175,11 +179,14 @@ def importar(request):
             return redirect('materia_prima:importarMateriasPrimas')
 
         try:
+            print("En el try")
             with (transaction.atomic()):
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
-
+                print(imported_data)
                 for data in imported_data:
+                    print("Estoy en el for")
+                    codigo = str(data[0]).strip() if data[0] is not None else None
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Asegúrate de que sea un string
                     unidad = str(data[2]).strip() if data[2] is not None else None
                     concentracion = str(data[3]).strip() if data[3] is not None else None
@@ -188,36 +195,49 @@ def importar(request):
                     tipo_materia_prima = str(data[6]).strip() if data[6] is not None else None
                     almacen = str(data[7]).strip() if data[7] is not None else None
                     cantidad = str(data[8]).strip() if data[8] is not None else None
-
-                    if not all([nombre, concentracion,  conformacion, unidad, costo, almacen]):
+                    print("Completo el analisis de la fila")
+                    if not all([codigo, nombre, concentracion,  conformacion, unidad, costo, almacen]):
                         print(f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         messages.error(request, f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         return redirect('materia_prima:importarMateriasPrimas')
+                    else:
+                        print("Todas columnas OK")
 
                     if len(nombre) > 255:
                         messages.error(request,
                                        f"Fila {No_fila + 1}: El nombre de la materia prima no puede exceder 255 caracteres.")
                         return redirect('materia_prima:importarMateriasPrimas')
+                    else:
+                        print("nombre < 255")
 
                     if len(unidad) > 10:
                         messages.error(request,
                                        f"Fila {No_fila + 1}: La unidad de medida no puede exceder 10 caracteres.")
                         return redirect('materia_prima:importarMateriasPrimas')
+                    else:
+                        print("longitud de unidad < 10")
 
                     if len(conformacion) > 50:
                         messages.error(request,
                                        f"Fila {No_fila + 1}: La conformación no puede exceder 50 caracteres.")
                         return redirect('materia_prima:importarMateriasPrimas')
+                    else:
+                        print("Conformacion < 50")
 
-                    if not concentracion.isdigit() or int(concentracion) <= 0:
+                    #concentracion.isdigit() or 
+                    if float(concentracion) <= 0:
                         messages.error(request,
                                        f"Fila {No_fila + 1}: 'Concentración' debe ser un número entero mayor que cero.")
                         return redirect('materia_prima:importarMateriasPrimas')
+                    else:
+                        print("Concentracion > 0")
                     
                     if not re.match(r'^-?\d+(\.\d+)?$', costo) or float(costo) <= 0:
                         messages.error(request,
                                        f"Fila {No_fila + 1}: 'Costo' debe ser un número decimal válido mayor que cero.")
                         return redirect('materia_prima:importarMateriasPrimas')
+                    else:
+                        print("costo es dígito y mayor que cero")
 
                     almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
                     if almacen_obj is None:
@@ -228,23 +248,36 @@ def importar(request):
                     else:
                         print(f"Almacen {almacen_obj.nombre}")
 
+                    print(costo)
+                    print("---------")
+                    print(concentracion)
                     costo = float(costo)  # Convertimos a entero después de la validación
-                    concentracion = int(concentracion)  # Convertimos a entero después de la validación
-
+                    concentracionD = decimal.Decimal('0.00')
+                    
+                    concentracionD = decimal.Decimal(str(concentracion))
+                    print(concentracionD)
                     if not cantidad:
                         cantidad = 0
-                    
+                    print("pase las validaciones")
                     try:
+                        print(f"en el try de crear los objetos {codigo}")
                         materia_prima, created_mp = MateriaPrima.objects.update_or_create(                    
                             nombre=nombre,
                             defaults={
                             'unidad_medida': unidad,
                             'tipo_materia_prima' : tipo_materia_prima,
                             'conformacion' : conformacion,
-                            'concentracion' : concentracion,
+                            'concentracion' : concentracionD,
                             'costo' : costo,
+                            'codigo' : codigo
                             }
                         )
+                        
+
+                        if created_mp:
+                            print("Creada MP")
+                        else:
+                            print("No creada")
 
                         materia_prima.clean()  # Valida los datos antes de guardar
                         materia_prima.save()

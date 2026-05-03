@@ -13,7 +13,7 @@ urlpatterns = [
     path('solicitudes/<uuid:pk>/cancelar/', views.cancelar_solicitud, name='cancelar_solicitud'),
     #path('solicitudes/<uuid:pk>/registrar-lote/', views.registrar_lote_envasado, name='registrar_lote_envasado'),
 
-    # APIs AJAX - ¡Estas URLs son necesarias!
+    # APIs AJAX - Â¡Estas URLs son necesarias!
     path('api/detalle-lote/', views.obtener_detalle_lote, name='detalle_lote'),
     path('api/detalle-envase/', views.obtener_detalle_envase, name='detalle_envase'),
     path('api/detalle-insumo/', views.obtener_detalle_insumo, name='detalle_insumo'),
