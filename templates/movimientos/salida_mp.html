@@ -26,7 +26,7 @@
                         <tbody>
                             {% for mp in materias_primas %}
                             <tr>
-                                <td>{{ mp.inv_materia_prima.nombre }}</td>
+                                <td>{{ mp.inv_materia_prima.materia_prima.nombre }}</td>
                                 <td>{{ mp.cantidad_materia_prima }}</td>
                                 <td>
                                     <input type="number" 

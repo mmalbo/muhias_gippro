@@ -142,7 +142,7 @@ class Produccion(ModeloBase):
         fecha_codigo = fecha_actual.strftime('%y%m%d')  # YYMMDD
         
         # 2. Obtener 3 letras del producto
-        if catalogo_producto.nombre_comercial:
+        """ if catalogo_producto.nombre_comercial:
             # Tomar las primeras 3 letras mayúsculas, eliminar espacios y caracteres especiales
             nombre = catalogo_producto.nombre_comercial.upper()
             # Filtrar solo letras
@@ -157,8 +157,15 @@ class Produccion(ModeloBase):
                 # Si no tiene letras, usar XXX
                 codigo_producto = 'XXX'
         else:
-            codigo_producto = 'XXX'
+            codigo_producto = 'XXX' """
         
+        """ if catalogo_producto.codigo_3l:
+            codigo_producto = catalogo_producto.codigo_3l
+        else:
+            codigo_producto = 'XXX' """
+        
+        codigo_producto = catalogo_producto.codigo_3l if catalogo_producto.codigo_3l else 'XXX'
+
         # 3. Obtener 4 dígitos para litros de volumen
         if cantidad_estimada is not None:
             try:
