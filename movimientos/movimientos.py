@@ -32,6 +32,10 @@ def export_vale(request, id_movimiento):
                inventarios = vale.mp_produccion.all()
                if inventarios:
                   tipo = 'Solicitud'
+               else:
+                  inventarios = vale.productos_produccion.all()
+                  if inventarios:
+                       tipo = 'SolicitudP'
    data['tipop'] = tipo
    if not inventarios:
       return HttpResponse('No se registraron movimientos de inventario con ese id')   

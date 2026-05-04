@@ -26,7 +26,7 @@
                         <tbody>
                             {% for p in productos %}
                             <tr>
-                                <td>{{ p.producto.nombre_comercial }}</td>
+                                <td>{{ p.producto.producto.nombre_comercial }}</td>
                                 <td>{{ p.cantidad_producto }}</td>
                                 <td>
                                     <input type="number" 

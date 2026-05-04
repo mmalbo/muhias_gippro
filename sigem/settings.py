@@ -122,7 +122,7 @@ WSGI_APPLICATION = 'sigem.wsgi.app'
 DATABASES = {
      'default': {
          'ENGINE': 'django.db.backends.sqlite3',
-         'NAME': BASE_DIR / 'gippro.sqlite3',
+         'NAME': BASE_DIR / 'gipproDB.sqlite3',
      }
 }
 

@@ -147,7 +147,7 @@
             {% elif data.tipop == 'productos' %}
             <tr>
                 <td> {{ item.producto.codigo_producto }} </td>
-                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item..producto.nombre_comercial }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.producto.nombre_comercial }} </td>
                 <td> {{ item.producto.formato }} </td>
                 <td> {{ item.cantidad }} </td>
                 <td> </td>
@@ -172,10 +172,23 @@
             </tr>
             {% elif data.tipop == 'Solicitud' %}
             <tr>
-                <td> {{ item.inv_materia_prima.codigo }} </td>
-                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.inv_materia_prima.nombre }} </td>
-                <td> {{ item.inv_materia_prima.unidad_medida }} </td>
+                <td> {{ item.inv_materia_prima.materia_prima.codigo }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.inv_materia_prima.materia_prima.nombre }} </td>
+                <td> {{ item.inv_materia_prima.materia_prima.unidad_medida }} </td>
                 <td> {{ item.cantidad_materia_prima }} </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+            </tr>
+            {% elif data.tipop == 'SolicitudP' %}
+            <tr>
+                <td> {{ item.producto.producto.codigo_producto }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.producto.producto.nombre_comercial }} </td>
+                <td> {{ item.producto.formato }} </td>
+                <td> {{ item.cantidad_producto }} </td>
                 <td> </td>
                 <td> </td>
                 <td> </td>

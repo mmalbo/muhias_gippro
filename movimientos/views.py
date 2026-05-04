@@ -433,9 +433,11 @@ def salida_produccion(request, vale_id):
     if mp_prod:
         produccion = get_object_or_404(Produccion, lote=mp_prod[0].lote_prod.lote)
         almacen = mp_prod[0].almacen
+        print(mp_prod[0])
     elif prod_prod:
         produccion = get_object_or_404(Produccion, lote=prod_prod[0].lote_prod.lote)
         almacen = prod_prod[0].almacen
+        print(prod_prod[0])
     #if produccion.estado == 'Planificada':
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
@@ -451,6 +453,7 @@ def salida_produccion(request, vale_id):
         vale_s = None
         if mp_prod:
             for mp in mp_prod:
+                print(f'materia prima {mp}')
                 if not vale_s:
                     vale_s = mp.vale
                 try:
@@ -462,6 +465,7 @@ def salida_produccion(request, vale_id):
                         vale=vale,  # Ejemplo: atributo fijo
                         cantidad=cantidad                        
                     )
+
                     inventario_mp = get_object_or_404(Inv_Mat_Prima,
                         materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
                     inventario_mp.cantidad = inventario_mp.cantidad - cantidad
@@ -1275,6 +1279,7 @@ def vale_detalle(request, pk):
     sol_prod_prod = vale.productos_produccion.all()
     sol_env_env = vale.env_envasado.all()
     sol_ins_env = vale.ins_envasado.all()
+
     # Preparar datos para la plantilla
     items_agrupados = []
     total_items = 0
@@ -1298,7 +1303,7 @@ def vale_detalle(request, pk):
         for prod in productos:
             items_agrupados.append({
                 'tipo': 'Producto',
-                'nombre': prod.producto.producto.nombre_comercial if prod.producto else 'Sin nombre',
+                'nombre': prod.producto.nombre_comercial if prod.producto else 'Sin nombre',
                 'codigo': prod.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
                 'cantidad': prod.cantidad,
                 'unidad': getattr(prod.producto, 'unidad_medida', '') if prod.producto else '',
