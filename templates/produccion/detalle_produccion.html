@@ -83,7 +83,7 @@
                                     {% if produccion.cantidad_real %}
                                     {{ produccion.cantidad_real|floatformat:2 }} L
                                     <!-- Usar el filtro widthratio incorporado de Django -->
-                                   <!--  {% widthratio produccion.cantidad_real produccion.cantidad_estimada 100 as porcentaje %} -->
+                                    {% widthratio produccion.cantidad_real produccion.cantidad_estimada 100 as porcentaje %}
                                     <span class="badge 
                                         {% if produccion.cantidad_real >= produccion.cantidad_estimada %}bg-success
                                         {% else %}bg-warning{% endif %}">
@@ -167,7 +167,7 @@
                                     <td>${{ mp.inv_materia_prima.costo|floatformat:2 }}</td>
                                     <td>
                                         <!-- Para multiplicar: cantidad * costo_unitario -->
-                                        
+                                        <!-- {% widthratio mp.cantidad_materia_prima 1 mp.inv_materia_prima.costo as costo_total %} -->
                                         <strong>${{ costo_total|floatformat:2 }}</strong>
                                     </td>
                                 </tr>
