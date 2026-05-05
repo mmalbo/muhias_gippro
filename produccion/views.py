@@ -1078,8 +1078,9 @@ class EditarProduccionView(LoginRequiredMixin, View):
             
         for mp in materias_primas_actuales:
             # Obtener inventario actual
+            print(mp)
             inventario = Inv_Mat_Prima.objects.filter(
-                materia_prima=mp.inv_materia_prima,
+                materia_prima=mp.inv_materia_prima.materia_prima,
                 almacen=mp.almacen
             ).first()
         
@@ -1091,13 +1092,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 'id': str(mp.id),  # ID de Prod_Inv_MP
                 'inventario_id': str(mp.inv_materia_prima.id) if mp.inv_materia_prima else None,  # ID de Inv_Mat_Prima
                 'materia_prima_id': str(materia_prima_obj.id),  # ID de MateriaPrima
-                'materia_prima_nombre': materia_prima_obj.nombre,
+                'materia_prima_nombre': materia_prima_obj.materia_prima.nombre,
                 'cantidad': float(mp.cantidad_materia_prima),
                 'almacen_id': str(mp.almacen.id),
                 'almacen_nombre': mp.almacen.nombre,
-                'unidad_medida': materia_prima_obj.unidad_medida,
-                'costo_unitario': float(materia_prima_obj.costo),
-                'costo_total': float(mp.cantidad_materia_prima) * materia_prima_obj.costo,
+                'unidad_medida': materia_prima_obj.materia_prima.unidad_medida,
+                'costo_unitario': float(materia_prima_obj.materia_prima.costo),
+                'costo_total': float(mp.cantidad_materia_prima) * materia_prima_obj.materia_prima.costo,
                 'inventario_disponible': float(inventario.cantidad) if inventario else 0,
             }
         
@@ -1111,10 +1112,12 @@ class EditarProduccionView(LoginRequiredMixin, View):
             
         for pp in productos_prod_actuales:
             # Obtener inventario actual
+            #print(f"pp:{pp.formato}")
             inventario = Inv_Producto.objects.filter(
-                producto=pp.producto,
+                producto=pp.producto.producto,
                 almacen=pp.almacen
             ).first()
+
         
             # IMPORTANTE: mp.inv_materia_prima es el objeto Inv_Mat_Prima
             # Necesitamos acceder a materia_prima (el objeto MateriaPrima) a través de él
@@ -1128,10 +1131,10 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 'cantidad': float(pp.cantidad_producto),
                 'almacen_id': str(pp.almacen.id),
                 'almacen_nombre': pp.almacen.nombre,
-                'unidad_medida': pp.producto.producto.formato.unidad_medida if pp.producto.producto.formato else 'unidades',
+                'unidad_medida': pp.producto.formato.unidad_medida if pp.producto.formato else 'unidades',
                 'costo_unitario': float(producto_prod_obj.costo),
-                'costo_total': float(pp.cantidad_producto) * producto_prod_obj.costo,
-                'inventario_disponible': float(inventario.cantidad) if inventario else 0,
+                'costo_total': float(pp.cantidad_producto) * float(producto_prod_obj.costo),
+                'inventario_disponible': float(pp.producto.cantidad) if pp.producto else 0,
             }
         
             productos.append(producto_data)
@@ -2225,6 +2228,8 @@ def concluir_prueba(request, pk):
     observaciones_generales = request.POST.get('observaciones_generales', '')
     almacen_destino_id = request.POST.get('almacen_destino')
 
+    print(decision_final)
+
     # Validaciones
     if not decision_final:
         messages.error(request, 'Debe seleccionar una decisión final.')
@@ -2247,29 +2252,50 @@ def concluir_prueba(request, pk):
             if prueba.estado == 'Aprobada':
                 prueba.resultado_final = True
                 prueba.produccion.estado = 'Concluida-Satisfactoria'
-                prueba.produccion.save()
-                # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
-                almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
-                vale = Vale_Movimiento_Almacen.objects.create(
+                tipo = 'Producción terminada'
+            elif prueba.estado == 'Rechazada':
+                prueba.resultado_final = False
+                prueba.produccion.estado = 'Concluida-Rechazada'
+                tipo = 'Producción rechazada'
+                print(prueba.produccion.estado)
+            prueba.produccion.save() 
+            # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
+            almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
+            vale = Vale_Movimiento_Almacen.objects.create(
                     origen = prueba.produccion.planta.nombre,
                     almacen = almacen_destino,
                     destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,
-                    tipo = 'Producción terminada',
+                    tipo = tipo,
                     estado='confirmado'
-                )
+            )
                 
-                #Este es el movimiento especifico del producto
-                Movimiento_Prod.objects.create(
+            #Este es el movimiento especifico del producto
+            formato = Formato.objects.filter(capacidad = 0).first()
+
+            nuevo_prod, created = Inv_Producto.objects.get_or_create(
+                almacen = almacen_destino,
+                cantidad = 0,
+                lote = prueba.produccion.lote,
+                producto = prueba.produccion.catalogo_producto,
+                estado = 'inventario' if prueba.estado == 'Aprobada' else 'no conforme',
+                formato = formato
+            )
+
+            print(nuevo_prod)
+            print(vale)
+            print(prueba.produccion.cantidad_real)
+            print(prueba.produccion.lote)
+
+            Movimiento_Prod.objects.create(
                     vale=vale,
-                    producto_id=prueba.produccion.catalogo_producto.id,
+                    producto=nuevo_prod,
                     cantidad=prueba.produccion.cantidad_real,
                     lote=prueba.produccion.lote
-                )    
-            elif prueba.estado == 'Rechazada':
-                prueba.resultado_final = False
-                prueba.produccion.estado = 'Concluida-Rechazada'
-                prueba.produccion.save() 
+            )
+
+            print("Creo el movimiento")
+
             prueba.observaciones = observaciones_generales
             #prueba.evaluado_por = request.user
             prueba.fecha_aprobacion = timezone.now()
@@ -2309,6 +2335,7 @@ def concluir_prueba(request, pk):
         })    
 
     except Exception as e:
+        print(str(e))
         return JsonResponse({
             'success': False,
             'message': f'Error al concluir la prueba: {str(e)}'
