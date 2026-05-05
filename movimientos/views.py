@@ -1057,7 +1057,7 @@ def entrada_producto(request, pk):
                     print(inv.producto)
                     # if inv.prod
                     inventario_in, created = Inv_Producto.objects.get_or_create(
-                        lote=inv.lote, producto=inv.producto, almacen=almacen)
+                        lote=inv.lote, producto=inv.producto.producto, almacen=almacen)
                     if created:
                         inventario_in.cantidad = cantidad
                         inventario_in.save()
@@ -1158,7 +1158,7 @@ def movimiento_list(request):
 
 def recepciones_pendientes_list(request):
     rec_pendientes = Adquisicion.objects.filter(registrada=False).all()
-    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado', tipo__in=['Producción terminada', 'Devolución', 'Transferencia'])
+    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado', tipo__in=['Producción terminada', 'Devolución', 'Transferencia', 'Producción rechazada'])
     return render(request, 'movimientos/recepciones_list.html', {
         'rec_pendientes': rec_pendientes,
         'mov_pendientes': mov_pendientes

@@ -2228,6 +2228,8 @@ def concluir_prueba(request, pk):
     observaciones_generales = request.POST.get('observaciones_generales', '')
     almacen_destino_id = request.POST.get('almacen_destino')
 
+    print(decision_final)
+
     # Validaciones
     if not decision_final:
         messages.error(request, 'Debe seleccionar una decisión final.')
@@ -2250,29 +2252,50 @@ def concluir_prueba(request, pk):
             if prueba.estado == 'Aprobada':
                 prueba.resultado_final = True
                 prueba.produccion.estado = 'Concluida-Satisfactoria'
-                prueba.produccion.save()
-                # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
-                almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
-                vale = Vale_Movimiento_Almacen.objects.create(
+                tipo = 'Producción terminada'
+            elif prueba.estado == 'Rechazada':
+                prueba.resultado_final = False
+                prueba.produccion.estado = 'Concluida-Rechazada'
+                tipo = 'Producción rechazada'
+                print(prueba.produccion.estado)
+            prueba.produccion.save() 
+            # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
+            almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
+            vale = Vale_Movimiento_Almacen.objects.create(
                     origen = prueba.produccion.planta.nombre,
                     almacen = almacen_destino,
                     destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,
-                    tipo = 'Producción terminada',
+                    tipo = tipo,
                     estado='confirmado'
-                )
+            )
                 
-                #Este es el movimiento especifico del producto
-                Movimiento_Prod.objects.create(
+            #Este es el movimiento especifico del producto
+            formato = Formato.objects.filter(capacidad = 0).first()
+
+            nuevo_prod, created = Inv_Producto.objects.get_or_create(
+                almacen = almacen_destino,
+                cantidad = 0,
+                lote = prueba.produccion.lote,
+                producto = prueba.produccion.catalogo_producto,
+                estado = 'inventario' if prueba.estado == 'Aprobada' else 'no conforme',
+                formato = formato
+            )
+
+            print(nuevo_prod)
+            print(vale)
+            print(prueba.produccion.cantidad_real)
+            print(prueba.produccion.lote)
+
+            Movimiento_Prod.objects.create(
                     vale=vale,
-                    producto_id=prueba.produccion.catalogo_producto.id,
+                    producto=nuevo_prod,
                     cantidad=prueba.produccion.cantidad_real,
                     lote=prueba.produccion.lote
-                )    
-            elif prueba.estado == 'Rechazada':
-                prueba.resultado_final = False
-                prueba.produccion.estado = 'Concluida-Rechazada'
-                prueba.produccion.save() 
+            )
+
+            print("Creo el movimiento")
+
             prueba.observaciones = observaciones_generales
             #prueba.evaluado_por = request.user
             prueba.fecha_aprobacion = timezone.now()
@@ -2312,6 +2335,7 @@ def concluir_prueba(request, pk):
         })    
 
     except Exception as e:
+        print(str(e))
         return JsonResponse({
             'success': False,
             'message': f'Error al concluir la prueba: {str(e)}'
