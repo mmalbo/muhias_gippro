@@ -4,6 +4,7 @@ from bases.bases.models import ModeloBase
 from nomencladores.almacen.models import Almacen
 #from produccion.envasado.models import Envasado
 from materia_prima.models import MateriaPrima
+from inventario.models import Inv_Envase, Inv_Insumos, Inv_Mat_Prima, Inv_Producto
 from producto.models import Producto
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros as Insu
@@ -307,7 +308,7 @@ class Vale_Salida_Almacen_Produccion(ModeloBase):
 
 #Relación mucho a mucho de vale con materia prima 
 class Movimiento_MP(MovimientoBase):
-    materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.PROTECT,
+    materia_prima = models.ForeignKey(Inv_Mat_Prima, on_delete=models.PROTECT,
         verbose_name="Materia prima",
         null=True
     )
@@ -335,7 +336,7 @@ class Movimiento_EE(MovimientoBase):
 
 #Relación mucho a mucho de vale con producto     
 class Movimiento_Prod(MovimientoBase):
-    producto = models.ForeignKey(Producto, on_delete=models.PROTECT,
+    producto = models.ForeignKey(Inv_Producto, on_delete=models.PROTECT,
         verbose_name="Productos",
         null=True, blank=False,
     )

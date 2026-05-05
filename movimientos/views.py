@@ -127,13 +127,16 @@ class CrearSalidaView(CreateView):
                 )
                 
             elif tipo == 'producto':
+                print(f"prod: {item_data['item_id']}")
+                inv = Inv_Producto.objects.filter(id=item_data['item_id'])[0]
+                print(inv)
                 Movimiento_Prod.objects.create(
                     vale=vale,
                     producto_id=item_data['item_id'],
                     cantidad=cantidad,
                     lote=item_data.get('lote', '')
                 )
-                
+                print("producto")
             elif tipo == 'envase':
                 ee = EnvaseEmbalaje.objects.get_or_create(
                         id=item_data['item_id'])[0]
@@ -466,16 +469,15 @@ def salida_produccion(request, vale_id):
                         cantidad=cantidad                        
                     )
 
-                    inventario_mp = get_object_or_404(Inv_Mat_Prima,
-                        materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
-                    inventario_mp.cantidad = inventario_mp.cantidad - cantidad
-                    inventario_mp.save()
+                    mp.inv_materia_prima.cantidad = mp.inv_materia_prima.cantidad - cantidad
+                    mp.inv_materia_prima.save()
                 except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}")
                     pass
                 mp.vale.estado = 'despachado'
                 mp.vale.save()
         if prod_prod:
+            print("Productos")
             for p in prod_prod:
                 if not vale_s:
                     vale_s = p.vale
@@ -483,17 +485,20 @@ def salida_produccion(request, vale_id):
                     field_name = str(p.producto.id)
                     cantidad = decimal.Decimal('0.00')
                     cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+                    
+                    print(p.producto)
                     Movimiento_Prod.objects.create(
                         producto=p.producto,
                         vale=vale,  # Ejemplo: atributo fijo
                         cantidad=cantidad                        
                     )
-                    inventario_p = get_object_or_404(Inv_Producto,
-                        producto=p.producto.id, almacen=almacen.id)
-                    inventario_p.cantidad = inventario_p.cantidad - cantidad
-                    inventario_p.save()
+                    print("Creo el movimiento prod")
+                    """ inventario_p = get_object_or_404(Inv_Producto,
+                        producto=p.producto.id, almacen=almacen.id) """
+                    p.producto.cantidad = p.producto.cantidad - cantidad
+                    p.producto.save()
                 except Exception as e: #(ValueError, TypeError):
-                    print(f"Error...{e}")
+                    print(f"Error MovInv...{e}")
                     pass
                 p.vale.estado = 'despachado'
                 p.vale.save()    
@@ -1303,7 +1308,7 @@ def vale_detalle(request, pk):
         for prod in productos:
             items_agrupados.append({
                 'tipo': 'Producto',
-                'nombre': prod.producto.nombre_comercial if prod.producto else 'Sin nombre',
+                'nombre': prod.producto.producto.nombre_comercial if prod.producto else 'Sin nombre',
                 'codigo': prod.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
                 'cantidad': prod.cantidad,
                 'unidad': getattr(prod.producto, 'unidad_medida', '') if prod.producto else '',
