@@ -685,7 +685,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
             except Inv_Producto.DoesNotExist as e:
                 raise ValueError(f"Producto con ID '{producto_id}' no existe en inventario")
             except ValueError as e:
-                print(f"Error de validación producto {i}: {e}")
+                print(f"Error de validacin producto {i}: {e}")
                 raise
             except Exception as e:
                 print(f"Error inesperado producto {i}: {e}")
@@ -2257,7 +2257,6 @@ def concluir_prueba(request, pk):
                 prueba.resultado_final = False
                 prueba.produccion.estado = 'Concluida-Rechazada'
                 tipo = 'Producción rechazada'
-                print(prueba.produccion.estado)
             prueba.produccion.save() 
             # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
             almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
@@ -2282,19 +2281,12 @@ def concluir_prueba(request, pk):
                 formato = formato
             )
 
-            print(nuevo_prod)
-            print(vale)
-            print(prueba.produccion.cantidad_real)
-            print(prueba.produccion.lote)
-
             Movimiento_Prod.objects.create(
                     vale=vale,
                     producto=nuevo_prod,
                     cantidad=prueba.produccion.cantidad_real,
                     lote=prueba.produccion.lote
             )
-
-            print("Creo el movimiento")
 
             prueba.observaciones = observaciones_generales
             #prueba.evaluado_por = request.user
@@ -2313,21 +2305,6 @@ def concluir_prueba(request, pk):
                             continue
 
             prueba.save() 
-        """ if prueba.resultado_final == False:
-
-            prod_proceso = Produccion.objects.create(
-                lote=lote_final,
-                catalogo_producto=catalogo_producto_instance,
-                prod_result=product,
-                cantidad_estimada=Decimal(produccion_data['cantidad_estimada']),
-                costo=prueba.produccion.costo,#Decimal(produccion_data['costo']),                
-                planta=prueba.produccion.planta,
-                estado='Planificada'
-            ) """
-        # Mensaje de éxito
-        #messages.success(request, f'Prueba {decision_final.lower()} correctamente.')
-        # Redirigir a la página de detalle //redirect('detalle_prueba_quimica', pk=prueba.produccion.id)
-        #return redirect('produccion_list')
         return JsonResponse({
             'success': True,
             'message': f'Prueba {prueba.estado.lower()} correctamente.',
@@ -2335,18 +2312,10 @@ def concluir_prueba(request, pk):
         })    
 
     except Exception as e:
-        print(str(e))
         return JsonResponse({
             'success': False,
             'message': f'Error al concluir la prueba: {str(e)}'
         }, status=500)    
-    """ except Exception as e:
-        messages.error(request, f'Error al concluir la prueba: {str(e)}')
-        return render(request, 'produccion/prueba_quimica/detalle_prueba_quimica.html', {
-            'prueba': prueba,
-            'parametros': prueba.detalles.all(),
-            'error': True
-        }) """
 
 @login_required
 def calcular_resultados_prueba(request, prueba_id):
