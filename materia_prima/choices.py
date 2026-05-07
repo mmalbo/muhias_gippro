@@ -9,6 +9,7 @@ ESTADOS = [
     ('produccion', _('Producción')),
     ('inventario', _('Inventario')),
     ('disponibleV', _('Disponible Venta')),
+    ('noconforme', _('No conforme')),
     ('reservada', _('Reservada')),
     ('vendida', _('Vendida')),
     ('entregada', _('Entregada')),

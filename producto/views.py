@@ -83,6 +83,8 @@ def listProductos(request):
 
     inv_productos = Inv_Producto.objects.select_related('producto', 'almacen')
     
+    inv_productos = inv_productos.filter(estado='inventario')
+    
     if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
             inv_productos = inv_productos.filter(almacen=almacen_id)
