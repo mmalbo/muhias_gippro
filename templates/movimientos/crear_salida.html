@@ -581,7 +581,7 @@ $('#btn-agregar-carrito').click(function(e) {
     
     // Verificar si ya existe en el carrito
     const existeIndex = carrito.findIndex(item => 
-        item.item_id === itemSeleccionado.id && 
+        item.id === itemSeleccionado.id && 
         item.tipo === itemSeleccionado.tipo &&
         item.lote === (itemSeleccionado.lote || '')
     );

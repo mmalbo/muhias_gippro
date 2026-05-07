@@ -317,7 +317,7 @@ class Movimiento_MP(MovimientoBase):
 
     def __str__(self):
         tipo = 'Entrada' if self.vale.entrada else 'Salida'
-        nombre = self.materia_prima.nombre if self.materia_prima else 'Sin materia prima'
+        nombre = self.materia_prima.materia_prima.nombre if self.materia_prima else 'Sin materia prima'
         return f'{tipo} de {nombre} en {self.vale.almacen}'
 
 #Relación mucho a mucho de vale con envase y embalaje 
