@@ -1185,7 +1185,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
         # Procesar materias primas enviadas
         try:
             materias_primas_nuevas = self.procesar_materias_primas(request.POST)
-            productos_data = self.procesar_productos(request.POST)
+            #productos_data = self.procesar_productos(request.POST)
         except ValueError as e:
             return JsonResponse({'success': False, 'errors': str(e)})
 
@@ -1197,9 +1197,9 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     produccion.cantidad_estimada = Decimal(editar_data['cantidad_estimada'])
                 
                 # 2. Calcular nuevo costo total
-                costo_total = sum(Decimal(str(mp['costo'])) for mp in materias_primas_nuevas) + \
+                """ costo_total = sum(Decimal(str(mp['costo'])) for mp in materias_primas_nuevas) + \
                 sum(Decimal(str(prod['costo'])) for prod in productos_data)
-                produccion.costo = costo_total
+                produccion.costo = costo_total """
                 
                 # 3. Obtener materias primas actuales
                 materias_actuales = Prod_Inv_MP.objects.filter(lote_prod=produccion)
@@ -1207,7 +1207,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 
                 # 4. Identificar IDs de materias primas nuevas
                 ids_nuevos_mp = [mp.get('id') for mp in materias_primas_nuevas if mp.get('id')]
-                ids_nuevos_pp = [pp.get('id') for pp in productos_data if pp.get('id')]
+                #ids_nuevos_pp = [pp.get('id') for pp in productos_data if pp.get('id')]
 
                 vale_s = None
                 vale_d = None
@@ -1235,7 +1235,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                         mp_actual.save()
 
                 # 5. Eliminar las que ya no están, se crea un vale de devolución
-                for pp_actual in productos_actuales:
+                """ for pp_actual in productos_actuales:
                     if str(pp_actual.id) not in ids_nuevos_pp:
                         if not vale_d_p:
                             vale_d_p = Vale_Movimiento_Almacen.objects.create(
@@ -1253,7 +1253,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 vale=vale_d_p
                             )
                         pp_actual.cantidad_producto = 0
-                        pp_actual.save()
+                        pp_actual.save() """
                 
                 # 6. Actualizar o crear nuevas materias primas
                 for mp_data in materias_primas_nuevas:
@@ -1344,23 +1344,23 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     inventario_mp.save()
                 
                 # 6. Actualizar o crear nuevos productos
-                for pp_data in productos_data:
+                """ for pp_data in productos_data:
                     producto_obj = get_object_or_404(Producto, id=pp_data['producto'])
                     almacen_obj = get_object_or_404(Almacen, id=pp_data['almacen'])
                     # Obtener inventario
                     inventario_pp = Inv_Mat_Prima.objects.filter(
                         producto=producto_obj,
                         almacen=almacen_obj
-                    ).first()
+                    ).first() """
                     
-                    if not inventario_pp:
+                """ if not inventario_pp:
                         raise ValueError(f'No hay inventario de {producto_obj.nombre_comercial} en {almacen_obj.nombre}')
                     
                     nueva_cantidad = Decimal(str(pp_data['cantidad']))
                     cantidad_anterior = Decimal('0')
-                            
+                     """        
                     # Verificar si es una actualización o creación
-                    if pp_data.get('id'):  # Actualizar existente
+                """ if pp_data.get('id'):  # Actualizar existente
                         pp_existente = Prod_Inv_Producto.objects.get(id=pp_data['id'])
                         cantidad_anterior = pp_existente.cantidad_producto
                         diferencia = nueva_cantidad - cantidad_anterior
@@ -1410,9 +1410,9 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     else:  # Crear nueva
                         if inventario_pp.cantidad < nueva_cantidad:
                             raise ValueError(f'Inventario insuficiente de {producto_obj.nombre_comercial}')
-                        
+                     """    
                         # Crear o reutilizar vale
-                        if not vale_s_p:
+                """     if not vale_s_p:
                             vale_s_p = Vale_Movimiento_Almacen.objects.create(
                                 tipo='Solicitud',
                                 entrada=False,
@@ -1429,7 +1429,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                             almacen=almacen_obj,                            
                         )
                     
-                    inventario_pp.save()
+                    inventario_pp.save() """
                 
                 # Guardar producción
                 produccion.save()
@@ -1510,7 +1510,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
         
         return materias_primas
 
-    def procesar_materias_primas(self, post_data):
+    def procesar_productos(self, post_data):
         """Procesa las materias primas del formulario"""
         materias_primas = []
         
@@ -2243,15 +2243,19 @@ def concluir_prueba(request, pk):
     try:
         with transaction.atomic():
             # Actualizar prueba
+            cantidad = 0
             prueba.estado = decision_final
             if prueba.estado == 'Aprobada':
                 prueba.resultado_final = True
                 prueba.produccion.estado = 'Concluida-Satisfactoria'
                 tipo = 'Producción terminada'
+                estado='confirmado'
             elif prueba.estado == 'Rechazada':
                 prueba.resultado_final = False
                 prueba.produccion.estado = 'Concluida-Rechazada'
                 tipo = 'Producción rechazada'
+                estado='rechazado'
+                cantidad = prueba.produccion.cantidad_real
             prueba.produccion.save() 
             # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
             almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
@@ -2260,19 +2264,19 @@ def concluir_prueba(request, pk):
                     almacen = almacen_destino,
                     destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,
-                    tipo = 'Producción terminada',
-                    estado='confirmado'
-                )
+                    tipo = tipo,
+                    estado=estado
+            )
                 
             #Este es el movimiento especifico del producto
             formato = Formato.objects.filter(capacidad = 0).first()
 
             nuevo_prod, created = Inv_Producto.objects.get_or_create(
                 almacen = almacen_destino,
-                cantidad = 0,
+                cantidad = cantidad,
                 lote = prueba.produccion.lote,
                 producto = prueba.produccion.catalogo_producto,
-                estado = 'inventario' if prueba.estado == 'Aprobada' else 'no conforme',
+                estado = 'inventario' if prueba.estado == 'Aprobada' else 'noconforme',
                 formato = formato
             )
 

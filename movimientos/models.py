@@ -79,6 +79,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
             ('cancelado', 'Cancelado'),
             ('despachado', 'Despachado'),
             ('recibido', 'Recibido'),
+            ('rechazado', 'Rechazado'),
         ],
         default='borrador',
         verbose_name="Estado del vale"
