@@ -76,20 +76,17 @@ class CrearSalidaView(CreateView):
                 
                 # Procesar el carrito desde el formulario
                 carrito_data = self.request.POST.get('carrito_data')
-                print(carrito_data)
                 if not carrito_data or carrito_data == '[]':
                     messages.error(self.request, 'Debe agregar al menos un item a la salida')
                     return self.form_invalid(form)
                 
                 # Parsear el carrito
                 carrito = json.loads(carrito_data)
-                print(carrito)
                 # Guardar el vale primero para tener un ID
                 vale.save()
                 # Crear los movimientos para cada item del carrito
                 for item in carrito:
                     self.crear_movimiento_item(vale, item)
-                print("salio del crear item")
 
                 # Limpiar el carrito de la sesión si existe
                 if 'carrito_salida' in self.request.session:
@@ -119,19 +116,15 @@ class CrearSalidaView(CreateView):
         """Crea un movimiento específico según el tipo de item"""
         tipo = item_data['tipo']
         cantidad = item_data['cantidad']
-        print(f'tipo en crear item: {tipo}')
         try:
             if tipo == 'materia_prima':
-                print(f"mp: {item_data['item_id']}")
                 Movimiento_MP.objects.create(
                     vale=vale,
                     materia_prima_id=item_data['item_id'],
                     cantidad=cantidad,
                     lote=item_data.get('lote', '')
                 )
-                print(f"Creo movimiento de la matria prima {item_data['item_id']}")
             elif tipo == 'producto':
-                print(f"prod: {item_data['item_id']}")
                 inv = Inv_Producto.objects.filter(id=item_data['item_id'])
                 Movimiento_Prod.objects.create(
                     vale=vale,
@@ -228,22 +221,24 @@ def buscar_items_almacen(request):
         
 
     if tipo == 'envase' or not tipo:
-       from inventario.models import Inv_Envase  # Ajusta según tu app
+        from inventario.models import Inv_Envase  # Ajusta según tu app
         
-       query = Inv_Envase.objects.filter(
+        query = Inv_Envase.objects.filter(
             almacen_id=almacen_id,
             cantidad__gt=0
         )
         
-       if term:
+        if term:
             query = query.filter(
                 envase__tipo_envase_embalaje__nombre__icontains=term
             )
-        
-       items.extend([{
+
+        print(query)
+
+        items.extend([{
             'id': item.envase.id,
-            'tipo': 'envase',
-            'nombre': '',
+            'tipo': item.envase.tipo_envase_embalaje.nombre,
+            'nombre': item.envase.nombre,
             'codigo': item.envase.codigo_envase,
             'cantidad_disponible': float(item.cantidad),
             'unidad': getattr(str(item.envase), 'formato', ''),
@@ -1028,13 +1023,17 @@ def entrada_producto(request, pk):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
-        return redirect('producto_list')  # Redirigir a página de éxito        
+        return redirect('producto_list')  # Redirigir a página de éxito
+    tipo = 'Entrada'
+    origen = vale_v.almacen.nombre if vale_v.almacen else ''
+    if vale_v.tipo == 'Producción terminada' or vale_v.tipo == 'Producción rechazada':
+        origen = vale_v.origen
     almacen = Almacen.objects.filter(nombre=vale_v.destino)[0] 
     inv_prod = vale_v.movimientos_productos.all()
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen.nombre if vale_v.almacen else '',
+                origen = origen,
                 destino = almacen.nombre,
                 estado = 'confirmado',
                 entrada=True,
@@ -1166,6 +1165,7 @@ def recepciones_pendientes_list(request):
 def solicitudes_pendientes_list(request):
     sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False, estado='confirmado')
     sol_envasado = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud envasado', despachado=False, estado='confirmado')
+    
     return render(request, 'movimientos/solicitudes_list.html', {
         'sol_pendientes': sol_pendientes, 'sol_envasado': sol_envasado
     })
@@ -1308,10 +1308,10 @@ def vale_detalle(request, pk):
             items_agrupados.append({
                 'tipo': 'Producto',
                 'nombre': prod.producto.producto.nombre_comercial if prod.producto else 'Sin nombre',
-                'codigo': prod.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
+                'codigo': prod.producto.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
                 'cantidad': prod.cantidad,
                 'unidad': getattr(prod.producto, 'unidad_medida', '') if prod.producto else '',
-                'lote': prod.lote or '',
+                'lote': prod.producto.lote or '',
                 'costo': prod.costo_unitario
             })
             total_items += 1

@@ -87,7 +87,7 @@ def listProductos(request):
     
     if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
-            inv_productos = inv_productos.filter(almacen=almacen_id)
+            inv_productos = inv_productos.filter(almacen=almacen)
     else:
         if almacen:
             inv_productos = inv_productos.filter(almacen=almacen)

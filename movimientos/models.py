@@ -38,6 +38,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
                       ('Solicitud','Solicitud'),
                       ('Solicitud envasado','Solicitud envasado'),
                       ('Producción terminada','Producción terminada'),
+                      ('Producción rechazada','Producción rechazada'),
                       ('Conduce','Conduce'),
                       ('Venta','Venta'),
                       ('I+D','I+D'),

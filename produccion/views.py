@@ -414,8 +414,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             tipo='Solicitud',
                             entrada=False,
                             almacen=almacen_obj,
-                            origen=almacen_obj.nombre,
-                            destino=planta_instance.nombre,
+                            origen='Producción en ' + planta_instance.nombre,
+                            destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
                             estado='confirmado'
                         )
@@ -465,8 +465,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             tipo='Solicitud',
                             entrada=False,
                             almacen=almacen_obj,
-                            origen=almacen_obj.nombre,
-                            destino=planta_instance.nombre,
+                            origen='Producción en ' + planta_instance.nombre,
+                            destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
                             estado='confirmado'
                         )
@@ -859,6 +859,20 @@ def iniciar_produccion(request, pk):
     """View para iniciar una producción específica"""
     produccion = get_object_or_404(Produccion, pk=pk)
     
+    mp = Prod_Inv_MP.objects.filter(lote_prod=produccion)
+    prod = Prod_Inv_Producto.objects.filter(lote_prod=produccion)
+
+    print(f'{mp}')
+    print(f'{prod}')
+
+    if mp and mp[0].vale.estado == 'confirmado' or prod and prod[0].vale.estado == 'confirmado':
+        messages.warning(request, f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
+        print(f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
+        return redirect('produccion_list')
+    else:
+        print(f'{mp[0].vale.estado}')
+        print(f'{prod[0].vale.estado}')
+
     if produccion.estado == 'Planificada':
         produccion.estado = 'En proceso: Iniciando mezcla'
         produccion.save()
@@ -2228,8 +2242,6 @@ def concluir_prueba(request, pk):
     observaciones_generales = request.POST.get('observaciones_generales', '')
     almacen_destino_id = request.POST.get('almacen_destino')
 
-    print(decision_final)
-
     # Validaciones
     if not decision_final:
         messages.error(request, 'Debe seleccionar una decisión final.')
@@ -2265,7 +2277,7 @@ def concluir_prueba(request, pk):
             # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
             almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
             vale = Vale_Movimiento_Almacen.objects.create(
-                    origen = prueba.produccion.planta.nombre,
+                    origen = tipo + ' en ' + prueba.produccion.planta.nombre,
                     almacen = almacen_destino,
                     destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,

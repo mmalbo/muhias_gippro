@@ -53,7 +53,7 @@ def export_vale(request, id_movimiento):
       data['orden'] = vale.orden_No
       data['lote'] = vale.lote_No
       data['tipoi'] = vale.tipo.upper()
-      data['descripcion'] = vale.descripcion
+      data['descripcion'] = vale.descripcion if vale.descripcion else ''
       if vale.transportista:
          data['nombre_transportista'] = vale.transportista
          data['ci_transportista'] = vale.transportista_cI

@@ -73,22 +73,17 @@
     <table border="1" style="border-collapse: collapse;">
         <tbody>
             <tr>
-                {% if data.tipoi == 'AJUSTE DE INVENTARIO' %}
-                    <td colspan="4" style="text-align: left;" class="first-td">Causa <br>
-                        {{data.descripcion}}
-                    </td>
-                {% else %}
-                    <td colspan="4" style="text-align: left;" class="first-td">Suministrador <br></td>
-                {% endif %}
+                <td colspan="4" style="text-align: left;" class="first-td">Observaciones <br>
+                        - {{data.descripcion}}
+                </td>
             </tr>
             <tr>
-                <td rowspan="2" class="first-td"><strong>DESTINO./ PROCED.</strong></td>
-                <td ><strong>Origen:</strong>  {{ data.origen }}</td>
+                <td colspan="2"><strong>Origen:</strong>  {{ data.origen }}</td>
                 <td >Centro de Costo</td>
                 <td >Código</td>
             </tr>
             <tr>
-                <td ><strong>Destino:</strong>  {{ data.destino }}</td>
+                <td colspan="2"><strong>Destino:</strong>  {{ data.destino }}</td>
                 <td >Producto </td>
                 <td >Otros </td>
             </tr>
@@ -120,9 +115,9 @@
             {% for item in inventarios %}
             {% if data.tipop == 'materias primas' %}
             <tr>
-                <td> {{ item.materia_prima.codigo }} </td>
-                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.materia_prima.nombre }} </td>
-                <td> {{ item.materia_prima.unidad_medida }} </td>
+                <td> {{ item.materia_prima.materia_prima.codigo }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.materia_prima.materia_prima.nombre }} </td>
+                <td> {{ item.materia_prima.materia_prima.unidad_medida }} </td>
                 <td> {{ item.cantidad }} </td>
                 <td> </td>
                 <td> </td>
@@ -146,8 +141,8 @@
             </tr>
             {% elif data.tipop == 'productos' %}
             <tr>
-                <td> {{ item.producto.codigo_producto }} </td>
-                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.producto.nombre_comercial }} </td>
+                <td> {{ item.producto.producto.codigo_producto }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.producto.producto.nombre_comercial }} </td>
                 <td> {{ item.producto.formato }} </td>
                 <td> {{ item.cantidad }} </td>
                 <td> </td>
