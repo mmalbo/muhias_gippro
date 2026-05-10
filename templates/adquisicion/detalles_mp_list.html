@@ -1,120 +1,161 @@
 {% extends 'base/base.html' %}
+{% load static %}
+{% load adquisicion_filters %}
 
 {% block contenido %}
-    <div class="wrapper">
-        <div class="content-page">
-            <div class="container-fluid">
-                <div class="col-sm-12 col-lg-12">
-                    <h4 class="card-title">{{adquisicion}}</h4>
+<div class="wrapper">
+    <div class="content-page">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="card-title mb-0">{{ adquisicion }}</h4>
+                            <span class="badge {% if adquisicion.estado == 'pendiente' %}bg-secondary
+                                              {% elif adquisicion.estado == 'recibido_parcial' %}bg-warning
+                                              {% elif adquisicion.estado == 'completado' %}bg-success
+                                              {% else %}bg-danger{% endif %}">
+                                {{ adquisicion.get_estado_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Información general de la compra -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless">
+                                        <tr><th>Fecha compra:</th><td>{{ adquisicion.fecha_compra|date:"d/m/Y" }}</td></tr>
+                                        <tr><th>Almacén destino:</th><td>{{ adquisicion.almacen }}</td></tr>
+                                        <tr><th>Importada:</th><td>{{ adquisicion.importada|yesno:"Sí,No" }}</td></tr>
+                                        <tr><th>Factura:</th>
+                                            <td>{% if adquisicion.factura %}<a href="{{ adquisicion.factura.url }}" target="_blank">Ver factura</a>{% else %}No adjunta{% endif %}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless">
+                                        <tr><th>Progreso recepción:</th>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-info" role="progressbar" 
+                                                         style="width: {{ adquisicion.progreso_recepcion|floatformat:0 }}%;" 
+                                                         aria-valuenow="{{ adquisicion.progreso_recepcion|floatformat:0 }}" 
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                        {{ adquisicion.progreso_recepcion|floatformat:0 }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr><th>Observaciones:</th><td>{{ adquisicion.observaciones|default:"-" }}</td></tr>
+                                    </table>
+                                </div>
+                            </div>
 
-                    {% if messages %}
-                        <script>
-                            {% for message in messages %}
-                                Swal.fire({
-                                    icon: '{{ message.tags }}',  // 'success', 'error', 'warning', etc.
-                                    title: '{{ message }}',
-                                    showConfirmButton: true
-                                });
-                            {% endfor %}
-                        </script>
-                    {% endif %}
-                </div>
-                <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table data-table table-striped">
-                        <thead>
-                        <tr class="ligth">
-                            <th style="width: 50%">Materia prima</th>
-                            <th style="width: 15%">Cantidad</th>
-                            <th style="width: 35%">Almacén</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for det in detalles %}
-                            <tr>
-                                <td>{{ det.materia_prima }}</td>
-                                <td>{{ det.cantidad }}</td>
-                                <td>{{ det.adquisicion.almacen }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                        <tfoot>
-                        <tr>
-                            <th style="width: 50%">Materia prima</th>
-                            <th style="width: 15%">Cantidad</th>
-                            <th style="width: 35%">Almacén</th>
-                        </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <!-- Agrega este código en la sección donde quieras mostrar el modal -->
-        <div id="materia_prima_modal" class="modal" style="text-align: left" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <span class="close-button">&times;</span>
-                    <div class="modal-header">
-                        <h2>Almacén: <strong><span id="modalCodigoMateriaPrima"></span></strong></h2>
-                    </div>
-                    <div style="margin-left: 1rem;">
-                        <strong><p>Listado de materias primas asociadas:</p></strong>
-                    </div>
-                    <ul id="almacenes-list"></ul>
-                    <div class="modal-footer">
-                        <button type="button" onclick="closeModal()"
-                                class="btn btn-secondary"
-                                data-bs-dismiss="modal">
-                            Cerrar
-                        </button>
+                            <!-- Tabla de materias primas -->
+                            <h5 class="mb-3">Materias Primas</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered" id="detallesTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Materia Prima</th>
+                                            <th>Cantidad pedida</th>
+                                            <th>Costo unitario</th>
+                                            <th>Costo total</th>
+                                            <th>Cantidad recibida</th>
+                                            <th>Pendiente</th>
+                                            <th>Observaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detalle in detalles %}
+                                        <tr>
+                                            <td>
+                                                <a href="#" class="ver-materia" data-id="{{ detalle.materia_prima.id }}" data-bs-toggle="modal" data-bs-target="#materiaModal">
+                                                    {{ detalle.materia_prima.nombre }}
+                                                </a>
+                                            </td>
+                                            <td>{{ detalle.cantidad|floatformat:2 }}</td>
+                                            <td>${{ detalle.costo_unitario|default:detalle.materia_prima.costo|floatformat:2 }}</td>
+                                            <td>${{ detalle.cantidad|multiply:detalle.costo_unitario|default:detalle.materia_prima.costo }}</td>
+                                            <td>{{ detalle.cantidad_recibida|default:"0"|floatformat:2 }}</td>
+                                            <td>{{ detalle.cantidad_pendiente|floatformat:2 }}</td>
+                                            <td>{{ detalle.observaciones|default:"-"|truncatechars:50 }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="7" class="text-center">No hay materias primas registradas</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'compras_mp_list' %}" class="btn btn-secondary">Volver al listado</a>
+                                {% if adquisicion.puede_editarse %}
+                                <a href="{% url 'compra_edit' adquisicion.id %}" class="btn btn-primary">Editar compra</a>
+                                {% endif %}
+                                {% if adquisicion.estado != 'completado' %}
+                                <a href="{% url 'recepcion_parcial' adquisicion.id %}" class="btn btn-success">Registrar recepción</a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const showAlmacenesLinks = document.querySelectorAll('.show_materias_primas');
-            const modal = document.getElementById('materia_prima_modal');
-            const closeButton = document.getElementsByClassName('close-button')[0];
+<!-- Modal para mostrar detalles de la materia prima -->
+<div class="modal fade" id="materiaModal" tabindex="-1" aria-labelledby="materiaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="materiaModalLabel">Detalles de la Materia Prima</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="materiaDetalles">
+                    <div class="text-center">Cargando...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-            showAlmacenesLinks.forEach(function (link) {
-                link.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    const pk = this.dataset.pk;
-                    fetch(`/materia_prima/materias_primas/${pk}/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            const almacenesList = document.getElementById('almacenes-list');
-                            const modalCodigoMateriaPrima = document.getElementById('modalCodigoMateriaPrima');
-                            modalCodigoMateriaPrima.innerHTML = '';
-                            almacenesList.innerHTML = '';
-                            const codigo = document.createElement('codigo');
-                            if (data.length > 0) {
-                                data.forEach(almacen => {
-                                    const li = document.createElement('li');
-                                    li.textContent = almacen.nombre;
-                                    codigo.textContent = almacen.nombre_almacen;
-                                    almacenesList.appendChild(li);
-                                });
-                                modalCodigoMateriaPrima.appendChild(codigo);
-                            } else {
-                                almacenesList.innerHTML = 'No hay materias primas asociadas';
-                            }
-                            modal.style.display = 'block';
-                        });
-                });
-            });
-            window.addEventListener('click', function (event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            });
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.ver-materia').on('click', function(e) {
+        e.preventDefault();
+        var materiaId = $(this).data('id');
+        var modalBody = $('#materiaDetalles');
+        modalBody.html('<div class="text-center">Cargando...</div>');
+        $.ajax({
+            url: `/adquisiciones/api/materias-primas/${materiaId}/`,  // ajusta la URL a tu endpoint
+            method: 'GET',
+            success: function(data) {
+                var html = `
+                    <table class="table table-sm">
+                        <tr><th>Código:</th><td>${data.id || '-'}</td></tr>
+                        <tr><th>Nombre:</th><td>${data.nombre || '-'}</td></tr>
+                        <tr><th>Tipo:</th><td>${data.tipo || '-'}</td></tr>
+                        <tr><th>Conformación:</th><td>${data.conformacion || '-'}</td></tr>
+                        <tr><th>Unidad de medida:</th><td>${data.medida || '-'}</td></tr>
+                        <tr><th>Concentración:</th><td>${data.concentracion || '-'}</td></tr>
+                        <tr><th>Costo actual:</th><td>$${data.costo || '0'}</td></tr>
+                    </table>
+                `;
+                modalBody.html(html);
+            },
+            error: function() {
+                modalBody.html('<div class="alert alert-danger">No se pudieron cargar los detalles.</div>');
+            }
         });
-
-        function closeModal() {
-            var modal = document.getElementById("materia_prima_modal");
-            modal.style.display = "none";
-        }
-    </script>
+    });
+});
+</script>
 {% endblock %}

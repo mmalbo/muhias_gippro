@@ -84,16 +84,14 @@
                                 <td>{{ producto.producto.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
-                                        <!--<a href="{% url 'actualizar_producto' producto.producto.pk %}"
-                                           title="Editar producto" class="btn far fa-edit"></a>-->
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_staff%}
                                         <a href="{% url 'ajuste_inv_prod' producto.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
                                         {% if request.user.groups.all.0.name == 'Almaceneros'%}
                                         <a href="{% url 'ajuste_inv_prod' producto.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
-                                        {% endif %}
+                                        <!-- {% endif %} -->
                                         <a href="{% url 'detalle_producto' producto.producto.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>

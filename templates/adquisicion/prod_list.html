@@ -46,6 +46,10 @@
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'detalles_prod_list' ad.id %}" title="Ver detalles"
                                            class="btn fas fa-eye"></a>
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
+                                        <a href="{% url 'compra_producto_edit' ad.id %}"
+                                           title="Editar adquisición" class="btn far fa-edit"></a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

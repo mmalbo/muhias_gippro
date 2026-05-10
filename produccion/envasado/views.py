@@ -130,7 +130,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
     
         # Crear el vale de movimiento tipo 'Solicitud'
         vale = Vale_Movimiento_Almacen.objects.create(
-            tipo='Solicitud',
+            tipo='Solicitud envasado',
             almacen=solicitud.lote_produccion_origen.almacen,
             fecha_movimiento=solicitud.fecha_inicio or timezone.now().date(),
             suministrador=self.request.user,

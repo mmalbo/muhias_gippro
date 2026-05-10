@@ -96,12 +96,12 @@ class Adquisicion(models.Model):
     
     def progreso_recepcion(self):
         """Calcula el porcentaje de recepción"""
-        detalles = self.detalles_adquisicion.all()
-        if not detalles:
+        detalles_adq = self.detalles.all()
+        if not detalles_adq:
             return 0
         
-        total_recibido = sum(d.cantidad_recibida or 0 for d in detalles)
-        total_pedido = sum(d.cantidad for d in detalles)
+        total_recibido = sum(d.cantidad_recibida or 0 for d in detalles_adq)
+        total_pedido = sum(d.cantidad for d in detalles_adq)
         
         if total_pedido == 0:
             return 0
@@ -153,6 +153,9 @@ class DetallesAdquisicionEnvase(models.Model):
         verbose_name="Recibida en almacén",
         null=False, default=False
     )
+    cantidad_recibida = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Nueva
+    costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
 
     def __str__(self):
         return f"{self.envase_embalaje.codigo_envase} - {self.adquisicion.fecha_compra}"
@@ -173,7 +176,9 @@ class DetallesAdquisicionInsumo(models.Model):
         verbose_name="Recibida en almacén",
         null=False, default=False
     )
-
+    cantidad_recibida = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Nueva
+    costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
     def __str__(self):
         return f"{self.insumo.nombre} - {self.adquisicion.fecha_compra}"
     
@@ -189,6 +194,8 @@ class DetallesAdquisicionProducto(models.Model):
         verbose_name="Recibida en almacén",
         null=False, default=False
     )
+    cantidad_recibida = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Nueva
+    costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return f"{self.producto.nombre_comercial} - {self.adquisicion.fecha_compra}"

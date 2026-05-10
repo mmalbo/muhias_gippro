@@ -64,8 +64,6 @@ def listInsumos(request):
     productos = InsumosOtros.objects.all()
     total_productos = insumo.count()
 
-    print(insumo)
-
     context = {
         'insumos':insumo,
         'almacenes':almacenes,
