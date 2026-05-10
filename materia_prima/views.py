@@ -54,15 +54,13 @@ class ListMateriaPrimaView(LoginRequiredMixin, ListView):
 
 @login_required
 def listMateriasPrimas(request):
-    print("Estoy en listar")
     almacen_id = request.GET.get('almacen')
     producto_id = request.GET.get('producto')
     
     almacen = None
     if request.user.groups.filter(name='Almaceneros').exists():
         almacen = Almacen.objects.filter(responsable=request.user).first()
-    #select_related('materia_prima', 'almacen')
-    print(f"Llegue a la consulta:")
+
     materias_primas = Inv_Mat_Prima.objects.all()
     
     if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
@@ -167,9 +165,7 @@ class CreateImportCostoView(LoginRequiredMixin, CreateView):
 
 @login_required
 def importar(request):
-    print("Importar")
     if request.method == 'POST':
-        print("En post de importar")
         file = request.FILES.get('excel')
         No_fila = 0
         materia_existentes = []
@@ -246,9 +242,6 @@ def importar(request):
                     else:
                         print(f"Almacen {almacen_obj.nombre}")
 
-                    print(costo)
-                    print("---------")
-                    print(concentracion)
                     costo = float(costo)  # Convertimos a entero después de la validación
                     concentracionD = decimal.Decimal('0.00')
                     
@@ -256,9 +249,8 @@ def importar(request):
                     print(concentracionD)
                     if not cantidad:
                         cantidad = 0
-                    print("pase las validaciones")
+                    
                     try:
-                        print(f"en el try de crear los objetos {codigo}")
                         materia_prima, created_mp = MateriaPrima.objects.update_or_create(                    
                             nombre=nombre,
                             defaults={

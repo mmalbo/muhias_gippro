@@ -414,8 +414,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             tipo='Solicitud',
                             entrada=False,
                             almacen=almacen_obj,
-                            origen=almacen_obj.nombre,
-                            destino=planta_instance.nombre,
+                            origen='Producción en ' + planta_instance.nombre,
+                            destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
                             estado='confirmado'
                         )
@@ -465,8 +465,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             tipo='Solicitud',
                             entrada=False,
                             almacen=almacen_obj,
-                            origen=almacen_obj.nombre,
-                            destino=planta_instance.nombre,
+                            origen='Producción en ' + planta_instance.nombre,
+                            destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
                             estado='confirmado'
                         )
@@ -859,6 +859,20 @@ def iniciar_produccion(request, pk):
     """View para iniciar una producción específica"""
     produccion = get_object_or_404(Produccion, pk=pk)
     
+    mp = Prod_Inv_MP.objects.filter(lote_prod=produccion)
+    prod = Prod_Inv_Producto.objects.filter(lote_prod=produccion)
+
+    print(f'{mp}')
+    print(f'{prod}')
+
+    if mp and mp[0].vale.estado == 'confirmado' or prod and prod[0].vale.estado == 'confirmado':
+        messages.warning(request, f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
+        print(f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
+        return redirect('produccion_list')
+    else:
+        print(f'{mp[0].vale.estado}')
+        print(f'{prod[0].vale.estado}')
+
     if produccion.estado == 'Planificada':
         produccion.estado = 'En proceso: Iniciando mezcla'
         produccion.save()
@@ -1079,7 +1093,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
         for mp in materias_primas_actuales:
             # Obtener inventario actual
             inventario = Inv_Mat_Prima.objects.filter(
-                materia_prima=mp.inv_materia_prima,
+                materia_prima=mp.inv_materia_prima.materia_prima,
                 almacen=mp.almacen
             ).first()
         
@@ -1091,13 +1105,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 'id': str(mp.id),  # ID de Prod_Inv_MP
                 'inventario_id': str(mp.inv_materia_prima.id) if mp.inv_materia_prima else None,  # ID de Inv_Mat_Prima
                 'materia_prima_id': str(materia_prima_obj.id),  # ID de MateriaPrima
-                'materia_prima_nombre': materia_prima_obj.nombre,
+                'materia_prima_nombre': materia_prima_obj.materia_prima.nombre,
                 'cantidad': float(mp.cantidad_materia_prima),
                 'almacen_id': str(mp.almacen.id),
                 'almacen_nombre': mp.almacen.nombre,
-                'unidad_medida': materia_prima_obj.unidad_medida,
-                'costo_unitario': float(materia_prima_obj.costo),
-                'costo_total': float(mp.cantidad_materia_prima) * materia_prima_obj.costo,
+                'unidad_medida': materia_prima_obj.materia_prima.unidad_medida,
+                'costo_unitario': float(materia_prima_obj.materia_prima.costo),
+                'costo_total': float(mp.cantidad_materia_prima) * materia_prima_obj.materia_prima.costo,
                 'inventario_disponible': float(inventario.cantidad) if inventario else 0,
             }
         
@@ -1112,7 +1126,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
         for pp in productos_prod_actuales:
             # Obtener inventario actual
             inventario = Inv_Producto.objects.filter(
-                producto=pp.producto,
+                producto=pp.producto.producto,
                 almacen=pp.almacen
             ).first()
         
@@ -1128,10 +1142,10 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 'cantidad': float(pp.cantidad_producto),
                 'almacen_id': str(pp.almacen.id),
                 'almacen_nombre': pp.almacen.nombre,
-                'unidad_medida': pp.producto.producto.formato.unidad_medida if pp.producto.producto.formato else 'unidades',
+                'unidad_medida': pp.producto.formato.unidad_medida if pp.producto.formato else 'unidades',
                 'costo_unitario': float(producto_prod_obj.costo),
-                'costo_total': float(pp.cantidad_producto) * producto_prod_obj.costo,
-                'inventario_disponible': float(inventario.cantidad) if inventario else 0,
+                'costo_total': float(pp.cantidad_producto) * float(producto_prod_obj.costo),
+                'inventario_disponible': float(pp.producto.cantidad) if pp.producto else 0,
             }
         
             productos.append(producto_data)
@@ -2260,12 +2274,13 @@ def concluir_prueba(request, pk):
             # Aquí creo vale de produccion terminada, envío solicitud de entrada a Almacen y envío notificación a Admin
             almacen_destino = get_object_or_404(Almacen, id=almacen_destino_id)
             vale = Vale_Movimiento_Almacen.objects.create(
-                    origen = prueba.produccion.planta.nombre,
+                    origen = tipo + ' en ' + prueba.produccion.planta.nombre,
                     almacen = almacen_destino,
                     destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,
                     tipo = tipo,
-                    estado=estado
+                    estado=estado,
+                    lote_No = prueba.produccion.lote
             )
                 
             #Este es el movimiento especifico del producto
@@ -2282,7 +2297,7 @@ def concluir_prueba(request, pk):
 
             Movimiento_Prod.objects.create(
                     vale=vale,
-                    producto_id=prueba.produccion.catalogo_producto.id,
+                    producto=nuevo_prod,
                     cantidad=prueba.produccion.cantidad_real,
                     lote=prueba.produccion.lote
             )

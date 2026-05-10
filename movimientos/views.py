@@ -76,20 +76,17 @@ class CrearSalidaView(CreateView):
                 
                 # Procesar el carrito desde el formulario
                 carrito_data = self.request.POST.get('carrito_data')
-                print(carrito_data)
                 if not carrito_data or carrito_data == '[]':
                     messages.error(self.request, 'Debe agregar al menos un item a la salida')
                     return self.form_invalid(form)
                 
                 # Parsear el carrito
                 carrito = json.loads(carrito_data)
-                print(carrito)
                 # Guardar el vale primero para tener un ID
                 vale.save()
                 # Crear los movimientos para cada item del carrito
                 for item in carrito:
                     self.crear_movimiento_item(vale, item)
-                print("salio del crear item")
 
                 # Limpiar el carrito de la sesión si existe
                 if 'carrito_salida' in self.request.session:
@@ -102,7 +99,7 @@ class CrearSalidaView(CreateView):
                 
                 # Redirigir al detalle del vale creado
                 return redirect('movimiento_update', pk=vale.id)
-            print("Salio de with")    
+                
         except json.JSONDecodeError:
             messages.error(self.request, 'Error al procesar los datos del carrito')
             return self.form_invalid(form)
@@ -119,19 +116,15 @@ class CrearSalidaView(CreateView):
         """Crea un movimiento específico según el tipo de item"""
         tipo = item_data['tipo']
         cantidad = item_data['cantidad']
-        print(f'tipo en crear item: {tipo}')
         try:
             if tipo == 'materia_prima':
-                print(f"mp: {item_data['item_id']}")
                 Movimiento_MP.objects.create(
                     vale=vale,
                     materia_prima_id=item_data['item_id'],
                     cantidad=cantidad,
                     lote=item_data.get('lote', '')
                 )
-                print(f"Creo movimiento de la matria prima {item_data['item_id']}")
             elif tipo == 'producto':
-                print(f"prod: {item_data['item_id']}")
                 inv = Inv_Producto.objects.filter(id=item_data['item_id'])
                 Movimiento_Prod.objects.create(
                     vale=vale,
@@ -228,22 +221,22 @@ def buscar_items_almacen(request):
         
 
     if tipo == 'envase' or not tipo:
-       from inventario.models import Inv_Envase  # Ajusta según tu app
+        from inventario.models import Inv_Envase  # Ajusta según tu app
         
-       query = Inv_Envase.objects.filter(
+        query = Inv_Envase.objects.filter(
             almacen_id=almacen_id,
             cantidad__gt=0
         )
         
-       if term:
+        if term:
             query = query.filter(
                 envase__tipo_envase_embalaje__nombre__icontains=term
             )
         
-       items.extend([{
+        items.extend([{
             'id': item.envase.id,
-            'tipo': 'envase',
-            'nombre': '',
+            'tipo': item.envase.tipo_envase_embalaje.nombre,
+            'nombre': item.envase.nombre,
             'codigo': item.envase.codigo_envase,
             'cantidad_disponible': float(item.cantidad),
             'unidad': getattr(str(item.envase), 'formato', ''),
@@ -438,11 +431,9 @@ def salida_produccion(request, vale_id):
     if mp_prod:
         produccion = get_object_or_404(Produccion, lote=mp_prod[0].lote_prod.lote)
         almacen = mp_prod[0].almacen
-        print(mp_prod[0])
     elif prod_prod:
         produccion = get_object_or_404(Produccion, lote=prod_prod[0].lote_prod.lote)
         almacen = prod_prod[0].almacen
-        print(prod_prod[0])
     #if produccion.estado == 'Planificada':
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
@@ -458,7 +449,6 @@ def salida_produccion(request, vale_id):
         vale_s = None
         if mp_prod:
             for mp in mp_prod:
-                print(f'materia prima {mp}')
                 if not vale_s:
                     vale_s = mp.vale
                 try:
@@ -471,10 +461,8 @@ def salida_produccion(request, vale_id):
                         cantidad=cantidad                        
                     )
 
-                    inventario_mp = get_object_or_404(Inv_Mat_Prima,
-                        materia_prima=mp.inv_materia_prima.id, almacen=almacen.id)
-                    inventario_mp.cantidad = inventario_mp.cantidad - cantidad
-                    inventario_mp.save()
+                    mp.inv_materia_prima.cantidad = mp.inv_materia_prima.cantidad - cantidad
+                    mp.inv_materia_prima.save()
                 except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}")
                     pass
@@ -493,12 +481,12 @@ def salida_produccion(request, vale_id):
                         vale=vale,  # Ejemplo: atributo fijo
                         cantidad=cantidad                        
                     )
-                    inventario_p = get_object_or_404(Inv_Producto,
-                        producto=p.producto.id, almacen=almacen.id)
-                    inventario_p.cantidad = inventario_p.cantidad - cantidad
-                    inventario_p.save()
+                    """ inventario_p = get_object_or_404(Inv_Producto,
+                        producto=p.producto.id, almacen=almacen.id) """
+                    p.producto.cantidad = p.producto.cantidad - cantidad
+                    p.producto.save()
                 except Exception as e: #(ValueError, TypeError):
-                    print(f"Error...{e}")
+                    print(f"Error MovInv...{e}")
                     pass
                 p.vale.estado = 'despachado'
                 p.vale.save()    
@@ -607,6 +595,7 @@ def recepcion_materia_prima(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
+                origen = 'Adquisición',
                 destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Adquisición'
@@ -619,11 +608,6 @@ def recepcion_materia_prima(request, adq_id):
             cantidad = decimal.Decimal(cantidad)
             if cantidad:
                 try:
-                    Movimiento_MP.objects.create(
-                        materia_prima=inv.materia_prima,
-                        vale=vale,  
-                        cantidad=cantidad                        
-                    )
                     inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
                         materia_prima=inv.materia_prima, almacen=almacen)
                     if created:
@@ -632,6 +616,12 @@ def recepcion_materia_prima(request, adq_id):
                     else:
                         inventario_mp.cantidad = inventario_mp.cantidad + cantidad
                         inventario_mp.save()
+                    Movimiento_MP.objects.create(
+                        materia_prima=inventario_mp,
+                        vale=vale,  
+                        cantidad=cantidad                        
+                    )
+
                     if not cantidad == inv.cantidad:
                         target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
                         # Crear notificaciones para cada usuario en ese grupo
@@ -669,6 +659,7 @@ def recepcion_producto(request, adq_id):
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
                 destino = almacen.nombre,
+                origen='Adquisición',
                 entrada = True,
                 tipo = 'Adquisición'
             )
@@ -680,19 +671,21 @@ def recepcion_producto(request, adq_id):
             cantidad = decimal.Decimal(cantidad)
             if cantidad:
                 try:
-                    Movimiento_Prod.objects.create(
-                        producto=inv.producto,
-                        vale=vale,  
-                        cantidad=cantidad                        
-                    )
-                    inventario_prod, created = Inv_Producto.objects.get_or_create(
-                        producto=inv.producto, almacen=almacen)
-                    if created:
+                    inventario_prod = Inv_Producto.objects.filter(
+                        producto=inv.producto, almacen=almacen).first()
+                    if not inventario_prod:
+                        inventario_prod = Inv_Producto.objects.create(
+                            producto=inv.producto, almacen=almacen)
                         inventario_prod.cantidad = cantidad
                         inventario_prod.save()
                     else:
                         inventario_prod.cantidad = inventario_prod.cantidad + cantidad
                         inventario_prod.save()
+                    Movimiento_Prod.objects.create(
+                        producto=inventario_prod,
+                        vale=vale,  
+                        cantidad=cantidad                        
+                    )
                     if not cantidad == inv.cantidad:
                         target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
                         # Crear notificaciones para cada usuario en ese grupo
@@ -1026,17 +1019,22 @@ def entrada_producto(request, pk):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
     vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     if vale_v.estado == 'recibido':
-        return redirect('producto_list')  # Redirigir a página de éxito        
+        return redirect('producto_list')  # Redirigir a página de éxito
+    tipo = 'Entrada'
+    origen = vale_v.almacen.nombre if vale_v.almacen else ''
+    if vale_v.tipo == 'Producción terminada' or vale_v.tipo == 'Producción rechazada':
+        origen = vale_v.origen
     almacen = Almacen.objects.filter(nombre=vale_v.destino)[0] 
     inv_prod = vale_v.movimientos_productos.all()
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen.nombre if vale_v.almacen else '',
+                origen = origen,
                 destino = almacen.nombre,
                 estado = 'confirmado',
                 entrada=True,
-                tipo = 'Entrada'
+                tipo = 'Entrada',
+                lote_No = vale_v.lote_No
             )
         # Procesar cada producto
         for inv in inv_prod:
@@ -1155,7 +1153,7 @@ def movimiento_list(request):
 
 def recepciones_pendientes_list(request):
     rec_pendientes = Adquisicion.objects.filter(registrada=False).all()
-    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado', tipo__in=['Producción terminada', 'Devolución', 'Transferencia'])
+    mov_pendientes = Vale_Movimiento_Almacen.objects.filter(estado='confirmado', tipo__in=['Producción terminada', 'Devolución', 'Transferencia', 'Producción rechazada'])
     return render(request, 'movimientos/recepciones_list.html', {
         'rec_pendientes': rec_pendientes,
         'mov_pendientes': mov_pendientes
@@ -1164,6 +1162,7 @@ def recepciones_pendientes_list(request):
 def solicitudes_pendientes_list(request):
     sol_pendientes = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud', despachado=False, estado='confirmado')
     sol_envasado = Vale_Movimiento_Almacen.objects.filter(tipo='Solicitud envasado', despachado=False, estado='confirmado')
+    
     return render(request, 'movimientos/solicitudes_list.html', {
         'sol_pendientes': sol_pendientes, 'sol_envasado': sol_envasado
     })
@@ -1305,11 +1304,11 @@ def vale_detalle(request, pk):
         for prod in productos:
             items_agrupados.append({
                 'tipo': 'Producto',
-                'nombre': prod.producto.nombre_comercial if prod.producto else 'Sin nombre',
-                'codigo': prod.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
+                'nombre': prod.producto.producto.nombre_comercial if prod.producto else 'Sin nombre',
+                'codigo': prod.producto.producto.codigo if prod.producto and hasattr(prod.producto, 'codigo') else '',
                 'cantidad': prod.cantidad,
                 'unidad': getattr(prod.producto, 'unidad_medida', '') if prod.producto else '',
-                'lote': prod.lote or '',
+                'lote': prod.producto.lote or '',
                 'costo': prod.costo_unitario
             })
             total_items += 1

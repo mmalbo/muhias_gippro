@@ -16,7 +16,6 @@ from datetime import date, datetime, timezone
 
 import decimal
 
-
 def importar_productos_desde_api(request):
     url = "http://tienda.produccionesmuhia.ca/catalogo/listarGippro/"
     params = {

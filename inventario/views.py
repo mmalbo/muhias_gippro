@@ -11,7 +11,6 @@ import decimal
 # Create your views here.
 def ajuste_inv_prod(request, inv_prod):
     inv_prod_o = get_object_or_404(Inv_Producto, id=inv_prod)
-    print(inv_prod_o)
     
     almacen = Almacen.objects.first()
     if request.user.groups.first() and (request.user.groups.first().name == 'Almaceneros' or request.user.groups.first().name == 'Presidencia-Admin'):
@@ -23,37 +22,25 @@ def ajuste_inv_prod(request, inv_prod):
     if request.method == 'POST':
         nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
         viejo_cant = inv_prod_o.cantidad
-        print('Antes de form')
         form = AjusteInvProdForm(request.POST, instance=inv_prod_o, user=request.user)
         if form.is_valid():
-            print(form.cleaned_data.get('causa'))
             causa = form.cleaned_data.get('causa')
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
                 origen=inv_prod_o.almacen.nombre,
                 destino=inv_prod_o.almacen.nombre,
-                almacen = inv_prod_o.almacen
+                almacen = inv_prod_o.almacen,
+                estado='confirmado'
             )
-            print()
             form.save()
-            print('Guardada la form')
             if nuevo_cant < viejo_cant:
                 vale.entrada = False
             else:  
-                """               nuevo_cant > viejo_cant: """
-                vale.entrada = True
-                """ else:
-                messages.success(request, f'No se ha modificado la cantidad en inventario')   
-                context = {
-                    'form': form,
-                    'inv': inv_prod_o,
-                }
-                return render(request, 'inventario/actualizar_inv_prod.html', context) """ 
+                vale.entrada = True 
             vale.save()
-            ll = nuevo_cant - viejo_cant
             mov_prod = Movimiento_Prod.objects.create(
-                producto = inv_prod_o.producto,
+                producto = inv_prod_o,
                 vale = vale,
                 cantidad = nuevo_cant - viejo_cant
             )
@@ -121,13 +108,11 @@ def ajuste_inv_mp(request, inv_mp):
             print('A guardar la form')
             vale.save()
             mov_mp = Movimiento_MP.objects.create(
-                materia_prima = inv_mat_prima.materia_prima,
+                materia_prima = inv_mat_prima,
                 vale = vale,
                 cantidad = nuevo_cant - viejo_cant
             )
             mov_mp.save()
-            print(mov_mp)
-            print(mov_mp.vale)
             messages.success(request, f'Inventario de {inv_mat_prima.materia_prima.nombre} actualizado correctamente')
             return redirect('materia_prima:materia_prima_list')
         else:

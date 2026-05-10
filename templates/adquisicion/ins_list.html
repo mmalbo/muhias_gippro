@@ -46,6 +46,10 @@
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         <a href="{% url 'detalles_ins_list' ad.id %}" title="Ver detalles"
                                            class="btn fas fa-eye"></a>
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
+                                        <a href="{% url 'compra_insumo_edit' ad.id %}"
+                                           title="Editar adquisición" class="btn far fa-edit"></a>
+                                        {% endif %}                                       
                                     </div>
                                 </td>
                             </tr>
@@ -76,7 +80,7 @@
                         <h2>Almacén: <strong><span id="modalCodigoMateriaPrima"></span></strong></h2>
                     </div>
                     <div style="margin-left: 1rem;">
-                        <strong><p>Listado de materias primas asociadas:</p></strong>
+                        <strong><p>Listado de insumos asociados:</p></strong>
                     </div>
                     <ul id="almacenes-list"></ul>
                     <div class="modal-footer">

@@ -1,8 +1,14 @@
+import os
+import decimal
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, redirect, get_object_or_404
 from formtools.wizard.views import SessionWizardView
-from .forms import CompraForm, CantidadMateriasForm, MateriaPrimaForm, CantidadEnvasesForm, EnvasesForm, InsumosForm, CantidadInsumosForm, ProductosForm, CantidadProductosForm
-from .models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo, DetallesAdquisicionProducto
+from .forms import (CompraForm, CantidadMateriasForm, MateriaPrimaForm, 
+                    CantidadEnvasesForm, EnvasesForm, InsumosForm, CantidadInsumosForm, 
+                    ProductosForm, CantidadProductosForm, CompraEditForm, DetalleFormSet,
+                    DetalleEnvaseFormSet, DetalleInsumoFormSet, DetalleProductoFormSet)
+from .models import (Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, 
+                     DetallesAdquisicionInsumo, DetallesAdquisicionProducto)
 from materia_prima.models import MateriaPrima
 from envase_embalaje.models import EnvaseEmbalaje
 from InsumosOtros.models import InsumosOtros
@@ -14,7 +20,7 @@ from collections import OrderedDict
 from django.conf import settings
 from django.forms.models import modelform_factory
 from django import forms
-import os
+from django.urls import reverse_lazy
 from django.views import View
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -180,6 +186,7 @@ class CompraWizard(LoginRequiredMixin, SessionWizardView):
                         materia.save()
                 else:
                     materia = MateriaPrima.objects.create(
+                        codigo=data['codigo'],
                         nombre=data['nombre'],
                         tipo_materia_prima=data['tipo_materia_prima'],
                         conformacion=data['conformacion'],
@@ -193,6 +200,7 @@ class CompraWizard(LoginRequiredMixin, SessionWizardView):
                     adquisicion=compra,
                     materia_prima=materia,
                     cantidad=data['cantidad'],
+                    costo_unitario=materia.costo,
                 )
             # Limpiar almacenamiento
             self.storage.reset()
@@ -202,6 +210,67 @@ class CompraWizard(LoginRequiredMixin, SessionWizardView):
             print(f"Error al procesar compra: {e}")
             # Manejar el error adecuadamente
             return redirect('error_page')
+
+class CompraEditView(LoginRequiredMixin, UpdateView):
+    model = Adquisicion
+    form_class = CompraEditForm
+    template_name = 'adquisicion/compra_edit.html'
+    success_url = reverse_lazy('compras_mp_list')
+
+    def get_queryset(self):
+        # Solo permitir editar compras que estén pendientes o parcialmente recibidas
+        return super().get_queryset().filter(estado__in=['pendiente', 'recibido_parcial'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['detalle_formset'] = DetalleFormSet(self.request.POST, instance=self.object)
+        else:
+            context['detalle_formset'] = DetalleFormSet(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        detalle_formset = context['detalle_formset']
+
+        # Verificar si el formset es válido
+        if not detalle_formset.is_valid():
+            # Mostrar errores del formset
+            for form_detalle in detalle_formset:
+                for field, errors in form_detalle.errors.items():
+                    for error in errors:
+                        messages.error(self.request, f"Detalle - {field}: {error}")
+            messages.error(self.request, "Corrige los errores en los detalles de materias primas.")
+            return self.form_invalid(form)
+
+        # Guardar la compra (el form ya incluye la factura)
+        else:
+            self.object = form.save()
+            detalle_formset.instance = self.object
+            detalles_guardados=detalle_formset.save()
+
+            # Actualizar el costo de cada materia prima según el costo_unitario del detalle
+            for detalle in detalles_guardados:
+                # Verificar si el detalle tiene costo_unitario y es diferente al costo actual de la materia prima
+                if detalle.costo_unitario and detalle.materia_prima:
+                    materia_prima = detalle.materia_prima
+                    # Comparar con tolerancia para decimales
+                    if abs(materia_prima.costo - float(detalle.costo_unitario)) > 0.01:
+                        materia_prima.costo = float(detalle.costo_unitario)
+                        materia_prima.save()
+                        messages.info(
+                            self.request, 
+                            f'Costo de "{materia_prima.nombre}" actualizado de ${materia_prima.costo} a ${detalle.costo_unitario}'
+                        )
+            messages.success(self.request, 'Compra actualizada exitosamente.')
+            return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        # Mostrar errores del formulario principal
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        return super().form_invalid(form)
 
 class MateriaPrimaDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
@@ -231,10 +300,13 @@ def list_detalles_mp_adquisicion(request, id, template_name="adquisicion/detalle
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
         detalles = DetallesAdquisicion.objects.filter(adquisicion=id)
-        #.order_by('almacen')
+        context = {
+            'adquisicion': adquisicion,
+            'detalles': detalles,
+        }
     else:
         messages.error(request, "Error al acceder a esa adquisición")
-    return render(request, template_name, locals())
+    return render(request, template_name, context)
 
 # Para los envases y embalajes 
 class CompraEnvaseWizard(LoginRequiredMixin, SessionWizardView):
@@ -399,7 +471,8 @@ class CompraEnvaseWizard(LoginRequiredMixin, SessionWizardView):
                 DetallesAdquisicionEnvase.objects.create(
                     adquisicion=compra,
                     envase_embalaje=envase,
-                    cantidad=data['cantidad']
+                    cantidad=data['cantidad'],
+                    costo_unitario=envase.costo
                 )
             
             # Limpiar almacenamiento
@@ -411,14 +484,71 @@ class CompraEnvaseWizard(LoginRequiredMixin, SessionWizardView):
             # Manejar el error adecuadamente
             return redirect('error_page')
 
+class CompraEnvaseEditView(LoginRequiredMixin, UpdateView):
+    model = Adquisicion
+    form_class = CompraEditForm
+    template_name = 'adquisicion/compra_envases_edit.html'
+    success_url = reverse_lazy('compras_env_list')
+
+    def get_queryset(self):
+        # Solo compras editables
+        return super().get_queryset().filter(estado__in=['pendiente', 'recibido_parcial'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['envase_formset'] = DetalleEnvaseFormSet(self.request.POST, instance=self.object)
+            # Agrega aquí otros formsets si los tienes
+        else:
+            context['envase_formset'] = DetalleEnvaseFormSet(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        envase_formset = context['envase_formset']
+
+        if envase_formset.is_valid():
+            self.object = form.save()
+            envase_formset.instance = self.object
+            detalles_env_guardados=envase_formset.save()
+
+            for det_env in detalles_env_guardados:
+                if det_env.costo_unitario and det_env.envase_embalaje:
+                    envase_embalaje=det_env.envase_embalaje
+                    if abs(envase_embalaje.costo - float(det_env.costo_unitario)) > 0.01:
+                        envase_embalaje.costo = float(det_env.costo_unitario)
+                        envase_embalaje.save()
+                        messages.info(
+                            self.request, 
+                            f'Costo de "{envase_embalaje.nombre}" actualizado de ${envase_embalaje.costo} a ${det_env.costo_unitario}'
+                        )
+            messages.success(self.request, 'Compra actualizada exitosamente.')
+            return redirect(self.success_url)
+        else:
+            # Mostrar errores del formset
+            for formset_errors in envase_formset.errors:
+                for field, errors in formset_errors.items():
+                    for error in errors:
+                        messages.error(self.request, f"Envases - {field}: {error}")
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        return super().form_invalid(form)
+
 class EnvaseDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
             envase = EnvaseEmbalaje.objects.get(pk=pk)
-            format = str(envase.formato.capacidad) + ' ' + envase.formato.unidad_medida
+            if envase.formato:
+                format = str(envase.formato.capacidad) + ' ' + envase.formato.unidad_medida
+            else:
+                format = ''
             return JsonResponse({
                 'codigo': envase.codigo_envase,
-                'formato': format or '',
+                'formato': format,
                 'tipo': envase.tipo_envase_embalaje.nombre or '',
                 'costo': envase.costo or '',
             })
@@ -600,12 +730,14 @@ class CompraInsumoWizard(LoginRequiredMixin, SessionWizardView):
                         codigo=data['codigo'],
                         nombre=data['nombre'],
                         descripcion=data['descripcion'],
+                        costo=data['costo'],
                     )
                 
                 DetallesAdquisicionInsumo.objects.create(
                     adquisicion=compra,
                     insumo=insumo,
-                    cantidad=data['cantidad']
+                    cantidad=data['cantidad'],
+                    costo_unitario=insumo.costo
                 )
             
             # Limpiar almacenamiento
@@ -616,6 +748,73 @@ class CompraInsumoWizard(LoginRequiredMixin, SessionWizardView):
             print(f"Error al procesar compra: {e}")
             # Manejar el error adecuadamente
             return redirect('error_page')
+
+class CompraInsumoEditView(LoginRequiredMixin, UpdateView):
+    model = Adquisicion
+    form_class = CompraEditForm
+    template_name = 'adquisicion/compra_insumo_edit.html'
+    success_url = reverse_lazy('compras_ins_list')
+
+    def get_queryset(self):
+        # Solo permitir editar compras que estén pendientes o parcialmente recibidas
+        return super().get_queryset().filter(estado__in=['pendiente', 'recibido_parcial'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['insumo_formset'] = DetalleInsumoFormSet(self.request.POST, instance=self.object)
+        else:
+            context['insumo_formset'] = DetalleInsumoFormSet(instance=self.object)
+
+            # Depuración: Verificar que los costos se están cargando
+        for form in context['insumo_formset']:
+            if form.instance.id and form.instance.costo_unitario:
+                print(f"Insumo: {form.instance.insumo.nombre}, Costo: {form.instance.costo_unitario}")
+            elif form.instance.id and form.instance.insumo:
+                print(f"Insumo: {form.instance.insumo.nombre}, Costo inicial: {form.instance.insumo.costo}")
+                
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        detalle_formset = context['insumo_formset']
+
+        # Verificar si el formset es válido
+        if not detalle_formset.is_valid():
+            # Mostrar errores del formset
+            for form_detalle in detalle_formset:
+                for field, errors in form_detalle.errors.items():
+                    for error in errors:
+                        messages.error(self.request, f"Detalle - {field}: {error}")
+            messages.error(self.request, "Corrige los errores en los detalles de insumos.")
+            return self.form_invalid(form)
+
+        # Guardar la compra (el form ya incluye la factura)
+        else:
+            self.object = form.save()
+            detalle_formset.instance = self.object
+            det_ins_guardados=detalle_formset.save()
+
+            for det_ins in det_ins_guardados:
+                if det_ins.costo_unitario and det_ins.insumo:
+                    insumo = det_ins.insumo
+
+                    if abs(insumo.costo - float(det_ins.costo_unitario)) > 0.01:
+                        insumo.costo = float(det_ins.costo_unitario)
+                        insumo.save()
+                        messages.info(
+                            self.request, 
+                            f'Costo de "{insumo.nombre}" actualizado de ${insumo.costo} a ${det_ins.costo_unitario}'
+                        )
+            messages.success(self.request, 'Compra actualizada exitosamente.')
+            return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        # Mostrar errores del formulario principal
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        return super().form_invalid(form)
 
 class InsumoDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
@@ -646,7 +845,6 @@ def list_detalles_ins_adquisicion(request, id, template_name="adquisicion/detall
     else:
         messages.error(request, "Error al acceder a esa adquisición")
     return render(request, template_name, locals())
-
 
 # Para los productos
 class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
@@ -810,7 +1008,8 @@ class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
                 DetallesAdquisicionProducto.objects.create(
                     adquisicion=compra,
                     producto=producto,
-                    cantidad=data['cantidad']
+                    cantidad=data['cantidad'],
+                    costo_unitario=producto.costo
                 )
             
             # Limpiar almacenamiento
@@ -821,6 +1020,66 @@ class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
             print(f"Error al procesar compra: {e}")
             # Manejar el error adecuadamente
             return redirect('error_page')
+
+class CompraProductoEditView(LoginRequiredMixin, UpdateView):
+    model = Adquisicion
+    form_class = CompraEditForm
+    template_name = 'adquisicion/compra_producto_edit.html'
+    success_url = reverse_lazy('compras_prod_list')
+
+    def get_queryset(self):
+        # Solo permitir editar compras que estén pendientes o parcialmente recibidas
+        return super().get_queryset().filter(estado__in=['pendiente', 'recibido_parcial'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['producto_formset'] = DetalleProductoFormSet(self.request.POST, instance=self.object)
+        else:
+            context['producto_formset'] = DetalleProductoFormSet(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        detalle_formset = context['producto_formset']
+
+        # Verificar si el formset es válido
+        if not detalle_formset.is_valid():
+            # Mostrar errores del formset
+            for form_detalle in detalle_formset:
+                for field, errors in form_detalle.errors.items():
+                    for error in errors:
+                        messages.error(self.request, f"Detalle - {field}: {error}")
+            messages.error(self.request, "Corrige los errores en los detalles de productos.")
+            return self.form_invalid(form)
+
+        # Guardar la compra (el form ya incluye la factura)
+        else:
+            self.object = form.save()
+            detalle_formset.instance = self.object
+            det_prod_guardado = detalle_formset.save()
+
+            for det_prod in det_prod_guardado:
+                if det_prod.costo_unitario and det_prod.producto:
+                    producto = det_prod.producto
+
+                    if abs(producto.costo - decimal.Decimal(det_prod.costo_unitario)) > 0.01:
+                        producto.costo = decimal.Decimal(det_prod.costo_unitario)
+                        producto.save()
+                        messages.info(
+                            self.request, 
+                            f'Costo de "{producto.nombre}" actualizado de ${producto.costo} a ${det_prod.costo_unitario}'
+                        )
+                        
+            messages.success(self.request, 'Compra actualizada exitosamente.')
+            return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        # Mostrar errores del formulario principal
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        return super().form_invalid(form)
 
 class ProductoDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
@@ -843,6 +1102,7 @@ def list_prod_adquisiciones(request, template_name="adquisicion/prod_list.html")
     ).filter(num_ad__gt=0)
     return render(request, template_name, locals())
 
+@login_required
 def list_detalles_prod_adquisicion(request, id, template_name="adquisicion/detalles_prod_list.html"):
     adquisicion = get_object_or_404(Adquisicion, id=id)
     if adquisicion:
