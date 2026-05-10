@@ -1068,7 +1068,7 @@ class CompraProductoEditView(LoginRequiredMixin, UpdateView):
                         producto.save()
                         messages.info(
                             self.request, 
-                            f'Costo de "{producto.nombre}" actualizado de ${producto.costo} a ${det_prod.costo_unitario}'
+                            f'Costo de "{producto.nombre_comercial}" actualizado de ${producto.costo} a ${det_prod.costo_unitario}'
                         )
                         
             messages.success(self.request, 'Compra actualizada exitosamente.')
