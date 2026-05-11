@@ -1,5 +1,6 @@
 from django import forms
-from .models import Adquisicion
+from django.forms import inlineformset_factory,TextInput, NumberInput
+from .models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo, DetallesAdquisicionProducto
 #from django_select2.forms import Select2Widget
 from materia_prima.models import MateriaPrima
 from materia_prima.choices import obtener_tipos_materia_prima
@@ -90,6 +91,12 @@ class MateriaPrimaForm(forms.Form):
     )
     
     # Campos para nueva materia prima
+    codigo = forms.CharField(
+        label="Código de la materia prima",
+        required=False,
+        max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
     nombre = forms.CharField(
         max_length=100, 
         required=False, 
@@ -115,7 +122,7 @@ class MateriaPrimaForm(forms.Form):
         label="Unidad de medida",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    concentracion = forms.IntegerField( 
+    concentracion = forms.DecimalField( 
         required=False, 
         label="Concentración",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
@@ -125,7 +132,6 @@ class MateriaPrimaForm(forms.Form):
         label="Costo",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-
     ficha_tecnica = forms.FileField(
         required=False,
         label= "Ficha Técnica",
@@ -154,17 +160,15 @@ class MateriaPrimaForm(forms.Form):
         elif opcion == self.NEW:
             if not cleaned_data.get('nombre'):
                 self.add_error('nombre', 'El nombre es obligatorio para nuevas materias primas')
-            """ if not cleaned_data.get('codigo'):
-                self.add_error('codigo', 'El código es obligatorio para nuevas materias primas')
- """            
+            if not cleaned_data.get('codigo'):
+                self.add_error('codigo', 'El código es obligatorio para nuevas materias primas')            
             # Validar que no exista una materia prima con el mismo nombre
             nombre = cleaned_data.get('nombre')
-            #codigo = cleaned_data.get('codigo')
+            codigo = cleaned_data.get('codigo')
             if nombre and MateriaPrima.objects.filter(nombre=nombre).exists():
                 self.add_error('nombre', 'Ya existe una materia prima con este nombre')
-            """ if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
-                self.add_error('codigo', 'Ya existe una materia prima con este código')
- """        
+            if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
+                self.add_error('codigo', 'Ya existe una materia prima con este código')        
         return cleaned_data
     
 """ Para envases y embalajes """
@@ -233,14 +237,12 @@ class EnvasesForm(forms.Form):
         label="Seleccionar formato",
         widget=forms.Select(attrs={'class': 'form-select formato-select'})
     )
-
     codigo_envase = forms.CharField(
         max_length=20, 
         required=False, 
         label="Código",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-
     costo = forms.FloatField(
         required=False,
         label="Costo",
@@ -262,11 +264,15 @@ class EnvasesForm(forms.Form):
                 raise forms.ValidationError('El costo no puede ser negativo')
             
         elif opcion == self.NEW:
+            if not cleaned_data.get('codigo_envase'):
+                self.add_error('codigo_envase', 'El código es obligatorio para nuevas materias primas')            
+            codigo=cleaned_data.get('codigo_envase')
             if not cleaned_data.get('tipo_envase_embalaje'):
                 self.add_error('tipo_envase_embalaje', 'El tipo de envase es obligatorio para nuevos evases o embalajes')
             if not cleaned_data.get('formato'):
                 self.add_error('formato', 'El formato es obligatorio para nuevos eases o embalajes')
-                    
+            if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
+                self.add_error('codigo', 'Ya existe una materia prima con este código')        
         return cleaned_data
     
 """ Para insumos y otros """
@@ -318,7 +324,6 @@ class InsumosForm(forms.Form):
         label="Código",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-
     nombre = forms.CharField(
         max_length=255, 
         required=False, 
@@ -331,7 +336,6 @@ class InsumosForm(forms.Form):
         label="Descripción",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-
     costo = forms.FloatField(
         required=False,
         label="Costo",
@@ -437,28 +441,23 @@ class ProductosForm(forms.Form):
         label="Código",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-
     nombre_comercial = forms.CharField(
         max_length=255, 
         required=False, 
         label="Nombre",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    
     formato = forms.ModelChoiceField(
         queryset=Formato.objects.all(),
         required=False,
         label="Seleccionar formato",
         widget=forms.Select(attrs={'class': 'form-select formato-select'})
     )
-
     costo = forms.FloatField(
         required=False,
         label="Costo",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-
-    
     def clean(self):
         cleaned_data = super().clean()
         opcion = cleaned_data.get('opcion')
@@ -489,4 +488,85 @@ class ProductosForm(forms.Form):
                 self.add_error('codigo_producto', 'Ya existe un producto con este código')
         
         return cleaned_data
+
+# forms.py
+class CompraEditForm(forms.ModelForm):
+    class Meta:
+        model = Adquisicion
+        fields = ['fecha_compra', 'importada', 'factura', 'almacen', 'observaciones']
+        widgets = {
+            'fecha_compra': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'importada': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'factura': forms.FileInput(attrs={'class': 'form-control'}),
+            'almacen': forms.Select(attrs={'class': 'form-select'}),
+            'observaciones': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['factura'].required = False
+        self.fields['factura'].help_text = 'Dejar vacío para mantener la factura actual'
+
+DetalleFormSet = inlineformset_factory(
+    Adquisicion,
+    DetallesAdquisicion,
+    fields=('materia_prima', 'cantidad', 'costo_unitario'),
+    widgets={
+        'cantidad': NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+        'costo_unitario': NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+    },
+    extra=0,
+    can_delete=False,
+) 
+
+# Formset para DetallesAdquisicionEnvase
+DetalleEnvaseFormSet = inlineformset_factory(
+    Adquisicion,                       # modelo padre
+    DetallesAdquisicionEnvase,         # modelo hijo
+    fields=('envase_embalaje', 'cantidad', 'costo_unitario'),  # solo permitimos editar cantidad (el envase es fijo)
+    widgets={
+        'envase_embalaje': forms.HiddenInput(),  # se envía oculto, se muestra como texto
+        'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+        'costo_unitario': NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+    },
+    extra=0,
+    can_delete=False,                  # opcional: si quieres permitir eliminar, cambia a True
+)
+
+# De manera análoga, puedes crear formsets para Insumo y Producto
+class BaseInsumoFormSet(forms.BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for form in self.forms:
+            if form.instance.id and form.instance.costo_unitario is None and form.instance.insumo:
+                # Si el detalle no tiene costo_unitario, usar el del insumo
+                form.initial['costo_unitario'] = form.instance.insumo.costo
+            elif form.instance.id and form.instance.costo_unitario:
+                # Si ya tiene, usarlo
+                form.initial['costo_unitario'] = form.instance.costo_unitario
+                
+DetalleInsumoFormSet = inlineformset_factory(
+    Adquisicion, 
+    DetallesAdquisicionInsumo, 
+    fields=('insumo', 'cantidad', 'costo_unitario'), 
+    widgets={
+        'insumo': forms.HiddenInput(),  # se envía oculto, se muestra como texto
+        'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+        'costo_unitario': NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+    },
+    extra=0,
+    can_delete=False,
+)
+
+DetalleProductoFormSet = inlineformset_factory(
+    Adquisicion, 
+    DetallesAdquisicionProducto, 
+    fields=('producto', 'cantidad', 'costo_unitario'), 
+    widgets={
+        'producto': forms.HiddenInput(),  # se envía oculto, se muestra como texto
+        'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+        'costo_unitario': NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+    },
+    extra=0,
+    can_delete=False
+)   

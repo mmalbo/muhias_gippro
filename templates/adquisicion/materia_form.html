@@ -119,141 +119,117 @@
         {{ wizard.form.cantidad }}
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
-    
-    <!-- Luego tu script de inicialización -->
-    {% block javascript %}
-    {{ block.super }}
-    <script>
-    $(document).ready(function() {
-        const prefix = "{{ wizard.form.prefix }}";
-        // Busca el select cuyo nombre termine en '-materia_existente'
-        const $select = $(`select[name$="-materia_existente"]`);
-        if ($select.length) {
-            $select.select2({
-                theme: 'bootstrap-5',   // si usas Bootstrap 5 y el tema
-                width: '100%',
-                placeholder: 'Escriba para buscar...',
-                allowClear: true,
-                language: {
-                    noResults: function() {
-                        return "No se encontraron materias primas";
-                    }
-                }
-            });
-        } else {
-            console.warn('No se encontró el select con nombre terminado en -materia_existente');
-        }
-    });
-    </script>
-    {% endblock %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const prefix = "{{ wizard.form.prefix }}";
-        const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
-        const existingSection = document.getElementById('existing-section');
-        const newSection = document.getElementById('new-section');
-        const detailsCard = document.getElementById('materia-details');
-        const selectMateria = document.querySelector(`select[name="${prefix}-materia_existente"]`);
-        const costoUpdateSection = document.getElementById('costo-update-section');
-        const costoActualSpan = document.getElementById('costo-actual');
-        
-        // Función para mostrar/ocultar secciones
-        function toggleSections() {
-            const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
-            
-            if (selectedValue === 'existing') {
-                existingSection.style.display = 'block';
-                newSection.style.display = 'none';
-                detailsCard.style.display = 'block';
-                // Mostrar sección de actualización de costo si hay una materia seleccionada
-                if (selectMateria && selectMateria.value) {
-                    costoUpdateSection.style.display = 'block';
-                } else {
-                    costoUpdateSection.style.display = 'none';
-                }
-            } else {
-                existingSection.style.display = 'none';
-                newSection.style.display = 'block';
-                detailsCard.style.display = 'none';
-                costoUpdateSection.style.display = 'none';
-            }
-        }
-        
-        // Inicializar estado
-        toggleSections();
-        
-        // Escuchar cambios en los radios
-        opcionRadios.forEach(radio => {
-            radio.addEventListener('change', toggleSections);
-        });
-        
-        // Cargar detalles cuando se selecciona una materia
-        if (selectMateria) {
-            selectMateria.addEventListener('change', function() {
-                const materiaId = this.value;
-                
-                if (materiaId) {
-                    fetch(`/adquisiciones/api/materias-primas/${materiaId}/`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Error en la respuesta');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log('Datos recibidos:', data); // Para depuración
-                        
-                            // Actualizar elementos existentes en el template
-                            document.getElementById('detail-codigo').textContent = data.id || '-';
-                            document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
-                            document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
-                            document.getElementById('detail-tipo').textContent = data.tipo || '-';
-                            document.getElementById('detail-medida').textContent = data.medida || '-';
-                            // Actualizar el costo en la tarjeta de detalles
-                            const detailCosto = document.getElementById('detail-costo');
-                            if (detailCosto) {
-                                detailCosto.textContent = data.costo ? `$${data.costo}` : '-';
-                            }
-                        
-                            // Actualizar el span del costo actual en el input group
-                            if (costoActualSpan) {
-                                costoActualSpan.textContent = data.costo ? `$${data.costo}` : '-';
-                            }
-                        
-                            // Mostrar sección de actualización de costo
-                            costoUpdateSection.style.display = 'block';
-                        })
-                        .catch(error => {
-                            console.error('Error al obtener detalles:', error);
-                            alert('Error al cargar los detalles de la materia prima');
-                        });
-                } else {
-                    // Limpiar detalles si no hay selección
-                    document.getElementById('detail-concentracion').textContent = '-';
-                    document.getElementById('detail-conformacion').textContent = '-';
-                    document.getElementById('detail-tipo').textContent = '-';
-                    document.getElementById('detail-medida').textContent = '-';
-                    
-                    const detailCosto = document.getElementById('detail-costo');
-                    if (detailCosto) {
-                        detailCosto.textContent = '-';
-                    }
-                
-                    if (costoActualSpan) {
-                        costoActualSpan.textContent = '-';
-                    }
-                
-                    // Ocultar sección de actualización de costo
-                    costoUpdateSection.style.display = 'none';
-                }
-            });
-            
-            // Cargar detalles iniciales si hay una selección
-            if (selectMateria.value) {
-                selectMateria.dispatchEvent(new Event('change'));
-            }
-        }
-    });
-    </script>
+{% endblock %}
 
-    {% endblock %}
+<!-- Luego tu script de inicialización -->
+{% block javascript %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const prefix = "{{ wizard.form.prefix }}";
+    const $select = $(`select[name$="-materia_existente"]`);
+
+    // Inicializar Select2
+    if ($select.length) {
+        $select.select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Escriba para buscar...',
+            allowClear: true,
+            language: { noResults: () => "No se encontraron materias primas" }
+        });
+
+        // Escuchar el evento específico de Select2 cuando se selecciona una opción
+        $select.on('select2:select', function(e) {
+            const materiaId = e.params.data.id;
+            cargarDetallesMateria(materiaId);
+        });
+
+        // También escuchar el evento 'change' por si acaso
+        $select.on('change', function() {
+            const materiaId = $(this).val();
+            if (materiaId) cargarDetallesMateria(materiaId);
+            else limpiarDetalles();
+        });
+
+        // Si ya hay un valor seleccionado (por ejemplo, al volver atrás), cargar detalles
+        const valorInicial = $select.val();
+        if (valorInicial) {
+            cargarDetallesMateria(valorInicial);
+        }
+    } else {
+        console.warn('No se encontró el select con nombre terminado en -materia_existente');
+    }
+
+    // --- Funciones auxiliares ---
+    function cargarDetallesMateria(materiaId) {
+        if (!materiaId) return;
+        fetch(`/adquisiciones/api/materias-primas/${materiaId}/`)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Detalles recibidos:', data);
+                document.getElementById('detail-codigo').textContent = data.codigo || data.id || '-';
+                document.getElementById('detail-concentracion').textContent = data.concentracion || '-';
+                document.getElementById('detail-conformacion').textContent = data.conformacion || '-';
+                document.getElementById('detail-tipo').textContent = data.tipo || '-';
+                document.getElementById('detail-medida').textContent = data.medida || '-';
+                const detailCosto = document.getElementById('detail-costo');
+                if (detailCosto) detailCosto.textContent = data.costo ? `$${data.costo}` : '-';
+                const costoActualSpan = document.getElementById('costo-actual');
+                if (costoActualSpan) costoActualSpan.textContent = data.costo ? `$${data.costo}` : '-';
+                document.getElementById('costo-update-section').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error al cargar detalles:', error);
+                alert('No se pudieron cargar los datos de la materia prima');
+                limpiarDetalles();
+            });
+    }
+
+    function limpiarDetalles() {
+        document.getElementById('detail-codigo').textContent = '-';
+        document.getElementById('detail-concentracion').textContent = '-';
+        document.getElementById('detail-conformacion').textContent = '-';
+        document.getElementById('detail-tipo').textContent = '-';
+        document.getElementById('detail-medida').textContent = '-';
+        const detailCosto = document.getElementById('detail-costo');
+        if (detailCosto) detailCosto.textContent = '-';
+        const costoActualSpan = document.getElementById('costo-actual');
+        if (costoActualSpan) costoActualSpan.textContent = '-';
+        document.getElementById('costo-update-section').style.display = 'none';
+    }
+
+    // --- Lógica de radios (existente / nueva) ---
+    const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
+    const existingSection = document.getElementById('existing-section');
+    const newSection = document.getElementById('new-section');
+    const detailsCard = document.getElementById('materia-details');
+    const costoUpdateSection = document.getElementById('costo-update-section');
+
+    function toggleSections() {
+        const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
+        if (selectedValue === 'existing') {
+            existingSection.style.display = 'block';
+            newSection.style.display = 'none';
+            detailsCard.style.display = 'block';
+            // Mostrar sección de costo solo si hay una materia seleccionada
+            const materiaId = $select.val();
+            if (materiaId) costoUpdateSection.style.display = 'block';
+            else costoUpdateSection.style.display = 'none';
+        } else {
+            existingSection.style.display = 'none';
+            newSection.style.display = 'block';
+            detailsCard.style.display = 'none';
+            costoUpdateSection.style.display = 'none';
+        }
+    }
+
+    opcionRadios.forEach(radio => radio.addEventListener('change', toggleSections));
+    toggleSections(); // estado inicial
+});
+</script>
+{% endblock %}

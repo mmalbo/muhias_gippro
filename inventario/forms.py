@@ -162,7 +162,6 @@ class AjusteInvProdForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         self.fields['producto'].disabled = True
-        print(f'lote: {self.instance.lote}')
         self.fields['lote'].initial = self.instance.lote
         if self.user:
             if self.user.groups.filter(name='Presidencia-Admin').exists() or self.user.is_staff:

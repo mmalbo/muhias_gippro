@@ -1092,7 +1092,6 @@ class EditarProduccionView(LoginRequiredMixin, View):
             
         for mp in materias_primas_actuales:
             # Obtener inventario actual
-            print(mp)
             inventario = Inv_Mat_Prima.objects.filter(
                 materia_prima=mp.inv_materia_prima.materia_prima,
                 almacen=mp.almacen
@@ -1126,12 +1125,10 @@ class EditarProduccionView(LoginRequiredMixin, View):
             
         for pp in productos_prod_actuales:
             # Obtener inventario actual
-            #print(f"pp:{pp.formato}")
             inventario = Inv_Producto.objects.filter(
                 producto=pp.producto.producto,
                 almacen=pp.almacen
             ).first()
-
         
             # IMPORTANTE: mp.inv_materia_prima es el objeto Inv_Mat_Prima
             # Necesitamos acceder a materia_prima (el objeto MateriaPrima) a través de él
@@ -2282,7 +2279,8 @@ def concluir_prueba(request, pk):
                     destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
                     entrada = False,
                     tipo = tipo,
-                    estado=estado
+                    estado=estado,
+                    lote_No = prueba.produccion.lote
             )
                 
             #Este es el movimiento especifico del producto

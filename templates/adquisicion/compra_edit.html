@@ -1,0 +1,118 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>Editar Compra #{{ object.id }}</h3>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Errores globales -->
+                {{ form.non_field_errors }}
+                {{ detalle_formset.non_form_errors }}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.fecha_compra.label }}</label>
+                        <input type="date" name="fecha_compra" value="{{ object.fecha_compra|date:'Y-m-d' }}" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.almacen.label_tag }}
+                        {{ form.almacen }}
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.importada }}
+                    <label class="form-check-label">{{ form.importada.label }}</label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.factura.label }}</label>
+                    {{ form.factura }}
+                    {% if object.factura %}
+                        <div class="form-text">
+                            Factura actual: 
+                            <a href="{{ object.factura.url }}" target="_blank">{{ object.factura.name }}</a>
+                        </div>
+                    {% else %}
+                        <div class="form-text text-muted">No hay factura cargada actualmente.</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.observaciones.label_tag }}
+                    {{ form.observaciones }}
+                </div>
+
+                <h4 class="mt-4">Materias Primas</h4>
+                {{ detalle_formset.management_form }}
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Materia Prima</th>
+                                <th>Cantidad Pedida</th>
+                                <th>Costo Unitario</th>
+                                <th>Cantidad Recibida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form_detalle in detalle_formset %}
+                                <tr>
+                                    <!-- Campo oculto para materia_prima + display del nombre -->
+                                    <td>
+                                        {{ form_detalle.id }}
+                                        <!-- Hidden field para materia_prima (se envía el ID) -->
+                                        <input type="hidden" name="{{ form_detalle.materia_prima.html_name }}" value="{{ form_detalle.instance.materia_prima.id }}">
+                                        <!-- Mostrar el nombre como texto plano -->
+                                        {{ form_detalle.instance.materia_prima.nombre }}
+                                    </td>
+                                    <td>
+                                        {{ form_detalle.cantidad }}
+                                        {% if form_detalle.cantidad.errors %}
+                                            <div class="text-danger small">{{ form_detalle.cantidad.errors }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ form_detalle.costo_unitario }}
+                                        {% if form_detalle.costo_unitario.errors %}
+                                            <div class="text-danger small">{{ form_detalle.costo_unitario.errors }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ form_detalle.instance.cantidad_recibida|default:"0" }}
+                                    </td>
+                                </tr>
+                                {% for hidden in form_detalle.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="{% url 'compras_mp_list' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -91,56 +91,102 @@
         {{ wizard.form.cantidad }}
         <div class="form-text">Cantidad adquirida en esta compra</div>
     </div>
-    {% block javascript %}
+{% endblock %}
+    
+{% block javascript %}
     {{ block.super }}
-    <script>
-    $(document).ready(function() {
-        const prefix = "{{ wizard.form.prefix }}";
-        // Busca el select cuyo nombre termine en '-materia_existente'
-        const $select = $(`select[name$="-producto_existente"]`);
-        if ($select.length) {
-            $select.select2({
-                theme: 'bootstrap-5',   // si usas Bootstrap 5 y el tema
-                width: '100%',
-                placeholder: 'Escriba para buscar...',
-                allowClear: true,
-                language: {
-                    noResults: function() {
-                        return "No se encontraron materias primas";
-                    }
-                }
-            });
-        } else {
-            console.warn('No se encontró el select con nombre terminado en -materia_existente');
-        }
-    });
-    </script>
-    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const prefix = "{{ wizard.form.prefix }}";
+        const $select = $(`select[name$="-producto_existente"]`);
+
+        // Inicializar Select2
+        if ($select.length) {
+            $select.select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Escriba para buscar...',
+                allowClear: true,
+                language: { noResults: () => "No se encontraron productos" }
+            });
+
+            // Escuchar el evento específico de Select2 cuando se selecciona una opción
+            $select.on('select2:select', function(e) {
+                const productoId = e.params.data.id;
+                cargarDetallesProducto(productoId);
+            });
+
+            // También escuchar el evento 'change' por si acaso
+            $select.on('change', function() {
+                const productoId = $(this).val();
+                if (productoId) cargarDetallesProducto(productoId);
+                else limpiarDetalles();
+            });
+
+            // Si ya hay un valor seleccionado (por ejemplo, al volver atrás), cargar detalles
+            const valorInicial = $select.val();
+            if (valorInicial) {
+                cargarDetallesProducto(valorInicial);
+            }
+        } else {
+            console.warn('No se encontró el select con nombre terminado en -producto_existente');
+        }
+
+        // --- Funciones auxiliares ---
+        function cargarDetallesProducto(productoId) {
+            if (!productoId) return;
+            fetch(`/adquisiciones/api/producto/${productoId}/`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Detalles recibidos:', data);
+                    document.getElementById('detail-codigo').textContent = data.codigo_producto || '-';
+                    document.getElementById('detail-nombre').textContent = data.nombre_comercial || '-';
+                    document.getElementById('detail-formato').textContent = data.formato || '-';
+                    const detailCosto = document.getElementById('detail-costo');
+                    if (detailCosto) detailCosto.textContent = data.costo ? `$${data.costo}` : '-';
+                    const costoActualSpan = document.getElementById('costo-actual');
+                    if (costoActualSpan) costoActualSpan.textContent = data.costo || '-';
+                    document.getElementById('costo-update-section').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error al cargar detalles:', error);
+                    alert('No se pudieron cargar los datos del producto');
+                    limpiarDetalles();
+                });
+        }
+
+        function limpiarDetalles() {
+            document.getElementById('detail-codigo').textContent = '-';
+            document.getElementById('detail-nombre').textContent = '-';
+            document.getElementById('detail-formato').textContent = '-';
+            const detailCosto = document.getElementById('detail-costo');
+            if (detailCosto) detailCosto.textContent = '-';
+            const costoActualSpan = document.getElementById('costo-actual');
+            if (costoActualSpan) costoActualSpan.textContent = '-';
+            document.getElementById('costo-update-section').style.display = 'none';
+        }
+
+        // --- Lógica de radios (existente / nuevo) ---
         const opcionRadios = document.querySelectorAll(`input[name="${prefix}-opcion"]`);
         const existingSection = document.getElementById('existing-section');
         const newSection = document.getElementById('new-section');
         const detailsCard = document.getElementById('producto-details');
-        const selectProducto = document.querySelector(`select[name="${prefix}-producto_existente"]`);
         const costoUpdateSection = document.getElementById('costo-update-section');
-        const costoActualSpan = document.getElementById('costo-actual');
-        
-        // Función para mostrar/ocultar secciones
+
         function toggleSections() {
             const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
-            
             if (selectedValue === 'existing') {
                 existingSection.style.display = 'block';
                 newSection.style.display = 'none';
                 detailsCard.style.display = 'block';
-                // Mostrar sección de actualización de costo si hay una materia seleccionada
-                if (selectProducto && selectProducto.value) {
-                    costoUpdateSection.style.display = 'block';
-                } else {
-                    costoUpdateSection.style.display = 'none';
-                }
+                // Mostrar sección de costo solo si hay un producto seleccionado
+                const productoId = $select.val();
+                if (productoId) costoUpdateSection.style.display = 'block';
+                else costoUpdateSection.style.display = 'none';
             } else {
                 existingSection.style.display = 'none';
                 newSection.style.display = 'block';
@@ -148,63 +194,9 @@
                 costoUpdateSection.style.display = 'none';
             }
         }
-        
-        // Inicializar estado
-        toggleSections();
-        
-        // Escuchar cambios en los radios
-        opcionRadios.forEach(radio => {
-            radio.addEventListener('change', toggleSections);
-        });
-        
-        // Cargar detalles cuando se selecciona un producto
-        if (selectProducto) {
-            selectProducto.addEventListener('change', function() {
-                const productoId = this.value;
-                
-                if (productoId) {
-                    fetch(`/adquisiciones/api/producto/${productoId}/`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Error en la respuesta');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            document.getElementById('detail-codigo').textContent = data.codigo_producto || '-';
-                            document.getElementById('detail-formato').textContent = data.formato || '-';
-                            document.getElementById('detail-nombre').textContent = data.nombre_comercial || '-';
-                            document.getElementById('detail-costo').textContent = data.costo ? `$${data.costo}` : '-';
 
-                            // Actualizar el span con el costo actual
-                            costoActualSpan.textContent = data.costo || '-';
-                            
-                            // Mostrar sección de actualización de costo
-                            costoUpdateSection.style.display = 'block';
-                        })
-                        .catch(error => {
-                            console.error('Error al obtener detalles:', error);
-                            alert('Error al cargar los detalles de los productos');
-                        });
-                } else {
-                    // Limpiar detalles si no hay selección
-                    document.getElementById('detail-codigo').textContent = '-';
-                    document.getElementById('detail-formato').textContent = '-';
-                    document.getElementById('detail-nombre').textContent = '-';
-                    document.getElementById('detail-costo').textContent = '-';
-                    costoActualSpan.textContent = '-';
-                    
-                    // Ocultar sección de actualización de costo
-                    costoUpdateSection.style.display = 'none';
-                }
-            });
-            
-            // Cargar detalles iniciales si hay una selección
-            if (selectProducto.value) {
-                selectProducto.dispatchEvent(new Event('change'));
-            }
-        }
+        opcionRadios.forEach(radio => radio.addEventListener('change', toggleSections));
+        toggleSections(); // estado inicial
     });
     </script>
-
-    {% endblock %}
+{% endblock %}

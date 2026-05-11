@@ -99,7 +99,7 @@ class CrearSalidaView(CreateView):
                 
                 # Redirigir al detalle del vale creado
                 return redirect('movimiento_update', pk=vale.id)
-            print("Salio de with")    
+                
         except json.JSONDecodeError:
             messages.error(self.request, 'Error al procesar los datos del carrito')
             return self.form_invalid(form)
@@ -232,9 +232,6 @@ def buscar_items_almacen(request):
             query = query.filter(
                 envase__tipo_envase_embalaje__nombre__icontains=term
             )
-
-        print(query)
-
         items.extend([{
             'id': item.envase.id,
             'tipo': item.envase.tipo_envase_embalaje.nombre,
@@ -433,11 +430,9 @@ def salida_produccion(request, vale_id):
     if mp_prod:
         produccion = get_object_or_404(Produccion, lote=mp_prod[0].lote_prod.lote)
         almacen = mp_prod[0].almacen
-        print(mp_prod[0])
     elif prod_prod:
         produccion = get_object_or_404(Produccion, lote=prod_prod[0].lote_prod.lote)
         almacen = prod_prod[0].almacen
-        print(prod_prod[0])
     #if produccion.estado == 'Planificada':
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
@@ -453,7 +448,6 @@ def salida_produccion(request, vale_id):
         vale_s = None
         if mp_prod:
             for mp in mp_prod:
-                print(f'materia prima {mp}')
                 if not vale_s:
                     vale_s = mp.vale
                 try:
@@ -474,7 +468,6 @@ def salida_produccion(request, vale_id):
                 mp.vale.estado = 'despachado'
                 mp.vale.save()
         if prod_prod:
-            print("Productos")
             for p in prod_prod:
                 if not vale_s:
                     vale_s = p.vale
@@ -482,14 +475,11 @@ def salida_produccion(request, vale_id):
                     field_name = str(p.producto.id)
                     cantidad = decimal.Decimal('0.00')
                     cantidad = decimal.Decimal(float(request.POST.get(field_name)))
-                    
-                    print(p.producto)
                     Movimiento_Prod.objects.create(
                         producto=p.producto,
                         vale=vale,  # Ejemplo: atributo fijo
                         cantidad=cantidad                        
                     )
-                    print("Creo el movimiento prod")
                     """ inventario_p = get_object_or_404(Inv_Producto,
                         producto=p.producto.id, almacen=almacen.id) """
                     p.producto.cantidad = p.producto.cantidad - cantidad
@@ -604,6 +594,7 @@ def recepcion_materia_prima(request, adq_id):
     if request.method == 'POST':
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
+                origen = 'Adquisición',
                 destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Adquisición'
@@ -616,11 +607,6 @@ def recepcion_materia_prima(request, adq_id):
             cantidad = decimal.Decimal(cantidad)
             if cantidad:
                 try:
-                    Movimiento_MP.objects.create(
-                        materia_prima=inv.materia_prima,
-                        vale=vale,  
-                        cantidad=cantidad                        
-                    )
                     inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
                         materia_prima=inv.materia_prima, almacen=almacen)
                     if created:
@@ -629,6 +615,12 @@ def recepcion_materia_prima(request, adq_id):
                     else:
                         inventario_mp.cantidad = inventario_mp.cantidad + cantidad
                         inventario_mp.save()
+                    Movimiento_MP.objects.create(
+                        materia_prima=inventario_mp,
+                        vale=vale,  
+                        cantidad=cantidad                        
+                    )
+
                     if not cantidad == inv.cantidad:
                         target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
                         # Crear notificaciones para cada usuario en ese grupo
@@ -666,6 +658,7 @@ def recepcion_producto(request, adq_id):
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
                 destino = almacen.nombre,
+                origen='Adquisición',
                 entrada = True,
                 tipo = 'Adquisición'
             )
@@ -677,19 +670,21 @@ def recepcion_producto(request, adq_id):
             cantidad = decimal.Decimal(cantidad)
             if cantidad:
                 try:
-                    Movimiento_Prod.objects.create(
-                        producto=inv.producto,
-                        vale=vale,  
-                        cantidad=cantidad                        
-                    )
-                    inventario_prod, created = Inv_Producto.objects.get_or_create(
-                        producto=inv.producto, almacen=almacen)
-                    if created:
+                    inventario_prod = Inv_Producto.objects.filter(
+                        producto=inv.producto, almacen=almacen).first()
+                    if not inventario_prod:
+                        inventario_prod = Inv_Producto.objects.create(
+                            producto=inv.producto, almacen=almacen)
                         inventario_prod.cantidad = cantidad
                         inventario_prod.save()
                     else:
                         inventario_prod.cantidad = inventario_prod.cantidad + cantidad
                         inventario_prod.save()
+                    Movimiento_Prod.objects.create(
+                        producto=inventario_prod,
+                        vale=vale,  
+                        cantidad=cantidad                        
+                    )
                     if not cantidad == inv.cantidad:
                         target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
                         # Crear notificaciones para cada usuario en ese grupo
@@ -1037,7 +1032,8 @@ def entrada_producto(request, pk):
                 destino = almacen.nombre,
                 estado = 'confirmado',
                 entrada=True,
-                tipo = 'Entrada'
+                tipo = 'Entrada',
+                lote_No = vale_v.lote_No
             )
         # Procesar cada producto
         for inv in inv_prod:
