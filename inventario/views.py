@@ -13,7 +13,7 @@ def ajuste_inv_prod(request, inv_prod):
     inv_prod_o = get_object_or_404(Inv_Producto, id=inv_prod)
     
     almacen = Almacen.objects.first()
-    if request.user.groups.first() and (request.user.groups.first().name == 'Almaceneros' or request.user.groups.first().name == 'Presidencia-Admin'):
+    if request.user.groups.first() and (request.user.groups.first().name == 'Almaceneros'):
         almacen = Almacen.objects.filter(responsable=request.user).first()
         if not almacen or inv_prod_o.almacen != almacen:
             messages.error(request,'No tienes permisos para ajustar este inventario')

@@ -45,6 +45,15 @@ class EnvaseEmbalaje(ModeloBase):
         )['total']
         return total if total is not None else 0 
     
+    def cantidad_almacen(self, almacen):
+        """
+        Calcula la cantidad de este envase en el almacen
+        """
+        from inventario.models import Inv_Envase
+        inv_env = Inv_Envase.objects.filter(envase = self, almacen=almacen).first()
+        print(inv_env.cantidad)
+        return inv_env.cantidad if inv_env is not None else 0
+    
     @property
     def all_almacenes(self):
         Almacen = apps.get_model('almacen', 'Almacen')

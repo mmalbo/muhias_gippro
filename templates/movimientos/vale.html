@@ -124,7 +124,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> {{ item.cantidad }} </td>
+                <td> {{ item.cantidad_inventario }} </td>
             </tr>
             {% elif data.tipop == 'envase o embalaje' %}
             <tr>
@@ -137,7 +137,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {{ item.cantidad_inventario }} </td>
             </tr>
             {% elif data.tipop == 'productos' %}
             <tr>
@@ -150,7 +150,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {{ item.cantidad_inventario }} </td>
             </tr>
             {% elif data.tipop == 'insumos' %}
             <tr>
@@ -163,7 +163,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {{ item.cantidad_inventario }} </td>
             </tr>
             {% elif data.tipop == 'Solicitud' %}
             <tr>
@@ -176,7 +176,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {{ item.cantidad_inventario }} </td>
             </tr>
             {% elif data.tipop == 'SolicitudP' %}
             <tr>
@@ -189,7 +189,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {{ item.cantidad_inventario }} </td>
             </tr>
             {% endif %}
             {% endfor %}

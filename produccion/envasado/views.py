@@ -85,15 +85,17 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                 # Guardar la solicitud (aún no tiene detalles)
                 self.object = form.save()
                 solicitud = self.object
-
+                print('A generar vale')
                 vale = self.crear_vale_solicitud(solicitud)
-                                
+                print(vale)
+
                 envases_data = self.request.POST.get('envases')
                 if envases_data:
                     envases_list = json.loads(envases_data)
                     for env in envases_list:
                         # env tiene: id, nombre, codigo, tipo, cantidad, disponible
                         inv_envase = Inv_Envase.objects.get(id=env['id'])
+                        print(f'inventario d eenvaso {inv_envase}')
                         DetalleEnvasado.objects.create(
                             solicitud=solicitud,
                             presentacion=inv_envase,
@@ -106,8 +108,13 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                 if insumos_data:
                     insumos_list = json.loads(insumos_data)
                     for ins in insumos_list:
+                        id = ins['id']
+                        ca = ins['cantidad']
+                        print(f'insumos id {id}')
+                        print(f'insumos cant {ca}')
                         # ins tiene: id, nombre, cantidad, unidad, disponible
                         inv_insumo = Inv_Insumos.objects.get(id=ins['id'])
+                        print(f'Inventario de insumos {inv_insumo}')
                         ConsumoInsumoEnvasado.objects.create(
                             solicitud=solicitud,
                             insumo=inv_insumo,
@@ -119,10 +126,12 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                     self.request,
                     f'Solicitud de envasado creada exitosamente. Vale de solicitud #{vale.consecutivo} generado.'
                 )
+                print(f'Solicitud de envasado creada exitosamente. Vale de solicitud #{vale.consecutivo} generado.')
                 return redirect(self.get_success_url())
 
         except Exception as e:
             messages.error(self.request, f'Error al crear la solicitud: {str(e)}')
+            print(f'Error al crear la solicitud: {str(e)}')
             return self.form_invalid(form)
 
     def crear_vale_solicitud(self, solicitud):
@@ -487,6 +496,41 @@ def concluir_envasado(request, pk):
                 'insumos': insumos_reales,
                 'observaciones_finales': observaciones_finales,
             }
+
+            #Crear vale de envasado terminado
+            almacen_destino = solicitud.lote_produccion_origen.almacen
+            print(almacen_destino)
+            vale = Vale_Movimiento_Almacen.objects.create(
+                    origen = 'Envasado',
+                    almacen = almacen_destino,
+                    destino = almacen_destino.nombre, # Aquí va el nuevo parametro almacen desde el modal 
+                    entrada = False,
+                    tipo = 'Envasado',
+                    estado= 'confirmado',
+                    lote_No = solicitud.lote_destino
+            )
+            print(vale)
+            #Este es el movimiento especifico del producto
+            formato = solicitud.envases.first().presentacion.envase.formato
+
+            nuevo_prod, created = Inv_Producto.objects.get_or_create(
+                almacen = almacen_destino,
+                lote = solicitud.lote_destino,
+                cantidad = solicitud.unidades_producidas,
+                producto = solicitud.lote_produccion_origen.producto,
+                estado = 'inventario',
+                formato = formato
+            )
+            print(nuevo_prod)
+
+            mov = Movimiento_Prod.objects.create(
+                    vale=vale,
+                    producto=nuevo_prod,
+                    cantidad=solicitud.unidades_producidas,
+                    lote=solicitud.lote_destino,
+                    cantidad_inventario = solicitud.unidades_producidas
+            ) 
+            print(mov)
             solicitud.save()
 
             # 3. (Opcional) Crear vale de entrada si usas el sistema de movimientos

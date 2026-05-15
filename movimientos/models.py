@@ -244,6 +244,15 @@ class MovimientoBase(ModeloBase):
         default=1.00, 
         verbose_name="Cantidad del movimiento"
     )
+
+    cantidad_inventario = models.DecimalField(
+        max_digits=7,
+        decimal_places=2, 
+        null=True,
+        blank=True, 
+        verbose_name="Cantidad final en inventario"
+    )
+
     costo_unitario = models.DecimalField(
         max_digits=12,
         decimal_places=4,
