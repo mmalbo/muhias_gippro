@@ -221,6 +221,7 @@
                             <th>Lote</th>
                             <th>Costo Unitario</th>
                             <th>Valor Total</th>
+                            <th>Saldo</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -255,6 +256,9 @@
                                 {% if item.costo %}
                                 ${{ item.costo|multiply:item.cantidad|floatformat:2 }}
                                 {% else %}-{% endif %}
+                            </td>
+                            <td>
+                                {{ item.saldo|floatformat:2 }}
                             </td>
                         </tr>
                         {% endfor %}

@@ -7,23 +7,32 @@
         <div class="container-fluid">
             <div class="container mt-4">
                 <form method="post">
-                    {% csrf_token %}                    
+                    {% csrf_token %}
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
+                                <th>Formato / Presentación</th>
                                 <th>Cantidad</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for prod in productos %}
+                            {% for item in productos_data %}
                             <tr>
-                                <td>{{ prod.producto.nombre_comercial }}</td>
+                                <td>{{ item.detalle.producto.nombre_comercial }}</td>
                                 <td>
-                                    <input type="number" 
-                                           name="{{ prod.producto.id }}" 
+                                    <select name="formato_{{ item.detalle.id }}" class="form-select">
+                                        <option value="">-- Seleccione formato --</option>
+                                        {% for formato_id, formato_label in item.formatos %}
+                                            <option value="{{ formato_id }}">{{ formato_label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           name="quantity_{{ item.detalle.id }}"
                                            value="0"
-                                           step="0.10"
+                                           step="0.01"
                                            min="0"
                                            class="form-control">
                                 </td>
@@ -31,7 +40,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    
+
                     <div class="text-end mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">
                             Confirmar recepción
@@ -42,5 +51,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
