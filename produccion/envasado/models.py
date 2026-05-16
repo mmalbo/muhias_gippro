@@ -17,13 +17,13 @@ import uuid
 class SolicitudEnvasado(ModeloBase):
     """Modelo para solicitudes de envasado"""
     # Datos de planificacion
-    folio = models.CharField(max_length=20, unique=True, editable=False)
+    folio = models.CharField(max_length=50, unique=True, editable=False)
     lote_produccion_origen = models.ForeignKey(Inv_Producto, on_delete=models.PROTECT,
                                               related_name='solicitudes_envasado')
     cantidad_solicitada = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     fecha_solicitud = models.DateField(auto_now_add=True)
     solicitante = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='solicitudes_envasado')
-    estado = models.CharField(max_length=20, choices=ESTADOS_ENV, default='Planificada')
+    estado = models.CharField(max_length=50, choices=ESTADOS_ENV, default='Planificada')
     observaciones = models.TextField(blank=True)
     
     # Datos de inicio 

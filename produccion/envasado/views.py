@@ -286,9 +286,9 @@ def iniciar_envasado(request, pk):
     """lote_origen_str = solicitud.lote_produccion_origen.lote  # campo 'lote' en Inv_Producto
     lote_destino_str = f"{lote_origen_str}-{formato}"""
     # Generar lote destino: reemplazar sufijo "-A granel" o "-granel" por el formato del envase
-    lote_origen = solicitud.lote_produccion_origen.lote
+    lote_or = solicitud.lote_produccion_origen.lote
     # Patrón para eliminar el sufijo (case insensitive, permite espacios opcionales)
-    lote_base = re.sub(r'(-A\s*granel|-granel)$', '', lote_origen, flags=re.IGNORECASE)
+    lote_base = re.sub(r'(-A\s*granel|-granel|-AG)$', '', lote_or, flags=re.IGNORECASE)
     lote_destino_str = f"{lote_base}-{formato}"
 
     # GET: mostrar formulario con el lote destino generado
@@ -310,13 +310,13 @@ def iniciar_envasado(request, pk):
         with transaction.atomic():
             # 1. Obtener o crear el ProductoCatalogo con el formato correspondiente
             producto_granel = solicitud.lote_produccion_origen.producto            
-
+            formato = solicitud.envases.first().presentacion.envase.formato
             # 2. Obtener o crear el Inv_Producto (lote destino)
             inventario_destino, _ = Inv_Producto.objects.get_or_create(
                 lote=lote_destino_str,
                 producto=producto_granel,
                 almacen=solicitud.lote_produccion_origen.almacen,
-                defaults={'cantidad': 0}   # cantidad se actualizará al concluir
+                defaults={'cantidad': 0, 'formato' : formato}   # cantidad se actualizará al concluir
             )
 
             # 3. Actualizar la solicitud
@@ -408,6 +408,7 @@ def concluir_envasado(request, pk):
         envases_planificados = []
         for det in detalles_envase:
             capacidad = det.presentacion.envase.formato.capacidad if hasattr(det.presentacion.envase.formato, 'capacidad') else 1
+            print(f'det.cantidad_unidades:{det.cantidad_unidades}')
             envases_planificados.append({
                 'id': det.id,
                 'nombre': det.presentacion.envase.nombre,
@@ -429,10 +430,10 @@ def concluir_envasado(request, pk):
 
         # Calcular total teórico (volumen) y pérdida estimada
         total_teorico = sum(e['capacidad'] * e['cantidad_solicitada'] for e in envases_planificados)
-        print(total_teorico)
+    
         granel_solicitado = float(solicitud.cantidad_solicitada)
         perdida_estimada = granel_solicitado - total_teorico
-        print(perdida_estimada)
+    
 
         context = {
             'solicitud': solicitud,
@@ -448,7 +449,9 @@ def concluir_envasado(request, pk):
     try:
         data = json.loads(request.body)
         envases_reales = data.get('envases', [])
+        print(envases_reales)
         insumos_reales = data.get('insumos', [])
+        print(insumos_reales)
         observaciones_finales = data.get('observaciones_finales', '')
 
         # Recalcular total producido en volumen (litros/kg) a partir de las cantidades reales por envase
@@ -458,15 +461,20 @@ def concluir_envasado(request, pk):
 
         # Obtener detalles originales para mapear capacidades
         detalles_envase_cap = DetalleEnvasado.objects.filter(solicitud=solicitud)
-        detalles_originales = {d.id: d for d in detalles_envase_cap}
+        detalles_originales = {str(d.id): d for d in detalles_envase_cap}
+        print(detalles_originales)
 
         for env in envases_reales:
+            print(env)
             detalle_id = env.get('id')
-            detalle_original = detalles_originales.get(detalle_id)
+            print(detalle_id)
+            detalle_original = detalles_originales.get(detalle_id) 
             if not detalle_original:
+                print(f'detalle_id:{detalle_id}')
                 continue
-            capacidad = float(detalle_original.presentacion.envase.capacidad or 1)
+            capacidad = float(detalle_original.presentacion.envase.formato.capacidad or 1)
             cantidad_real = float(env.get('cantidad_real', 0))
+            print(f'cantidad_real: {cantidad_real}')
             total_unidades += cantidad_real
             total_producido_volumen += cantidad_real * capacidad
             detalles_envase_actualizados.append({
@@ -480,11 +488,6 @@ def concluir_envasado(request, pk):
             cantidad_perdida = 0
 
         with transaction.atomic():
-            # 1. Actualizar el lote destino (Inv_Producto) con la cantidad real de unidades
-            lote_destino = solicitud.lote_destino
-            if lote_destino:
-                lote_destino.cantidad = total_unidades   # cantidad en unidades (envases)
-                lote_destino.save()
 
             # 2. Actualizar la solicitud
             solicitud.estado = 'completada'
@@ -499,7 +502,7 @@ def concluir_envasado(request, pk):
 
             #Crear vale de envasado terminado
             almacen_destino = solicitud.lote_produccion_origen.almacen
-            print(almacen_destino)
+            print(solicitud.lote_destino.lote)
             vale = Vale_Movimiento_Almacen.objects.create(
                     origen = 'Envasado',
                     almacen = almacen_destino,
@@ -507,30 +510,28 @@ def concluir_envasado(request, pk):
                     entrada = False,
                     tipo = 'Envasado',
                     estado= 'confirmado',
-                    lote_No = solicitud.lote_destino
+                    lote_No = solicitud.lote_destino.lote 
             )
-            print(vale)
             #Este es el movimiento especifico del producto
             formato = solicitud.envases.first().presentacion.envase.formato
 
+            print(f'formato: {formato}')
+
             nuevo_prod, created = Inv_Producto.objects.get_or_create(
                 almacen = almacen_destino,
-                lote = solicitud.lote_destino,
-                cantidad = solicitud.unidades_producidas,
-                producto = solicitud.lote_produccion_origen.producto,
-                estado = 'inventario',
-                formato = formato
+                lote = solicitud.lote_destino.lote,
+                producto = solicitud.lote_produccion_origen.producto
             )
-            print(nuevo_prod)
+
+            print(f'Nuevo producto: {nuevo_prod}: cantidad: {nuevo_prod.cantidad}')
 
             mov = Movimiento_Prod.objects.create(
                     vale=vale,
                     producto=nuevo_prod,
                     cantidad=solicitud.unidades_producidas,
-                    lote=solicitud.lote_destino,
-                    cantidad_inventario = solicitud.unidades_producidas
+                    lote=solicitud.lote_destino.lote,
+                    cantidad_inventario = nuevo_prod.cantidad
             ) 
-            print(mov)
             solicitud.save()
 
             # 3. (Opcional) Crear vale de entrada si usas el sistema de movimientos

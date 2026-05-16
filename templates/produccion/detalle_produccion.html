@@ -41,10 +41,10 @@
                                 <dd class="col-sm-8">
                                     <span class="badge bg-dark fs-6">{{ produccion.lote }}</span>
                                 </dd>
-                                <dt class="col-sm-4">Lote Base:</dt>
+<!--                                 <dt class="col-sm-4">Lote Base:</dt>
                                 <dd class="col-sm-8">
                                     <span class="badge bg-success fs-6">{{ datos_produccion.lote_base }}</span>
-                                </dd>
+                                </dd> -->
                                 
                                 <dt class="col-sm-4">Producto:</dt>
                                 <dd class="col-sm-8">
@@ -155,20 +155,20 @@
                                 {% for mp in materias_primas %}
                                 <tr>
                                     <td>
-                                        <strong>{{ mp.inv_materia_prima.nombre }}</strong>
+                                        <strong>{{ mp.inv_materia_prima.materia_prima.nombre }}</strong>
                                         <br>
                                         <small class="text-muted">
                                             {{ mp.inv_materia_prima.tipo_materia_prima }}
                                         </small>
                                     </td>
                                     <td>{{ mp.cantidad_materia_prima|floatformat:4 }}</td>
-                                    <td>{{ mp.inv_materia_prima.unidad_medida }}</td>
+                                    <td>{{ mp.inv_materia_prima.materia_prima.unidad_medida }}</td>
                                     <td>{{ mp.almacen.nombre }}</td>
-                                    <td>${{ mp.inv_materia_prima.costo|floatformat:2 }}</td>
+                                    <td>${{ mp.inv_materia_prima.materia_prima.costo|floatformat:2 }}</td>
                                     <td>
                                         <!-- Para multiplicar: cantidad * costo_unitario -->
                                         
-                                        <strong>${{ costo_total|floatformat:2 }}</strong>
+                                        <strong>${{ costo_total_mp|floatformat:2|intcomma }}</strong>
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -223,7 +223,7 @@
                             <i class="fas fa-flask me-2"></i>Pruebas Químicas
                         </h5>
                         <span class="badge bg-light text-dark">
-                            {{ pruebas_quimicas.count }} pruebas
+                            {{ pruebas_quimicas.count }}   {% if pruebas_quimicas.count == 1 %} prueba {% else %} pruebas {% endif %}
                         </span>
                     </div>
                 </div>
