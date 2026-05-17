@@ -22,7 +22,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>{{ inv_prod.producto.nombre_comercial }}</td>
+                                <td>{{ inv_prod.producto.nombre_comercial }}
+                                    <input type="hidden" name="producto" value="{{inv_prod.producto}}">
+                                </td>
                                     <td>{{ inv_prod.almacen.nombre }}
                                         <input type="hidden" name="almacen" value="{{inv_prod.almacen.id}}">
                                     </td>

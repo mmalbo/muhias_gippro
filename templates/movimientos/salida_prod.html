@@ -27,12 +27,12 @@
                             {% for p in productos %}
                             <tr>
                                 <td>{{ p.producto.producto.nombre_comercial }}</td>
-                                <td>{{ p.cantidad_producto }}</td>
+                                <td> {{ p.cantidad_producto }}</td>
                                 <td>
                                     <input type="number" 
                                            name="{{ p.producto.id }}" 
                                            value="0"
-                                           step="0.10"
+                                           step="0.001"
                                            min="0"
                                            class="form-control">
                                 </td>

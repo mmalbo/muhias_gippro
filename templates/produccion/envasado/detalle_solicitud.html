@@ -109,7 +109,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for detalle in solicitud.detalleenvasado_set.all %}
+                                        {% for detalle in solicitud.envases.all %}
                                         <tr>
                                             <td>{{ detalle.presentacion.envase.nombre }}</td>
                                             <td>{{ detalle.presentacion.envase.codigo_envase }}</td>

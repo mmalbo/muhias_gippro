@@ -61,6 +61,7 @@ class SolicitudEnvasadoForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         lote = cleaned_data.get('lote_produccion_origen')
+        print(lote.lote)
         cantidad = cleaned_data.get('cantidad_solicitada')
         envases_data = cleaned_data.get('envases')
         insumos_data = cleaned_data.get('insumos')

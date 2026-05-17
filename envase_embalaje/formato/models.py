@@ -24,10 +24,10 @@ class Formato(ModeloBase):
         verbose_name_plural = "Formatos"
 
     def __str__(self):
-        return f"{self.capacidad} {self.unidad_medida}" if self.capacidad > 0 else "A granel"
+        return f"{self.capacidad}{self.unidad_medida}" if self.capacidad > 0 else "AG"
     
     def __unicode__(self):
-        return f"{self.capacidad} {self.unidad_medida}"
+        return f"{self.capacidad}{self.unidad_medida}" if self.capacidad > 0 else "AG"
 
     """def clean(self):
         if self.capacidad and not str(self.capacidad).isdigit():

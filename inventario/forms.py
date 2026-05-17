@@ -158,11 +158,9 @@ class AjusteInvProdForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
-        self.instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
         
         self.fields['producto'].disabled = True
-        self.fields['lote'].initial = self.instance.lote
         if self.user:
             if self.user.groups.filter(name='Presidencia-Admin').exists() or self.user.is_staff:
                 self.fields['almacen'].queryset = Almacen.objects.all()

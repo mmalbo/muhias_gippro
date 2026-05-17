@@ -464,6 +464,7 @@ class DetalleValeView(DetailView):
         return context
 
 def salida_produccion(request, vale_id):
+    print("salida produccion")
     mp_prod = Prod_Inv_MP.objects.filter(vale__id=vale_id, vale__estado='confirmado', vale__tipo = 'Solicitud')
     prod_prod = Prod_Inv_Producto.objects.filter(vale__id=vale_id, vale__estado='confirmado', vale__tipo = 'Solicitud')
     if mp_prod:
@@ -492,8 +493,10 @@ def salida_produccion(request, vale_id):
                     vale_s = mp.vale
                 try:
                     field_name = str(mp.inv_materia_prima.id)
-                    cantidad = decimal.Decimal('0.00')
-                    cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+                    cantidad = decimal.Decimal('0.000')
+                    cantidad = decimal.Decimal(float(request.POST.get(field_name))) 
+                    canr_float = float(request.POST.get(field_name))
+                    print(canr_float)
                     mp.inv_materia_prima.cantidad = mp.inv_materia_prima.cantidad - cantidad
                     mp.inv_materia_prima.save()
                     Movimiento_MP.objects.create(
@@ -514,7 +517,7 @@ def salida_produccion(request, vale_id):
                     vale_s = p.vale
                 try:
                     field_name = str(p.producto.id)
-                    cantidad = decimal.Decimal('0.00')
+                    cantidad = decimal.Decimal('0.000')
                     cantidad = decimal.Decimal(float(request.POST.get(field_name)))                    
                     p.producto.cantidad = p.producto.cantidad - cantidad
                     p.producto.save()
@@ -561,7 +564,7 @@ def salida_envasado(request, vale_id):
                 estado='confirmado'
         )
         field_name = str(producto.id)
-        cantidad = decimal.Decimal('0.00')
+        cantidad = decimal.Decimal('0.000')
         cantidad = decimal.Decimal(float(request.POST.get(field_name)))
         # Procesar producto
         producto.cantidad = producto.cantidad - cantidad
@@ -1204,7 +1207,7 @@ def entrada_producto(request, pk):
                                 # Notificación en base de datos
                                 Notification.objects.create(
                                     user=user,
-                                    message=f"No coincide la recepción con la adquisición de: {inv.producto.producto.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
+                                    message=f"No coincide la recepción con la adquisición de: {inv.producto.producto.nombre_comercial}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
                                     link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
                                 )
                 except Exception as e: #(ValueError, TypeError):
@@ -1696,7 +1699,6 @@ def vale_detalle(request, pk):
     puede_confirmar = vale.estado == 'borrador' and not vale.entrada  # Solo salidas en borrador
     puede_cancelar = vale.estado in ['borrador', 'confirmado']
     puede_despachar = vale.estado == 'confirmado' and vale.despachado == False
-    print(vale.destino)
     context = {
         'vale': vale,
         'tipo_inventario': tipo_inventario,
