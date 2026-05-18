@@ -11,33 +11,38 @@ def export_vale(request, id_movimiento):
    data = {}
    #data['date'] = 
    #Diccionario de vale
-   current_vale = {}        
+   current_vale = {}
+   inventarios = False        
+   tipo = []
    vale = Vale_Movimiento_Almacen.objects.filter(consecutivo=id_movimiento)[0]
-   inventarios = Movimiento_MP.objects.filter(vale=vale.id) #vale.movimientos.all()
-   if inventarios:
-      tipo = 'materias primas'
-   else:
-      inventarios = vale.movimientos_envases.all()
-      if inventarios:
-         tipo = 'envase o embalaje'
-      else:
-         inventarios = vale.movimientos_productos.all()
-         if inventarios:
-            tipo = 'productos'
-         else:
-            inventarios = vale.movimientos_insumos.all()
-            if inventarios:
-               tipo = 'insumos'
-            else:
-               inventarios = vale.mp_produccion.all()
-               if inventarios:
-                  tipo = 'Solicitud'
-               else:
-                  inventarios = vale.productos_produccion.all()
-                  if inventarios:
-                       tipo = 'SolicitudP'
+   inventarios_mp = Movimiento_MP.objects.filter(vale=vale.id) #vale.movimientos.all()
+   if inventarios_mp:
+      tipo.append('materias primas')
+   inventarios_env = vale.movimientos_envases.all()
+   if inventarios_env:
+      tipo.append('envase') 
+   inventarios_prod = vale.movimientos_productos.all()
+   if inventarios_prod:
+      tipo.append('productos')
+   inventarios_ins = vale.movimientos_insumos.all()
+   if inventarios_ins:
+      tipo.append('insumos')
+   inventarios_mp_prod = vale.mp_produccion.all()
+   if inventarios_mp_prod:
+      tipo.apppend('SolicitudMPP')
+   inventarios_prod_prod = vale.productos_produccion.all()
+   if inventarios_prod_prod:
+      tipo.append('SolicitudPP')
+   inventarios_env_env = vale.env_envasado.all()
+   if inventarios_env_env:
+      tipo.append('SolicitudEE')
+      insumos_env = vale.ins_envasado.all()
+      solicitud_env = inventarios_env_env[0].solicitud
+      data['insumos_e'] = insumos_env
+      data['solicitud_e'] = solicitud_env
+   print(tipo)
    data['tipop'] = tipo
-   if not inventarios:
+   if tipo == []:
       return HttpResponse('No se registraron movimientos de inventario con ese id')   
    else:
       data['consecutivo'] = vale.consecutivo
@@ -64,7 +69,10 @@ def export_vale(request, id_movimiento):
       data['chapa'] = vale.chapa
       template_src = 'movimientos/vale.html'
       template = get_template(template_src)
-      context = {'data': data, 'inventarios': inventarios, 'request': request}
+      context = {'data': data, 'inventarios_mp': inventarios_mp, 'inventarios_prod': inventarios_prod,
+                 'inventarios_prod_prod': inventarios_prod_prod,'inventarios_mp_prod': inventarios_mp_prod, 
+                 'inventarios_env': inventarios_env, 'inventarios_ins': inventarios_ins, 
+                 'inventarios_env_env': inventarios_env_env, 'request': request}
       response = HttpResponse(content_type='application/pdf')
       response['Content-Disposition'] = 'attachment; filename="factura.pdf"'
       html = template.render(context)

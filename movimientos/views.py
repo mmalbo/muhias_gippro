@@ -123,7 +123,8 @@ class CrearSalidaView(CreateView):
                 if not inv:
                     messages('Error', 'No existe esa materia prima en inventario')
                     raise ValueError(f'Inventario no existe: {id}')
-                inv_cantidad = inv.cantidad - cantidad
+                print(inv.cantidad)
+                inv_cantidad = inv.cantidad - decimal.Decimal(cantidad)
                 Movimiento_MP.objects.create(
                     vale=vale,
                     materia_prima_id=item_data['item_id'],
@@ -137,7 +138,8 @@ class CrearSalidaView(CreateView):
                 if not inv:
                     messages('Error', 'No existe ese producto en inventario')
                     raise ValueError(f'Inventario no existe: {id}')
-                inv_cantidad = inv.cantidad - cantidad
+                print(inv.cantidad)
+                inv_cantidad = inv.cantidad - decimal.Decimal(cantidad)
                 Movimiento_Prod.objects.create(
                     vale=vale,
                     producto_id=item_data['item_id'],

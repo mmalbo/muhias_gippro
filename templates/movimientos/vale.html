@@ -84,7 +84,7 @@
             </tr>
             <tr>
                 <td colspan="2"><strong>Destino:</strong>  {{ data.destino }}</td>
-                <td >Producto: {{ data.lote }} </td>
+                <td >Producto: {% if data.lote %} {{ data.lote }}  {% endif %} </td>
                 <td >Otros </td>
             </tr>
             <tr>
@@ -112,8 +112,49 @@
                 <td> MN </td>
                 <td> USD </td>
             </tr>
-            {% for item in inventarios %}
-            {% if data.tipop == 'materias primas' %}
+            {% if 'SolicitudEE' in data.tipop %}
+            <tr>
+                <td> {{ data.solicitud_e.lote_produccion_origen.producto.codigo_producto }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ data.solicitud_e.lote_produccion_origen.producto.nombre_comercial }} </td>
+                <td> {% if data.solicitud_e.lote_produccion_origen.formato == 'AG' %} L {% else %} {{ data.solicitud_e.lote_produccion_origen.formato }} {% endif %} </td>
+                <td> {{ data.solicitud_e.cantidad_solicitada }} </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+            </tr>
+            {% for item in data.insumos_e %}
+            <tr>
+                <td> {{ item.insumo.insumos.codigo }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.insumo.insumos.nombre }} </td>
+                <td> u </td>
+                <td> {{ item.cantidad_unidades }} </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+            </tr>
+            {% endfor %}
+            {% for item in inventarios_env_env %}
+            <tr>
+                <td> {{ item.presentacion.envase.codigo_envase }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.presentacion.envase }} </td>
+                <td> u </td>
+                <td> {{ item.cantidad_unidades }} </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+            {% for item in inventarios_mp %}
             <tr>
                 <td> {{ item.materia_prima.materia_prima.codigo }} </td>
                 <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.materia_prima.materia_prima.nombre }} </td>
@@ -126,7 +167,8 @@
                 <td> </td>
                 <td> {{ item.cantidad_inventario }} </td>
             </tr>
-            {% elif data.tipop == 'envase o embalaje' %}
+            {% endfor %}
+            {% for item in inventarios_env %}
             <tr>
                 <td> {{ item.envase_embalaje.codigo_envase }} </td>
                 <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.envase_embalaje }} </td>
@@ -139,10 +181,11 @@
                 <td> </td>
                 <td> {{ item.cantidad_inventario }} </td>
             </tr>
-            {% elif data.tipop == 'productos' %}
+            {% endfor %}
+            {% for item in inventarios_prod %}
             <tr>
                 <td> {{ item.producto.producto.codigo_producto }} </td>
-                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.producto.producto.nombre_comercial }} </td>
+                <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.producto.producto.nombre_comercial }} : {% if item.producto.lote %} {{ item.producto.lote }} {% endif %} </td>
                 <td> {{ item.producto.formato }} </td>
                 <td> {{ item.cantidad }} </td>
                 <td> </td>
@@ -152,7 +195,8 @@
                 <td> </td>
                 <td> {{ item.cantidad_inventario }} </td>
             </tr>
-            {% elif data.tipop == 'insumos' %}
+            {% endfor %}
+            {% for item in inventarios_ins %}
             <tr>
                 <td> {{ item.insumo.codigo }} </td>
                 <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.insumo.nombre }} </td>
@@ -165,7 +209,8 @@
                 <td> </td>
                 <td> {{ item.cantidad_inventario }} </td>
             </tr>
-            {% elif data.tipop == 'Solicitud' %}
+            {% endfor %}
+            {% for item in inventarios_mp_prod %}
             <tr>
                 <td> {{ item.inv_materia_prima.materia_prima.codigo }} </td>
                 <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.inv_materia_prima.materia_prima.nombre }} </td>
@@ -178,7 +223,8 @@
                 <td> </td>
                 <td> {{ item.cantidad_inventario }} </td>
             </tr>
-            {% elif data.tipop == 'SolicitudP' %}
+            {% endfor %}
+           {% for item in inventarios_prod_prod %}
             <tr>
                 <td> {{ item.producto.producto.codigo_producto }} </td>
                 <td colspan="3" class="table-info-td" style="width: 200px;"> {{ item.producto.producto.nombre_comercial }} </td>
@@ -191,7 +237,6 @@
                 <td> </td>
                 <td> {{ item.cantidad_inventario }} </td>
             </tr>
-            {% endif %}
             {% endfor %}
         </tbody>
     </table>
