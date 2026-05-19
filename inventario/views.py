@@ -42,7 +42,8 @@ def ajuste_inv_prod(request, inv_prod):
             mov_prod = Movimiento_Prod.objects.create(
                 producto = inv_prod_o,
                 vale = vale,
-                cantidad = nuevo_cant - viejo_cant
+                cantidad = nuevo_cant - viejo_cant,
+                cantidad_inventario = nuevo_cant   
             )
             try:
                 mov_prod.save()
@@ -110,7 +111,9 @@ def ajuste_inv_mp(request, inv_mp):
             mov_mp = Movimiento_MP.objects.create(
                 materia_prima = inv_mat_prima,
                 vale = vale,
-                cantidad = nuevo_cant - viejo_cant
+                cantidad = nuevo_cant - viejo_cant,
+                cantidad_inventario = nuevo_cant
+
             )
             mov_mp.save()
             messages.success(request, f'Inventario de {inv_mat_prima.materia_prima.nombre} actualizado correctamente')
@@ -145,8 +148,6 @@ def ajuste_inv_env(request, inv_ee):
         print('En POST')
         nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
         viejo_cant = inv_env.cantidad
-        print(nuevo_cant)
-        print(viejo_cant)
         form = AjusteInvEEForm(request.POST, instance=inv_env, user=request.user)
         if form.is_valid():
             causa = form.cleaned_data.get('causa')
@@ -174,7 +175,8 @@ def ajuste_inv_env(request, inv_ee):
             mov_ee = Movimiento_EE.objects.create(
                 envase_embalaje = inv_env.envase,
                 vale = vale,
-                cantidad = nuevo_cant - viejo_cant
+                cantidad = nuevo_cant - viejo_cant,
+                cantidad_inventario = nuevo_cant   
             )
             mov_ee.save()
             
@@ -206,11 +208,8 @@ def ajuste_inv_ins(request, inv_ins):
             return redirect('InsumosOtros:insumos_list')
 
     if request.method == 'POST':
-        print('En POST')
         nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
         viejo_cant = inv_insT.cantidad
-        print(nuevo_cant)
-        print(viejo_cant)
         form = AjusteInvInsForm(request.POST, instance=inv_insT, user=request.user)
         if form.is_valid():
             causa = form.cleaned_data.get('causa')
@@ -233,12 +232,12 @@ def ajuste_inv_ins(request, inv_ins):
                     'inv': inv_insT,
                 }
                 return render(request, 'inventario/actualizar_inv_ins.html', context) 
-            print('A guardar la form')
             vale.save()
             mov_ins = Movimiento_Ins.objects.create(
                 insumo = inv_insT.insumos,
                 vale = vale,
-                cantidad = nuevo_cant - viejo_cant
+                cantidad = nuevo_cant - viejo_cant,
+                cantidad_inventario = nuevo_cant   
             )
             mov_ins.save()
             messages.success(request, f'Inventario de {inv_insT.insumos} actualizado correctamente')

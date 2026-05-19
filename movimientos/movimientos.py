@@ -29,7 +29,7 @@ def export_vale(request, id_movimiento):
       tipo.append('insumos')
    inventarios_mp_prod = vale.mp_produccion.all()
    if inventarios_mp_prod:
-      tipo.apppend('SolicitudMPP')
+      tipo.append('SolicitudMPP')
    inventarios_prod_prod = vale.productos_produccion.all()
    if inventarios_prod_prod:
       tipo.append('SolicitudPP')
@@ -74,7 +74,7 @@ def export_vale(request, id_movimiento):
                  'inventarios_env': inventarios_env, 'inventarios_ins': inventarios_ins, 
                  'inventarios_env_env': inventarios_env_env, 'request': request}
       response = HttpResponse(content_type='application/pdf')
-      response['Content-Disposition'] = 'attachment; filename="factura.pdf"'
+      response['Content-Disposition'] = 'attachment; filename="vale.pdf"'
       html = template.render(context)
       # create a pdf
       pisa_status = pisa.CreatePDF(
