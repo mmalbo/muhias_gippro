@@ -91,10 +91,26 @@ class Produccion(ModeloBase):
         """Calcula el costo total de materias primas"""
         from django.db.models import F, Sum, DecimalField, ExpressionWrapper
         
-        resultado = self.inventarios_prod.aggregate(
+        resultado = self.inv_mp.aggregate(
             total=Sum(
                 ExpressionWrapper(
-                    F('cantidad_materia_prima') * F('inv_materia_prima__costo'),
+                    F('cantidad_materia_prima') * F('inv_materia_prima__materia_prima__costo'),
+                    output_field=DecimalField(max_digits=15, decimal_places=2)
+                )
+            )
+        )
+        
+        return resultado['total'] or Decimal('0')
+    
+    @property
+    def costo_total_prod_ins(self):
+        """Calcula el costo total de materias primas"""
+        from django.db.models import F, Sum, DecimalField, ExpressionWrapper
+        
+        resultado = self.productos_consumidos.aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    F('cantidad_producto') * F('producto__producto__costo'),
                     output_field=DecimalField(max_digits=15, decimal_places=2)
                 )
             )

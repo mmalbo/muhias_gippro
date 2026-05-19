@@ -187,27 +187,69 @@
                                     <td>
                                         <strong>${{ costo_total_mp|floatformat:2|intcomma }}</strong>
                                     </td>
+                                </tr>                                
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos Utilizados -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-boxes me-2"></i>Productos como insumos
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{ prod_ins.count }} items
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Almacén</th>
+                                    <th>Costo Unitario</th>
+                                    <th>Costo Total</th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                {% for prod in prod_ins %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ prod.producto.producto.nombre_comercial }}</strong>                                        
+                                    </td>
+                                    <td>{{ prod.cantidad_producto|floatformat:4 }}</td>
+                                    <td>{{ prod.almacen.nombre }}</td>
+                                    <td>${{ prod.producto.producto.costo|floatformat:2 }}</td>
+                                    <td>
+                                        <!-- Para multiplicar: cantidad * costo_unitario -->
+                                        
+                                        <strong>${{ costo_total_prod|floatformat:2|intcomma }}</strong>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        No hay productos registrados
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-dark">
                                 <tr>
                                     <td colspan="5" class="text-end">
-                                        <strong>Costo Producción:</strong>
+                                        <strong>Total Productos:</strong>
                                     </td>
                                     <td>
-                                        <strong>${{ produccion.costo|floatformat:2|intcomma }}</strong>
+                                        <strong>${{ costo_prod_ins|floatformat:2|intcomma }}</strong>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="5" class="text-end">
-                                        <strong>Diferencia:</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge 
-                                            {% if datos_produccion.diferencia_costo >= 0 %}bg-success
-                                            {% else %}bg-danger{% endif %}">
-                                            ${{ datos_produccion.diferencia_costo|floatformat:2|intcomma }}
-                                        </span>
-                                    </td>
-                                </tr>
+                                </tr>                                
                             </tfoot>
                         </table>
                     </div>
@@ -377,6 +419,51 @@
                             <i class="fas fa-plus me-1"></i> Adjuntar Documento
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Archivos adjuntos -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paperclip me-2"></i>Costo total de Producción
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <tbody>
+                            <tr class="bg-info">
+                                <td>
+                                <strong>Costo Materias Primas</strong>
+                                </td>
+                                <td>{{ produccion.costo_total_materias_primas|floatformat:4 }}</td>
+                            </tr>
+                            <tr class="bg-info">
+                                <td>
+                                <strong>Costo Productos</strong>
+                                </td>
+                                <td>{{ produccion.costo_total_prod_ins|floatformat:4 }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <td colspan="5" class="text-end">
+                                    <strong>Total Producción:</strong>
+                                </td>
+                                <td>
+                                    <strong>${{ costo_total|floatformat:2|intcomma }}</strong>
+                                </td>
+                            </tr> 
+                            <tr>
+                                <td colspan="5" class="text-end">
+                                    <strong>Diferencia:</strong>
+                                </td>
+                                <td>
+                                    <strong>${{ diferencia_costo|floatformat:2|intcomma }}</strong>
+                                </td>
+                            </tr>                               
+                        </tfoot>
+                    </table>
                 </div>
             </div>
 

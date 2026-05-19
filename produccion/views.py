@@ -714,9 +714,14 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         materias_primas = Prod_Inv_MP.objects.filter(lote_prod=produccion).select_related(
             'inv_materia_prima', 'almacen'
         )
+
+        prod_ins = Prod_Inv_Producto.objects.filter(lote_prod=produccion).select_related(
+            'producto', 'almacen'
+        )
         
         # 2. Calcular total de costos de materias primas
-        costo_total_mp = produccion.costo
+        costo_total_mp = produccion.costo_total_materias_primas
+        costo_total_prod = produccion.costo_total_prod_ins
         
         # 3. Pruebas químicas asociadas
         pruebas_quimicas = produccion.pruebas_quimicas.all()  # Usando related_name
@@ -755,8 +760,9 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         datos_produccion = {
             'lote_base': produccion.produccion_base.lote if produccion.produccion_base else '',
             'costo_materias_primas': costo_total_mp,
+            'costo_prod_ins': costo_total_prod,
             'costo_total': produccion.costo,
-            'diferencia_costo': produccion.costo - costo_total_mp,
+            'diferencia_costo': produccion.costo - float(costo_total_mp+costo_total_prod),
             'eficiencia': (produccion.cantidad_real or 0) / produccion.cantidad_estimada * 100 
             if produccion.cantidad_real else 0,
             'porcentaje_avance': porcentaje_avance,
@@ -768,7 +774,9 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         
         context.update({
             'materias_primas': materias_primas,
+            'prod_ins':prod_ins,
             'costo_total_mp': costo_total_mp,
+            'costo_total_prod':costo_total_prod,
             'pruebas_quimicas': pruebas_quimicas,
             'historial': historial,
             'datos_produccion': datos_produccion,
