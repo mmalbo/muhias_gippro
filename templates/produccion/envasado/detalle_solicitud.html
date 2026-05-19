@@ -65,27 +65,18 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <strong>Producto:</strong>
                                     <p class="mt-1">{{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</p>
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Lote Origen:</strong>
-                                    <p class="mt-1">{{ solicitud.lote_produccion_origen }}</p>
+                                    <p class="mt-1">{{ solicitud.lote_produccion_origen.lote }}</p>
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Cantidad a Envasar:</strong>
                                     <p class="mt-1">{{ solicitud.cantidad_solicitada }} L/kg</p>
-                                </div>
-                                <div class="col-md-2">
-                                    <strong>Disponible:</strong>
-                                    <p class="mt-1 {% if disponible %}text-success{% else %}text-danger{% endif %}">
-                                        {{ solicitud.lote_produccion_origen.cantidad }} L/kg
-                                        {% if not disponible %}
-                                            <br><small class="text-danger">¡Insuficiente!</small>
-                                        {% endif %}
-                                    </p>
-                                </div>
+                                </div>                                
                             </div>
                         </div>
                     </div>
@@ -100,29 +91,25 @@
                                 <table class="table table-bordered table-striped">
                                     <thead class="thead-dark">
                                         <tr>
-                                            <th>Envase</th>
+                                            <th>Tipo/Nombre</th>
                                             <th>Código</th>
-                                            <th>Tipo</th>
                                             <th>Unidades Requeridas</th>
-                                            <th>Disponible en Inventario</th>
-                                            <th>Estado</th>
+                                            <th>Estado Solicitud</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for detalle in solicitud.envases.all %}
                                         <tr>
-                                            <td>{{ detalle.presentacion.envase.nombre }}</td>
+                                            <td>{{ detalle.presentacion.envase.tipo_envase_embalaje }}/{{ detalle.presentacion.envase.nombre }}</td>
                                             <td>{{ detalle.presentacion.envase.codigo_envase }}</td>
-                                            <td>{{ detalle.presentacion.envase.tipo_envase_embalaje }}</td>
-                                            <td>{{ detalle.cantidad_unidades }}</td>
-                                            <td>{{ detalle.presentacion.cantidad }}</td>
+                                            <td>{{ detalle.cantidad_unidades }}</td>       
                                             <td>
-                                                {% if detalle.cantidad_unidades <= detalle.presentacion.cantidad %}
-                                                    <span class="badge badge-success">Disponible</span>
-                                                {% else %}
-                                                    <span class="badge badge-danger">Insuficiente</span>
+                                                {% if detalle.vale.despachado %} 
+                                                    <span class="badge badge-success">Despachado en almacen</span> 
+                                                {% else %} 
+                                                    <span class="badge badge-danger">Solicitado</span> 
                                                 {% endif %}
-                                            </td>
+                                            </td>                                     
                                         </tr>
                                         {% empty %}
                                         <tr>
@@ -147,7 +134,6 @@
                                         <tr>
                                             <th>Insumo</th>
                                             <th>Cantidad Requerida</th>
-                                            <th>Disponible en Inventario</th>
                                             <th>Estado</th>
                                         </tr>
                                     </thead>
@@ -156,12 +142,11 @@
                                         <tr>
                                             <td>{{ consumo.insumo.insumos.nombre }}</td>
                                             <td>{{ consumo.cantidad_unidades }}</td>
-                                            <td>{{ consumo.insumo.cantidad }}</td>
                                             <td>
-                                                {% if consumo.cantidad_unidades <= consumo.insumo.cantidad %}
-                                                    <span class="badge badge-success">Disponible</span>
+                                                {% if consumo.vale.despachado %}
+                                                    <span class="badge badge-success">Despachado en almacen</span>
                                                 {% else %}
-                                                    <span class="badge badge-danger">Insuficiente</span>
+                                                    <span class="badge badge-danger">Solicitado</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -190,7 +175,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Lote Destino:</strong>
-                                    <p class="mt-1">{{ solicitud.lote_destino.lote_produccion|default:"No definido" }}</p>
+                                    <p class="mt-1">{{ solicitud.lote_destino.lote|default:"No definido" }}</p>
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Unidades Producidas:</strong>
@@ -214,7 +199,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Responsable Ejecución:</strong>
-                                    <p class="mt-1">{{ solicitud.responsable_ejecucion.get_full_name|default:"No registrado" }}</p>
+                                    <p class="mt-1">{{ solicitud.solicitante.get_full_name|default:"No registrado" }}</p>
                                 </div>
                             </div>
                             {% if solicitud.observaciones_proceso %}
