@@ -751,7 +751,10 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
 
         # Calcular costo por litro
         if not produccion.cantidad_real:
-            costo_litro = produccion.costo / float(produccion.cantidad_estimada)
+            if produccion.cantidad_estimada:
+                costo_litro = produccion.costo / float(produccion.cantidad_estimada)
+            else:
+                costo_litro = 0
         else:
             costo_litro = produccion.costo / float(produccion.cantidad_real)
              
