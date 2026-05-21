@@ -51,8 +51,8 @@
                         
                         <dt class="col-sm-5">Fecha Vencimiento:</dt>
                         <dd class="col-sm-7">
-                            {% if prueba.fecha_vencimiento %}
-                                {{ prueba.fecha_vencimiento|date:"d/m/Y" }}
+                            {% if prueba.produccion.fecha_vencimiento %}
+                                {{ prueba.produccion.fecha_vencimiento|date:"d/m/Y" }}
                             {% else %}
                                 <span class="text-muted">No especificado</span>
                             {% endif %}

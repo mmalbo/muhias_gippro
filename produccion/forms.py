@@ -268,12 +268,8 @@ class BuscarParametroForm(forms.Form):
 class PruebaQuimicaForm(forms.ModelForm):
     class Meta:
         model = PruebaQuimica
-        fields = ['fecha_vencimiento', 'observaciones', 'archivo_resultado']
+        fields = [ 'observaciones', 'archivo_resultado']
         widgets = {
-            'fecha_vencimiento': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
             'observaciones': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
@@ -284,6 +280,11 @@ class PruebaQuimicaForm(forms.ModelForm):
                 'accept': '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
             })
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hacer que fecha_vencimiento no sea requerido (opcional)
+        self.fields['archivo_resultado'].required = False
 
 class DetallePruebaForm(forms.ModelForm):
     class Meta:

@@ -53,9 +53,12 @@ class Produccion(ModeloBase):
 
     estado = models.CharField(verbose_name='Estado', max_length=50, choices=CHOICE_ESTADO_PROD, blank=False, null=False )
 
+    fecha_vencimiento = models.DateField(null=True, blank=True) 
+    
     observaciones_cancelacion = models.TextField(blank=True,null=True,
         verbose_name="Observaciones de Cancelación/Detención"
     )
+
     fecha_cancelacion = models.DateTimeField(null=True, blank=True)
 
     # Solo estos 2 campos para el enlace simple
@@ -358,7 +361,7 @@ class PruebaQuimica(models.Model):
     nomenclador_prueba = models.CharField(max_length=100, null=True, blank=True)
     produccion = models.ForeignKey('Produccion', on_delete=models.CASCADE, related_name='pruebas_quimicas')
     fecha_prueba = models.DateField(null=True, blank=True)
-    fecha_vencimiento = models.DateField(null=True, blank=True)  # Para productos con fecha de vencimiento
+    #fecha_vencimiento = models.DateField(null=True, blank=True)  # Para productos con fecha de vencimiento
     #responsable = models.ForeignKey('CustomUser', on_delete=models.PROTECT, related_name='pruebas_realizadas')
     estado = models.CharField(max_length=20, choices=ESTADOS_PRUEBA, default='en_proceso')
     observaciones = models.TextField(blank=True)

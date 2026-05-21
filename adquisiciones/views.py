@@ -999,7 +999,6 @@ class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
                         producto.costo = nuevo_costo
                         producto.save()
                 else:
-                    # print("A crear producto") formato=data['formato'],
                     producto = Producto.objects.create(
                         codigo_producto=data['codigo_producto'],
                         nombre_comercial=data['nombre_comercial'],                        
