@@ -1,6 +1,7 @@
 <!-- templates/produccion/detalle_produccion.html -->
 {% extends 'base/base.html' %}
 {% load humanize %}
+{% load adquisicion_filters %}
 
 {% block title %}Detalle de Producción - {{ produccion.lote }}{% endblock %}
 
@@ -167,8 +168,9 @@
                                     <td>${{ mp.inv_materia_prima.materia_prima.costo|floatformat:2 }}</td>
                                     <td>
                                         <!-- Para multiplicar: cantidad * costo_unitario -->
-                                        
-                                        <strong>${{ costo_total_mp|floatformat:2|intcomma }}</strong>
+                                        <strong>
+                                            ${{ mp.cantidad_materia_prima|multiply:mp.inv_materia_prima.materia_prima.costo|floatformat:2|intcomma }}
+                                        </strong>
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -229,8 +231,9 @@
                                     <td>${{ prod.producto.producto.costo|floatformat:2 }}</td>
                                     <td>
                                         <!-- Para multiplicar: cantidad * costo_unitario -->
-                                        
-                                        <strong>${{ costo_total_prod|floatformat:2|intcomma }}</strong>
+                                        <strong>
+                                            ${{ prod.cantidad_producto|multiply:prod.producto.producto.costo|floatformat:2|intcomma }}
+                                        </strong>
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -247,7 +250,7 @@
                                         <strong>Total Productos:</strong>
                                     </td>
                                     <td>
-                                        <strong>${{ costo_prod_ins|floatformat:2|intcomma }}</strong>
+                                        <strong>${{ costo_total_prod|floatformat:2|intcomma }}</strong>
                                     </td>
                                 </tr>                                
                             </tfoot>
@@ -451,7 +454,7 @@
                                     <strong>Total Producción:</strong>
                                 </td>
                                 <td>
-                                    <strong>${{ costo_total|floatformat:2|intcomma }}</strong>
+                                    <strong>${{ datos_produccion.costo_total|floatformat:2|intcomma }}</strong>
                                 </td>
                             </tr> 
                             <tr>
@@ -459,7 +462,7 @@
                                     <strong>Diferencia:</strong>
                                 </td>
                                 <td>
-                                    <strong>${{ diferencia_costo|floatformat:2|intcomma }}</strong>
+                                    <strong>${{ datos_produccion.diferencia_costo|floatformat:2|intcomma }}</strong>
                                 </td>
                             </tr>                               
                         </tfoot>

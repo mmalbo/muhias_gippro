@@ -45,7 +45,7 @@
 
             <!-- Paso 1: Cantidad Estimada -->
             <div id="step1" class="step-content">
-                <form id="formPaso1" >
+                <form id="formPaso1">
                     {% csrf_token %}
                     <input type="hidden" name="step" value="1">
                     
@@ -113,57 +113,57 @@
                 </form>
             </div>
 
-            <!-- Paso 2: Materias Primas (oculto inicialmente) -->
+            <!-- Paso 2: Formulación -->
             <div id="step2" class="step-content" style="display: none;">
                 <form id="formPaso2">
                     {% csrf_token %}
                     <input type="hidden" name="step" value="2">
                     
+                    <!-- Materias Primas -->
                     <div class="card mb-4">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">
-                                <i class="fas fa-flask me-2"></i> Materias Primas
-                            </h5>
+                            <h5 class="mb-0">Materias Primas</h5>
                             <button type="button" class="btn btn-sm btn-success" id="btnAgregarMateriaPrima">
-                                <i class="fas fa-plus me-1"></i> Agregar Materia Prima
+                                <i class="fas fa-plus me-1"></i> Agregar
                             </button>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-hover" id="tablaMateriasPrimas">
+                                <table class="table table-hover">
                                     <thead class="table-light">
-                                        <tr>
-                                            <th width="5%">#</th>
-                                            <th width="25%">Materia Prima</th>
-                                            <th width="15%">Cantidad</th>
-                                            <th width="15%">Unidad</th>
-                                            <th width="15%">Almacén</th>
-                                            <th width="15%">Costo Total</th>
-                                            <th width="10%">Acciones</th>
-                                        </tr>
+                                        <tr><th>#</th><th>Materia Prima</th><th>Cantidad</th><th>Unidad</th><th>Almacén</th><th>Costo</th><th></th></tr>
                                     </thead>
-                                    <tbody id="materiasPrimasContainer">
-                                        <!-- Se llenará con JavaScript -->
-                                    </tbody>
-                                    <tfoot class="table-light">
-                                        <tr>
-                                            <th colspan="5" class="text-end">TOTAL:</th>
-                                            <th id="totalCosto">$0.00</th>
-                                            <th></th>
-                                        </tr>
-                                    </tfoot>
+                                    <tbody id="materiasPrimasContainer"></tbody>
+                                    <tfoot><tr><th colspan="5">Total MP:</th><th id="totalMateriasPrimas">$0.00</th><th></th></tr></tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Productos -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Productos (Insumos)</h5>
+                            <button type="button" class="btn btn-sm btn-success" id="btnAgregarProducto">
+                                <i class="fas fa-plus me-1"></i> Agregar
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr><th>#</th><th>Producto</th><th>Cantidad</th><th>Unidad</th><th>Almacén</th><th>Costo</th><th></th></tr>
+                                    </thead>
+                                    <tbody id="productosContainer"></tbody>
+                                    <tfoot><tr><th colspan="5">Total Productos:</th><th id="totalProductos">$0.00</th><th></th></tr></tfoot>
                                 </table>
                             </div>
                         </div>
                     </div>
                     
                     <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary" id="btnVolverPaso1">
-                            <i class="fas fa-arrow-left me-1"></i> Volver
-                        </button>
-                        <button type="submit" class="btn btn-success" id="btnGuardar">
-                            <i class="fas fa-save me-1"></i> Guardar Cambios
-                        </button>
+                        <button type="button" class="btn btn-secondary" id="btnVolverPaso1">← Volver</button>
+                        <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
                     </div>
                 </form>
             </div>
@@ -171,492 +171,328 @@
     </div>
 </div>
 
-<!-- Template para fila de materia prima - CORREGIDO -->
+<!-- Templates -->
 <template id="templateMateriaPrima">
     <tr class="materia-prima-row">
         <td class="indice"></td>
-        <td>
-            <select class="form-select form-select-sm materia-prima-select" required>
-                <option value="">Seleccionar...</option>
-                {% for inv in materias_primas_disponibles %}
-                <option value="{{ inv.materia_prima.id }}" 
-                        data-inventario-id="{{ inv.id }}"
-                        data-unidad="{{ inv.materia_prima.unidad_medida }}"
-                        data-costo="{{ inv.materia_prima.costo }}"
-                        data-almacen-id="{{ inv.almacen.id }}">
-                    {{ inv.materia_prima.nombre }} - {{ inv.almacen.nombre }} ({{ inv.cantidad }} disp.)
-                </option>
-                {% endfor %}
-            </select>
-            <input type="hidden" name="id" class="materia-prima-id-hidden">
-            <input type="hidden" name="inventario_id" class="inventario-id-hidden">
-        </td>
-        <td>
-            <input type="number" step="0.01" min="0.01" class="form-control form-control-sm cantidad-input" 
-                   name="cantidad" placeholder="Cantidad" required>
-        </td>
+        <td><select class="form-select form-select-sm materia-prima-select" style="min-width: 200px;"></select>
+            <input type="hidden" class="materia-prima-id-hidden"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm cantidad-input" style="width: 100px;"></td>
         <td class="unidad-medida"></td>
-        <td>
-            <select class="form-select form-select-sm almacen-select" name="almacen" required>
-                <option value="">Almacén</option>
-                {% for almacen in almacenes %}
-                <option value="{{ almacen.id }}">{{ almacen.nombre }}</option>
-                {% endfor %}
-            </select>
-        </td>
+        <td><select class="form-select form-select-sm almacen-select" style="min-width: 150px;"></select></td>
         <td class="costo-total text-end">$0.00</td>
-        <td>
-            <button type="button" class="btn btn-sm btn-danger btn-eliminar">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
+        <td><button type="button" class="btn btn-sm btn-danger btn-eliminar">🗑</button></td>
     </tr>
 </template>
 
-<!-- Datos JSON para JavaScript -->
-{{ materias_primas_json|json_script:"materias-primas-data" }}
-{{ materias_disponibles_json|json_script:"materias-disponibles-data" }}
-{{ almacenes_json|json_script:"almacenes-data" }}
+<template id="templateProducto">
+    <tr class="producto-row">
+        <td class="indice"></td>
+        <td><select class="form-select form-select-sm producto-select" style="min-width: 200px;"></select>
+            <input type="hidden" class="producto-id-hidden"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm cantidad-input" style="width: 100px;"></td>
+        <td class="unidad-medida"></td>
+        <td><select class="form-select form-select-sm almacen-select" style="min-width: 150px;"></select></td>
+        <td class="costo-total text-end">$0.00</td>
+        <td><button type="button" class="btn btn-sm btn-danger btn-eliminar">🗑</button></td>
+    </tr>
+</template>
+
+<!-- Datos JSON ocultos -->
+<script type="application/json" id="materias-primas-data">{{ materias_primas_json|safe }}</script>
+<script type="application/json" id="productos-prod-data">{{ productos_prod_json|safe }}</script>
+<script type="application/json" id="materias-disponibles-data">{{ materias_disponibles_json|safe }}</script>
+<script type="application/json" id="productos-disponibles-data">{{ productos_disponibles_json|safe }}</script>
+<script type="application/json" id="almacenes-data">{{ almacenes_json|safe }}</script>
 
 {% endblock %}
 
 {% block javascript %}
+{{ block.super }}
 <script>
-// Recuperar datos del json_script
-const materiasPrimasIniciales = JSON.parse(document.getElementById('materias-primas-data').textContent);
-const materiasPrimasDisponibles = JSON.parse(document.getElementById('materias-disponibles-data').textContent);
-const almacenesDisponibles = JSON.parse(document.getElementById('almacenes-data').textContent);
+// Cargar datos
+const materiasPrimasIniciales = JSON.parse(document.getElementById('materias-primas-data').textContent || '[]');
+const productosIniciales = JSON.parse(document.getElementById('productos-prod-data').textContent || '[]');
+const materiasPrimasDisponibles = JSON.parse(document.getElementById('materias-disponibles-data').textContent || '[]');
+const productosDisponibles = JSON.parse(document.getElementById('productos-disponibles-data').textContent || '[]');
+const almacenesDisponibles = JSON.parse(document.getElementById('almacenes-data').textContent || '[]');
 
-console.log('✅ Datos cargados:', {
-    materiasPrimasIniciales: materiasPrimasIniciales,
-    materiasPrimasDisponibles: materiasPrimasDisponibles,
-    almacenesDisponibles: almacenesDisponibles
+console.log('Datos cargados:', {
+    mp_iniciales: materiasPrimasIniciales.length,
+    prod_iniciales: productosIniciales.length,
+    mp_disponibles: materiasPrimasDisponibles.length,
+    prod_disponibles: productosDisponibles.length,
+    almacenes: almacenesDisponibles.length
 });
 
 $(document).ready(function() {
-    let contadorFilas = 0;
-    let datosMateriasPrimas = materiasPrimasIniciales || [];
+    let contadorMaterias = 0;
+    let contadorProductos = 0;
     
-// ============================================
-// PASO 1: Guardar cantidad estimada - VERSIÓN CORREGIDA
-// ============================================
-$('#formPaso1').on('submit', function(e) {
-    e.preventDefault();
-        
+    // Paso 1
+    $('#formPaso1').on('submit', function(e) {
+        e.preventDefault();
         const cantidadEstimada = $('#cantidad_estimada').val();
         
         if (!cantidadEstimada || cantidadEstimada <= 0) {
-            mostrarMensaje('warning', 'Ingrese una cantidad estimada válida');
+            alert('Ingrese una cantidad válida');
             return;
         }
         
-        const $submitBtn = $(this).find('button[type="submit"]');
-        const originalText = $submitBtn.html();
-        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Procesando...');    
-    // Crear FormData para asegurar que se envíe como POST
-    const formData = new FormData();
-    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    formData.append('step', '1');
-    formData.append('cantidad_estimada', cantidadEstimada);
-    
-    console.log('📤 Enviando paso 1 - cantidad estimada:', cantidadEstimada);
-    
-    $.ajax({
-        url: '{% url "editar_produccion" produccion.id %}',
-        method: 'POST',  // Asegurar que sea POST
-        data: formData,
-        processData: false,  // Importante para FormData
-        contentType: false,  // Importante para FormData
-        success: function(response) {
-            console.log('✅ Respuesta recibida:', response);
-            
-            if (response.success) {
-                // Avanzar al paso 2
-                $('#step1').hide();
-                $('#step2').show();
-                $('#step1-indicator').removeClass('active');
-                $('#step2-indicator').addClass('active');
-                
-                // Cargar materias primas
-                cargarMateriasPrimas(datosMateriasPrimas);
-                
-                mostrarMensaje('success', 'Cantidad estimada actualizada');
-            } else {
-                mostrarMensaje('error', response.errors || 'Error al guardar');
-                $submitBtn.prop('disabled', false).html(originalText);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('❌ Error en la petición:', error);
-            console.error('Status:', status);
-            console.error('Respuesta:', xhr.responseText);
-            
-            let errorMsg = 'Error de conexión';
-            try {
-                const response = JSON.parse(xhr.responseText);
-                errorMsg = response.errors || errorMsg;
-            } catch (e) {
-                // Si no es JSON, mostrar el texto de error
-                errorMsg = xhr.responseText || errorMsg;
-            }
-            
-            mostrarMensaje('error', errorMsg);
-            $submitBtn.prop('disabled', false).html(originalText);
-        }
+        $.ajax({
+            url: window.location.href,
+            method: 'POST',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                step: '1',
+                cantidad_estimada: cantidadEstimada
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#step1').hide();
+                    $('#step2').show();
+                    $('#step1-indicator').removeClass('active');
+                    $('#step2-indicator').addClass('active');
+                    cargarMateriasPrimas(materiasPrimasIniciales);
+                    cargarProductos(productosIniciales);
+                } else {
+                    alert(response.errors || 'Error');
+                }
+            },
+            error: function() { alert('Error de conexión'); }
+        });
     });
-});
     
-    // ============================================
-    // VOLVER AL PASO 1
-    // ============================================
-    $('#btnVolverPaso1').on('click', function() {
+    $('#btnVolverPaso1').click(function() {
         $('#step2').hide();
         $('#step1').show();
         $('#step2-indicator').removeClass('active');
         $('#step1-indicator').addClass('active');
     });
     
-    // ============================================
-    // CARGAR MATERIAS PRIMAS EN TABLA - VERSIÓN MEJORADA
-    // ============================================
+    // Materias Primas
     function cargarMateriasPrimas(materias) {
-        console.log('📦 Cargando materias primas:', materias);
         $('#materiasPrimasContainer').empty();
-        contadorFilas = 0;
-    
-        // Verificar que materias sea un array
-        if (!Array.isArray(materias)) {
-            console.warn('⚠️ materias no es un array, usando array vacío');
-            materias = [];
-        }
-
-        if (materias.length > 0) {
-            materias.forEach(mp => {
-                agregarFilaExistente(mp);
-            });
+        contadorMaterias = 0;
+        if (materias && materias.length) {
+            materias.forEach(mp => agregarFilaMateriaPrimaConDatos(mp));
         } else {
-            agregarFilaVacia();
+            agregarFilaMateriaPrimaVacia();
         }
-    
         calcularTotal();
     }
-
-    function agregarFilaExistente(mp) {
-        contadorFilas++;
-        const template = document.getElementById('templateMateriaPrima');
-        const clone = template.content.cloneNode(true);
-        const $fila = $(clone);
     
-        console.log('➕ Agregando fila existente:', mp);
-    
-        // Configurar índices y valores ocultos
-        $fila.find('.indice').text(contadorFilas);
-        $fila.find('.materia-prima-id-hidden').val(mp.id || '');
-        $fila.find('.inventario-id-hidden').val(mp.inventario_id || '');
-    
-        // Seleccionar materia prima en el select
+    function agregarFilaMateriaPrimaConDatos(mp) {
+        contadorMaterias++;
+        const $fila = crearFilaMateriaPrima(contadorMaterias);
+        
         const $select = $fila.find('.materia-prima-select');
-    
-        // Recorrer todas las opciones para encontrar la que coincida
-        let opcionEncontrada = false;
-        $select.find('option').each(function() {
-            const $option = $(this);
-            const optionValue = $option.val();
-            const optionAlmacenId = $option.data('almacen-id');
-        
-            // Coincidencia por ID de materia prima y almacén
-            if (optionValue == mp.materia_prima_id && optionAlmacenId == mp.almacen_id) {
-                $option.prop('selected', true);
-                opcionEncontrada = true;
-                console.log('  ✅ Opción encontrada por materia prima y almacén');
-                return false; // break each
-            }
-        });
-    
-        // Si no se encontró por ambos, intentar solo por materia prima
-        if (!opcionEncontrada) {
-            $select.val(mp.materia_prima_id);
-            console.log('  ⚠️ Opción seleccionada solo por materia prima');
-        }
-    
-        // Establecer cantidad
+        $select.val(mp.materia_prima_id);
+        $fila.find('.materia-prima-id-hidden').val(mp.id || '');
         $fila.find('.cantidad-input').val(mp.cantidad);
-    
-        // Seleccionar almacén en su propio select
-        const $almacenSelect = $fila.find('.almacen-select');
-        $almacenSelect.val(mp.almacen_id);
-    
-        // Actualizar unidad de medida
-        const selectedOption = $select.find('option:selected');
-        const unidad = selectedOption.data('unidad') || mp.unidad_medida;
-        $fila.find('.unidad-medida').text(unidad);
-    
-        // Guardar costo unitario en data de la fila
-        const costoUnitario = selectedOption.data('costo') || mp.costo_unitario;
-        $fila.data('costo-unitario', costoUnitario);
-    
-        // Configurar eventos de la fila
-        configurarEventosFila($fila);
-    
-        // Agregar la fila a la tabla
-        $('#materiasPrimasContainer').append($fila);
-    
-        // Calcular costo de la fila
-        actualizarCostoFila($fila);
-    
-        console.log('  ✅ Fila agregada correctamente');
-    }
-
-    function actualizarUnidadYCosto($fila) {
-        const selectedOption = $fila.find('.materia-prima-select option:selected');
-        const unidad = selectedOption.data('unidad') || '';
-        const costo = selectedOption.data('costo') || 0;
-    
-        $fila.find('.unidad-medida').text(unidad);
-        $fila.data('costo-unitario', costo);
-    
-        // Si hay un inventario-id, guardarlo
-        const inventarioId = selectedOption.data('inventario-id');
-        if (inventarioId) {
-            $fila.find('.inventario-id-hidden').val(inventarioId);
-        }
-    }
-
-    function agregarFilaVacia() {
-        contadorFilas++;
-        const template = document.getElementById('templateMateriaPrima');
-        const clone = template.content.cloneNode(true);
-        const $fila = $(clone);
+        $fila.find('.almacen-select').val(mp.almacen_id);
         
-        $fila.find('.indice').text(contadorFilas);
-        configurarEventosFila($fila);
-        
+        const selected = $select.find('option:selected');
+        $fila.find('.unidad-medida').text(selected.data('unidad') || '');
+        actualizarCostoMateriaPrima($fila);
         $('#materiasPrimasContainer').append($fila);
     }
     
-    // ============================================
-    // AGREGAR NUEVA MATERIA PRIMA
-    // ============================================
-    $('#btnAgregarMateriaPrima').on('click', function() {
-        contadorFilas++;
-        const template = document.getElementById('templateMateriaPrima');
-        const clone = template.content.cloneNode(true);
-        const $fila = $(clone);
-        
-        $fila.find('.indice').text(contadorFilas);
-        configurarEventosFila($fila);
-        
+    function agregarFilaMateriaPrimaVacia() {
+        contadorMaterias++;
+        const $fila = crearFilaMateriaPrima(contadorMaterias);
         $('#materiasPrimasContainer').append($fila);
-    });
-    
-    // ============================================
-    // CONFIGURAR EVENTOS DE UNA FILA
-    // ============================================
-    function configurarEventosFila($fila) {
-        // Cambio en materia prima
-        $fila.find('.materia-prima-select').on('change', function() {
-            const selected = $(this).find('option:selected');
-            const unidad = selected.data('unidad') || '';
-            const costo = selected.data('costo') || 0;
-            const almacenId = selected.data('almacen-id');
-            const inventarioId = selected.data('inventario-id');
-        
-            $fila.find('.unidad-medida').text(unidad);
-            $fila.data('costo-unitario', costo);
-        
-            // Actualizar inventario_id oculto
-            if (inventarioId) {
-                $fila.find('.inventario-id-hidden').val(inventarioId);
-            }
-        
-            // Si el option tiene almacén predefinido, seleccionarlo automáticamente
-            if (almacenId) {
-                $fila.find('.almacen-select').val(almacenId);
-            } else {
-                // Si no tiene almacén predefinido, limpiar la selección
-                $fila.find('.almacen-select').val('');
-            }
-        
-            // Remover clases de error si las hay
-            $(this).removeClass('is-invalid');
-            $fila.find('.almacen-select').removeClass('is-invalid');
-            $fila.find('.cantidad-input').removeClass('is-invalid');
-        
-            actualizarCostoFila($fila);
-        });
-    
-        // Cambio en cantidad
-        $fila.find('.cantidad-input').on('input', function() {
-            actualizarCostoFila($fila);
-            $(this).removeClass('is-invalid');
-        });
-    
-        // Cambio en almacén
-        $fila.find('.almacen-select').on('change', function() {
-            $(this).removeClass('is-invalid');
-        });
-    
-        // Botón eliminar
-        $fila.find('.btn-eliminar').on('click', function() {
-            if ($('#materiasPrimasContainer tr').length > 1) {
-                $fila.remove();
-                reordenarIndices();
-                calcularTotal();
-            } else {
-                mostrarMensaje('warning', 'Debe haber al menos una materia prima');
-            }
-        });
     }
     
-    // ============================================
-    // ACTUALIZAR COSTO DE UNA FILA
-    // ============================================
-    function actualizarCostoFila($fila) {
+    function crearFilaMateriaPrima(indice) {
+        const $fila = $($('#templateMateriaPrima').html());
+        $fila.find('.indice').text(indice);
+        
+        const $select = $fila.find('.materia-prima-select');
+        $select.append('<option value="">Seleccionar...</option>');
+        materiasPrimasDisponibles.forEach(mp => {
+            $select.append(`<option value="${mp.materia_prima_id}" data-unidad="${mp.unidad_medida}" data-costo="${mp.costo}" data-almacen-id="${mp.almacen_id}">${mp.materia_prima_nombre} - ${mp.almacen_nombre} (${mp.cantidad_disponible})</option>`);
+        });
+        
+        const $almacen = $fila.find('.almacen-select');
+        $almacen.append('<option value="">Seleccionar...</option>');
+        almacenesDisponibles.forEach(alm => {
+            $almacen.append(`<option value="${alm.id}">${alm.nombre}</option>`);
+        });
+        
+        $fila.find('.materia-prima-select').change(() => actualizarInfoMateriaPrima($fila));
+        $fila.find('.cantidad-input').on('input', () => actualizarCostoMateriaPrima($fila));
+        $fila.find('.btn-eliminar').click(() => { $fila.remove(); calcularTotal(); });
+        
+        return $fila;
+    }
+    
+    function actualizarInfoMateriaPrima($fila) {
+        const selected = $fila.find('.materia-prima-select option:selected');
+        $fila.find('.unidad-medida').text(selected.data('unidad') || '');
+        $fila.find('.almacen-select').val(selected.data('almacen-id') || '');
+        actualizarCostoMateriaPrima($fila);
+    }
+    
+    function actualizarCostoMateriaPrima($fila) {
         const cantidad = parseFloat($fila.find('.cantidad-input').val()) || 0;
         const costoUnitario = parseFloat($fila.find('.materia-prima-select option:selected').data('costo')) || 0;
-        const costoTotal = cantidad * costoUnitario;
-        
-        $fila.find('.costo-total').text('$' + costoTotal.toFixed(2));
-        
+        $fila.find('.costo-total').text('$' + (cantidad * costoUnitario).toFixed(2));
         calcularTotal();
     }
     
-    // ============================================
-    // CALCULAR TOTAL GENERAL
-    // ============================================
+    // Productos
+    function cargarProductos(productos) {
+        $('#productosContainer').empty();
+        contadorProductos = 0;
+        if (productos && productos.length) {
+            productos.forEach(prod => agregarFilaProductoConDatos(prod));
+        } else {
+            agregarFilaProductoVacia();
+        }
+        calcularTotal();
+    }
+    
+    function agregarFilaProductoConDatos(prod) {
+        contadorProductos++;
+        const $fila = crearFilaProducto(contadorProductos);
+        
+        const $select = $fila.find('.producto-select');
+        $select.val(prod.producto_id);
+        $fila.find('.producto-id-hidden').val(prod.id || '');
+        $fila.find('.cantidad-input').val(prod.cantidad);
+        $fila.find('.almacen-select').val(prod.almacen_id);
+        
+        const selected = $select.find('option:selected');
+        $fila.find('.unidad-medida').text(selected.data('unidad') || '');
+        actualizarCostoProducto($fila);
+        $('#productosContainer').append($fila);
+    }
+    
+    function agregarFilaProductoVacia() {
+        contadorProductos++;
+        const $fila = crearFilaProducto(contadorProductos);
+        $('#productosContainer').append($fila);
+    }
+    
+    function crearFilaProducto(indice) {
+        const $fila = $($('#templateProducto').html());
+        $fila.find('.indice').text(indice);
+        
+        const $select = $fila.find('.producto-select');
+        $select.append('<option value="">Seleccionar...</option>');
+        productosDisponibles.forEach(prod => {
+            $select.append(`<option value="${prod.producto_id}" data-unidad="${prod.unidad_medida}" data-costo="${prod.costo}" data-almacen-id="${prod.almacen_id}">${prod.nombre} - ${prod.almacen_nombre} (${prod.cantidad_disponible})</option>`);
+        });
+        
+        const $almacen = $fila.find('.almacen-select');
+        $almacen.append('<option value="">Seleccionar...</option>');
+        almacenesDisponibles.forEach(alm => {
+            $almacen.append(`<option value="${alm.id}">${alm.nombre}</option>`);
+        });
+        
+        $fila.find('.producto-select').change(() => actualizarInfoProducto($fila));
+        $fila.find('.cantidad-input').on('input', () => actualizarCostoProducto($fila));
+        $fila.find('.btn-eliminar').click(() => { $fila.remove(); calcularTotal(); });
+        
+        return $fila;
+    }
+    
+    function actualizarInfoProducto($fila) {
+        const selected = $fila.find('.producto-select option:selected');
+        $fila.find('.unidad-medida').text(selected.data('unidad') || '');
+        $fila.find('.almacen-select').val(selected.data('almacen-id') || '');
+        actualizarCostoProducto($fila);
+    }
+    
+    function actualizarCostoProducto($fila) {
+        const cantidad = parseFloat($fila.find('.cantidad-input').val()) || 0;
+        const costoUnitario = parseFloat($fila.find('.producto-select option:selected').data('costo')) || 0;
+        $fila.find('.costo-total').text('$' + (cantidad * costoUnitario).toFixed(2));
+        calcularTotal();
+    }
+    
     function calcularTotal() {
-        let total = 0;
-        
-        $('.materia-prima-row').each(function() {
-            const costoText = $(this).find('.costo-total').text();
-            const costo = parseFloat(costoText.replace('$', '')) || 0;
-            total += costo;
+        let totalMP = 0, totalProd = 0;
+        $('.materia-prima-row .costo-total').each(function() {
+            totalMP += parseFloat($(this).text().replace('$', '')) || 0;
         });
-        
-        $('#totalCosto').text('$' + total.toFixed(2));
+        $('.producto-row .costo-total').each(function() {
+            totalProd += parseFloat($(this).text().replace('$', '')) || 0;
+        });
+        $('#totalMateriasPrimas').text('$' + totalMP.toFixed(2));
+        $('#totalProductos').text('$' + totalProd.toFixed(2));
     }
     
-    // ============================================
-    // REORDENAR ÍNDICES DESPUÉS DE ELIMINAR
-    // ============================================
-    function reordenarIndices() {
-        let i = 1;
-        $('.materia-prima-row').each(function() {
-            $(this).find('.indice').text(i++);
-        });
-        contadorFilas = i - 1;
-    }
+    // Botones agregar
+    $('#btnAgregarMateriaPrima').click(() => agregarFilaMateriaPrimaVacia());
+    $('#btnAgregarProducto').click(() => agregarFilaProductoVacia());
     
-    // ============================================
-    // ENVIAR FORMULARIO (PASO 2)
-    // ============================================
+    // Envío final
     $('#formPaso2').on('submit', function(e) {
         e.preventDefault();
         
-        // Validar que todas las filas estén completas
-        let filasValidas = true;
-        let errores = [];
+        const materiasPrimas = [], productos = [];
         
-        $('.materia-prima-row').each(function(index) {
-            const $fila = $(this);
-            const materiaPrima = $fila.find('.materia-prima-select').val();
-            const cantidad = $fila.find('.cantidad-input').val();
-            const almacen = $fila.find('.almacen-select').val();
-            
-            if (!materiaPrima) {
-                filasValidas = false;
-                errores.push(`Fila ${index + 1}: Seleccione una materia prima`);
-                $fila.find('.materia-prima-select').addClass('is-invalid');
-            }
-            
-            if (!cantidad || cantidad <= 0) {
-                filasValidas = false;
-                errores.push(`Fila ${index + 1}: Ingrese una cantidad válida`);
-                $fila.find('.cantidad-input').addClass('is-invalid');
-            }
-            
-            if (!almacen) {
-                filasValidas = false;
-                errores.push(`Fila ${index + 1}: Seleccione un almacén`);
-                $fila.find('.almacen-select').addClass('is-invalid');
-            }
-        });
-        
-        if (!filasValidas) {
-            mostrarMensaje('warning', 'Complete todos los campos:\n' + errores.join('\n'));
-            return;
-        }
-        
-        // Recolectar datos
-        const materiasPrimas = [];
         $('.materia-prima-row').each(function() {
             const $fila = $(this);
-            materiasPrimas.push({
-                id: $fila.find('.materia-prima-id-hidden').val(),
-                materia_prima: $fila.find('.materia-prima-select').val(),
-                cantidad: $fila.find('.cantidad-input').val(),
-                almacen: $fila.find('.almacen-select').val()
-            });
+            if ($fila.find('.materia-prima-select').val() && $fila.find('.cantidad-input').val()) {
+                materiasPrimas.push({
+                    id: $fila.find('.materia-prima-id-hidden').val(),
+                    materia_prima: $fila.find('.materia-prima-select').val(),
+                    cantidad: $fila.find('.cantidad-input').val(),
+                    almacen: $fila.find('.almacen-select').val()
+                });
+            }
         });
         
-        // Crear FormData
+        $('.producto-row').each(function() {
+            const $fila = $(this);
+            if ($fila.find('.producto-select').val() && $fila.find('.cantidad-input').val()) {
+                productos.push({
+                    id: $fila.find('.producto-id-hidden').val(),
+                    producto: $fila.find('.producto-select').val(),
+                    cantidad: $fila.find('.cantidad-input').val(),
+                    almacen: $fila.find('.almacen-select').val()
+                });
+            }
+        });
+        
         const formData = new FormData();
         formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
         formData.append('step', '2');
         
-        materiasPrimas.forEach((mp, index) => {
-            if (mp.id) {
-                formData.append(`materias_primas[${index}][id]`, mp.id);
-            }
-            formData.append(`materias_primas[${index}][materia_prima]`, mp.materia_prima);
-            formData.append(`materias_primas[${index}][cantidad]`, mp.cantidad);
-            formData.append(`materias_primas[${index}][almacen]`, mp.almacen);
+        materiasPrimas.forEach((mp, i) => {
+            if (mp.id) formData.append(`materias_primas[${i}][id]`, mp.id);
+            formData.append(`materias_primas[${i}][materia_prima]`, mp.materia_prima);
+            formData.append(`materias_primas[${i}][cantidad]`, mp.cantidad);
+            formData.append(`materias_primas[${i}][almacen]`, mp.almacen);
         });
         
-        // Deshabilitar botón
-        $('#btnGuardar').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Guardando...');
+        productos.forEach((p, i) => {
+            if (p.id) formData.append(`productos[${i}][id]`, p.id);
+            formData.append(`productos[${i}][producto]`, p.producto);
+            formData.append(`productos[${i}][cantidad]`, p.cantidad);
+            formData.append(`productos[${i}][almacen]`, p.almacen);
+        });
         
         $.ajax({
-            url: '{% url "editar_produccion" produccion.id %}',
+            url: window.location.href,
             method: 'POST',
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
                 if (response.success) {
-                    mostrarMensaje('success', response.message);
-                    setTimeout(() => {
-                        window.location.href = response.redirect_url;
-                    }, 1500);
+                    alert(response.message);
+                    window.location.href = response.redirect_url;
                 } else {
-                    $('#btnGuardar').prop('disabled', false).html('<i class="fas fa-save me-1"></i> Guardar Cambios');
-                    mostrarMensaje('error', response.errors || 'Error al guardar');
+                    alert(response.errors || 'Error');
                 }
             },
-            error: function(xhr) {
-                $('#btnGuardar').prop('disabled', false).html('<i class="fas fa-save me-1"></i> Guardar Cambios');
-                mostrarMensaje('error', 'Error de conexión');
-            }
+            error: function() { alert('Error de conexión'); }
         });
     });
-    
-    // ============================================
-    // FUNCIÓN PARA MOSTRAR MENSAJES
-    // ============================================
-    function mostrarMensaje(tipo, mensaje) {
-        // Usar SweetAlert2 si está disponible
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: tipo,
-                title: tipo === 'success' ? 'Éxito' : tipo === 'warning' ? 'Advertencia' : 'Error',
-                text: mensaje,
-                timer: tipo === 'success' ? 2000 : undefined,
-                showConfirmButton: tipo !== 'success'
-            });
-        } else {
-            alert(mensaje);
-        }
-    }
 });
 </script>
 

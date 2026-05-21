@@ -106,7 +106,7 @@
 $(document).ready(function() {
     // Fecha de vencimiento por defecto (6 meses desde hoy)
     let fechaDefault = new Date();
-    fechaDefault.setMonth(fechaDefault.getMonth() + 6);
+    fechaDefault.setMonth(fechaDefault.getMonth() + 24);
     $('#fecha_vencimiento').val(fechaDefault.toISOString().split('T')[0]);
 
     $('#btnIniciar').click(function() {
