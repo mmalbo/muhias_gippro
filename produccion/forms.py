@@ -264,7 +264,10 @@ class BuscarParametroForm(forms.Form):
             'placeholder': 'Buscar por código o nombre...'
         })
     )
-
+"""'fecha_vencimiento', 'fecha_vencimiento': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),"""
 class PruebaQuimicaForm(forms.ModelForm):
     class Meta:
         model = PruebaQuimica

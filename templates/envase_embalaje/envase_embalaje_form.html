@@ -5,32 +5,79 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-11 col-lg-11">
-                    <h4 class="card-title">{% if object %}Actualizar envase o embalaje: {{ object.codigo_envase }}{% else %}Crear envase o
+                    <h4 class="card-title">{% if object %}Actualizar envase/embalaje: {{ object.codigo_envase }}{% else %}Crear envase o
                         embalaje{% endif %}</h4>
                     <div class="card">
                         <div class="card-body">
                             <form method="post">
                                 {% csrf_token %}
-                                <div class="form-row">
-
-                                   {% if object %}
-                                   	 <div class="col-md-6 mb-3">
+                                
+                                <!-- Fila 1: Código (solo lectura) -->
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
                                         {{ form.codigo_envase.label_tag }}
                                         {{ form.codigo_envase }}
+                                        {% if form.codigo_envase.help_text %}
+                                            <small class="form-text text-muted">{{ form.codigo_envase.help_text }}</small>
+                                        {% endif %}
+                                        {% if form.codigo_envase.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.codigo_envase.errors }}</div>
+                                        {% endif %}
                                     </div>
-                                   {% endif %}
-
+                                </div>
+                                
+                                <!-- Fila 2: Nombre y Proveedor -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.nombre.label_tag }}
+                                        {{ form.nombre }}
+                                        {% if form.nombre.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.nombre.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.proveedor.label_tag }}
+                                        {{ form.proveedor }}
+                                        {% if form.proveedor.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.proveedor.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Fila 3: Tipo y Formato -->
+                                <div class="row">
                                     <div class="col-md-6 mb-3">
                                         {{ form.tipo_envase_embalaje.label_tag }}
                                         {{ form.tipo_envase_embalaje }}
+                                        {% if form.tipo_envase_embalaje.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.tipo_envase_embalaje.errors }}</div>
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         {{ form.formato.label_tag }}
                                         {{ form.formato }}
+                                        {% if form.formato.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.formato.errors }}</div>
+                                        {% endif %}
                                     </div>
-
                                 </div>
-{#                                {{ form.as_p }}#}
+                                
+                                <!-- Fila 4: Costo -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.costo.label_tag }}
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">$</span>
+                                            </div>
+                                            {{ form.costo }}
+                                        </div>
+                                        {% if form.costo.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.costo.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
                                 <br>
                                 <div class="form-group" style="text-align: center;">
                                     <button type="submit" class="btn btn-success">Guardar</button>

@@ -875,16 +875,10 @@ def iniciar_produccion(request, pk):
     mp = Prod_Inv_MP.objects.filter(lote_prod=produccion)
     prod = Prod_Inv_Producto.objects.filter(lote_prod=produccion)
 
-    print(f'{mp}')
-    print(f'{prod}')
-
     if mp and mp[0].vale.estado == 'confirmado' or prod and prod[0].vale.estado == 'confirmado':
         messages.warning(request, f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
         print(f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
         return redirect('produccion_list')
-    else:
-        print(f'{mp[0].vale.estado}')
-        print(f'{prod[0].vale.estado}')
 
     if produccion.estado == 'Planificada':
         produccion.estado = 'En proceso: Iniciando mezcla'

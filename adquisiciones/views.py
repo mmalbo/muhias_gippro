@@ -462,10 +462,12 @@ class CompraEnvaseWizard(LoginRequiredMixin, SessionWizardView):
                         envase.save()
                 else:
                     envase = EnvaseEmbalaje.objects.create(
+                        codigo_envase=data['codigo_envase'],  # CORREGIDO: usar codigo_envase
+                        nombre=data.get('nombre_envase', 'Envase'),  # Valor por defecto
                         tipo_envase_embalaje=data['tipo_envase_embalaje'],
                         formato=data['formato'],
+                        proveedor=data.get('proveedor', 'Proveedor'),  # Valor por defecto
                         costo=data['costo'],
-                        codigo_envase=data['codigo_envase'],
                     )
                 
                 DetallesAdquisicionEnvase.objects.create(
@@ -541,17 +543,17 @@ class CompraEnvaseEditView(LoginRequiredMixin, UpdateView):
 class EnvaseDetalleView(LoginRequiredMixin, View):
     def get(self, request, pk):
         try:
-            envase = EnvaseEmbalaje.objects.get(pk=pk)
-            if envase.formato:
-                format = str(envase.formato.capacidad) + ' ' + envase.formato.unidad_medida
-            else:
-                format = ''
-            return JsonResponse({
+            envase = EnvaseEmbalaje.objects.select_related('tipo_envase_embalaje', 'formato').get(pk=pk)
+            data = {
+                'codigo_envase': envase.codigo_envase,
                 'codigo': envase.codigo_envase,
-                'formato': format,
-                'tipo': envase.tipo_envase_embalaje.nombre or '',
-                'costo': envase.costo or '',
-            })
+                'formato': str(envase.formato) if envase.formato else 'Sin formato',
+                'formato_nombre': str(envase.formato) if envase.formato else 'Sin formato',
+                'tipo': envase.tipo_envase_embalaje.nombre if envase.tipo_envase_embalaje else 'Sin tipo',
+                'tipo_nombre': envase.tipo_envase_embalaje.nombre if envase.tipo_envase_embalaje else 'Sin tipo',
+                'costo': float(envase.costo) if envase.costo else 0,
+            }
+            return JsonResponse(data)
         except EnvaseEmbalaje.DoesNotExist:
             return JsonResponse({'error': 'Envase no encontrado'}, status=404)
 

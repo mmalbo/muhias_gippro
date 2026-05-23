@@ -1,4 +1,5 @@
 from django.db import models
+from os.path import basename
 from django.db.models import Sum
 from bases.bases.models import ModeloBase
 from .choices import ESTADOS, Tipo_mat_prima, obtener_tipos_materia_prima
@@ -96,10 +97,21 @@ class MateriaPrima(ModeloBase):
         return self.nombre
 
     def get_ficha_tecnica_name(self):
+        """Retorna el nombre del archivo de ficha técnica"""
+        if self.ficha_tecnica:
+            return basename(self.ficha_tecnica.name)
+        return None
+    
+    def get_hoja_seguridad_name(self):
+        """Retorna el nombre del archivo de hoja de seguridad"""
+        if self.hoja_seguridad:
+            return basename(self.hoja_seguridad.name)
+        return None
+    """def get_ficha_tecnica_name(self):
         return self.ficha_tecnica.name if self.ficha_tecnica else ''
 
     def get_hoja_seguridad_name(self):
-        return self.hoja_seguridad.name if self.hoja_seguridad else ''
+        return self.hoja_seguridad.name if self.hoja_seguridad else ''"""
 
     """ def save(self, *args, **kwargs):
         # Actualizar choices antes de guardar

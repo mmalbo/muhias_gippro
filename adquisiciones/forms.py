@@ -204,7 +204,8 @@ class EnvasesForm(forms.Form):
         required=False,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Nuevo costo (opcional)'
+            'placeholder': 'Nuevo costo (opcional)',
+            'step': '0.01'
         }),
         label='Actualizar costo'
     )
@@ -221,10 +222,22 @@ class EnvasesForm(forms.Form):
         decimal_places=2,
         min_value=0.01,
         label="Cantidad adquirida",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
     )
    
-    # Campos para nuevo envase
+    # Campos para nuevo envase - CORREGIDO: usar codigo_envase para coincidir con template
+    codigo_envase = forms.CharField(
+        max_length=20, 
+        required=False,  # Cambiar a False, se valida en clean
+        label="Código",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    nombre_envase = forms.CharField(
+        max_length=255,  # Aumentado para coincidir con modelo
+        required=False, 
+        label="Nombre del envase",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
     tipo_envase_embalaje = forms.ModelChoiceField(
         queryset=TipoEnvaseEmbalaje.objects.all(),
         required=False,
@@ -237,19 +250,18 @@ class EnvasesForm(forms.Form):
         label="Seleccionar formato",
         widget=forms.Select(attrs={'class': 'form-select formato-select'})
     )
-    codigo_envase = forms.CharField(
-        max_length=20, 
+    proveedor = forms.CharField(
+        max_length=255,  # Aumentado para coincidir con modelo
         required=False, 
-        label="Código",
+        label="Proveedor",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     costo = forms.FloatField(
         required=False,
         label="Costo",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
     )
 
-    
     def clean(self):
         cleaned_data = super().clean()
         opcion = cleaned_data.get('opcion')
@@ -258,23 +270,41 @@ class EnvasesForm(forms.Form):
             if not cleaned_data.get('envase_existente'):
                 self.add_error('envase_existente', 'Debes seleccionar un envase existente')
 
-            # Si se proporciona nuevo_costo, asegurarse de que sea válido
+            # Validar nuevo costo
             nuevo_costo = cleaned_data.get('nuevo_costo')
             if nuevo_costo is not None and nuevo_costo < 0:
-                raise forms.ValidationError('El costo no puede ser negativo')
+                self.add_error('nuevo_costo', 'El costo no puede ser negativo')
             
         elif opcion == self.NEW:
-            if not cleaned_data.get('codigo_envase'):
-                self.add_error('codigo_envase', 'El código es obligatorio para nuevas materias primas')            
-            codigo=cleaned_data.get('codigo_envase')
+            # Validar código
+            codigo = cleaned_data.get('codigo_envase')
+            if not codigo:
+                self.add_error('codigo_envase', 'El código es obligatorio para nuevos envases o embalajes')
+            else:
+                # Verificar unicidad del código CORREGIDO
+                if EnvaseEmbalaje.objects.filter(codigo_envase=codigo).exists():
+                    self.add_error('codigo_envase', 'Ya existe un envase con este código')
+            
+            # Validar tipo de envase
             if not cleaned_data.get('tipo_envase_embalaje'):
-                self.add_error('tipo_envase_embalaje', 'El tipo de envase es obligatorio para nuevos evases o embalajes')
+                self.add_error('tipo_envase_embalaje', 'El tipo de envase es obligatorio para nuevos envases o embalajes')
+            
+            # Validar formato
             if not cleaned_data.get('formato'):
-                self.add_error('formato', 'El formato es obligatorio para nuevos eases o embalajes')
-            if codigo and MateriaPrima.objects.filter(codigo=codigo).exists():
-                self.add_error('codigo', 'Ya existe una materia prima con este código')        
+                self.add_error('formato', 'El formato es obligatorio para nuevos envases o embalajes')
+            
+            # Validar costo
+            costo = cleaned_data.get('costo')
+            if costo is None or costo <= 0:
+                self.add_error('costo', 'El costo es obligatorio y debe ser mayor a 0')
+        
+        # Validar cantidad siempre
+        cantidad = cleaned_data.get('cantidad')
+        if not cantidad or cantidad <= 0:
+            self.add_error('cantidad', 'La cantidad debe ser mayor a 0')
+        
         return cleaned_data
-    
+        
 """ Para insumos y otros """
 class CantidadInsumosForm(forms.Form):
     cantidad = forms.IntegerField(
@@ -434,6 +464,7 @@ class ProductosForm(forms.Form):
         }),
         label='Actualizar costo'
     )
+
     # Campos para nuevo producto
     codigo_producto = forms.CharField(
         max_length=20, 
@@ -447,12 +478,7 @@ class ProductosForm(forms.Form):
         label="Nombre",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    formato = forms.ModelChoiceField(
-        queryset=Formato.objects.all(),
-        required=False,
-        label="Seleccionar formato",
-        widget=forms.Select(attrs={'class': 'form-select formato-select'})
-    )
+    
     costo = forms.FloatField(
         required=False,
         label="Costo",
@@ -476,8 +502,6 @@ class ProductosForm(forms.Form):
                 self.add_error('codigo', 'El codigo es obligatorio para nuevos productos')
             if not cleaned_data.get('nombre_comercial'):
                 self.add_error('nombre', 'El nombre es obligatorio para nuevos productos')
-            if not cleaned_data.get('formato'):
-                self.add_error('formato', 'El formato es obligatorio para nuevos productos')
             
             # Validar que no exista un producto con el mismo código o nombre
             nombre_comercial = cleaned_data.get('nombre_comercial')

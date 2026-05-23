@@ -27,6 +27,20 @@
     <!-- ===================== -->
     <!-- ESTILOS PERSONALIZADOS -->
     <!-- ===================== -->
+     <style>
+        /* Contenedor de toasts: esquina superior derecha */
+        .toast-container-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            width: 350px;
+        }
+        /* Opcional: para que los toasts se apilen con espacio */
+        .toast-container-custom .toast {
+            margin-bottom: 12px;
+        }
+    </style>
     <style>
     /* ========== VARIABLES Y RESET ========== */
     :root {
@@ -733,6 +747,9 @@
 <!-- ===================== -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+<!-- Contenedor donde se mostrarán los toasts -->
+<div class="toast-container-custom" id="toastContainer"></div>
+
 <!-- ===================== -->
 <!-- ESTRUCTURA PRINCIPAL -->
 <!-- ===================== -->
@@ -867,10 +884,69 @@
 
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+<!-- Script para convertir mensajes de Django en toasts -->
+    <script>
+        // Función que muestra un toast con Bootstrap
+    function mostrarToast(mensaje, nivel, persistente = false) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const config = {
+            'success': { bg: 'bg-success', icon: '✓', autohide: true, delay: 5000 },
+            'info':    { bg: 'bg-info',    icon: 'ℹ', autohide: true, delay: 3000 },
+            'warning': { bg: 'bg-warning', icon: '⚠', autohide: true, delay: 8000 },
+            'error':   { bg: 'bg-danger',  icon: '✗', autohide: false, delay: 0 }
+        };
+        const cfg = config[nivel] || config['info'];
+        const autohide = persistente ? false : cfg.autohide;
+        const delay = cfg.delay;
+
+        const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+        const toastHTML = `
+        <div id="${toastId}" class="toast align-items-center text-white ${cfg.bg} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${cfg.icon}</strong> ${mensaje}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+            </div>
+        </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', toastHTML);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: autohide,
+            delay: delay
+        });
+        toast.show();
+
+        // Eliminar del DOM después de que se oculte (sea por botón o por timeout)
+        toastElement.addEventListener('hidden.bs.toast', function () {
+            toastElement.remove();
+        });
+    }
+
+// Procesar mensajes de Django
+document.addEventListener('DOMContentLoaded', function() {
+    const messageElements = document.querySelectorAll('.django-message-item');
+    messageElements.forEach(el => {
+        const nivel = el.getAttribute('data-level');
+        const texto = el.innerText;
+        const persistente = (nivel === 'error');
+        mostrarToast(texto, nivel, persistente);
+        el.remove();
+    });
+});
+    </script>
+    
 <!-- ===================== -->
 <!-- INICIALIZACIÓN Y CONFIGURACIÓN DATATABLES -->
 <!-- ===================== -->
- 
+
+
 <script>
 // Configuración global
 window.GIPPro = {

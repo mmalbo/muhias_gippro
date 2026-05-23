@@ -3,12 +3,17 @@
 {% load static %}
 
 {% block contenido %}
+{% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3>Detalle de Solicitud de Envasado</h3>
+                    <h3>Detalles de Envasado</h3>
                     <div>
                         <span class="badge 
                             {% if solicitud.estado == 'Planificada' %}badge-warning
@@ -61,7 +66,7 @@
                     <!-- Producto a Envasar -->
                     <div class="card mb-3">
                         <div class="card-header bg-success text-white">
-                            <h5>Producto a Envasar</h5>
+                            <h5>Producto</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -84,7 +89,7 @@
                     <!-- Envases a Utilizar -->
                     <div class="card mb-3">
                         <div class="card-header bg-warning">
-                            <h5>Envases a Utilizar</h5>
+                            <h5>Envases</h5>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -125,7 +130,7 @@
                     <!-- Insumos Necesarios -->
                     <div class="card mb-3">
                         <div class="card-header bg-secondary text-white">
-                            <h5>Insumos Necesarios</h5>
+                            <h5>Insumos</h5>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -199,7 +204,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <strong>Responsable Ejecución:</strong>
-                                    <p class="mt-1">{{ solicitud.solicitante.get_full_name|default:"No registrado" }}</p>
+                                    <p class="mt-1">{{ solicitud.solicitante|default:"No registrado" }}</p>
                                 </div>
                             </div>
                             {% if solicitud.observaciones_proceso %}

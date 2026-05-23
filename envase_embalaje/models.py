@@ -20,7 +20,6 @@ class EnvaseEmbalaje(ModeloBase):
         ('reservado', 'Reservado'),
     ]
     estado = models.CharField(choices=ESTADOS, max_length=255, blank=False, null=False, default='comprado', verbose_name='Estado')
-
     costo = models.FloatField(null=True, blank=False, default=0, verbose_name="Costo")
 
     #almacen = models.ForeignKey(Almacen, on_delete=models.SET_NULL, null=True, verbose_name='Almacen')
@@ -44,6 +43,14 @@ class EnvaseEmbalaje(ModeloBase):
             total=Sum('cantidad')
         )['total']
         return total if total is not None else 0 
+    
+    @property
+    def capacidad_litro(self):
+        if self.formato and self.formato.unidad_medida.lower() == 'l':
+            return self.formato.capacidad
+        if self.formato and self.formato.unidad_medida.lower() == 'ml':
+            return self.formato.capacidad/1000
+        return 1
     
     def cantidad_almacen(self, almacen):
         """

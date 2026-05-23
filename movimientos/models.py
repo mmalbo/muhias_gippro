@@ -46,14 +46,14 @@ class Vale_Movimiento_Almacen(ModeloBase):
                       ('Consumo interno','Consumo interno'),
                       ('Adquisición','Adquisición'),
     )
-    tipo = models.CharField(choices=VALE_TYPES, max_length=25, default='Recepción', verbose_name = "Tipo de movimiento")
+    tipo = models.CharField(choices=VALE_TYPES, max_length=40, default='Recepción', verbose_name = "Tipo de movimiento")
     consecutivo = models.IntegerField(null=False, verbose_name="Código del vale")
     # Revisar aquí hay una inconsistencia, si se borra el almacén esteatributo dice que no hace nada, pero no puede ser nulo.
     almacen = models.ForeignKey(Almacen, on_delete=models.DO_NOTHING, verbose_name="Almacen que registra", null=True, blank=False)
     fecha_movimiento = models.DateField(auto_now=True, null=False,verbose_name="Fecha de solicitud")
     suministrador = models.ForeignKey(CustomUser, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Suministrador")
     orden_No = models.IntegerField(blank=True, null=True, verbose_name="Número de orden")
-    lote_No = models.CharField(blank=True, null=True, max_length=25, verbose_name="Número de lote")
+    lote_No = models.CharField(blank=True, null=True, max_length=40, verbose_name="Número de lote")
     transportista = models.CharField(blank=True, null=True, default='', max_length=150, verbose_name="Transportista")
     transportista_cI = models.CharField(blank=True, null=True, default='', max_length=11, verbose_name="Carnet de identidad")
     chapa = models.CharField(blank=True, null=True, max_length=150, verbose_name="Chapa del vehículo")

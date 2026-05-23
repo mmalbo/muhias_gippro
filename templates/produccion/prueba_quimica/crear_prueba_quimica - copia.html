@@ -3,6 +3,11 @@
 {% load static %}
 
 {% block contenido %}
+{% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
 <div class="container mt-4">
     <div class="card">
         <div class="card-header bg-primary text-white">

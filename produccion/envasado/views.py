@@ -16,6 +16,7 @@ from .forms import *
 from produccion.choices import ESTADOS_ENV
 from inventario.models import Inv_Producto, Producto, Inv_Envase, Inv_Insumos
 from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod
+import decimal
 
 # Create your views here.
 @login_required
@@ -57,6 +58,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                     'codigo': inv_envase.envase.codigo_envase,
                     'tipo': inv_envase.envase.tipo_envase_embalaje,
                     'cantidad': inv_envase.cantidad,
+                    'capacidad': inv_envase.envase.capacidad_litro,
                     'almacen': inv_envase.almacen.nombre if inv_envase.almacen else 'N/A'
                 })
         context['envases_disponibles'] = envases_disponibles
@@ -83,19 +85,33 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
         try:
             with transaction.atomic():
                 # Guardar la solicitud (aún no tiene detalles)
-                self.object = form.save()
-                solicitud = self.object
-                print('A generar vale')
-                vale = self.crear_vale_solicitud(solicitud)
-                print(vale)
 
                 envases_data = self.request.POST.get('envases')
+                cant_a_env = self.request.POST.get('cantidad_solicitada')
                 if envases_data:
                     envases_list = json.loads(envases_data)
+                    try:
+                        total_necesario = decimal.Decimal(cant_a_env.replace(',', '').strip())
+                    except (Exception, TypeError):
+                        messages.error(self.request,'Cantidad solicitada no válida')
+                        return self.form_invalid(form)
+
+                    capacidad_total = decimal.Decimal('0.00') 
+                    for env in envases_list:
+                        cant = decimal.Decimal(env['cantidad'])
+                        cap = str(env['capacidad'])
+                        cap = decimal.Decimal(cap.replace(',', '.'))
+                        capacidad_total += cap*cant
+                    if capacidad_total < total_necesario:
+                        messages.error(self.request,'Debe seleccionar una cantidad de envases que cubra toda la solicitud de producto a envasar')
+                        return self.form_invalid(form)
+                   
+                    self.object = form.save()
+                    solicitud = self.object
+                    vale = self.crear_vale_solicitud(solicitud)
                     for env in envases_list:
                         # env tiene: id, nombre, codigo, tipo, cantidad, disponible
                         inv_envase = Inv_Envase.objects.get(id=env['id'])
-                        print(f'inventario d eenvaso {inv_envase}')
                         DetalleEnvasado.objects.create(
                             solicitud=solicitud,
                             presentacion=inv_envase,
@@ -110,11 +126,8 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                     for ins in insumos_list:
                         id = ins['id']
                         ca = ins['cantidad']
-                        print(f'insumos id {id}')
-                        print(f'insumos cant {ca}')
                         # ins tiene: id, nombre, cantidad, unidad, disponible
                         inv_insumo = Inv_Insumos.objects.get(id=ins['id'])
-                        print(f'Inventario de insumos {inv_insumo}')
                         ConsumoInsumoEnvasado.objects.create(
                             solicitud=solicitud,
                             insumo=inv_insumo,
@@ -126,12 +139,10 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                     self.request,
                     f'Solicitud de envasado creada exitosamente. Vale de solicitud #{vale.consecutivo} generado.'
                 )
-                print(f'Solicitud de envasado creada exitosamente. Vale de solicitud #{vale.consecutivo} generado.')
                 return redirect(self.get_success_url())
 
         except Exception as e:
             messages.error(self.request, f'Error al crear la solicitud: {str(e)}')
-            print(f'Error al crear la solicitud: {str(e)}')
             return self.form_invalid(form)
 
     def crear_vale_solicitud(self, solicitud):
@@ -269,18 +280,31 @@ def iniciar_envasado(request, pk):
             return JsonResponse({'success': False, 'error': 'La solicitud no está planificada'})
         messages.error(request, 'Esta solicitud no está planificada para iniciar.')
         return redirect('envasado:detalle_solicitud_envasado', pk=pk)
+    
+    # Tomar el primer envase para determinar el formato (ajustable según necesidad)
+    detalles_envase = DetalleEnvasado.objects.filter(solicitud=solicitud)    
+    primer_envase = detalles_envase.first().presentacion.envase
+    formato = primer_envase.formato  # Campo 'formato' en el modelo Envase (ej: "500ml")
 
+    vale = detalles_envase.first().vale
+    print(vale.estado)
+
+    # Validación salida de materiales
+    if vale.estado == 'confirmado':
+        if request.method == 'POST':
+            return JsonResponse({'success': False, 'error': 'Aún no se han despachado los materiales desde el almacén'})
+        messages.error(request, 'Aún no se han despachado los materiales desde el almacén')
+        return redirect('envasado:detalle_solicitud_envasado', pk=pk)
+    
     # Obtener detalles de envases
-    detalles_envase = DetalleEnvasado.objects.filter(solicitud=solicitud)
+
     if not detalles_envase.exists():
         if request.method == 'POST':
             return JsonResponse({'success': False, 'error': 'No hay envases definidos en la solicitud'})
         messages.error(request, 'La solicitud no tiene envases asociados.')
         return redirect('envasado:detalle_solicitud_envasado', pk=pk)
 
-    # Tomar el primer envase para determinar el formato (ajustable según necesidad)
-    primer_envase = detalles_envase.first().presentacion.envase
-    formato = primer_envase.formato  # Campo 'formato' en el modelo Envase (ej: "500ml")
+
 
     # Generar lote destino: lote_origen + "-" + formato
     """lote_origen_str = solicitud.lote_produccion_origen.lote  # campo 'lote' en Inv_Producto
@@ -327,6 +351,9 @@ def iniciar_envasado(request, pk):
             solicitud.fecha_vencimiento = fecha_vencimiento
             solicitud.observaciones = observaciones
             solicitud.save()
+
+            vale.estado == 'despachado'
+            vale.save()
 
             return JsonResponse({
                 'success': True,
@@ -408,7 +435,6 @@ def concluir_envasado(request, pk):
         envases_planificados = []
         for det in detalles_envase:
             capacidad = det.presentacion.envase.formato.capacidad if hasattr(det.presentacion.envase.formato, 'capacidad') else 1
-            print(f'det.cantidad_unidades:{det.cantidad_unidades}')
             envases_planificados.append({
                 'id': det.id,
                 'nombre': det.presentacion.envase.nombre,
@@ -434,7 +460,6 @@ def concluir_envasado(request, pk):
         granel_solicitado = float(solicitud.cantidad_solicitada)
         perdida_estimada = granel_solicitado - total_teorico
     
-
         context = {
             'solicitud': solicitud,
             'envases_planificados': envases_planificados,
@@ -449,9 +474,7 @@ def concluir_envasado(request, pk):
     try:
         data = json.loads(request.body)
         envases_reales = data.get('envases', [])
-        print(envases_reales)
         insumos_reales = data.get('insumos', [])
-        print(insumos_reales)
         observaciones_finales = data.get('observaciones_finales', '')
 
         # Recalcular total producido en volumen (litros/kg) a partir de las cantidades reales por envase
@@ -462,30 +485,34 @@ def concluir_envasado(request, pk):
         # Obtener detalles originales para mapear capacidades
         detalles_envase_cap = DetalleEnvasado.objects.filter(solicitud=solicitud)
         detalles_originales = {str(d.id): d for d in detalles_envase_cap}
-        print(detalles_originales)
 
         for env in envases_reales:
-            print(env)
             detalle_id = env.get('id')
-            print(detalle_id)
             detalle_original = detalles_originales.get(detalle_id) 
             if not detalle_original:
-                print(f'detalle_id:{detalle_id}')
                 continue
             capacidad = float(detalle_original.presentacion.envase.formato.capacidad or 1)
             cantidad_real = float(env.get('cantidad_real', 0))
-            print(f'cantidad_real: {cantidad_real}')
             total_unidades += cantidad_real
             total_producido_volumen += cantidad_real * capacidad
+
+            cantidad_perdida = float(solicitud.cantidad_solicitada) - total_producido_volumen
+            if cantidad_perdida < 0:
+                cantidad_perdida = 0
+
+            print(cantidad_perdida)
+            print(observaciones_finales)
+            if cantidad_perdida > 0 and observaciones_finales == '':
+                print('Debe especificar una causa de la doferencia entre la solicitud soliciada y la envasada')
+                return JsonResponse({'success': False, 'error': 'Debe especificar una causa de la doferencia entre la solicitud soliciada y la envasada'})
+
             detalles_envase_actualizados.append({
                 'detalle_id': detalle_id,
                 'cantidad_producida': cantidad_real,
                 'observaciones': env.get('observaciones', '')
             })
 
-        cantidad_perdida = float(solicitud.cantidad_solicitada) - total_producido_volumen
-        if cantidad_perdida < 0:
-            cantidad_perdida = 0
+
 
         with transaction.atomic():
 
@@ -515,15 +542,11 @@ def concluir_envasado(request, pk):
             #Este es el movimiento especifico del producto
             formato = solicitud.envases.first().presentacion.envase.formato
 
-            print(f'formato: {formato}')
-
             nuevo_prod, created = Inv_Producto.objects.get_or_create(
                 almacen = almacen_destino,
                 lote = solicitud.lote_destino.lote,
                 producto = solicitud.lote_produccion_origen.producto
             )
-
-            print(f'Nuevo producto: {nuevo_prod}: cantidad: {nuevo_prod.cantidad}')
 
             mov = Movimiento_Prod.objects.create(
                     vale=vale,

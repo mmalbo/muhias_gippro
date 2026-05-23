@@ -164,7 +164,6 @@
 </style>
 
 <div class="sidebar" id="sidebar">
-    
     <!-- Sidebar Navigation -->
     <nav class="sidebar-nav">
         <ul class="nav flex-column" id="sidebarMenu">
@@ -259,16 +258,10 @@
             {% endif %}
 
             {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
-                <!--<div class="nav-title">INVENTARIOS</div>-->
-                <li class="nav-item">
+                <!--<div class="nav-title">Catalogo</div>-->
+                <li class="nav-item {% if active_menu == 'catalogo' %}active{% endif %}" >
                     <a href="#submenuCatalogos" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
-                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <span class="ml-2">Catálogo</span>
+                        <i class="fas fa-book"></i> Catálogo
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuCatalogos">
@@ -281,7 +274,7 @@
                         <a href="{% url 'list_insumos' %}" class="nav-link">
                             <span>Insumos y otros</span>
                         </a>
-                        <a href="{% url 'list_producto' %}" class="nav-link">
+                        <a href="{% url 'list_producto' %}" class="nav-link {% if active_submenu == 'productos' %}active{% endif %}">
                             <span>Productos</span>
                         </a>
                     </div>
@@ -293,21 +286,12 @@
                 <!--<div class="nav-title">ADQUISICIONES</div>-->
                 <li class="nav-item">
                     <a href="#submenuAdquisiciones" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
-                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <span class="ml-2">Adquisiciones</span>
+                        <i class="fas fa-handshake"></i> Adquisiciones
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuAdquisiciones">
                         <a href="{% url 'compras_mp_list' %}" class="nav-link">
                             <span>Materia prima</span>
-                        </a>
-                        <a href="{% url 'compras_prod_list' %}" class="nav-link">
-                            <span>Productos</span>
                         </a>
                         <a href="{% url 'compras_env_list' %}" class="nav-link">
                             <span>Envase o embalajes</span>
@@ -315,6 +299,9 @@
                         <a href="{% url 'compras_ins_list' %}" class="nav-link">
                             <span>Insumos y otros</span>
                         </a>
+                        <a href="{% url 'compras_prod_list' %}" class="nav-link">
+                            <span>Productos</span>
+                        </a>                        
                     </div>
                 </li>
             {% endif %}
@@ -324,13 +311,7 @@
                 <!--<div class="nav-title">INVENTARIOS</div>-->
                 <li class="nav-item">
                     <a href="#submenuInventarios" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
-                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <span class="ml-2">Inventarios</span>
+                        <i class="fas fa-warehouse"></i>Inventarios
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuInventarios">
@@ -360,27 +341,21 @@
                 <!--<div class="nav-title">MOVIMIENTOS</div>-->
                 <li class="nav-item">
                     <a href="#submenuMovimientos" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
-                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <span class="ml-2">Movimientos</span>
+                        <i class="fas fa-exchange-alt"></i> Movimientos
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuMovimientos">
                         <a href="{% url 'rec_pend_list' %}" class="nav-link">
                             <span>Recepciones pendientes</span>
                         </a>
+                        <a href="{% url 'solicitudes_pendientes' %}" class="nav-link">
+                            <span>Solicitudes pendientes</span>
+                        </a>
                         <a href="{% url 'movimiento_list' %}" class="nav-link">
                             <span>Movimientos</span>
                         </a>
                         <a href="{% url 'crear_salida' %}" class="nav-link">
                             <span>Salida de almacén</span>
-                        </a>
-                        <a href="{% url 'solicitudes_pendientes' %}" class="nav-link">
-                            <span>Solicitudes pendientes</span>
                         </a>
                     </div>
                 </li>
@@ -391,13 +366,7 @@
                 <!--<div class="nav-title">PRODUCCIÓN</div>-->
                 <li class="nav-item">
                     <a href="#submenuProducciones" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
-                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <span class="ml-2">Producciones</span>
+                        <i class="fas fa-industry"></i> Producciones
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuProducciones">
@@ -415,13 +384,7 @@
             {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                 <li class="nav-item">
                     <a href="#submenuEnvasado" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
-                        <svg class="svg-icon" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <span class="ml-2">Envasado</span>
+                        <i class="fas fa-box-open"></i> Envasado
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuEnvasado">

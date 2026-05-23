@@ -383,8 +383,7 @@ def reducir_inventario(vale, inv, cantidad):
                 cantidad=cantidad,
                 cantidad_inventario = inventario_ins.cantidad
         )
-
-    
+   
 """ def validar_disponibilidad_mp(movimiento, almacen):
     from inventario.models import Inv_Mat_Prima
     
@@ -661,6 +660,9 @@ def recepcion_materia_prima(request, adq_id):
                         cantidad_inventario = inventario_mp.cantidad                        
                     )
 
+                    inv.cantidad_recibida = cantidad
+                    inv.save()  
+                               
                     if not cantidad == inv.cantidad:
                         target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
                         # Crear notificaciones para cada usuario en ese grupo
@@ -678,6 +680,7 @@ def recepcion_materia_prima(request, adq_id):
             else:
                 print("No encontro cantidad")
         adquisicion.registrada = True
+        adquisicion.estado = 'completado'
         adquisicion.save()
         return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
     
@@ -751,7 +754,6 @@ def recepcion_materia_prima(request, adq_id):
         'productos': inv_prod, 'adquisicion': adquisicion
     }) """
 
-
 def recepcion_producto(request, adq_id):
     # Líneas de la adquisición
     detalles = DetallesAdquisicionProducto.objects.filter(adquisicion__id=adq_id)
@@ -804,6 +806,9 @@ def recepcion_producto(request, adq_id):
             inventario_prod.cantidad = inventario_prod.cantidad + cantidad
             inventario_prod.save()
 
+            detalle.cantidad_recibida = cantidad
+            detalle.save()
+            
             # Registrar movimiento
             Movimiento_Prod.objects.create(
                 producto=inventario_prod,
@@ -830,6 +835,7 @@ def recepcion_producto(request, adq_id):
                         )
 
         adquisicion.registrada = True
+        adquisicion.estado = 'completado'
         adquisicion.save()
         return redirect('producto_list')
 
@@ -893,12 +899,17 @@ def recepcion_envase(request, adq_id):
                                     message=f"No coincide la recepción con la adquisición de: {inv.envase_embalaje.codigo_envase}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
                                     link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
                                 )
+
+                    inv.cantidad_recibida = cantidad                    
+                    inv.save()
+                    
                 except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}") 
                     pass
             else:
                 print("No se encontro cantidad")
         adquisicion.registrada = True
+        adquisicion.estado = 'completado'
         adquisicion.save()
         return redirect('envase_embalaje_lista')  # Redirigir a página de éxito
 
@@ -954,12 +965,17 @@ def recepcion_insumo(request, adq_id):
                                     message=f"No coincide la recepción con la adquisición de: {inv.insumo.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
                                     link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
                                 )
+
+                    inv.cantidad_recibida = cantidad
+                    inv.save()
+                    
                 except Exception as e: #(ValueError, TypeError):
                     print(f"Error...{e}") 
                     pass
             else:
                 print("No encontró cantidad")
         adquisicion.registrada = True
+        adquisicion.estado = 'completado'
         adquisicion.save()
         return redirect('insumos_list')  # Redirigir a página de éxito
     

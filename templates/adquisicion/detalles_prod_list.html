@@ -108,7 +108,7 @@
                             <a href="{% url 'compra_producto_edit' adquisicion.id %}" class="btn btn-primary">Editar compra</a>
                             {% endif %}
                             {% if adquisicion.estado != 'completado' %}
-                            <a href="{% url 'recepcion_parcial' adquisicion.id %}" class="btn btn-success">Registrar recepción</a>
+                            <a href="{% url 'recepcion_prod' adquisicion.id %}" class="btn btn-success">Registrar recepción</a>
                             {% endif %}
                         </div>
                     </div>
