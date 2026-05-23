@@ -86,7 +86,7 @@ class UpdateEnvaseEmbalajeView(LoginRequiredMixin, UpdateView):
     model = EnvaseEmbalaje
     form_class = EnvaseEmbalajeUpdateForm
     template_name = 'envase_embalaje/envase_embalaje_form.html'
-    success_url = reverse_lazy('envase_embalaje_lista')  # Cambia esto al nombre de tu URL
+    success_url = reverse_lazy('list_envase_embalaje')  # Cambia esto al nombre de tu URL
 
     def form_valid(self, form):
         messages.success(self.request, "Se ha actualizado correctamente el envase o embalaje.")

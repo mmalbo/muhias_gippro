@@ -82,11 +82,22 @@ class UpdateInsumosView(LoginRequiredMixin, UpdateView):
     model = InsumosOtros
     form_class = InsumoUpdateForm
     template_name = 'insumos/insumos_form.html'
-    success_url = reverse_lazy('insumo_lista')  # Cambia esto al nombre de tu URL
+    success_url = reverse_lazy('list_insumos')  # Asegúrate que el nombre sea correcto
 
     def form_valid(self, form):
         messages.success(self.request, "Se ha actualizado correctamente el insumo.")
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"Error en {field}: {error}")
+        return super().form_invalid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Actualizar insumo' if self.object else 'Crear insumo'
+        return context
 
 class DeleteInsumoView(LoginRequiredMixin, DeleteView):
     model = InsumosOtros

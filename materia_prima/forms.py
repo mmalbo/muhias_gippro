@@ -54,33 +54,95 @@ class MateriaPrimaCostoForm(forms.ModelForm):
         }
         
 class MateriaPrimaFormUpdate(forms.ModelForm):
-
+    # Campos que no deben editarse en update (solo lectura)
+    codigo = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        required=False
+    )
+    
     class Meta:
         model = MateriaPrima
-        fields = [ 'nombre', 'unidad_medida', 'concentracion', 'conformacion',
-                  'costo', 'ficha_tecnica', 'hoja_seguridad']
+        fields = [
+            'codigo',  # Solo lectura en update
+            'nombre',
+            'tipo_materia_prima',  # Añadido
+            'unidad_medida',
+            'concentracion',
+            'conformacion',
+            'costo',
+            'ficha_tecnica',
+            'hoja_seguridad'
+        ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo_materia_prima': forms.Select(attrs={'class': 'form-control'}),
             'unidad_medida': forms.TextInput(attrs={'class': 'form-control'}),
-            'concentracion': forms.NumberInput(attrs={'class': 'form-control'}),
+            'concentracion': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'conformacion': forms.TextInput(attrs={'class': 'form-control'}),
-            'costo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'ficha_tecnica': forms.FileInput(attrs={'class': 'form-control-file'}),
             'hoja_seguridad': forms.FileInput(attrs={'class': 'form-control-file'}),
         }
         labels = {
+            'codigo': 'Código',
             'nombre': 'Nombre',
+            'tipo_materia_prima': 'Tipo de materia prima',
             'unidad_medida': 'Unidad de medida',
-            'concentracion': 'Concentración',
+            'concentracion': 'Concentración (%)',
             'conformacion': 'Conformación',
-            'costo': 'Costo',
+            'costo': 'Costo ($)',
+            'ficha_tecnica': 'Ficha técnica',
+            'hoja_seguridad': 'Hoja de seguridad',
+        }
+        help_texts = {
+            'concentracion': 'Ingrese la concentración en porcentaje (ej: 99.5)',
+            'costo': 'Costo por unidad de medida',
         }
 
-        def __init__(self, *args, **kwargs):
-            super(MateriaPrimaFormUpdate, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(MateriaPrimaFormUpdate, self).__init__(*args, **kwargs)
+        
+        # Hacer campos opcionales
+        self.fields['concentracion'].required = False
+        self.fields['conformacion'].required = False
+        self.fields['tipo_materia_prima'].required = True
+
+        # Lógica para el campo código
+        if self.instance and self.instance.pk and self.instance.codigo:
+            # Si ya tiene un código válido, hacerlo readonly
+            self.fields['codigo'].widget.attrs['readonly'] = 'readonly'
+            self.fields['codigo'].help_text = "El código no puede modificarse porque ya tiene un valor asignado"
+        else:
+            # Si es nuevo o el código está vacío, permitir edición
+            self.fields['codigo'].required = True
+            self.fields['codigo'].help_text = "Ingrese un código único para esta materia prima"
             
-            self.fields['concentracion'].required = False
-            self.fields['conformacion'].required = False
+        # Si es una actualización (tiene instance), mostrar nombres de archivos actuales
+        if self.instance and self.instance.pk:
+            if self.instance.ficha_tecnica:
+                self.fields['ficha_tecnica'].help_text = f'Actual: {self.instance.get_ficha_tecnica_name()}'
+            if self.instance.hoja_seguridad:
+                self.fields['hoja_seguridad'].help_text = f'Actual: {self.instance.get_hoja_seguridad_name()}'
+
+    def clean_codigo(self):
+        codigo = self.cleaned_data.get('codigo')
+        instance = self.instance
+        
+        # Si es una actualización y ya tenía código, no permitir cambios
+        if instance and instance.pk and instance.codigo:
+            if codigo != instance.codigo:
+                raise forms.ValidationError("No se puede modificar el código porque ya tiene un valor asignado.")
+            return codigo
+
+        # Si es nuevo o no tenía código, validar que no esté vacío
+        if not codigo:
+            raise forms.ValidationError("El código es obligatorio.")
+        
+        # Validar unicidad
+        if MateriaPrima.objects.exclude(pk=instance.pk if instance else None).filter(codigo=codigo).exists():
+            raise forms.ValidationError("Ya existe una materia prima con este código.")
+        
+        return codigo
             
 class AgregarTipoForm(forms.Form):
     valor = forms.CharField(

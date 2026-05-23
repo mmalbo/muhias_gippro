@@ -52,6 +52,20 @@ class Producto(ModeloBase):
         )['total']
         return total if total is not None else 0
 
+    def get_ficha_tecnica_folio_name(self):
+        """Retorna el nombre del archivo de ficha técnica"""
+        if self.ficha_tecnica_folio:
+            from os.path import basename
+            return basename(self.ficha_tecnica_folio.name)
+        return None
+    
+    def get_ficha_costo_name(self):
+        """Retorna el nombre del archivo de ficha de costo"""
+        if self.ficha_costo:
+            from os.path import basename
+            return basename(self.ficha_costo.name)
+        return None
+
     def clean(self):
         """Validaciones a nivel de modelo"""
         super().clean()

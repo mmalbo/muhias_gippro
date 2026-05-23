@@ -6,6 +6,11 @@
 {% block title %}Detalle de Producción - {{ produccion.lote }}{% endblock %}
 
 {% block contenido %}
+{% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
 <div class="container-fluid py-4">
     <!-- Header con acciones -->
     <div class="d-flex justify-content-between align-items-center mb-4">

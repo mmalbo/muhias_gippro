@@ -98,29 +98,29 @@ class UpdateMateriaPrimaView(LoginRequiredMixin, UpdateView):
     model = MateriaPrima
     form_class = MateriaPrimaFormUpdate
     template_name = 'materia_prima/materia_prima_form.html'
-    success_url = reverse_lazy('materia_prima:materia_prima_list')  # Cambia esto al nombre de tu URL
+    success_url = reverse_lazy('materia_prima:list_materia_prima')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        obj = self.get_object()
+        
+        # Pasar nombres de archivos al formulario
+        if obj.ficha_tecnica:
+            initial['ficha_tecnica'] = obj.get_ficha_tecnica_name()
+        if obj.hoja_seguridad:
+            initial['hoja_seguridad'] = obj.get_hoja_seguridad_name()
+        
+        return initial
 
     def form_valid(self, form):
         messages.success(self.request, "Se ha actualizado correctamente la materia prima.")
         return super().form_valid(form)
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        instance = kwargs.get('instance')
-        if instance:
-            kwargs['initial'] = {
-                'ficha_tecnica': instance.get_ficha_tecnica_name,
-                'hoja_seguridad': instance.get_hoja_seguridad_name,
-            }
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        obj = self.get_object()
-        # context['factura_adquisicion_nombre'] = basename(obj.factura_adquisicion.name) if obj.factura_adquisicion else ''
-        context['ficha_tecnica_nombre'] = basename(obj.ficha_tecnica.name) if obj.ficha_tecnica else ''
-        context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
-        return context
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"Error en {field}: {error}")
+        return super().form_invalid(form)
 
 class DeleteMateriaPrimaView(LoginRequiredMixin, DeleteView):
     model = MateriaPrima

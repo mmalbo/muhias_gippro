@@ -5,49 +5,89 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-11 col-lg-11">
-                    <h4 class="card-title">{% if object %}Actualizar pomo{% else %}Crear pomo{% endif %}</h4>
+                    <h4 class="card-title">
+                        {% if object %}
+                            Actualizar insumo: {{ object.codigo }}
+                        {% else %}
+                            Crear insumo
+                        {% endif %}
+                    </h4>
                     <div class="card">
                         <div class="card-body">
+                            {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>Errores en el formulario:</strong>
+                                    {% for field in form %}
+                                        {% if field.errors %}
+                                            <div>{{ field.label }}: {{ field.errors|striptags }}</div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if form.non_field_errors %}
+                                        <div>{{ form.non_field_errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
                             <form method="post">
                                 {% csrf_token %}
-                                <div class="form-row">
-
-                                    <div class="col-md-6 mb-3">
+                                
+                                <!-- Fila 1: Código (condicionalmente readonly) -->
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
                                         {{ form.codigo.label_tag }}
                                         {{ form.codigo }}
+                                        {% if form.codigo.help_text %}
+                                            <small class="form-text text-muted">{{ form.codigo.help_text }}</small>
+                                        {% endif %}
+                                        {% if form.codigo.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.codigo.errors }}</div>
+                                        {% endif %}
                                     </div>
+                                </div>
+                                
+                                <!-- Fila 2: Nombre y Estado -->
+                                <div class="row">
                                     <div class="col-md-6 mb-3">
                                         {{ form.nombre.label_tag }}
                                         {{ form.nombre }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.estado.label_tag }}
-                                        {{ form.estado }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.cantidad_almacen.label_tag }}
-                                        {{ form.cantidad_almacen }}
+                                        {% if form.nombre.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.nombre.errors }}</div>
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         {{ form.costo.label_tag }}
-                                        {{ form.costo }}
-                                    </div> 
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.almacen.label_tag }}
-                                        {{ form.almacen }}
-                                    </div> 
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">$</span>
+                                            </div>
+                                            {{ form.costo }}
+                                        </div>
+                                        {% if form.costo.help_text %}
+                                            <small class="form-text text-muted">{{ form.costo.help_text }}</small>
+                                        {% endif %}
+                                        {% if form.costo.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.costo.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Fila 3: Descripción (ancho completo) -->
+                                <div class="row">
                                     <div class="col-md-12 mb-3">
                                         {{ form.descripcion.label_tag }}
                                         {{ form.descripcion }}
+                                        {% if form.descripcion.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.descripcion.errors }}</div>
+                                        {% endif %}
                                     </div>
-
                                 </div>
-                                {#                                {{ form.as_p }}#}
+                                
                                 <br>
                                 <div class="form-group" style="text-align: center;">
-                                    <button type="submit" class="btn btn-success">{% if object %}Actualizar{% else %}
-                                        Añadir{% endif %}</button>
-                                    <a href="{% url 'insumos_list' %}" class="btn btn-danger">Cancelar</a>
+                                    <button type="submit" class="btn btn-success">
+                                        {% if object %}Actualizar{% else %}Crear{% endif %}
+                                    </button>
+                                    <a href="{% url 'list_insumos' %}" class="btn btn-danger">Cancelar</a>
                                 </div>
                             </form>
                         </div>

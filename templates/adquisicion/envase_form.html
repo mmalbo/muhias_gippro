@@ -45,21 +45,29 @@
             </div>
             <div id="new-section" style="{% if wizard.form.initial.opcion == 'new' %}display: block;{% else %}display: none;{% endif %}">
                 <div class="mb-3">
-                    {{ wizard.form.formato.label_tag }}
-                    {{ wizard.form.formato }}
+                    {{ wizard.form.codigo_envase.label_tag }}
+                    {{ wizard.form.codigo_envase }}
+                </div>
+                <div class="mb-3">
+                    {{ wizard.form.nombre_envase.label_tag }}
+                    {{ wizard.form.nombre_envase }}
                 </div>
                 <div class="mb-3">
                     {{ wizard.form.tipo_envase_embalaje.label_tag }}
                     {{ wizard.form.tipo_envase_embalaje }}
                 </div>
                 <div class="mb-3">
-                    {{ wizard.form.costo.label_tag }}
-                    {{ wizard.form.costo }}
+                    {{ wizard.form.formato.label_tag }}
+                    {{ wizard.form.formato }}
                 </div>
                 <div class="mb-3">
-                    {{ wizard.form.codigo_envase.label_tag }}
-                    {{ wizard.form.codigo_envase }}
+                    {{ wizard.form.proveedor.label_tag }}
+                    {{ wizard.form.proveedor }}
                 </div>
+                <div class="mb-3">
+                    {{ wizard.form.costo.label_tag }}
+                    {{ wizard.form.costo }}
+                </div>                
             </div>
         </div>
         
@@ -137,6 +145,8 @@
         // --- Funciones para cargar y limpiar detalles ---
         function cargarDetallesEnvase(envaseId) {
             if (!envaseId) return;
+    
+            // Asegúrate que la URL esté correctamente configurada
             fetch(`/adquisiciones/api/envases/${envaseId}/`)
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -144,14 +154,18 @@
                 })
                 .then(data => {
                     console.log('Detalles del envase:', data);
-                    document.getElementById('detail-codigo').textContent = data.codigo || '-';
-                    document.getElementById('detail-formato').textContent = data.formato || '-';
-                    document.getElementById('detail-tipo').textContent = data.tipo || '-';
+                    document.getElementById('detail-codigo').textContent = data.codigo_envase || data.codigo || '-';  // CORREGIDO
+                    document.getElementById('detail-formato').textContent = data.formato_nombre || data.formato || '-';  // CORREGIDO
+                    document.getElementById('detail-tipo').textContent = data.tipo_nombre || data.tipo || '-';  // CORREGIDO
+            
                     const detailCosto = document.getElementById('detail-costo');
                     if (detailCosto) detailCosto.textContent = data.costo ? `$${data.costo}` : '-';
+            
                     const costoActualSpan = document.getElementById('costo-actual');
                     if (costoActualSpan) costoActualSpan.textContent = data.costo || '-';
-                    document.getElementById('costo-update-section').style.display = 'block';
+            
+                    const costoUpdateSection = document.getElementById('costo-update-section');
+                    if (costoUpdateSection) costoUpdateSection.style.display = 'block';
                 })
                 .catch(error => {
                     console.error('Error al cargar detalles:', error);
@@ -181,31 +195,40 @@
         // Campo código del nuevo envase (se habilita/deshabilita según selección)
         const codigoField = document.querySelector(`input[name="${prefix}-codigo_envase"]`);
 
+        // En el script, reemplazar la parte de los radios
         function toggleSections() {
-            const selectedValue = document.querySelector(`input[name="${prefix}-opcion"]:checked`).value;
+            // Obtener el valor del radio seleccionado correctamente con el prefijo
+            const selectedRadio = document.querySelector(`input[name="${prefix}-opcion"]:checked`);
+            if (!selectedRadio) return;
+    
+            const selectedValue = selectedRadio.value;
+    
             if (selectedValue === 'existing') {
                 existingSection.style.display = 'block';
                 newSection.style.display = 'none';
                 detailsCard.style.display = 'block';
                 // Mostrar sección de costo solo si hay un envase seleccionado
                 const envaseId = $select.val();
-                if (envaseId) costoUpdateSection.style.display = 'block';
-                else costoUpdateSection.style.display = 'none';
-                // Deshabilitar y limpiar el campo código cuando se usa existente
-                if (codigoField) {
-                    codigoField.disabled = true;
-                    codigoField.value = '';
+                if (envaseId) {
+                    costoUpdateSection.style.display = 'block';
+                } else {
+                    costoUpdateSection.style.display = 'none';
                 }
+                // Deshabilitar campos de nuevo envase
+                document.querySelectorAll(`#new-section input, #new-section select`).forEach(field => {
+                    field.disabled = true;
+                });
             } else {
                 existingSection.style.display = 'none';
                 newSection.style.display = 'block';
                 detailsCard.style.display = 'none';
                 costoUpdateSection.style.display = 'none';
-                // Habilitar campo código y enfocarlo para nuevo registro
-                if (codigoField) {
-                    codigoField.disabled = false;
-                    codigoField.focus();
-                }
+                // Deshabilitar campos de envase existente
+                $select.prop('disabled', true);
+                // Habilitar campos de nuevo envase
+                document.querySelectorAll(`#new-section input, #new-section select`).forEach(field => {
+                    field.disabled = false;
+                });
             }
         }
 

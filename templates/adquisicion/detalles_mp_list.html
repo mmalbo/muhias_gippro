@@ -75,7 +75,7 @@
                                             </td>
                                             <td>{{ detalle.cantidad|floatformat:2 }}</td>
                                             <td>${{ detalle.costo_unitario|default:detalle.materia_prima.costo|floatformat:2 }}</td>
-                                            <td>${{ detalle.cantidad|multiply:detalle.costo_unitario|default:detalle.materia_prima.costo }}</td>
+                                            <td>${{ detalle.cantidad|multiply:detalle.costo_unitario|floatformat:2 }}</td>
                                             <td>{{ detalle.cantidad_recibida|default:"0"|floatformat:2 }}</td>
                                             <td>{{ detalle.cantidad_pendiente|floatformat:2 }}</td>
                                             <td>{{ detalle.observaciones|default:"-"|truncatechars:50 }}</td>
@@ -92,7 +92,7 @@
                                 <a href="{% url 'compra_edit' adquisicion.id %}" class="btn btn-primary">Editar compra</a>
                                 {% endif %}
                                 {% if adquisicion.estado != 'completado' %}
-                                <a href="{% url 'recepcion_parcial' adquisicion.id %}" class="btn btn-success">Registrar recepción</a>
+                                <a href="{% url 'recepcion_mp' adquisicion.id %}" class="btn btn-success">Registrar recepción</a>
                                 {% endif %}
                             </div>
                         </div>

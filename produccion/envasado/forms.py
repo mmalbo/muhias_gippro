@@ -53,7 +53,7 @@ class SolicitudEnvasadoForm(forms.ModelForm):
             cantidad__gt=0 ).select_related('producto', 'almacen').order_by('lote')
 
     def clean_cantidad_solicitada(self):
-        cantidad = self.cleaned_data.get('cantidad_solicitada')
+        cantidad =  self.cleaned_data.get('cantidad_solicitada')
         if cantidad and cantidad <= 0:
             raise ValidationError('La cantidad debe ser mayor a cero')
         return cantidad
@@ -61,10 +61,9 @@ class SolicitudEnvasadoForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         lote = cleaned_data.get('lote_produccion_origen')
-        print(lote.lote)
         cantidad = cleaned_data.get('cantidad_solicitada')
         envases_data = cleaned_data.get('envases')
-        insumos_data = cleaned_data.get('insumos')
+        #insumos_data = cleaned_data.get('insumos')
         
         # Validar disponibilidad en inventario
         if lote and cantidad:

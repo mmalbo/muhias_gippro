@@ -5,56 +5,145 @@
         <div class="content-page">
             <div class="container-fluid">
                 <div class="col-sm-11 col-lg-11">
-                    <h4 class="card-title">{% if object %}Actualizar producto{% else %}Crear producto
-                    {% endif %}</h4>
+                    <h4 class="card-title">
+                        {% if object %}
+                            Actualizar producto: {{ object.nombre_comercial }}
+                        {% else %}
+                            Crear producto
+                        {% endif %}
+                    </h4>
                     <div class="card">
                         <div class="card-body">
-                            <form method="post">
+                            {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>Errores en el formulario:</strong>
+                                    {% for field in form %}
+                                        {% if field.errors %}
+                                            <div>{{ field.label }}: {{ field.errors|striptags }}</div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if form.non_field_errors %}
+                                        <div>{{ form.non_field_errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <form method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
-                                <div class="form-row">
+                                
+                                <!-- Fila 1: Códigos (2 columnas) -->
+                                <div class="row">
                                     <div class="col-md-6 mb-3">
                                         {{ form.codigo_producto.label_tag }}
                                         {{ form.codigo_producto }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.nombre_comercial.label_tag }}
-                                        {{ form.nombre_comercial }}
+                                        {% if form.codigo_producto.help_text %}
+                                            <small class="form-text text-muted">{{ form.codigo_producto.help_text }}</small>
+                                        {% endif %}
+                                        {% if form.codigo_producto.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.codigo_producto.errors }}</div>
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         {{ form.codigo_3l.label_tag }}
                                         {{ form.codigo_3l }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.formato.label_tag }}
-                                        {{ form.formato }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.ficha_tecnica_folio.label_tag }}
-                                        {{ form.ficha_tecnica_folio }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.almacen.label_tag }}
-                                        {{ form.almacen }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.cantidad_alm.label_tag }}
-                                        {{ form.cantidad_alm }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.ficha_costo.label_tag }}
-                                        {{ form.ficha_costo }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.product_final.label_tag }}
-                                        {{ form.product_final }}
+                                        {% if form.codigo_3l.help_text %}
+                                            <small class="form-text text-muted">{{ form.codigo_3l.help_text }}</small>
+                                        {% endif %}
+                                        {% if form.codigo_3l.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.codigo_3l.errors }}</div>
+                                        {% endif %}
                                     </div>
                                 </div>
-
-
+                                
+                                <!-- Fila 2: Nombre comercial y Costo -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.nombre_comercial.label_tag }}
+                                        {{ form.nombre_comercial }}
+                                        {% if form.nombre_comercial.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.nombre_comercial.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.costo.label_tag }}
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">$</span>
+                                            </div>
+                                            {{ form.costo }}
+                                        </div>
+                                        {% if form.costo.help_text %}
+                                            <small class="form-text text-muted">{{ form.costo.help_text }}</small>
+                                        {% endif %}
+                                        {% if form.costo.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.costo.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Fila 3: Producto base (checkbox) -->
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="form-check">
+                                            {{ form.prod_base }}
+                                            <label class="form-check-label" for="{{ form.prod_base.id_for_label }}">
+                                                {{ form.prod_base.label }}
+                                            </label>
+                                            {% if form.prod_base.help_text %}
+                                                <small class="form-text text-muted">{{ form.prod_base.help_text }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Fila 4: Ficha técnica -->
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.ficha_tecnica_folio.label_tag }}
+                                        {{ form.ficha_tecnica_folio }}
+                                        {% if form.ficha_tecnica_folio.help_text %}
+                                            <small class="form-text text-muted">{{ form.ficha_tecnica_folio.help_text }}</small>
+                                        {% endif %}
+                                        {% if object and object.ficha_tecnica_folio %}
+                                            <div class="mt-1">
+                                                <a href="{{ object.ficha_tecnica_folio.url }}" target="_blank" class="btn btn-sm btn-info">
+                                                    Ver ficha técnica actual
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                        {% if form.ficha_tecnica_folio.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.ficha_tecnica_folio.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Fila 5: Ficha de costo -->
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.ficha_costo.label_tag }}
+                                        {{ form.ficha_costo }}
+                                        {% if form.ficha_costo.help_text %}
+                                            <small class="form-text text-muted">{{ form.ficha_costo.help_text }}</small>
+                                        {% endif %}
+                                        {% if object and object.ficha_costo %}
+                                            <div class="mt-1">
+                                                <a href="{{ object.ficha_costo.url }}" target="_blank" class="btn btn-sm btn-info">
+                                                    Ver ficha de costo actual
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                        {% if form.ficha_costo.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.ficha_costo.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
                                 <br>
                                 <div class="form-group" style="text-align: center;">
-                                    <button type="submit" class="btn btn-success">Guardar</button>
-                                    <a href="{% url 'producto_list' %}" class="btn btn-danger">Cancelar</a>
+                                    <button type="submit" class="btn btn-success">
+                                        {% if object %}Actualizar{% else %}Crear{% endif %}
+                                    </button>
+                                    <a href="{% url 'list_producto' %}" class="btn btn-danger">Cancelar</a>
                                     {% if not object %}
                                         <a href="{% url 'importarProducto' %}" class="btn btn-success">
                                             Importar excel

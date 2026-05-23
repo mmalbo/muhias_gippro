@@ -1,4 +1,6 @@
 {% extends 'base/base.html' %}
+{% load static %}
+{% load adquisicion_filters %}
 
 {% block contenido %}
     <div class="wrapper">
@@ -65,9 +67,13 @@
                             <table id="datatable" class="table table-striped table-bordered">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width: 50%">Insumo</th>
-                                        <th style="width: 15%">Cantidad</th>
-                                        <th style="width: 35%">Almacén</th>
+                                        <th>Insumo</th>
+                                        <th>Cantidad</th>
+                                        <th>Costo unitario</th>
+                                        <th>Costo total</th>
+                                        <th>Cantidad recibida</th>
+                                        <th>Pendiente</th>
+                                        <th>Observaciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -75,15 +81,23 @@
                                     <tr>
                                         <td>{{ det.insumo }}</td>
                                         <td>{{ det.cantidad }}</td>
-                                        <td>{{ det.adquisicion.almacen }}</td>
+                                        <td>${{ det.costo_unitario|default:det.insumo.costo|floatformat:2 }}</td>
+                                        <td>${{ det.cantidad|multiply:det.costo_unitario|floatformat:2 }}</td>
+                                        <td>{{ det.cantidad_recibida|default:"0"|floatformat:2 }}</td>
+                                        <td>{{ det.cantidad_pendiente|floatformat:2 }}</td>
+                                        <td>{{ det.observaciones|default:"-"|truncatechars:50 }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th style="width: 50%">Materia prima</th>
-                                        <th style="width: 15%">Cantidad</th>
-                                        <th style="width: 35%">Almacén</th>
+                                        <th>Insumo</th>
+                                        <th>Cantidad</th>
+                                        <th>Costo unitario</th>
+                                        <th>Costo total</th>
+                                        <th>Cantidad recibida</th>
+                                        <th>Pendiente</th>
+                                        <th>Observaciones</th>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -94,7 +108,7 @@
                             <a href="{% url 'compra_insumo_edit' adquisicion.id %}" class="btn btn-primary">Editar compra</a>
                             {% endif %}
                             {% if adquisicion.estado != 'completado' %}
-                            <a href="{% url 'recepcion_parcial' adquisicion.id %}" class="btn btn-success">Registrar recepción</a>
+                            <a href="{% url 'recepcion_ins' adquisicion.id %}" class="btn btn-success">Registrar recepción</a>
                             {% endif %}
                         </div>
                     </div>

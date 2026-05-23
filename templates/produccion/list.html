@@ -1,7 +1,11 @@
 {% extends 'base/base.html' %}
 
 {% block contenido %}
-
+{% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
                 <div class="col-sm-12 col-lg-12">
                     <h4 class="card-title">Listado de producciones</h4>
                 </div>

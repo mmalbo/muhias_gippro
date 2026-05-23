@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from django.contrib.messages import constants as messages
+
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -210,3 +212,11 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 # AXES_FAILURE_LIMIT = 5  # Número de intentos fallidos antes de bloquear
 # AXES_LOCK_OUT_AT_FAILURE = True  # Bloquear una dirección IP después de superar el límite
 # AXES_USE_USER_AGENT = True  # Registrar también el User-Agent en los intentos de inicio de sesión
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'info',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}

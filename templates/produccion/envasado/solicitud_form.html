@@ -3,8 +3,14 @@
 {% load static %}
 
 {% block contenido %}
-<div class="container-fluid">
+
+ {% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
     
+<div class="container-fluid">    
     <div class="row">
         <div class="col-md-12">
             <div class="card">
@@ -109,7 +115,8 @@
                                                     data-nombre="{{ envase.nombre }}"
                                                     data-codigo="{{ envase.codigo }}"
                                                     data-tipo="{{ envase.tipo }}"
-                                                    data-cantidad="{{ envase.cantidad }}">
+                                                    data-cantidad="{{ envase.cantidad }}"
+                                                    data-capacidad="{{ envase.capacidad }}">
                                                 {{ envase.nombre }} ({{ envase.codigo }}) - Disponible: {{ envase.cantidad }}
                                                 </option>
                                                 {% empty %}
@@ -350,10 +357,13 @@ $(document).ready(function() {
         var codigo = option.data('codigo');
         var tipo = option.data('tipo');
         var disponible = option.data('cantidad');
+        var capacidad = option.data('capacidad');
+
+        console.log("Capacidad:", capacidad, "Disponibles:", disponible);
 
         // Verificar disponibilidad
         if (cantidad > disponible) {
-            alert(`Solo hay ${disponible} unidades disponibles de este envase`);
+            alert(`Solo hay ${disponible} unidades disponibles de este envase, la capacidad es ${capacidad}`);
             return;
         }
 
@@ -363,7 +373,7 @@ $(document).ready(function() {
             return;
         }
 
-        console.log("Datos del envase:", {nombre, codigo, tipo, disponible});
+        console.log("Datos del envase:", {nombre, codigo, tipo, disponible, capacidad});
 
         // Agregar a la lista
         envases.push({
@@ -372,7 +382,8 @@ $(document).ready(function() {
             codigo: codigo,
             tipo: tipo,
             cantidad: cantidad,
-            disponible: disponible
+            disponible: disponible,
+            capacidad: capacidad
         });
 
         actualizarTablaEnvases();
