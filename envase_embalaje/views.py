@@ -66,8 +66,6 @@ def listEnvaseEmbalaje(request):
     productos = EnvaseEmbalaje.objects.all()
     total_productos = envase_embalaje.count()
 
-    print(envase_embalaje)
-
     context = {
         'envase_embalaje':envase_embalaje,
         'almacenes':almacenes,
@@ -92,24 +90,6 @@ class UpdateEnvaseEmbalajeView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Se ha actualizado correctamente el envase o embalaje.")
         return super().form_valid(form)
 
-    """ def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        instance = kwargs.get('instance')
-        if instance:
-            kwargs['initial'] = {
-                'ficha_tecnica': instance.get_ficha_tecnica_name,
-                'hoja_seguridad': instance.get_hoja_seguridad_name,
-            }
-        return kwargs """
-
-    """ def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        obj = self.get_object()
-        # context['factura_adquisicion_nombre'] = basename(obj.factura_adquisicion.name) if obj.factura_adquisicion else ''
-        context['ficha_tecnica_nombre'] = basename(obj.ficha_tecnica.name) if obj.ficha_tecnica else ''
-        context['hoja_seguridad_nombre'] = basename(obj.hoja_seguridad.name) if obj.hoja_seguridad else ''
-        return context """
-
 class DeleteEnvaseEmbalajeView(LoginRequiredMixin, DeleteView):
     model = EnvaseEmbalaje
     template_name = 'envase_embalaje/envase_embalaje_confirm_delete.html'
@@ -132,7 +112,7 @@ def detalle_envase(request, pk):
     """Ver detalle completo de un parámetro"""
     envase = get_object_or_404(EnvaseEmbalaje, id=pk)
     
-    return render(request, 'envase_embalaje\detalle_envase_embalaje.html', {
+    return render(request, 'envase_embalaje/detalle_envase_embalaje.html', {
         'envase': envase,
     })
 
@@ -157,9 +137,7 @@ class EnvaseEmbalajeCreateView(LoginRequiredMixin, CreateView):
 
 @login_required
 def importar(request):
-    print("En importar")
     if request.method == 'POST':
-        print("En el post")
         file = request.FILES.get('excel')
         No_fila = 0
         envases_existentes = []
@@ -169,7 +147,6 @@ def importar(request):
             return redirect('envase_embalaje:importarEnvaseEmbalaje')
 
         try:
-            print("En try")
             with (transaction.atomic()):
                 format = 'xls' if file.name.endswith('.xls') else 'xlsx'
                 imported_data = Dataset().load(file.read(), format=format)
@@ -179,7 +156,7 @@ def importar(request):
                     if len(data) < 7:  # Necesitas al menos 7 columnas
                         messages.error(request, f"Fila {No_fila+1}: El archivo debe tener al menos 9 columnas. Tiene {len(data)} columnas.")
                         return redirect('importarEnvaseEmbalaje')
-                    print(f"En importar: {data}")
+                    
                     codigo = str(data[0]).strip() if data[0] is not None else None
                     nombre = str(data[1]).strip() if data[1] is not None else None  # Asegúrate de que sea un string
                     tipo = str(data[2]).strip() if data[2] is not None else None
@@ -189,10 +166,7 @@ def importar(request):
                     cantidad = str(data[6]).strip() if data[6] is not None else None
                     almacen = str(data[7]).strip() if data[7] is not None else None
 
-                    print(f"Nombre: {nombre}")
-
                     if not all([nombre, costo, almacen]):
-                        print(f"Fila {No_fila + 1}: Estos campos son obligatorios.")
                         messages.error(request, f"Fila {No_fila + 1}: Todos los campos son obligatorios.")
                         return redirect('importarEnvaseEmbalaje')
 
@@ -206,12 +180,9 @@ def importar(request):
                                        f"Fila {No_fila + 1}: 'Costo' debe ser un número decimal válido mayor que cero.")
                         return redirect('importarEnvaseEmbalaje')
 
-                    print(f"Validaciones listas")
-                    
                     tipo_obj = TipoEnvaseEmbalaje.objects.filter(nombre__iexact=tipo).first()
                        
                     if tipo_obj is None:
-                        print("No existe el tipo"+tipo)
                         messages.error(request,
                                        f"Fila {No_fila}: No existe el tipo de envase  '{str(data[3]).strip()}' en el nomenclador")
                         return redirect('importarEnvaseEmbalaje')
@@ -245,16 +216,12 @@ def importar(request):
                         else:
                             um = 'U'
 
-                        print(f"UM: {um} capacidad: {capacidad}")
-
                         formato_o = Formato.objects.filter(unidad_medida=um, capacidad=capacidad).first()
                         if not formato_o:
                             formato_o = Formato.objects.create(unidad_medida=um, capacidad=capacidad)
-                        print(f"Formato: {formato_o}")
-
+                        
                     almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
                     if almacen_obj is None:
-                        print("No existe el almacen")
                         messages.error(request,
                                        f"Fila {No_fila}: No existe el almacén  '{str(data[7]).strip()}' en el nomenclador")
                         return redirect('importarEnvaseEmbalaje')
@@ -295,34 +262,26 @@ def importar(request):
                         inventario_ee, created_inv = Inv_Envase.objects.get_or_create(
                             envase=envase_emb, almacen=almacen_obj)
                         if created_inv:
-                            print('Creado inventario')
                             fecha_actual = datetime.now()
                             fecha_codigo = fecha_actual.strftime('%y%m%d')
                         else:
                             print('No fue creado el inventario')
-                            print(inventario_ee.almacen)
-                        
+                            
                         inventario_ee.cantidad = decimal.Decimal(cantidad)
-                        print(inventario_ee.cantidad)
                         inventario_ee.save()
-                        print(inventario_ee.envase)
-
+                        
                         No_fila += 1 # Incrementa solo si se guarda correctamente
                         
 
                     except Exception as e:
-                        print(f"Error al procesar la fila {No_fila + 2}: {str(e)}")
                         messages.error(request, f"Error al procesar la fila {No_fila + 2}: {str(e)}")
                         return redirect('importarEnvaseEmbalaje')
 
                 # Mensajes finales
                 if No_fila > 0:
                     Total_filas = No_fila - len(envases_existentes)
-                    print(f'Se han importado {Total_filas} envases o embalajes satisfactoriamente.')
                     messages.success(request, f'Se han importado {Total_filas} envases o embalajes satisfactoriamente.')
                     if envases_existentes:
-                        print('Los siguientes envases o embalajes ya se encontraban registradas: ' + ', '.join(
-                                             envases_existentes))
                         messages.warning(request,
                                          'Los siguientes envases o embalajes ya se encontraban registradas: ' + ', '.join(
                                              envases_existentes))
@@ -330,14 +289,11 @@ def importar(request):
 
                 else:
                     if envases_existentes:
-                        print('Los siguientes envases o embalajes ya se encontraban registradas: ' + ', '.join(
-                                             envases_existentes))
                         messages.warning(request,
                                          'Los siguientes envases o embalajes ya se encontraban registradas: ' + ', '.join(
                                              envases_existentes))
                         return redirect('importarEnvaseEmbalaje')
                     else:
-                        print("No se importó ningun envases o embalajes .")
                         messages.warning(request, "No se importó ningun envases o embalajes .")
                         return redirect('importarEnvaseEmbalaje')
 

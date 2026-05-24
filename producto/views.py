@@ -41,7 +41,6 @@ def exportar_productos_excel(request):
 
     # Agregar los datos fila por fila
     for prod in productos:
-        print(prod.formato)
         formato = str(prod.formato.capacidad) + ' ' + prod.formato.unidad_medida
         ws.append([
             prod.codigo_producto,
@@ -193,7 +192,6 @@ class CreateImportView(LoginRequiredMixin, CreateView):
 
 @login_required
 def importar(request):
-    print("En el import")
     if request.method == 'POST':
         file = request.FILES.get('excel')
         No_fila = 0
@@ -228,13 +226,11 @@ def importar(request):
                     # Validaciones de los datos
                     if not all(
                             [codigo, nombre, codigo_3l, almacen, formato, costo]):
-                        print(f"Fila {i}: Todos los campos son obligatorios.")
                         messages.error(request, f"Fila {i}: Todos los campos son obligatorios.")
                         return redirect('importarProducto')
 
                     almacen_obj = Almacen.objects.filter(nombre__iexact=almacen).first()
                     if almacen_obj is None:
-                        print(f"No existe el almacen {almacen}")
                         messages.error(request,
                                        f"Fila {i}: No existe el almacén  '{str(data[Col_Almacen]).strip()}' en el nomenclador")
                         return redirect('importarProducto')
@@ -249,13 +245,13 @@ def importar(request):
 
                     if len(codigo) > 20:
                         messages.error(request,
-                                       f"Fila {i}: El código no puede exceder 20 caracteres.")
+                                       f"Fila {i}: El codigo no puede exceder 20 caracteres.")
                         return redirect('importarProducto')
                     else: print(codigo)
 
                     if len(codigo_3l) > 3:
                         messages.error(request,
-                                       f"Fila {i}: El código corto solo debe tener 3 letras.")
+                                       f"Fila {i}: El codigo corto solo debe tener 3 letras.")
                         return redirect('importarProducto')
                     else: print(codigo_3l)
 
@@ -265,9 +261,6 @@ def importar(request):
                         return redirect('importarProducto')
                     else: print(cantidad)
 
-                    print(costo)
-
-                    print("Estoy luego de validaciones")
                     cap_str = ''
 					          
                     for j in formato:
@@ -295,15 +288,10 @@ def importar(request):
                     else:
                         um = 'U'
 
-                    print(f"UM: {um} capacidad: {capacidad}")
-
                     formato_o = Formato.objects.filter(unidad_medida=um, capacidad=capacidad).first()
                     if not formato_o:
                         formato_o = Formato.objects.create(unidad_medida=um, capacidad=capacidad)
-                    print(f"Formato: {formato_o}")
-
-                    #cantidad_dig = int(cantidad)  # Convertimos a entero después de la validación
-                    print(f"Datos: {nombre} {codigo} {costo} {codigo_3l}")
+                    
                     try:
                         producto, created_prod = Producto.objects.update_or_create(
                                 nombre_comercial=nombre,
@@ -312,14 +300,11 @@ def importar(request):
                                           "codigo_3l": codigo_3l}
                             )
 
-                        print(producto)
-
                         producto.clean()  
                         producto.save()
 
                         #Ahora a actualizar inventario
                         if producto:
-                            print('preparando inventario')
                             fecha_actual = datetime.now()
                             fecha_codigo = fecha_actual.strftime('%y%m%d')
                             lote = f"{fecha_codigo}-{producto.codigo_3l}-0000-{str(formato)}"
@@ -340,7 +325,6 @@ def importar(request):
                         No_fila += 1   #Incrementa solo si se guarda correctamente
 
                     except Exception as e:
-                        print(f"Error al procesar la fila {i + 1}: {str(e)}")
                         messages.error(request, f"Error al procesar la fila {i + 1}: {str(e)}")
                         return redirect('importarProducto')
                     i += 1

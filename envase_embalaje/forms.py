@@ -76,7 +76,7 @@ class EnvaseEmbalajeUpdateForm(forms.ModelForm):
             'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
         labels = {
-            'codigo_envase': 'Código:',
+            'codigo_envase': 'Codigo:',
             'nombre': 'Nombre:',
             'proveedor': 'Proveedor:',
             'costo': 'Costo:',
@@ -87,11 +87,11 @@ class EnvaseEmbalajeUpdateForm(forms.ModelForm):
         # Si el objeto ya existe Y tiene un código válido, entonces hacerlo readonly
         if self.instance and self.instance.pk and self.instance.codigo_envase:
             self.fields['codigo_envase'].widget.attrs['readonly'] = 'readonly'
-            self.fields['codigo_envase'].help_text = "El código no puede modificarse porque ya tiene un valor asignado"
+            self.fields['codigo_envase'].help_text = "El codigo no puede modificarse porque ya tiene un valor asignado"
         else:
             # Si es nuevo o el código está vacío, permitir edición
             self.fields['codigo_envase'].required = True
-            self.fields['codigo_envase'].help_text = "Ingrese un código único para este envase/embalaje"
+            self.fields['codigo_envase'].help_text = "Ingrese un codigo único para este envase/embalaje"
             
         # Hacer que el campo nombre sea opcional si quieres mantener el valor por defecto
         self.fields['nombre'].required = False
@@ -105,12 +105,12 @@ class EnvaseEmbalajeUpdateForm(forms.ModelForm):
         # Si es una actualización y ya tenía código, no permitir cambios
         if instance and instance.pk and instance.codigo_envase:
             if codigo != instance.codigo_envase:
-                raise forms.ValidationError("No se puede modificar el código porque ya tiene un valor asignado.")
+                raise forms.ValidationError("No se puede modificar el codigo porque ya tiene un valor asignado.")
             return codigo
         
         # Si es nuevo o no tenía código, validar unicidad
         if EnvaseEmbalaje.objects.exclude(pk=instance.pk if instance else None).filter(codigo_envase=codigo).exists():
-            raise forms.ValidationError("Ya existe un envase/embalaje con este código.")
+            raise forms.ValidationError("Ya existe un envase/embalaje con este codigo.")
         
         return codigo
     

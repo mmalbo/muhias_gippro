@@ -876,16 +876,15 @@ def iniciar_produccion(request, pk):
     prod = Prod_Inv_Producto.objects.filter(lote_prod=produccion)
 
     if mp and mp[0].vale.estado == 'confirmado' or prod and prod[0].vale.estado == 'confirmado':
-        messages.warning(request, f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
-        print(f'⚠️ Aún no se ha sacado el almacén las materias primas solicitadas')
+        messages.warning(request, f' Aun no se ha sacado del almacén las materias primas solicitadas')
         return redirect('produccion_list')
 
     if produccion.estado == 'Planificada':
         produccion.estado = 'En proceso: Iniciando mezcla'
         produccion.save()
-        messages.success(request, f'✅ Producción {produccion.lote} iniciada correctamente')
+        messages.success(request, f'Producción {produccion.lote} iniciada correctamente')
     else:
-        messages.warning(request, f'⚠️ La producción {produccion.lote} ya está en estado: {produccion.estado}')
+        messages.warning(request, f'La producción {produccion.lote} ya está en estado: {produccion.estado}')
     
     return redirect('produccion_list')
 
@@ -896,9 +895,9 @@ def agita_produccion(request, pk):
     if produccion_p.estado == 'En proceso: Iniciando mezcla':
         produccion_p.estado = 'En proceso: Agitado'
         produccion_p.save()
-        messages.success(request, f'✅ Producción {produccion_p.lote} actualizada correctamente')
+        messages.success(request, f'Producción {produccion_p.lote} actualizada correctamente')
     else:
-        messages.warning(request, f'⚠️ La producción {produccion_p.lote} ya está en estado: {produccion_p.estado}')
+        messages.warning(request, f'La producción {produccion_p.lote} ya está en estado: {produccion_p.estado}')
     
     return redirect('produccion_list')
 
@@ -916,17 +915,17 @@ def concluir_produccion(request, pk):
                 if cantidad_real > 0:
                     produccion.cantidad_real = cantidad_real
                     produccion.estado = 'En proceso: Validación'
-                    produccion.fecha_actualizacion = datetime.datetime.now()
+                    produccion.fecha_actualizacion = datetime.now()
                     produccion.save()
 
-                    messages.success(request, f'✅ Producción {produccion.lote} completada. Cantidad obtenida: {cantidad_real}')
+                    messages.success(request, f'Producción {produccion.lote} completada. Cantidad obtenida: {cantidad_real}')
                     return redirect('produccion_list')
                 else:
-                    messages.error(request, '❌ La cantidad real debe ser mayor a 0')
+                    messages.error(request, 'La cantidad real debe ser mayor a 0')
             except ValueError:
-                messages.error(request, '❌ La cantidad debe ser un número válido')
+                messages.error(request, 'La cantidad debe ser un número válido')
         else:
-            messages.error(request, '❌ Debe especificar la cantidad obtenida')
+            messages.error(request, 'Debe especificar la cantidad obtenida')
     
     return render(request, 'produccion/concluir_produccion.html', { 'produccion': produccion })
 
@@ -937,7 +936,7 @@ def cancelar_produccion(request, pk):
     
     # Verificar si puede ser cancelada
     if not produccion.puede_ser_cancelada():
-        messages.error(request, f'❌ No se puede cancelar la producción {produccion.lote} porque ya está {produccion.get_estado_display().lower()}')
+        messages.error(request, f'No se puede cancelar la producción {produccion.lote} porque ya está {produccion.get_estado_display().lower()}')
         return redirect('produccion_list')
     
     if request.method == 'POST':
@@ -945,7 +944,7 @@ def cancelar_produccion(request, pk):
         
         if form.is_valid():
             form.save()
-            messages.success(request, f'✅ Producción {produccion.lote} cancelada correctamente')
+            messages.success(request, f'Producción {produccion.lote} cancelada correctamente')
             
             # Notificar a admin, verificar si las materias primas ya salieron de almacen
             target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
@@ -991,7 +990,7 @@ def cancelar_produccion(request, pk):
             
             return redirect('produccion_list')
         else:
-            messages.error(request, '❌ Error al cancelar la producción')
+            messages.error(request, 'Error al cancelar la producción')
     else:
         form = CancelarProduccionForm(produccion=produccion)
     
@@ -1571,7 +1570,7 @@ def subir_pruebas_quimicas(request, pk):
         
         if form.is_valid():
             form.save()
-            messages.success(request, f'✅ Archivo de pruebas químicas subido correctamente para {produccion.lote}')
+            messages.success(request, f'Archivo de pruebas químicas subido correctamente para {produccion.lote}')
             produccion.estado = 'Evaluada'
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1583,7 +1582,7 @@ def subir_pruebas_quimicas(request, pk):
             
             return redirect('produccion_list')
         else:
-            messages.error(request, '❌ Error al subir el archivo')
+            messages.error(request, 'Error al subir el archivo')
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': False,
@@ -1626,7 +1625,7 @@ def eliminar_pruebas_quimicas(request, pk):
         produccion.pruebas_quimicas_ext = None
         produccion.save()
         
-        messages.success(request, f'✅ Archivo de pruebas químicas eliminado para {produccion.lote}')
+        messages.success(request, f'Archivo de pruebas químicas eliminado para {produccion.lote}')
     else:
         messages.warning(request, 'No hay archivo para eliminar')
     

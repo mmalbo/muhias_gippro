@@ -31,7 +31,7 @@
                             <form method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 
-                                <!-- Fila 1: Códigos (2 columnas) -->
+                                <!-- Fila 1: CÃ³digos (2 columnas) -->
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         {{ form.codigo_producto.label_tag }}
@@ -96,7 +96,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Fila 4: Ficha técnica -->
+                                <!-- Fila 4: Ficha tï¿½cnica -->
                                 <div class="row">
                                     <div class="col-md-12 mb-3">
                                         {{ form.ficha_tecnica_folio.label_tag }}
@@ -107,7 +107,7 @@
                                         {% if object and object.ficha_tecnica_folio %}
                                             <div class="mt-1">
                                                 <a href="{{ object.ficha_tecnica_folio.url }}" target="_blank" class="btn btn-sm btn-info">
-                                                    Ver ficha técnica actual
+                                                    Ver ficha tï¿½cnica actual
                                                 </a>
                                             </div>
                                         {% endif %}
