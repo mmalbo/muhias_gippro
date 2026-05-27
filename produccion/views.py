@@ -1272,6 +1272,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                         if diferencia != 0:
                             if diferencia > 0:  # Aumenta cantidad
                                 if inventario_mp.cantidad < diferencia:
+                                    messages.error(self.request, f'Inventario insuficiente de {materia_prima_obj.nombre}')
                                     raise ValueError(f'Inventario insuficiente de {materia_prima_obj.nombre}')
                                 if not vale_sol_mp:
                                     vale_sol_mp = Vale_Movimiento_Almacen.objects.create(
@@ -1310,6 +1311,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                             mp_existente.save()
                     else:  # Crear nueva
                         if inventario_mp.cantidad < nueva_cantidad:
+                            messages.error(self.request, f'Inventario insuficiente de {materia_prima_obj.nombre}')
                             raise ValueError(f'Inventario insuficiente de {materia_prima_obj.nombre}')
                         
                         if not vale_sol_mp:
@@ -1342,11 +1344,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     # Obtener inventario (Inv_Producto)
                     inventario_pp = Inv_Producto.objects.filter(
                         producto=producto_catalogo,
-                        almacen=almacen_obj
+                        almacen=almacen_obj,
+                        formato__capacidad=0
                     ).first()
                     
                     if not inventario_pp:
-                        raise ValueError(f'No hay inventario de {producto_catalogo.nombre_comercial} en {almacen_obj.nombre}')
+                        messages.error(self.request, f'No hay inventario de {producto_catalogo.nombre_comercial} a granel en {almacen_obj.nombre}')
+                        raise ValueError(f'No hay inventario de {producto_catalogo.nombre_comercial} a granel en {almacen_obj.nombre}')
                     
                     nueva_cantidad = Decimal(str(pp_data['cantidad']))
                     
@@ -1358,6 +1362,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                         if diferencia != 0:
                             if diferencia > 0:  # Aumenta cantidad
                                 if inventario_pp.cantidad < diferencia:
+                                    messages.error(self.request, f'Inventario insuficiente de {producto_catalogo.nombre_comercial}')
                                     raise ValueError(f'Inventario insuficiente de {producto_catalogo.nombre_comercial}')
                                 if not vale_sol_pp:
                                     vale_sol_pp = Vale_Movimiento_Almacen.objects.create(
@@ -1386,17 +1391,17 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         lote_No=produccion.lote,
                                         estado='confirmado'
                                     )
-                                if hasattr(models, 'Movimiento_Producto'):
-                                    Movimiento_Producto.objects.create(
+                                Movimiento_Prod.objects.create(
                                         producto=inventario_pp,
                                         cantidad=abs(diferencia),
                                         vale=vale_dev_pp
-                                    )
+                                )
                             
                             pp_existente.cantidad_producto = nueva_cantidad
                             pp_existente.save()
                     else:  # Crear nueva
                         if inventario_pp.cantidad < nueva_cantidad:
+                            messages.error(self.request, f'Inventario insuficiente de {producto_catalogo.nombre_comercial}')
                             raise ValueError(f'Inventario insuficiente de {producto_catalogo.nombre_comercial}')
                         
                         if not vale_sol_pp:
@@ -1496,6 +1501,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 materias_primas.append(mp_data)
                 
             except Exception as e:
+                messages.error(self.request, f'Error en materia prima {i}')
                 raise ValueError(f'Error en materia prima {i}: {str(e)}')
             
             i += 1
@@ -1553,6 +1559,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 productos.append(pp_data)
                 
             except Exception as e:
+                messages.error(self.request, f'Error en producto {i}')
                 raise ValueError(f'Error en producto {i}: {str(e)}')
             
             i += 1
