@@ -13,6 +13,7 @@
                             <tr>
                                 <th>Producto</th>
                                 <th>Formato / Presentación</th>
+                                <th>Número de Lote</th>
                                 <th>Cantidad</th>
                             </tr>
                         </thead>
@@ -28,6 +29,13 @@
                                         {% endfor %}
                                     </select>
                                 </td>
+                                <td>
+                                    <input type="text"
+                                        name="lote_{{ item.detalle.id }}"
+                                        class="form-control"
+                                        placeholder="Ingrese número de lote"
+                                        required>
+                                </td>    
                                 <td>
                                     <input type="number"
                                            name="quantity_{{ item.detalle.id }}"

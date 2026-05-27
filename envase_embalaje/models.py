@@ -30,9 +30,9 @@ class EnvaseEmbalaje(ModeloBase):
 
     def __str__(self):
         if self.formato:
-            return self.tipo_envase_embalaje.nombre + ' ' + str(self.formato.capacidad) + ' ' + self.formato.unidad_medida 
+            return self.nombre + '/' + self.tipo_envase_embalaje.nombre + ' ' + str(self.formato.capacidad) + ' ' + self.formato.unidad_medida 
         else:
-            return self.tipo_envase_embalaje.nombre
+            return self.nombre + '/' + self.tipo_envase_embalaje.nombre
 
     @property
     def cantidad_total(self):

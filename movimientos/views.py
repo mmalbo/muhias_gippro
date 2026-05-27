@@ -295,7 +295,6 @@ def buscar_items_almacen(request):
 
     return JsonResponse({'items': items})
 
-
 def reducir_inventario(vale, inv, cantidad):
     if vale.tipo == 'Materias primas':
         inventario_mp = get_object_or_404(Inv_Mat_Prima,
@@ -345,7 +344,6 @@ def reducir_inventario(vale, inv, cantidad):
                 cantidad=cantidad,
                 cantidad_inventario = inventario_ins.cantidad
         )
-   
 
 def validar_disponibilidad_env(movimiento, almacen):
     """Validar disponibilidad de materia prima"""
@@ -638,11 +636,20 @@ def recepcion_producto(request, adq_id):
             estado='confirmado'
         )
 
+        errores = []
+
         for detalle in detalles:
             # 1. Formato seleccionado
             formato_id = request.POST.get(f'formato_{detalle.id}')
             # 2. Cantidad ingresada
             cantidad_str = request.POST.get(f'quantity_{detalle.id}', '0')
+             # 3. Lote (NUEVO)
+            lote = request.POST.get(f'lote_{detalle.id}', '').strip()
+
+            if not lote:
+                errores.append(f"{detalle.producto.nombre_comercial}: Número de lote obligatorio")
+                continue
+            
             try:
                 cantidad = round(float(cantidad_str), 2)
                 cantidad = decimal.Decimal(cantidad)
@@ -658,12 +665,13 @@ def recepcion_producto(request, adq_id):
             except Formato.DoesNotExist:
                 print(f"Formato {formato_id} no existe")
                 continue
-
+            
             # Buscar o crear el inventario para este producto + almacén + formato
             inventario_prod, creado = Inv_Producto.objects.get_or_create(
                 producto=detalle.producto,
                 almacen=almacen,
                 formato=formato,
+                lote=lote,
                 defaults={'cantidad': decimal.Decimal('0.00')}
             )
 
@@ -698,10 +706,17 @@ def recepcion_producto(request, adq_id):
                             ),
                             link='/movimientos/lista/'
                         )
-
+        # Si hay errores, mostrar mensajes y no completar la recepción
+        if errores:
+            for error in errores:
+                messages.error(request, error)
+            return redirect('recepcion_producto', adq_id=adq_id)
+        
         adquisicion.registrada = True
         adquisicion.estado = 'completado'
         adquisicion.save()
+
+        messages.success(request, "Recepción completada exitosamente")
         return redirect('producto_list')
 
     # --- GET: preparar datos para el template ---
