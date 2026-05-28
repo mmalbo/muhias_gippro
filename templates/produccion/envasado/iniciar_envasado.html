@@ -26,7 +26,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <strong>Producto granel:</strong>
+                                    <strong>Producto a granel:</strong>
                                     <p>{{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</p>
                                 </div>
                                 <div class="col-md-4">
@@ -36,7 +36,7 @@
                                 <div class="col-md-4">
                                     <strong>Envases a utilizar:</strong>
                                     <ul class="mb-0">
-                                        {% for detalle in solicitud.detalleenvasado_set.all %}
+                                        {% for detalle in solicitud.envases.all %}
                                             <li>{{ detalle.presentacion.envase.nombre }}: {{ detalle.cantidad_unidades }} und</li>
                                         {% endfor %}
                                     </ul>

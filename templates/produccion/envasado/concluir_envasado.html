@@ -21,7 +21,7 @@
                 <div class="row card-body">
                     <!-- Información general -->
                     <div class="mb-3 col-md-6">
-                        <div><strong>Producto granel:</strong> {{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</div>
+                        <div><strong>Producto a granel:</strong> {{ solicitud.lote_produccion_origen.producto.nombre_comercial }}</div>
                         <div><strong>Lote destino:</strong> {{ solicitud.lote_destino.lote }}</div>
                     </div>
                     <div class="col-md-4">
@@ -98,72 +98,96 @@
     </div>
 </div>
 
+<!-- Datos ocultos para JavaScript -->
+    <div id="datos-envasado" 
+         data-url-concluir="{% url 'envasado:concluir_envasado' solicitud.pk %}"
+         data-csrf="{{ csrf_token }}"
+         data-granel-solicitado="{{ granel_solicitado }}">
+    </div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-    var granelSolicitado = parseFloat($('#datos-envasado').data('granel-solicitado')) || 0;
-    var urlConcluir = $('#datos-envasado').data('url-concluir');
-    var csrfToken = $('#datos-envasado').data('csrf');
+    <script>
+        $(document).ready(function() {
+            // Leer datos desde el div oculto (corregido)
+            var granelSolicitado = parseFloat($('#datos-envasado').data('granel-solicitado')) || 0;
+            var urlConcluir = $('#datos-envasado').data('url-concluir');
+            var csrfToken = $('#datos-envasado').data('csrf');
 
-    function calcularResumen() {
-        let totalVolumen = 0;
-        $('#tablaEnvases tbody tr').each(function() {
-            let cantidad = parseFloat($(this).find('.cantidad-real').val()) || 0;
-            let capacidad = parseFloat($(this).find('.cantidad-real').data('capacidad')) || 1;
-            totalVolumen += cantidad * capacidad;
-        });
-        let perdida = granelSolicitado - totalVolumen;
-        if (perdida < 0) perdida = 0;
-        let rendimiento = granelSolicitado > 0 ? (totalVolumen / granelSolicitado * 100) : 0;
-        $('#totalProducido').text(totalVolumen.toFixed(2));
-        $('#perdida').text(perdida.toFixed(2));
-        $('#rendimiento').text(rendimiento.toFixed(2));
-    }
-
-    $('.cantidad-real, .cantidad-insumo').on('input', calcularResumen);
-    calcularResumen();
-
-    $('#btnConcluir').click(function() {
-        console.log("Botón clickeado");
-        let envases = [];
-        $('#tablaEnvases tbody tr').each(function() {
-            let id = $(this).find('.cantidad-real').data('id');
-            let cantidad = parseFloat($(this).find('.cantidad-real').val()) || 0;
-            let obs = $(this).find('.obs-envase').val() || '';
-            envases.push({ id: id, cantidad_real: cantidad, observaciones: obs });
-        });
-        let insumos = [];
-        $('#tablaInsumos tbody tr').each(function() {
-            let id = $(this).find('.cantidad-insumo').data('id');
-            let cantidad = parseFloat($(this).find('.cantidad-insumo').val()) || 0;
-            let obs = $(this).find('.obs-insumo').val() || '';
-            insumos.push({ id: id, cantidad_real: cantidad, observaciones: obs });
-        });
-        let observacionesFinales = $('#observacionesFinales').val();
-
-        $.ajax({
-            url: urlConcluir,
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrfToken },
-            contentType: 'application/json',
-            data: JSON.stringify({
-                envases: envases,
-                insumos: insumos,
-                observaciones_finales: observacionesFinales
-            }),
-            success: function(response) {
-                if (response.success) {
-                    window.location.href = response.redirect_url;
-                } else {
-                    alert('Error: ' + response.error);
+            // Función para mostrar toasts desde JavaScript (usa la global si existe, o implementa aquí)
+            function mostrarToast(mensaje, nivel, persistente = false) {
+                // Si ya existe la función global (definida en base.html), úsala
+                if (typeof window.mostrarToast === 'function') {
+                    window.mostrarToast(mensaje, nivel, persistente);
+                    return;
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error AJAX:", error);
-                alert('Error al concluir envasado: ' + error);
+                // Fallback simple si no está disponible
+                alert(mensaje);
             }
+
+            // Cálculo de resumen (igual que antes)
+            function calcularResumen() {
+                let totalVolumen = 0;
+                $('#tablaEnvases tbody tr').each(function() {
+                    let cantidad = parseFloat($(this).find('.cantidad-real').val()) || 0;
+                    let capacidad = parseFloat($(this).find('.cantidad-real').data('capacidad')) || 1;
+                    totalVolumen += cantidad * capacidad;
+                });
+                let perdida = granelSolicitado - totalVolumen;
+                if (perdida < 0) perdida = 0;
+                let rendimiento = granelSolicitado > 0 ? (totalVolumen / granelSolicitado * 100) : 0;
+                $('#totalProducido').text(totalVolumen.toFixed(2));
+                $('#perdida').text(perdida.toFixed(2));
+                $('#rendimiento').text(rendimiento.toFixed(2));
+            }
+
+            $('.cantidad-real, .cantidad-insumo').on('input', calcularResumen);
+            calcularResumen();
+
+            // Envío AJAX
+            $('#btnConcluir').click(function() {
+                let envases = [];
+                $('#tablaEnvases tbody tr').each(function() {
+                    let id = $(this).find('.cantidad-real').data('id');
+                    let cantidad = parseFloat($(this).find('.cantidad-real').val()) || 0;
+                    let obs = $(this).find('.obs-envase').val() || '';
+                    envases.push({ id: id, cantidad_real: cantidad, observaciones: obs });
+                });
+                let insumos = [];
+                $('#tablaInsumos tbody tr').each(function() {
+                    let id = $(this).find('.cantidad-insumo').data('id');
+                    let cantidad = parseFloat($(this).find('.cantidad-insumo').val()) || 0;
+                    let obs = $(this).find('.obs-insumo').val() || '';
+                    insumos.push({ id: id, cantidad_real: cantidad, observaciones: obs });
+                });
+                let observacionesFinales = $('#observacionesFinales').val();
+
+                $.ajax({
+                    url: urlConcluir,
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        envases: envases,
+                        insumos: insumos,
+                        observaciones_finales: observacionesFinales
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            // Redirige, y al cargar la nueva página se mostrarán los mensajes de Django
+                            window.location.href = response.redirect_url;
+                        } else {
+                            // Si hay mensaje de error o info en la respuesta, mostrarlo como toast
+                            let mensaje = response.error || response.info || 'Error desconocido';
+                            let nivel = response.error ? 'error' : 'warning';
+                            mostrarToast(mensaje, nivel, true);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = xhr.responseJSON?.error || 'Error de conexión con el servidor';
+                        mostrarToast(errorMsg, 'error', true);
+                    }
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 {% endblock %}

@@ -13,7 +13,6 @@
                         Usar insumo existente
                     </label>
                 </div>
-                {% if almacenero == 'False' %}
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="{{ wizard.form.prefix }}-opcion" 
                            id="{{ wizard.form.prefix }}-opcion-new" value="new"
@@ -22,7 +21,6 @@
                         Registrar nuevo insumo
                     </label>
                 </div>
-                {% endif %}
             </div>
             
             <div id="existing-section" style="{% if wizard.form.initial.opcion != 'new' %}display: block;{% else %}display: none;{% endif %}">
