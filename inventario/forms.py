@@ -139,20 +139,26 @@ class AjusteInvProdForm(forms.ModelForm):
         max_length=100,
         required = False,
         label="Causa del ajuste",
-        widget=forms.TextInput(attrs={'class':'form-control'})
+        widget=forms.TextInput(attrs={'class':'form-control', 
+                                      'placeholder': 'Ej: Ajuste por inventario físico, merma, sobrante, etc.'})
     )
     
     class Meta:
         model = Inv_Producto
         fields = ['cantidad', 'almacen', 'producto', 'lote']
         widgets = {
-            'cantidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'lote': forms.TextInput(attrs={'class': 'form-control'}),
+            'cantidad': forms.NumberInput(attrs={'class': 'form-control',
+                'step': '0.01',
+                'min': '0'}),
+            'lote': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Número de lote'}),
             'almacen': forms.Select(attrs={'class': 'form-control'}),
             'producto': forms.Select(attrs={'class': 'form-control'}),
         }
         labels = {
             'cantidad': 'Nueva cantidad',
+            'lote': 'Nuevo lote (opcional)',
+            'almacen': 'Almacen',
+            'producto': 'Producto',
         }
         
 
@@ -161,6 +167,13 @@ class AjusteInvProdForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         self.fields['producto'].disabled = True
+        self.fields['almacen'].disabled = True
+
+        # Mostrar el lote actual como ayuda
+        if self.instance.lote:
+            self.fields['lote'].help_text = f'Lote actual: {self.instance.lote}.'
+            self.fields['lote'].widget.attrs['placeholder'] = self.instance.lote
+            
         if self.user:
             if self.user.groups.filter(name='Presidencia-Admin').exists() or self.user.is_staff:
                 self.fields['almacen'].queryset = Almacen.objects.all()
@@ -178,3 +191,23 @@ class AjusteInvProdForm(forms.ModelForm):
         if causa == '':
             raise forms.ValidationError("Debe especificar una causa del ajuste")
         return causa
+
+    def clean_cantidad(self):
+        cantidad = self.cleaned_data.get('cantidad')
+        if cantidad is None:
+            raise forms.ValidationError("La cantidad es obligatoria")
+        if cantidad < 0:
+            raise forms.ValidationError("La cantidad no puede ser negativa")
+        return cantidad
+    
+    def save(self, commit=True):
+        """Personalizar el save para mantener el lote si no se proporciona uno nuevo"""
+        instance = super().save(commit=False)
+        
+        # Si no se proporcionó un nuevo lote, mantener el existente
+        if not self.cleaned_data.get('lote') and self.instance.pk:
+            instance.lote = self.instance.lote
+        
+        if commit:
+            instance.save()
+        return instance
