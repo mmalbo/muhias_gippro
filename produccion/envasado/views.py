@@ -287,11 +287,11 @@ def iniciar_envasado(request, pk):
     formato = primer_envase.formato  # Campo 'formato' en el modelo Envase (ej: "500ml")
 
     vale = detalles_envase.first().vale
+    print(vale.estado)
 
     # Validación salida de materiales
     if vale.estado == 'confirmado':
         if request.method == 'POST':
-            messages.error(request, 'Aún no se han despachado los materiales desde el almacén')
             return JsonResponse({'success': False, 'error': 'Aún no se han despachado los materiales desde el almacén'})
         messages.error(request, 'Aún no se han despachado los materiales desde el almacén')
         return redirect('envasado:detalle_solicitud_envasado', pk=pk)
@@ -300,10 +300,10 @@ def iniciar_envasado(request, pk):
 
     if not detalles_envase.exists():
         if request.method == 'POST':
-            messages.error(request, 'La solicitud no tiene envases asociados.')
             return JsonResponse({'success': False, 'error': 'No hay envases definidos en la solicitud'})
         messages.error(request, 'La solicitud no tiene envases asociados.')
         return redirect('envasado:detalle_solicitud_envasado', pk=pk)
+
 
 
     # Generar lote destino: lote_origen + "-" + formato
@@ -355,7 +355,6 @@ def iniciar_envasado(request, pk):
             vale.estado == 'despachado'
             vale.save()
 
-            messages.success(request, f'Envasado iniciado. Lote destino: {lote_destino_str}')
             return JsonResponse({
                 'success': True,
                 'message': f'Envasado iniciado. Lote destino: {lote_destino_str}',
@@ -363,11 +362,59 @@ def iniciar_envasado(request, pk):
             })
 
     except json.JSONDecodeError:
-        messages.error(request, 'Datos inválidos')
         return JsonResponse({'success': False, 'error': 'Datos inválidos'})
     except Exception as e:
-        messages.error(request, 'Error desconocido')
         return JsonResponse({'success': False, 'error': str(e)})
+
+"""@login_required    
+def concluir_envasado(request, pk):
+    # Iniciar el proceso de envasado
+    solicitud = get_object_or_404(SolicitudEnvasado, pk=pk)
+    
+    if solicitud.estado != 'en_proceso':
+        messages.error(request, 'Esta solicitud no está preparada para concluir.')
+        return redirect('envasado:detalle_solicitud_envasado', pk=pk)
+    
+    solicitud.estado = 'completada'
+    solicitud.fecha_fin = timezone.now().date()
+    solicitud.save()
+    
+    messages.success(request, 'Proceso de envasado concluido.')
+    return redirect('envasado:lista_solicitudes')
+
+@login_required
+def registrar_lote_envasado(request, pk):
+    # Registrar un lote de producto envasado
+    solicitud = get_object_or_404(SolicitudEnvasado, pk=pk)
+    
+    if request.method == 'POST':
+        form = LoteEnvasadoForm(request.POST, solicitud=solicitud)
+        if form.is_valid():
+            with transaction.atomic():
+                lote = form.save(commit=False)
+                lote.solicitud = solicitud
+                lote.responsable = request.user
+                lote.save()
+                
+                # Registrar consumos de insumos
+                for insumo_data in form.cleaned_data['consumos']:
+                    ConsumoInsumoEnvasado.objects.create(
+                        lote=lote,
+                        **insumo_data
+                    )
+                
+                # Verificar si ya se completó toda la cantidad solicitada
+                # Definir el form para establecer el cierre del envasado y registrar la cantidad real
+                
+                messages.success(request, 'Lote registrado exitosamente.')
+                return redirect('detalle_solicitud_envasado', pk=pk)
+    else:
+        form = LoteEnvasadoForm(solicitud=solicitud)
+    
+    return render(request, 'produccion/envasado/registrar_lote.html', {
+        'form': form,
+        'solicitud': solicitud
+    })"""
 
 @csrf_exempt
 @login_required
@@ -409,11 +456,10 @@ def concluir_envasado(request, pk):
 
         # Calcular total teórico (volumen) y pérdida estimada
         total_teorico = sum(e['capacidad'] * e['cantidad_solicitada'] for e in envases_planificados)
-        print(total_teorico)    
+    
         granel_solicitado = float(solicitud.cantidad_solicitada)
         perdida_estimada = granel_solicitado - total_teorico
-        print(perdida_estimada)
-
+    
         context = {
             'solicitud': solicitud,
             'envases_planificados': envases_planificados,
@@ -450,21 +496,22 @@ def concluir_envasado(request, pk):
             total_unidades += cantidad_real
             total_producido_volumen += cantidad_real * capacidad
 
-        cantidad_perdida = float(solicitud.cantidad_solicitada) - total_producido_volumen
-        if cantidad_perdida < 0:
-            cantidad_perdida = 0
+            cantidad_perdida = float(solicitud.cantidad_solicitada) - total_producido_volumen
+            if cantidad_perdida < 0:
+                cantidad_perdida = 0
 
-        if cantidad_perdida > 0 and observaciones_finales == '':
-            return JsonResponse({
-                'success': False, 
-                'error': 'Debe especificar una causa de la diferencia entre la cantidad prevista a envasar y la real envasada'
-                })
-        
-        detalles_envase_actualizados.append({
-            'detalle_id': detalle_id,
-            'cantidad_producida': cantidad_real,
-            'observaciones': env.get('observaciones', '')
-        })
+            print(cantidad_perdida)
+            print(observaciones_finales)
+            if cantidad_perdida > 0 and observaciones_finales == '':
+                print('Debe especificar una causa de la doferencia entre la solicitud soliciada y la envasada')
+                return JsonResponse({'success': False, 'error': 'Debe especificar una causa de la doferencia entre la solicitud soliciada y la envasada'})
+
+            detalles_envase_actualizados.append({
+                'detalle_id': detalle_id,
+                'cantidad_producida': cantidad_real,
+                'observaciones': env.get('observaciones', '')
+            })
+
 
 
         with transaction.atomic():
@@ -482,7 +529,7 @@ def concluir_envasado(request, pk):
 
             #Crear vale de envasado terminado
             almacen_destino = solicitud.lote_produccion_origen.almacen
-
+            print(solicitud.lote_destino.lote)
             vale = Vale_Movimiento_Almacen.objects.create(
                     origen = 'Envasado',
                     almacen = almacen_destino,
@@ -510,8 +557,10 @@ def concluir_envasado(request, pk):
             ) 
             solicitud.save()
 
-            messages.success(request, f'Envasado concluido. Unidades producidas: {total_unidades}, Pérdida: {cantidad_perdida:.2f} L/kg')
-        
+            # 3. (Opcional) Crear vale de entrada si usas el sistema de movimientos
+            # from .services import ServicioEnvasadoVales
+            # vale = ServicioEnvasadoVales.crear_vale_entrada_envasado(...)
+
             return JsonResponse({
                 'success': True,
                 'message': f'Envasado concluido. Unidades producidas: {total_unidades}, Pérdida: {cantidad_perdida:.2f} L/kg',
