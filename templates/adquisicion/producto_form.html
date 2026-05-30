@@ -2,7 +2,11 @@
 {% load static %}
 
 {% block step_content %}
-
+{% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="mb-3">

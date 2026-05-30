@@ -11,7 +11,7 @@ class Almacen(ModeloBase):
     concepto = models.CharField( max_length=20, choices=obtener_conceptos_almacen(), default='inventario', 
                                 verbose_name='Concepto de almacen')
     responsable = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, verbose_name="Responsable de almacén", 
-                                    null=True, blank=True)
+                                    null=True, blank=True, related_name='almacen')
 
     class Meta:
         verbose_name = "Almacen"

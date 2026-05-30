@@ -107,7 +107,6 @@ class Vale_Movimiento_Almacen(ModeloBase):
         tipos = []
         if self.movimientos.exists():
             return 'Materias primas'
-            tipos.append('Materias primas')
         if self.movimientos_envases.exists():
             return 'Envases y embalajes'
         if self.movimientos_insumos.exists():
