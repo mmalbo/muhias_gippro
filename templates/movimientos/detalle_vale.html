@@ -3,6 +3,11 @@
 {% load custom_filters %}
 
 {% block contenido %}
+{% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
 <div class="container mt-4">
     <!-- Header del vale -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -297,7 +302,7 @@
         </div>
         
         <div>
-            {% if vale.estado == 'borrador' and not vale.entrada and puede_confirmar %}
+            {% if vale.estado == 'borrador' and not vale.entrada and puede_confirmar and almacenero == 'True'%}
             <form method="post" action="{% url 'confirmar_salida' vale.id %}" id="confirmForm{{ vale.id }}" class="d-inline">
                 {% csrf_token %}
                 <button type="button" class="btn btn-success" onclick="confirmarSalida('{{ vale.id }}')">

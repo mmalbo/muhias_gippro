@@ -6,8 +6,14 @@ def group_of(request):
     almacenero = 'False'
     presidencia = 'False'
     admin = 'False'
+    consultor = 'False'
+    comercial = 'False'
     if user.groups.filter(name__in=['Almaceneros']):
         almacenero = 'True'
+    if user.groups.filter(name__in=['Consultor']):
+        consultor = 'True'
+    if user.groups.filter(name__in=['Comercial']):
+        comercial = 'True'
     if user.groups.filter(name__in=['Presidencia-Admin']):
         presidencia = 'True'
     if user.is_staff:

@@ -1,22 +1,16 @@
 {% extends 'base/base.html' %}
 
 {% block contenido %}
+{% for message in messages %}
+        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
 <div class="wrapper">
     <div class="content-page">
         <div class="container-fluid">
             <div class="col-sm-12 col-lg-12">
                 <h4 class="card-title">Listado de solicitudes pendientes</h4>
-                {% if messages %}
-                    <script>
-                        {% for message in messages %}
-                            Swal.fire({
-                                icon: '{{ message.tags }}',
-                                title: '{{ message }}',
-                                showConfirmButton: true
-                            });
-                        {% endfor %}
-                    </script>
-                {% endif %}
             </div>
             <div class="col-sm-12 col-lg-12">
                 <table id="datatable" class="table datatable table-striped">
@@ -25,6 +19,7 @@
                             <th>Fecha</th>
                             <th>Tipo de solicitud</th>
                             <th>Lote / Detalle</th>
+                            <th>Almacén</th>
                             <th>Cantidad</th>
                             <th>Acciones</th>
                         </tr>
@@ -35,13 +30,14 @@
                             <td>{{ fila.fecha|date:"d/m/Y" }}</td>
                             <td>{{ fila.tipo_solicitud }}</td>
                             <td>{{ fila.lote }}</td>
+                            <td>{{ fila.almacen }}</td>
                             <td>{{ fila.cantidad }}</td>
                             <td>
                                 <div class="button-container" style="display: flex; gap: 10px;">
                                     <!-- Botón Detalles siempre visible -->
                                     <a href="{% url fila.url_detalle fila.vale_id %}" class="btn btn-success btn-sm">Detalles</a>
                                     <!-- Botón Entregar solo si tiene url_entregar definido -->
-                                    {% if fila.url_entregar %}
+                                    {% if fila.url_entregar and not fila.tipo_solicitud == 'Venta'%}
                                         <a href="{% url fila.url_entregar fila.vale_id %}" class="btn btn-primary btn-sm">Entregar</a>
                                     {% endif %}
                                 </div>
