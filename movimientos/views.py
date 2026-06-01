@@ -1339,7 +1339,6 @@ def solicitudes_pendientes_list(request):
 def generar_vale(request, cons):
     return export_vale(request, cons)
 
-
 def vale_detalle(request, pk):
     vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
     # Manejar POST si tienes un formulario de actualización

@@ -345,6 +345,7 @@
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuMovimientos">
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or user.is_superuser %}
                         <a href="{% url 'rec_pend_list' %}" class="nav-link">
                             <span>Recepciones pendientes</span>
                         </a>
@@ -354,6 +355,7 @@
                         <a href="{% url 'movimiento_list' %}" class="nav-link">
                             <span>Movimientos</span>
                         </a>
+                        {% endif %}
                         <a href="{% url 'crear_salida' %}" class="nav-link">
                             <span>Salida de almacén</span>
                         </a>
@@ -403,8 +405,8 @@
     <!-- Sidebar Footer -->
     <div class="sidebar-footer p-3 border-top">
         <div class="text-center text-muted small">
-            <div>© 2024 GIPPro</div>
-            <div class="mt-1">v1.0.0</div>
+            <div>© 2026 GIPPro</div>
+            <div class="mt-1">v1.1.0</div>
         </div>
     </div>
 </div>

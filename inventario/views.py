@@ -59,8 +59,7 @@ def ajuste_inv_prod(request, inv_prod):
             messages.success(request, f'Inventario de {inv_prod_o.producto} actualizado correctamente')
             return redirect('producto_list')
         else:
-            print(f'La form no es valida {form.errors}')
-            messages.success(request, f'Error en la form {form.errors}')
+            messages.info(request, f'Error en la form {form.errors}')
             return redirect('producto_list')
     else:
         form = AjusteInvProdForm(instance=inv_prod_o, user=request.user)
@@ -107,7 +106,7 @@ def ajuste_inv_mp(request, inv_mp):
             elif nuevo_cant > viejo_cant:
                 vale.entrada = True
             else:
-                messages.success(request, f'No se ha modificado la cantidad en inventario')   
+                messages.info(request, f'No se ha modificado la cantidad en inventario')   
                 context = {
                     'form': form,
                     'inv': inv_mat_prima,
@@ -125,7 +124,7 @@ def ajuste_inv_mp(request, inv_mp):
             messages.success(request, f'Inventario de {inv_mat_prima.materia_prima.nombre} actualizado correctamente')
             return redirect('materia_prima:materia_prima_list')
         else:
-            messages.success(request, f'Error en la form {form.errors}')
+            messages.info(request, f'Error en la form {form.errors}')
             return redirect('materia_prima:materia_prima_list')
     else:
         form = AjusteInvMPForm(instance=inv_mat_prima, user=request.user)
@@ -168,7 +167,7 @@ def ajuste_inv_env(request, inv_ee):
             elif nuevo_cant > viejo_cant:
                 vale.entrada = True
             else:
-                messages.success(request, f'No se ha modificado la cantidad en inventario')   
+                messages.info(request, f'No se ha modificado la cantidad en inventario')   
                 context = {
                     'form': form,
                     'inv': inv_env,
@@ -186,7 +185,7 @@ def ajuste_inv_env(request, inv_ee):
             messages.success(request, f'Inventario de {inv_env.envase.codigo_envase} actualizado correctamente')
             return redirect('envase_embalaje_lista')
         else:
-            messages.success(request, f'Error en la form {form.errors}')
+            messages.info(request, f'Error en la form {form.errors}')
             return redirect('envase_embalaje_lista')
     else:
         form = AjusteInvMPForm(instance=inv_env, user=request.user)
@@ -206,7 +205,7 @@ def ajuste_inv_ins(request, inv_ins):
     almacen = Almacen.objects.first()
     if request.user.groups.first() and request.user.groups.first().name == 'Almaceneros':
         almacen = Almacen.objects.filter(responsable=request.user).first()
-        if not almacen or inv_ins.almacen != almacen:
+        if not almacen or inv_insT.almacen != almacen:
             messages.error(request,'No tienes permisos para ajustar este inventario')
             return redirect('InsumosOtros:insumos_list')
 
@@ -229,7 +228,7 @@ def ajuste_inv_ins(request, inv_ins):
             elif nuevo_cant > viejo_cant:
                 vale.entrada = True
             else:
-                messages.success(request, f'No se ha modificado la cantidad en inventario')   
+                messages.info(request, f'No se ha modificado la cantidad en inventario')   
                 context = {
                     'form': form,
                     'inv': inv_insT,
@@ -246,7 +245,7 @@ def ajuste_inv_ins(request, inv_ins):
             messages.success(request, f'Inventario de {inv_insT.insumos} actualizado correctamente')
             return redirect('insumos_list')
         else:
-            messages.success(request, f'Error en la form {form.errors}')
+            messages.info(request, f'Error en la form {form.errors}')
             return redirect('insumos_list')
     else:
         form = AjusteInvMPForm(instance=inv_insT.insumos, user=request.user)
