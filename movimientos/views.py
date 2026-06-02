@@ -1533,7 +1533,7 @@ def vale_detalle(request, pk):
             valor_total += float(item['cantidad']) * float(item['costo'])
     
     # Determinar estado para mostrar acciones disponibles
-    puede_confirmar = vale.estado == 'borrador' and not vale.entrada  # Solo salidas en borrador
+    puede_confirmar = vale.estado == 'borrador'  # Solo salidas en borrador
     puede_cancelar = vale.estado in ['borrador', 'confirmado']
     puede_despachar = vale.estado == 'confirmado' and vale.despachado == False
     context = {

@@ -21,7 +21,9 @@ def group_of(request):
     return {
         'almacenero': almacenero,
         'presidencia': presidencia,
-        'admin': admin
+        'admin': admin,
+        'comercial': comercial,
+        'consultor': consultor
     }
 
 def notifications(request):

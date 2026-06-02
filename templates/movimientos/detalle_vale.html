@@ -302,15 +302,16 @@
         </div>
         
         <div>
-            {% if vale.estado == 'borrador' and not vale.entrada and puede_confirmar and almacenero == 'True'%}
-            <form method="post" action="{% url 'confirmar_salida' vale.id %}" id="confirmForm{{ vale.id }}" class="d-inline">
-                {% csrf_token %}
-                <button type="button" class="btn btn-success" onclick="confirmarSalida('{{ vale.id }}')">
-                    <i class="bi bi-check-circle"></i> Confirmar Salida
-                </button>
-            </form>
+            {% if vale.estado == 'borrador' and puede_confirmar %}
+                {% if almacenero == 'True' or presidencia == 'True' %}
+                <form method="post" action="{% url 'confirmar_salida' vale.id %}" id="confirmForm{{ vale.id }}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-success" onclick="confirmarSalida('{{ vale.id }}')">
+                        <i class="bi bi-check-circle"></i> Confirmar Salida
+                    </button>
+                </form>
+                {% endif %}
             {% endif %}
-            
             <!-- {% if vale.estado == 'confirmado' and puede_despachar %}
             <button class="btn btn-warning">
                 <i class="bi bi-truck"></i> Marcar como Despachado
