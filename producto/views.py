@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Sum
 from django.shortcuts import redirect, render
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
@@ -84,7 +85,7 @@ def listProductos(request):
     
     inv_productos = inv_productos.filter(estado='inventario')
     
-    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
+    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
             inv_productos = inv_productos.filter(almacen=almacen)
     else:
