@@ -9,13 +9,13 @@
     {% endfor %}
 <div class="container">
     <h2>Solicitudes de Envasado</h2>
-    
+    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
     <div class="mb-3">
         <a href="{% url 'envasado:crear_solicitud' %}" class="btn btn-primary">
             Nueva Solicitud
         </a>
     </div>
-    
+    {% endif %}
     <table id="datatable" class="table datatable table-striped">
         <thead>
             <tr>
@@ -44,6 +44,12 @@
                 </td>
                 <td>
                     <div class="button-container" style="display: flex; gap: 10px;">
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                        <a href="{% url 'envasado:detalle_solicitud_envasado' solicitud.pk %}" class="btn btn-sm" 
+                            title="Ver detalles de solicitud de envasado">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% else %}
                         <a href="{% url 'envasado:detalle_solicitud_envasado' solicitud.pk %}" class="btn btn-sm" 
                             title="Ver detalles de solicitud de envasado">
                             <i class="fas fa-eye"></i>
@@ -77,8 +83,8 @@
                             class="btn btn-danger btn-sm"
                             title="Cancelar envasado">
                             <i class="fas fa-ban"></i>
-                        </a>
-                        
+                        </a>                        
+                        {% endif %}
                         {% endif %}
                     </div>
                 </td>

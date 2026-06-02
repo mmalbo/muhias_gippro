@@ -64,7 +64,13 @@
                                 
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-                                         <!-- bi bi-play-btnacciónfast-forward de cambio de estado directo (En procesourl 'produccion_update' produccion.pk )-->
+                                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                                        <a href="{% url 'produccion_detail' produccion.id %}"
+                                            class="btn btn-sm"
+                                            title="Ver detalles de producción">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% else %}
                                         <a href="{% url 'produccion_detail' produccion.id %}"
                                             class="btn btn-sm"
                                             title="Ver detalles de producción">
@@ -150,7 +156,7 @@
                                                 <i class="fas fa-industry"></i> Reutilizar
                                             </a>
                                         {% endif %}-->
-                                        
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -168,7 +174,9 @@
                         </tr>
                         </tfoot>
                     </table>
+                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                     <a href="{% url 'crear_produccion' %}" class="btn btn-success">Crear producción</a>
+                    {% endif %}
                 </div>
 
 {% endblock %}
