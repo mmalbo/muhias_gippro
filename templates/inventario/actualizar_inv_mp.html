@@ -40,12 +40,23 @@
                                     </button>
                                 </td>
                             </tr>
-                            <tr>
-                                 {{form.causa.label}}
-                                {{form.causa}}
-                            </tr>
-							</tr>
+                            
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Materia prima</th>
+                                <th>Almacen</th>
+                                <th>Cantidad</th>
+                                <th>Nueva Cantidad</th>
+                                <th>Actualizar</th>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="bg-light">
+                                {{form.causa.label}}
+                                {{form.causa}}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                     
                     <div class="text-end mt-4">

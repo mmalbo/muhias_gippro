@@ -64,6 +64,7 @@
                                 
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
+
                                         {% if presidencia == 'True' or tecnologo == 'True' or comercial == 'True' or user.is_superuser %}
                                         <a href="{% url 'produccion_detail' produccion.id %}"
                                             class="btn btn-sm"

@@ -22,8 +22,11 @@
                 </div>
                    
                 <div class="button-container" style="margin-top: 20px;text-align: center;">
-                    <a href="{% url 'insumos_editar' insumo.pk %}" class="btn btn-warning">Editar</a>
+                    {% if request.user.groups.all.0.name == 'Almaceneros'%}
+                    <a href="{% url 'insumos_list' %}" class="btn btn-secondary">Volver</a>
+                    {% else %}
                     <a href="{% url 'list_insumos' %}" class="btn btn-secondary">Volver</a>
+                    {% endif %}
                 </div>
             </div> <!-- Cierre de col-sm-12 col-lg-12 -->
         </div> <!-- Cierre de container-fluid -->

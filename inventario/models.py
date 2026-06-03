@@ -1,8 +1,6 @@
 import uuid
 from django.db import models
-
-# Create your models here.
-from django.db import models
+from django.core.validators import MinValueValidator
 from bases.bases.models import ModeloBase
 from nomencladores.almacen.models import Almacen
 from materia_prima.models import MateriaPrima
@@ -22,7 +20,8 @@ class ItemInventarioBase(ModeloBase):
     )
     cantidad = models.DecimalField(
         max_digits=7, decimal_places=2, 
-        verbose_name="Cantidad", null=False, default=0
+        verbose_name="Cantidad", null=False, default=0,
+        validators=[MinValueValidator(0)]
     )
     
     # Campos para identificar el tipo de item

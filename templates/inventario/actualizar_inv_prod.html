@@ -3,10 +3,10 @@
 
 {% block contenido %}
 {% for message in messages %}
-        <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
-            {{ message }}
-        </div>
-    {% endfor %}
+    <div class="django-message-item" style="display: none;" data-level="{{ message.tags }}">
+        {{ message }}
+    </div>
+{% endfor %}
 <div class="wrapper">
     <div class="content-page">
         <div class="container-fluid">
@@ -19,7 +19,7 @@
                                 <th>Producto</th>
                                 <th>Almacen</th>
                                 <th>Lote</th>
-                                <th>Ajustar lote</th>
+                                <th>Nuevo lote</th>
                                 <th>Cantidad</th>
                                 <th>Nueva Cantidad</th>
                                 <th>Actualizar</th>
@@ -30,14 +30,25 @@
                                 <td>{{ inv_prod.producto.nombre_comercial }}
                                     <input type="hidden" name="producto" value="{{inv_prod.producto}}">
                                 </td>
-                                    <td>{{ inv_prod.almacen.nombre }}
-                                        <input type="hidden" name="almacen" value="{{inv_prod.almacen.id}}">
-                                    </td>
-                                <td>{{ inv_prod.lote }}</td>
-                                <td>{{ form.lote }}</td>
-                                <td>{{ inv_prod.cantidad }}</td>
-                                <td>          
+                                <td>{{ inv_prod.almacen.nombre }}
+                                    <input type="hidden" name="almacen" value="{{inv_prod.almacen.id}}">
+                                </td>
+                                <td><span class="badge bg-info">{{ inv_prod.lote|default:"Sin lote" }}</span></td>
+                                <td>
+                                    {{ form.lote }}
+                                    {% if form.lote.help_text %}
+                                        <small class="form-text text-muted">{{ form.lote.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.lote.errors %}
+                                        <div class="text-danger">{{ form.lote.errors }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">{{ inv_prod.cantidad|floatformat:2 }}</td>
+                                <td>
                                     {{ form.cantidad }}
+                                    {% if form.cantidad.errors %}
+                                        <div class="text-danger">{{ form.cantidad.errors }}</div>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <button type="submit" class="btn btn-warning">
@@ -51,6 +62,23 @@
                             </tr>
 							</tr>
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Almacen</th>
+                                <th>Lote</th>
+                                <th>Ajustar lote</th>
+                                <th>Cantidad</th>
+                                <th>Nueva Cantidad</th>
+                                <th>Actualizar</th>
+                            </tr>
+                            <tr>
+                                <td colspan="7" class="bg-light">
+                                {{form.causa.label}}
+                                {{form.causa}}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                     
                     <div class="text-end mt-4">

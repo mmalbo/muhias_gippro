@@ -51,9 +51,15 @@
                                     </div>
 
                                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        {% if request.user.groups.all.0.name == 'Almaceneros'%}
+                                        <a href="{% url 'envase_embalaje_lista' %}" class="btn btn-secondary me-md-2">
+                                            <i class="fas fa-times"></i> Volver
+                                        </a>
+                                        {% else %}
                                         <a href="{% url 'list_envase_embalaje' %}" class="btn btn-secondary me-md-2">
                                             <i class="fas fa-times"></i> Volver
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

@@ -34,6 +34,7 @@
                             <th>Código/Código 3L</th>
                             <th>Nombre</th>
                             <th>Costo Promedio</th>
+                            <th>Inventarios totales</th>
                             <th>Acciones</th>
                         </tr>
                         </thead>
@@ -43,6 +44,7 @@
                                 <td>{{ prod.codigo_producto }}/{{ prod.codigo_3l }}</td>
                                 <td>{{ prod.nombre_comercial }}</td>
                                 <td>{{ prod.costo }}</td>
+                                <td>{{ prod.cantidad_total|floatformat:2 }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
@@ -62,6 +64,7 @@
                             <th>Código/Código 3L</th>
                             <th>Nombre</th>
                             <th>Costo Promedio</th>
+                            <th>Inventarios totales</th>
                             <th>Acciones</th>
                         </tr>
                         </tfoot>

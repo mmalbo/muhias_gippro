@@ -19,12 +19,12 @@ def ajuste_inv_prod(request, inv_prod):
             messages.error(request,'No tienes permisos para ajustar este inventario')
             return redirect('producto_list')
 
-    if request.method == 'POST':
-        nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
-        viejo_cant = inv_prod_o.cantidad
+    if request.method == 'POST':        
         form = AjusteInvProdForm(request.POST, instance=inv_prod_o, user=request.user)
         if form.is_valid():
             causa = form.cleaned_data.get('causa')
+            viejo_cant = inv_prod_o.cantidad
+            nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
@@ -33,16 +33,23 @@ def ajuste_inv_prod(request, inv_prod):
                 almacen = inv_prod_o.almacen,
                 estado='confirmado'
             )
+            #form.save()
+            # Guardar el inventario actualizado
             form.save()
+            
+            # Determinar tipo de movimiento
             if nuevo_cant < viejo_cant:
                 vale.entrada = False
-            else:  
-                vale.entrada = True 
+                cantidad_movimiento = viejo_cant - nuevo_cant
+            else:
+                vale.entrada = True
+                cantidad_movimiento = nuevo_cant - viejo_cant
+            
             vale.save()
             mov_prod = Movimiento_Prod.objects.create(
                 producto = inv_prod_o,
                 vale = vale,
-                cantidad = nuevo_cant - viejo_cant,
+                cantidad = cantidad_movimiento,
                 cantidad_inventario = nuevo_cant   
             )
             try:
@@ -52,10 +59,10 @@ def ajuste_inv_prod(request, inv_prod):
             messages.success(request, f'Inventario de {inv_prod_o.producto} actualizado correctamente')
             return redirect('producto_list')
         else:
-            print(f'La form no es valida {form.errors}')
-            messages.info(request, f'Debe especificar una causa del ajuste')
+            messages.info(request, f'Error en la form {form.errors}')
+            return redirect('producto_list')
     else:
-        form = AjusteInvProdForm(instance=inv_prod_o.producto, user=request.user)
+        form = AjusteInvProdForm(instance=inv_prod_o, user=request.user)
 
     context = {
         'form':form,
@@ -78,8 +85,11 @@ def ajuste_inv_mp(request, inv_mp):
             return redirect('materia_prima:materia_prima_list')
 
     if request.method == 'POST':
+        print('En POST')
         nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
         viejo_cant = inv_mat_prima.cantidad
+        print(nuevo_cant)
+        print(viejo_cant)
         form = AjusteInvMPForm(request.POST, instance=inv_mat_prima, user=request.user)
         if form.is_valid():
             causa = form.cleaned_data.get('causa')
@@ -114,7 +124,8 @@ def ajuste_inv_mp(request, inv_mp):
             messages.success(request, f'Inventario de {inv_mat_prima.materia_prima.nombre} actualizado correctamente')
             return redirect('materia_prima:materia_prima_list')
         else:
-            messages.info(request, f'Debe especificar una causa del ajuste')
+            messages.info(request, f'Error en la form {form.errors}')
+            return redirect('materia_prima:materia_prima_list')
     else:
         form = AjusteInvMPForm(instance=inv_mat_prima, user=request.user)
 
@@ -134,7 +145,7 @@ def ajuste_inv_env(request, inv_ee):
     if request.user.groups.first() and request.user.groups.first().name == 'Almaceneros':
         almacen = Almacen.objects.filter(responsable=request.user).first()
         if not almacen or inv_env.almacen != almacen:
-            messages.info(request,'No tienes permisos para ajustar este inventario')
+            messages.error(request,'No tienes permisos para ajustar este inventario')
             return redirect('envase_embalaje:envase_embalaje_list')
 
     if request.method == 'POST':
@@ -174,7 +185,8 @@ def ajuste_inv_env(request, inv_ee):
             messages.success(request, f'Inventario de {inv_env.envase.codigo_envase} actualizado correctamente')
             return redirect('envase_embalaje_lista')
         else:
-            messages.info(request, f'Debe especificar una causa del ajuste')
+            messages.info(request, f'Error en la form {form.errors}')
+            return redirect('envase_embalaje_lista')
     else:
         form = AjusteInvMPForm(instance=inv_env, user=request.user)
 
@@ -193,8 +205,8 @@ def ajuste_inv_ins(request, inv_ins):
     almacen = Almacen.objects.first()
     if request.user.groups.first() and request.user.groups.first().name == 'Almaceneros':
         almacen = Almacen.objects.filter(responsable=request.user).first()
-        if not almacen or inv_ins.almacen != almacen:
-            messages.info(request,'No tienes permisos para ajustar este inventario')
+        if not almacen or inv_insT.almacen != almacen:
+            messages.error(request,'No tienes permisos para ajustar este inventario')
             return redirect('InsumosOtros:insumos_list')
 
     if request.method == 'POST':
@@ -233,7 +245,8 @@ def ajuste_inv_ins(request, inv_ins):
             messages.success(request, f'Inventario de {inv_insT.insumos} actualizado correctamente')
             return redirect('insumos_list')
         else:
-            messages.info(request, f'Debe especificar una causa del ajuste')
+            messages.info(request, f'Error en la form {form.errors}')
+            return redirect('insumos_list')
     else:
         form = AjusteInvMPForm(instance=inv_insT.insumos, user=request.user)
 

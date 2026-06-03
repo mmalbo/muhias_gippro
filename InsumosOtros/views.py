@@ -47,7 +47,7 @@ def listInsumos(request):
 
     insumo = Inv_Insumos.objects.select_related('insumos', 'almacen')
     
-    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.is_staff:
+    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
             insumo = insumo.filter(almacen=almacen_id)
     else:
@@ -69,7 +69,7 @@ def listInsumos(request):
         'almacenes':almacenes,
         'productos':productos,
         'almacen_id':almacen_id,
-        'producto_id':producto_id,
+        #'producto_id':producto_id,
         'almacen':almacen,
         'total_productos':total_productos,
         'es_admin': request.user.groups.filter(name='Presidencia-Admin').exists(),
@@ -137,9 +137,9 @@ class InsumoCreateView(LoginRequiredMixin, CreateView):
     
 # Nueva vista para ver detalles
 @login_required
-def insumos_detail(request, pk):
-    insumo = get_object_or_404(InsumosOtros, pk=pk)
-    return render(request, 'insumos/insumos_detail.html', {'insumo': insumo}) 
+def insumos_detail(request, pk):    
+    insumo = get_object_or_404(InsumosOtros, id=pk)
+    return render(request, 'insumos/insumos_detail.html', {'insumo': insumo,} ) 
 
 @login_required
 def importar(request):

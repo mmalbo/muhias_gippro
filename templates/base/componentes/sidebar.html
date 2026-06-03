@@ -345,6 +345,7 @@
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuMovimientos">
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or user.is_superuser %}
                         <a href="{% url 'rec_pend_list' %}" class="nav-link">
                             <span>Recepciones pendientes</span>
                         </a>
@@ -354,6 +355,7 @@
                         <a href="{% url 'movimiento_list' %}" class="nav-link">
                             <span>Movimientos</span>
                         </a>
+                        {% endif %}
                         <a href="{% url 'crear_salida' %}" class="nav-link">
                             <span>Salida de almacén</span>
                         </a>
@@ -362,7 +364,7 @@
             {% endif %}
             
             <!-- Producciones -->
-            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
                 <!--<div class="nav-title">PRODUCCIÓN</div>-->
                 <li class="nav-item">
                     <a href="#submenuProducciones" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
@@ -370,9 +372,11 @@
                         <i class="las la-angle-down arrow"></i>
                     </a>
                     <div class="submenu collapse" id="submenuProducciones">
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                         <a href="{% url 'crear_produccion' %}" class="nav-link">
                             <span>Nueva producción</span>
                         </a>
+                        {% endif %}
                         <a href="{% url 'produccion_list' %}" class="nav-link">
                             <span>Listar</span>
                         </a>
@@ -381,16 +385,19 @@
             {% endif %}
             
             <!-- Envasado -->
-            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
                 <li class="nav-item">
                     <a href="#submenuEnvasado" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
                         <i class="fas fa-box-open"></i> Envasado
                         <i class="las la-angle-down arrow"></i>
                     </a>
+                    
                     <div class="submenu collapse" id="submenuEnvasado">
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                         <a href="{% url 'envasado:crear_solicitud' %}" class="nav-link">
                             <span>Nuevo envasado</span>
                         </a>
+                        {% endif %}
                         <a href="{% url 'envasado:lista_solicitudes' %}" class="nav-link">
                             <span>Listar</span>
                         </a>
@@ -403,8 +410,8 @@
     <!-- Sidebar Footer -->
     <div class="sidebar-footer p-3 border-top">
         <div class="text-center text-muted small">
-            <div>© 2024 GIPPro</div>
-            <div class="mt-1">v1.0.0</div>
+            <div>© 2026 GIPPro</div>
+            <div class="mt-1">v1.1.0</div>
         </div>
     </div>
 </div>

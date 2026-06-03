@@ -75,7 +75,7 @@
                         {% for ee in envase_embalaje %}
                             <tr>
                                 <td>{{ ee.envase.codigo_envase }}</td>
-                                <td>{{ ee.envase.formato }}</td>
+                                <td>{% if ee.envase.formato %} {{ ee.envase.formato }} {% else %} --- {% endif %}</td>
                                 <td>{{ ee.almacen }}</td>
                                 <td>{{ ee.envase.tipo_envase_embalaje}} - {{ ee.envase.nombre}}</td>
                                 <td>{{ ee.cantidad }}</td>
@@ -83,8 +83,6 @@
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
                                         {% if request.user.groups.all.0.name == 'Presidencia-Admin' or user.is_superuser%}
-                                        <!--<a href="{% url 'envase_embalaje_editar' ee.envase.pk %}"
-                                           title="Editar envase o embalaje" class="btn far fa-edit"></a>-->
                                         <a href="{% url 'ajuste_inv_ee' ee.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
@@ -92,7 +90,7 @@
                                         <a href="{% url 'ajuste_inv_ee' ee.pk %}"
                                            title="Ajuste de inventario" class="btn far fa-edit"></a>
                                         {% endif %}
-                                        <a href="{% url 'detalle_envase_embalaje' ee.pk %}"
+                                        <a href="{% url 'detalle_envase_embalaje' ee.envase.pk %}"
                                             title="Ver detalles" class="btn fas fa-eye"></a>
                                     </div>
                                 </td>
