@@ -395,7 +395,6 @@ class DetalleValeView(DetailView):
         return context
 
 def salida_produccion(request, vale_id):
-    
     mp_prod = Prod_Inv_MP.objects.filter(vale__id=vale_id, vale__estado='confirmado', vale__tipo = 'Solicitud')
     prod_prod = Prod_Inv_Producto.objects.filter(vale__id=vale_id, vale__estado='confirmado', vale__tipo = 'Solicitud')
     if mp_prod:
