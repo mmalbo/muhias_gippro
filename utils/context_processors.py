@@ -8,7 +8,7 @@ def group_of(request):
     admin = 'False'
     consultor = 'False'
     comercial = 'False'
-    tecnologo = 'False'
+    tecnologa = 'False'
     if user.groups.filter(name__in=['Almaceneros']):
         almacenero = 'True'
     if user.groups.filter(name__in=['Consultor']):
@@ -17,8 +17,8 @@ def group_of(request):
         comercial = 'True'
     if user.groups.filter(name__in=['Presidencia-Admin']):
         presidencia = 'True'
-    if user.groups.filter(name__in=['Tecnologo']):
-        tecnologo = 'True'
+    if user.groups.filter(name__in=['Tecnologa']):
+        tecnologa = 'True'
     if user.is_staff:
         admin = 'True'
     return {
@@ -27,7 +27,7 @@ def group_of(request):
         'admin': admin,
         'comercial': comercial,
         'consultor': consultor,
-        'tecnologo':tecnologo
+        'tecnologa':tecnologa
     }
 
 def notifications(request):

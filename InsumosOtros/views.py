@@ -47,7 +47,7 @@ def listInsumos(request):
 
     insumo = Inv_Insumos.objects.select_related('insumos', 'almacen')
     
-    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.is_staff:
+    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.groups.filter(name='Tecnologa').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
             insumo = insumo.filter(almacen=almacen_id)
     else:
