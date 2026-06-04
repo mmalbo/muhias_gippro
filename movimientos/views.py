@@ -1158,6 +1158,8 @@ def movimiento_list(request):
         else:
             messages.info(request, 'No se encontró almacén asociado')
             movimientos = None
+    elif request.user.groups.filter(name__in=['Tecnologa']):
+        movimientos = Vale_Movimiento_Almacen.objects.filter(tipo__in=['Solicitud', 'Devolución', 'Producción terminada', 'Producción rechazada', 'Solicitud envasado', 'Envasado']).order_by('consecutivo')
     else:
         movimientos = Vale_Movimiento_Almacen.objects.all().order_by('consecutivo')
     return render(request, 'movimientos/movimientos_list.html', {

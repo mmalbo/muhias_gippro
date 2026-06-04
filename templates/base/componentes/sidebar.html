@@ -337,7 +337,6 @@
             {% endif %}
             
             <!-- Movimientos -->
-            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
                 <!--<div class="nav-title">MOVIMIENTOS</div>-->
                 <li class="nav-item">
                     <a href="#submenuMovimientos" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
@@ -352,16 +351,19 @@
                         <a href="{% url 'solicitudes_pendientes' %}" class="nav-link">
                             <span>Solicitudes pendientes</span>
                         </a>
+                        {% endif %}
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros'  or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
                         <a href="{% url 'movimiento_list' %}" class="nav-link">
                             <span>Movimientos</span>
                         </a>
                         {% endif %}
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros'  or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
                         <a href="{% url 'crear_salida' %}" class="nav-link">
                             <span>Salida de almacén</span>
                         </a>
+                        {% endif %}
                     </div>
                 </li>
-            {% endif %}
             
             <!-- Producciones -->
             {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
