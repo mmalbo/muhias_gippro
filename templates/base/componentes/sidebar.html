@@ -307,7 +307,7 @@
             {% endif %}
             
             <!-- Inventarios -->
-            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Almaceneros' or request.user.groups.all.0.name == 'Comerciales' or request.user.groups.all.0.name == 'Consultor' or user.is_superuser %}
                 <!--<div class="nav-title">INVENTARIOS</div>-->
                 <li class="nav-item">
                     <a href="#submenuInventarios" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
@@ -336,7 +336,7 @@
                 </li>
             {% endif %}
             
-            <!-- Movimientos -->
+             <!--Movimientos -->
                 <!--<div class="nav-title">MOVIMIENTOS</div>-->
                 <li class="nav-item">
                     <a href="#submenuMovimientos" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
@@ -352,7 +352,7 @@
                             <span>Solicitudes pendientes</span>
                         </a>
                         {% endif %}
-                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros'  or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros'  or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Consultor' or user.is_superuser %}
                         <a href="{% url 'movimiento_list' %}" class="nav-link">
                             <span>Movimientos</span>
                         </a>
@@ -366,7 +366,7 @@
                 </li>
             
             <!-- Producciones -->
-            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+            {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or request.user.groups.all.0.name == 'Comerciales' or request.user.groups.all.0.name == 'Consultor' or user.is_superuser %}
                 <!--<div class="nav-title">PRODUCCIÓN</div>-->
                 <li class="nav-item">
                     <a href="#submenuProducciones" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false">
