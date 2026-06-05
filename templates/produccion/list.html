@@ -64,7 +64,6 @@
                                 
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">
-
                                         {% if presidencia == 'True' or tecnologo == 'True' or comercial == 'True' or user.is_superuser %}
                                         <a href="{% url 'produccion_detail' produccion.id %}"
                                             class="btn btn-sm"
@@ -175,7 +174,7 @@
                         </tr>
                         </tfoot>
                     </table>
-                    {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Tecnologa' or user.is_superuser %}
+                    {% if presidencia == 'True' or tecnologo == 'True' or comercial == 'True' or user.is_superuser %}
                     <a href="{% url 'crear_produccion' %}" class="btn btn-success">Crear producción</a>
                     {% endif %}
                 </div>
