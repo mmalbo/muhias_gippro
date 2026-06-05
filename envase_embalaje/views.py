@@ -49,7 +49,7 @@ def listEnvaseEmbalaje(request):
 
     envase_embalaje = Inv_Envase.objects.select_related('envase', 'almacen')
     
-    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.is_staff:
+    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.groups.filter(name='Tecnologa').exists() or request.user.groups.filter(name='Consultor').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
             envase_embalaje = envase_embalaje.filter(almacen=almacen_id)
     else:

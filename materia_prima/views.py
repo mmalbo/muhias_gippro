@@ -63,7 +63,7 @@ def listMateriasPrimas(request):
 
     materias_primas = Inv_Mat_Prima.objects.all()
     
-    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.is_staff:
+    if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.groups.filter(name='Tecnologa').exists() or request.user.groups.filter(name='Consultor').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
             materias_primas = materias_primas.filter(almacen=almacen_id)
     else:
