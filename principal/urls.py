@@ -9,6 +9,7 @@ urlpatterns = [
     path('login/principal', views.LoginTemplateView.as_view(), name='login'),
     path('login/', views.loginPage, name='loginPage'),
     path('logout/', views.logoutUser, name='logoutUser'),
+    path('select2/', include('django_select2.urls')),
 
     # Rutas para diferentes secciones de la aplicación
     path('almacen/', include('nomencladores.almacen.urls'), name='almacen'),
