@@ -192,7 +192,9 @@ def buscar_items_almacen(request):
     almacen_id = request.GET.get('almacen_id')
     tipo = request.GET.get('tipo', '')
     term = request.GET.get('q', '')
-        
+    
+    print(f"Busqueda: almacen_id={almacen_id}, tipo={tipo}, term={term}")
+    
     items = []
         
     if tipo == 'materia_prima' or not tipo:

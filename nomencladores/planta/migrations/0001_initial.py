@@ -13,17 +13,17 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Formato',
+            name='Planta',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
                 ('fecha_creacion', models.DateTimeField(auto_now_add=True)),
                 ('fecha_actualizacion', models.DateTimeField(auto_now=True)),
-                ('unidad_medida', models.TextField(max_length=255, verbose_name='Unidad de medida')),
-                ('capacidad', models.DecimalField(decimal_places=2, default=0, max_digits=10, verbose_name='Valor de capacidad')),
+                ('nombre', models.CharField(max_length=255, unique=True, verbose_name='Nombre')),
+                ('propio', models.BooleanField(default=False, verbose_name='Propia')),
             ],
             options={
-                'verbose_name': 'Formato',
-                'verbose_name_plural': 'Formatos',
+                'verbose_name': 'Planta',
+                'verbose_name_plural': 'Plantas',
             },
         ),
     ]
