@@ -27,6 +27,7 @@ class CreatePomoView(CreateView):
         envase.color = form.cleaned_data['color_input']
         envase.save()
         return super().form_valid(form)
+
 class CreateImportView(CreateView):
     model = Pomo
     form_class = PomoForm

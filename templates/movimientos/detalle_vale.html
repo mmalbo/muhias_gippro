@@ -319,9 +319,12 @@
             {% endif %} -->
             
             {% if vale.estado == 'borrador' or vale.estado == 'confirmado' %}
-            <button class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#cancelarModal">
-                <i class="bi bi-x-circle"></i> Cancelar
-            </button>
+            <form method="post" action="{% url 'movimiento_cancel' vale.id %}" id="confirmForm{{ vale.id }}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-success" onclick="confirmarCancelar('{{ vale.id }}')">
+                        <i class="bi bi-check-circle"></i> Cancelar
+                    </button>
+                </form>
             {% endif %}
         </div>
     </div>
@@ -370,6 +373,11 @@ $(document).ready(function() {
 });
 function confirmarSalida(valeId) {
     if (confirm('¿Está seguro de confirmar esta salida?')) {
+        document.getElementById('confirmForm' + valeId).submit();
+    }
+}
+function confirmarCancelar(valeId) {
+    if (confirm('¿Está seguro de cancelar este vale?')) {
         document.getElementById('confirmForm' + valeId).submit();
     }
 }
