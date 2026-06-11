@@ -19,7 +19,7 @@ class PomoForm(forms.ModelForm):
 
     class Meta:
         model = Pomo
-        fields = ['nombre','forma','material']
+        fields = ['nombre','forma','material', 'color']
         """ widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'forma': forms.TextInput(attrs={'class': 'form-control'}),
@@ -37,7 +37,7 @@ class PomoForm(forms.ModelForm):
         
         # Valor inicial si es edición
         if self.instance and self.instance.pk and hasattr(self.instance, 'color'):
-            self.fields['color_input'].initial = self.instance.colore
+            self.fields['color_input'].initial = self.instance.color
         
     
     def clean_color_input(self):

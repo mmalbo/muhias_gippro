@@ -1,4 +1,5 @@
 from django.forms import formset_factory
+from urllib3 import request
 from .forms import RecepcionMateriaPrimaForm, MovimientoFormUpdate
 from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo, DetallesAdquisicionProducto
 from inventario.models import Inv_Mat_Prima, Inv_Insumos, Inv_Envase, Inv_Producto 
@@ -1568,6 +1569,16 @@ def vale_detalle(request, pk):
     }
     
     return render(request, 'movimientos/detalle_vale.html', context)
+
+def cancelar_vale(request,pk):
+    vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
+    if vale.estado not in ['borrador', 'confirmado']:
+        messages.error(request, 'Este vale no se puede cancelar porque ya está cancelado o finalizado.')
+        return redirect('detalle_vale', pk)  # Cambia a la URL que quieras
+    vale.estado = 'cancelado'
+    vale.save()
+    messages.success(request, f'El vale {vale.id} ha sido cancelado correctamente.')
+    return redirect('movimiento_list')
 
 # Vista para confirmar una salida
 def confirmar_salida(request, pk):
