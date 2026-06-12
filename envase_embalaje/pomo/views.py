@@ -14,7 +14,7 @@ from envase_embalaje.filters import *
 
 
 # Create your views here.
-class CreatePomoView(CreateView):
+""" class CreatePomoView(CreateView):
     model = Pomo
     form_class = PomoForm
     template_name = 'pomo/pomo_form.html'
@@ -26,7 +26,31 @@ class CreatePomoView(CreateView):
         envase = form.save(commit=False)
         envase.color = form.cleaned_data['color_input']
         envase.save()
-        return super().form_valid(form)
+        return super().form_valid(form) """
+
+class CreatePomoView(CreateView):
+    model = Pomo
+    form_class = PomoForm
+    template_name = 'pomo/pomo_form.html'
+    success_url = '/pomo/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['colores'] = Color.objects.values_list('nombre', flat=True).distinct()
+        return context
+
+    def form_valid(self, form):
+        # Crear la instancia sin guardar aún en DB
+        pomo = form.save(commit=False)
+        # Asignar la instancia de Color obtenida del campo color_input
+        pomo.color = form.cleaned_data['color_input']   # ya es un objeto Color
+        pomo.save()
+        # Redirigir a success_url
+        return redirect('pomo:listar')
+
+    def form_invalid(self, form):
+        # Si el formulario no es válido, vuelve a mostrar el template con errores
+        return self.render_to_response(self.get_context_data(form=form))
 
 class CreateImportView(CreateView):
     model = Pomo

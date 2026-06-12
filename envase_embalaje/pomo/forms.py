@@ -12,32 +12,17 @@ class PomoForm(forms.ModelForm):
             'class': 'form-control'
         })
     )
-    """ color = forms.ModelChoiceField(queryset=Color.objects.all(),
-                                   label='Color',
-                                   widget=forms.Select(attrs={'class': 'form-control'})
-                                   ) """
+    
 
     class Meta:
         model = Pomo
-        fields = ['nombre','forma','material', 'color']
-        """ widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'forma': forms.TextInput(attrs={'class': 'form-control'}),
-            'material': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-        labels = {
-            'nombre': 'Nombre',
-            'forma': 'Forma',
-            'material': 'Material',
-        } """
+        fields = ['nombre','forma','material']
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.colores = Color.objects.all().values_list('nombre', flat=True)
-        
-        # Valor inicial si es edición
-        if self.instance and self.instance.pk and hasattr(self.instance, 'color'):
-            self.fields['color_input'].initial = self.instance.color
+        # Valor inicial si es edición (útil para UpdateView)
+        if self.instance and self.instance.pk and self.instance.color:
+            self.fields['color_input'].initial = self.instance.color.nombre
         
     
     def clean_color_input(self):
