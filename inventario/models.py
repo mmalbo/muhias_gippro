@@ -19,7 +19,7 @@ class ItemInventarioBase(ModeloBase):
         verbose_name="Almacén"
     )
     cantidad = models.DecimalField(
-        max_digits=7, decimal_places=2, 
+        max_digits=7, decimal_places=4, 
         verbose_name="Cantidad", null=False, default=0,
         validators=[MinValueValidator(0)]
     )
