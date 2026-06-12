@@ -503,7 +503,7 @@ def concluir_envasado(request, pk):
             print(cantidad_perdida)
             print(observaciones_finales)
             if cantidad_perdida > 0 and observaciones_finales == '':
-                print('Debe especificar una causa de la doferencia entre la solicitud soliciada y la envasada')
+                print('Debe especificar una causa de la diferencia entre la solicitud soliciada y la envasada')
                 return JsonResponse({'success': False, 'error': 'Debe especificar una causa de la doferencia entre la solicitud soliciada y la envasada'})
 
             detalles_envase_actualizados.append({
