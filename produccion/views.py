@@ -34,7 +34,7 @@ from inventario.models import Inv_Mat_Prima, Inv_Producto
 from producto.models import Producto
 from envase_embalaje.models import Formato
 from nomencladores.almacen.models import Almacen
-from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod, Movimiento_MP
+from movimientos.models import Vale_Movimiento_Almacen, Movimiento_Prod, Movimiento_MP, Movimiento_EE, Movimiento_Ins
 from utils.utils import normalizar_UUID
 from .forms import (ProduccionForm, MateriaPrimaForm, 
     SubirPruebasQuimicasForm, CancelarProduccionForm, PruebaQuimicaForm, 
@@ -720,6 +720,27 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         prod_ins = Prod_Inv_Producto.objects.filter(lote_prod=produccion).select_related(
             'producto', 'almacen'
         )
+
+        vales_asociados = Vale_Movimiento_Almacen.objects.filter(
+            lote_No=produccion  # Si tienes este campo
+        ).order_by('-fecha_creacion')
+
+         # Obtener todos los movimientos de cada tipo
+        movimientos_mp = Movimiento_MP.objects.filter(
+            vale__in=vales_asociados
+        ).select_related('materia_prima', 'materia_prima__materia_prima', 'vale', 'vale__almacen')
+        
+        movimientos_prod = Movimiento_Prod.objects.filter(
+            vale__in=vales_asociados
+        ).select_related('producto', 'producto__producto', 'vale', 'vale__almacen')
+        
+        movimientos_ins = Movimiento_Ins.objects.filter(
+            vale__in=vales_asociados
+        ).select_related('insumo', 'vale', 'vale__almacen')
+        
+        movimientos_ee = Movimiento_EE.objects.filter(
+            vale__in=vales_asociados
+        ).select_related('envase_embalaje', 'vale', 'vale__almacen')
         
         # 2. Calcular total de costos de materias primas
         costo_total_mp = produccion.costo_total_materias_primas
@@ -771,7 +792,12 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             'eficiencia': (produccion.cantidad_real or 0) / produccion.cantidad_estimada * 100 
             if produccion.cantidad_real else 0,
             'porcentaje_avance': porcentaje_avance,
-            'costo_litro': costo_litro
+            'costo_litro': costo_litro,
+            # Agregar resumen de movimientos
+            'total_movimientos_mp': movimientos_mp.count(),
+            'total_movimientos_prod': movimientos_prod.count(),
+            'total_movimientos_ins': movimientos_ins.count(),
+            'total_movimientos_ee': movimientos_ee.count(),
         }
         
         # 6. Productos relacionados (si aplica)
@@ -788,6 +814,12 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             'producto_relacionado': producto_relacionado,
             'estados_disponibles': self.get_estados_disponibles(produccion),
             'puede_editar': self.puede_editar_produccion(produccion),
+            # Movimientos de inventario
+            'movimientos_mp': movimientos_mp,
+            'movimientos_prod': movimientos_prod,
+            'movimientos_ins': movimientos_ins,
+            'movimientos_ee': movimientos_ee,
+            'vales_asociados': vales_asociados,
         })
         
         return context
