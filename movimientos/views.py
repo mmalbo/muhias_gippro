@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.forms import formset_factory
 from urllib3 import request
 from .forms import RecepcionMateriaPrimaForm, MovimientoFormUpdate
@@ -1157,19 +1159,174 @@ def entrada_producto(request, pk):
     })
 
 def movimiento_list(request):
+    movimientos = Vale_Movimiento_Almacen.objects.all()
+    
     if request.user.groups.filter(name__in=['Almaceneros']):
         almacen = Almacen.objects.filter(responsable=request.user).first()
         if almacen:
             movimientos = Vale_Movimiento_Almacen.objects.filter(almacen=almacen).order_by('consecutivo')
         else:
             messages.info(request, 'No se encontró almacén asociado')
-            movimientos = None
+            movimientos = Vale_Movimiento_Almacen.objects.none()
     elif request.user.groups.filter(name__in=['Tecnologa']):
         movimientos = Vale_Movimiento_Almacen.objects.filter(tipo__in=['Solicitud', 'Devolución', 'Producción terminada', 'Producción rechazada', 'Solicitud envasado', 'Envasado']).order_by('consecutivo')
-    else:
-        movimientos = Vale_Movimiento_Almacen.objects.all().order_by('consecutivo')
+
+    # ===== FILTROS AVANZADOS =====
+    
+    # 1. Filtro por tipo de movimiento
+    tipo_movimiento = request.GET.get('tipo_movimiento')
+    if tipo_movimiento and tipo_movimiento != '':
+        movimientos = movimientos.filter(tipo=tipo_movimiento)
+    
+    # 2. Filtro por tipo de inventario
+    tipo_inventario = request.GET.get('tipo_inventario')
+    if tipo_inventario and tipo_inventario != '':
+        # Usamos las relaciones inversas para filtrar
+        if tipo_inventario == 'Materias primas':
+            movimientos = movimientos.filter(
+                Q(movimientos__isnull=False) | Q(mp_produccion__isnull=False)
+            ).distinct()
+        elif tipo_inventario == 'Envases y embalajes':
+            movimientos = movimientos.filter(
+                Q(movimientos_envases__isnull=False) | Q(env_envasado__isnull=False)
+            ).distinct()
+        elif tipo_inventario == 'Insumos':
+            movimientos = movimientos.filter(
+                Q(movimientos_insumos__isnull=False)
+            ).distinct()
+        elif tipo_inventario == 'Productos':
+            movimientos = movimientos.filter(
+                Q(movimientos_productos__isnull=False) | Q(productos_produccion__isnull=False)
+            ).distinct()
+        elif tipo_inventario == 'Salida a producción':
+            movimientos = movimientos.filter(
+                Q(salidas_produccion__isnull=False)
+            ).distinct()
+        elif tipo_inventario == 'Salida a envasado':
+            movimientos = movimientos.filter(
+                Q(env_envasado__isnull=False)
+            ).distinct()
+    
+    # 3. Filtro por almacén
+    almacen_id = request.GET.get('almacen')
+    if almacen_id and almacen_id != '':
+        movimientos = movimientos.filter(almacen_id=almacen_id)
+    
+    # 4. Filtro por fecha (rango)
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    
+    if fecha_desde and fecha_desde != '':
+        try:
+            fecha_desde = datetime.strptime(fecha_desde, '%Y-%m-%d')
+            movimientos = movimientos.filter(fecha_movimiento__gte=fecha_desde)
+        except ValueError:
+            pass
+    
+    if fecha_hasta and fecha_hasta != '':
+        try:
+            fecha_hasta = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+            movimientos = movimientos.filter(fecha_movimiento__lte=fecha_hasta)
+        except ValueError:
+            pass
+    
+    # 5. Filtro por estado del vale
+    estado_vale = request.GET.get('estado_vale')
+    if estado_vale and estado_vale != '':
+        movimientos = movimientos.filter(estado=estado_vale)
+    
+    # 6. Filtro por tipo de entrada/salida
+    tipo_entrada = request.GET.get('tipo_entrada')
+    if tipo_entrada and tipo_entrada != '':
+        if tipo_entrada == 'entrada':
+            movimientos = movimientos.filter(entrada=True)
+        elif tipo_entrada == 'salida':
+            movimientos = movimientos.filter(entrada=False)
+    
+    # 7. FILTRO POR LOTE ASOCIADO (NUEVO)
+    lote_asociado = request.GET.get('lote_asociado')
+    if lote_asociado and lote_asociado != '':
+        # Buscar en los diferentes tipos de movimientos por el campo 'lote'
+        #from app.models import Movimiento_MP, Movimiento_Prod, Movimiento_Ins, Movimiento_EE
+        
+        # Obtener IDs de vales que tienen movimientos con ese lote
+        vales_mp = Movimiento_MP.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
+        vales_prod = Movimiento_Prod.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
+        vales_ins = Movimiento_Ins.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
+        vales_ee = Movimiento_EE.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
+        
+        # También buscar en el campo lote_No del vale directamente
+        vales_directos = Vale_Movimiento_Almacen.objects.filter(
+            lote_No__icontains=lote_asociado
+        ).values_list('id', flat=True)
+        
+        # Combinar todos los IDs
+        todos_vales_ids = set(list(vales_mp) + list(vales_prod) + list(vales_ins) + list(vales_ee) + list(vales_directos))
+        
+        if todos_vales_ids:
+            movimientos = movimientos.filter(id__in=todos_vales_ids)
+        else:
+            # Si no hay resultados, mostrar lista vacía
+            movimientos = movimientos.none()
+    
+    # 8. Búsqueda general por texto
+    busqueda = request.GET.get('busqueda')
+    if busqueda and busqueda != '':
+        movimientos = movimientos.filter(
+            Q(consecutivo__icontains=busqueda) |
+            Q(descripcion__icontains=busqueda) |
+            Q(transportista__icontains=busqueda) |
+            Q(recibido_por__icontains=busqueda) |
+            Q(autorizado_por__icontains=busqueda) |
+            Q(origen__icontains=busqueda) |
+            Q(destino__icontains=busqueda) |
+            Q(lote_No__icontains=busqueda)  # Búsqueda por lote también aquí
+        )
+    
+    # Ordenar por consecutivo descendente (más reciente primero)
+    movimientos = movimientos.order_by('-consecutivo')
+    
+    # Obtener listas para los filtros
+    tipos_movimiento = Vale_Movimiento_Almacen.VALE_TYPES
+    almacenes = Almacen.objects.all().order_by('nombre')
+    estados_vale = Vale_Movimiento_Almacen._meta.get_field('estado').choices
+    
+    # Tipos de inventario para filtro
+    tipos_inventario = [
+        ('Materias primas', 'Materias primas'),
+        ('Envases y embalajes', 'Envases y embalajes'),
+        ('Insumos', 'Insumos'),
+        ('Productos', 'Productos'),
+        ('Salida a producción', 'Salida a producción'),
+        ('Salida a envasado', 'Salida a envasado'),
+    ]
+    
+    # Tipos de entrada/salida
+    tipos_entrada = [
+        ('entrada', 'Entrada'),
+        ('salida', 'Salida'),
+    ]
+    
+    # else:
+    #     movimientos = Vale_Movimiento_Almacen.objects.all().order_by('consecutivo')
     return render(request, 'movimientos/movimientos_list.html', {
-        'movimientos': movimientos
+        'movimientos': movimientos,
+                'tipos_movimiento': tipos_movimiento,
+        'almacenes': almacenes,
+        'estados_vale': estados_vale,
+        'tipos_inventario': tipos_inventario,
+        'tipos_entrada': tipos_entrada,
+        # Mantener valores de filtros en el contexto para mostrar en el template
+        'filtros': {
+            'tipo_movimiento': request.GET.get('tipo_movimiento', ''),
+            'tipo_inventario': request.GET.get('tipo_inventario', ''),
+            'almacen': request.GET.get('almacen', ''),
+            'fecha_desde': request.GET.get('fecha_desde', ''),
+            'fecha_hasta': request.GET.get('fecha_hasta', ''),
+            'estado_vale': request.GET.get('estado_vale', ''),
+            'tipo_entrada': request.GET.get('tipo_entrada', ''),
+            'lote_asociado': request.GET.get('lote_asociado', ''),
+            'busqueda': request.GET.get('busqueda', ''),}
     })
 
 def recepciones_pendientes_list(request):

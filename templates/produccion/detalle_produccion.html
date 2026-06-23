@@ -45,12 +45,10 @@
                             <dl class="row">
                                 <dt class="col-sm-4">Lote:</dt>
                                 <dd class="col-sm-8">
-                                    <span class="badge bg-dark fs-6">{{ produccion.lote }}</span>
+                                    <span class="badge" style="background-color: #343a40; color: white; padding: 5px 10px; font-size: 1rem;">
+                                        {{ produccion.lote }}
+                                    </span>
                                 </dd>
-<!--                                 <dt class="col-sm-4">Lote Base:</dt>
-                                <dd class="col-sm-8">
-                                    <span class="badge bg-success fs-6">{{ datos_produccion.lote_base }}</span>
-                                </dd> -->
                                 
                                 <dt class="col-sm-4">Producto:</dt>
                                 <dd class="col-sm-8">
@@ -62,13 +60,13 @@
                                 
                                 <dt class="col-sm-4">Estado:</dt>
                                 <dd class="col-sm-8">
-                                    <span class="badge 
-                                        {% if produccion.estado == 'Planificada' %}bg-warning
-                                        {% elif 'En proceso:' in produccion.estado %}bg-info
-                                        {% elif produccion.estado == 'Concluida-Satisfactoria' %}bg-success
-                                        {% elif produccion.estado == 'Concluida-Rechazada' %}bg-danger
-                                        {% elif produccion.estado == 'Cancelada' %}bg-secondary
-                                        {% endif %} fs-6">
+                                    <span class="badge" style="font-size: 1rem; padding: 5px 10px;
+                                        {% if produccion.estado == 'Planificada' %}background-color: #ffc107; color: #212529;
+                                        {% elif 'En proceso:' in produccion.estado %}background-color: #17a2b8; color: white;
+                                        {% elif produccion.estado == 'Concluida-Satisfactoria' %}background-color: #28a745; color: white;
+                                        {% elif produccion.estado == 'Concluida-Rechazada' %}background-color: #dc3545; color: white;
+                                        {% elif produccion.estado == 'Cancelada' %}background-color: #6c757d; color: white;
+                                        {% else %}background-color: #6c757d; color: white;{% endif %}">
                                         {{ produccion.estado }}
                                     </span>
                                 </dd>
@@ -364,77 +362,11 @@
                 </div>
             </div>
 
-            <!-- Cambiar estado 
-            {% if estados_disponibles %}
-            <div class="card mb-4">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0">
-                        <i class="fas fa-sync-alt me-2"></i>Cambiar Estado
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="nuevo_estado" class="form-label">Nuevo Estado</label>
-                            <select class="form-select" id="nuevo_estado" name="nuevo_estado" required>
-                                <option value="">Seleccionar...</option>
-                                {% for estado in estados_disponibles %}
-                                <option value="{{ estado }}">{{ estado }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="observaciones" class="form-label">Observaciones (opcional)</label>
-                            <textarea class="form-control" id="observaciones" 
-                                      name="observaciones" rows="2"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-warning w-100">
-                            <i class="fas fa-check me-2"></i>Actualizar Estado
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endif %}-->
-
-            <!-- Archivos adjuntos -->
+            <!-- Costo total de Producción -->
             <div class="card mb-4">
                 <div class="card-header bg-dark text-white">
                     <h5 class="mb-0">
-                        <i class="fas fa-paperclip me-2"></i>Documentos
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if produccion.pruebas_quimicas_ext %}
-                    <div class="mb-3">
-                        <h6>Pruebas Químicas Externas</h6>
-                        <a href="{{ produccion.pruebas_quimicas_ext.url }}" 
-                           target="_blank" 
-                           class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-file-pdf me-1"></i> 
-                            {{ produccion.nombre_archivo_pruebas }}
-                        </a>
-                        <small class="d-block text-muted mt-1">
-                            {{ produccion.extension_archivo|upper }} • 
-                            {{ produccion.pruebas_quimicas_ext.size|filesizeformat }}
-                        </small>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Espacio para otros documentos -->
-                    <div class="mt-3">
-                        <button class="btn btn-sm btn-outline-secondary w-100">
-                            <i class="fas fa-plus me-1"></i> Adjuntar Documento
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Archivos adjuntos -->
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-paperclip me-2"></i>Costo total de Producción
+                        <i class="fas fa-money-bill-wave me-2"></i>Costo total de Producción
                     </h5>
                 </div>
                 <div class="card-body">
@@ -475,6 +407,71 @@
                 </div>
             </div>
 
+            <!-- Movimientos de Inventario -->
+            <div class="card mb-4">
+                <div class="card-header" style="background-color: #343a40; color: white;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Movimientos de Inventario
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <div class="alert alert-info mb-0" style="padding: 8px 12px;">
+                                <small><strong>MP:</strong> {{ datos_produccion.total_movimientos_mp }}</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="alert alert-info mb-0" style="padding: 8px 12px;">
+                                <small><strong>Productos:</strong> {{ datos_produccion.total_movimientos_prod }}</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="alert alert-info mb-0" style="padding: 8px 12px;">
+                                <small><strong>Insumos:</strong> {{ datos_produccion.total_movimientos_ins }}</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="alert alert-info mb-0" style="padding: 8px 12px;">
+                                <small><strong>EE:</strong> {{ datos_produccion.total_movimientos_ee }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if vales_asociados %}
+                    <hr>
+                    <h6>Vales Asociados</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>N° Vale</th>
+                                    <th>Tipo</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for vale in vales_asociados %}
+                                <tr>
+                                    <td>{{ vale.consecutivo }}</td>
+                                    <td>{{ vale.tipo }}</td>
+                                    <td>{{ vale.fecha_creacion|date:"d/m/Y" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No hay vales asociados</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if vales_asociados.count > 5 %}
+                            <small class="text-muted">Mostrando 5 de {{ vales_asociados.count }} vales</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Historial -->
             {% if historial %}
             <div class="card">
@@ -501,58 +498,6 @@
                 </div>
             </div>
             {% endif %}
-
-            <!-- Movimientos -->
-            <div class="card">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">
-                        Movimientos de Inventario Asociados
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <!-- Resumen -->
-                    <div class="row mb-4">
-                        <div class="alert alert-info">
-                            <strong>Total Movimientos MP:</strong> {{ datos_produccion.total_movimientos_mp }}
-                        </div>
-                        <div class="alert alert-info">
-                            <strong>Total Movimientos Producto:</strong> {{ datos_produccion.total_movimientos_prod }}
-                        </div>
-                        <div class="alert alert-info">
-                            <strong>Total Movimientos Insumos:</strong> {{ datos_produccion.total_movimientos_ins }}
-                        </div>
-                        <div class="alert alert-info">
-                            <strong>Total Movimientos EE:</strong> {{ datos_produccion.total_movimientos_ee }}
-                        </div>
-                    </div>
-                    <!-- Vales Asociados -->
-                    {% if vales_asociados %}
-                    <div class="mb-4">
-                        <h4>Vales Asociados</h4>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead>
-                                    <tr>
-                                    <th>N° Vale</th>
-                                    <th>Tipo</th>
-                                    <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {% for vale in vales_asociados %}
-                                    <tr>
-                                    <td>{{ vale.id }}</td>
-                                    <td>{{ vale.get_tipo_movimiento_display }}</td>
-                                    <td>{{ vale.fecha_creacion|date:"d/m/Y H:i" }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
         </div>
     </div>
 </div>

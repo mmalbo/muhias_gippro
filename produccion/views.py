@@ -722,7 +722,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         )
 
         vales_asociados = Vale_Movimiento_Almacen.objects.filter(
-            lote_No=produccion  # Si tienes este campo
+            lote_No=produccion.lote  # Si tienes este campo
         ).order_by('-fecha_creacion')
 
          # Obtener todos los movimientos de cada tipo
@@ -752,10 +752,12 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         # 4. Historial de cambios (si tienes model History)
         try:
             from django.contrib.admin.models import LogEntry
+            from django.contrib.contenttypes.models import ContentType
+            content_type = ContentType.objects.get_for_model(produccion)
             historial = LogEntry.objects.filter(
                 object_id=produccion.id,
-                content_type__model='produccion'
-            ).order_by('-action_time')[:10]
+                content_type=content_type
+            ).order_by('-action_time')
         except:
             historial = []
 
@@ -794,6 +796,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             'porcentaje_avance': porcentaje_avance,
             'costo_litro': costo_litro,
             # Agregar resumen de movimientos
+            'vales_asociados': vales_asociados,
             'total_movimientos_mp': movimientos_mp.count(),
             'total_movimientos_prod': movimientos_prod.count(),
             'total_movimientos_ins': movimientos_ins.count(),
