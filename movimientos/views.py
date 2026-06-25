@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from django.forms import formset_factory
 from urllib3 import request
 from .forms import RecepcionMateriaPrimaForm, MovimientoFormUpdate
@@ -8,7 +7,6 @@ from inventario.models import Inv_Mat_Prima, Inv_Insumos, Inv_Envase, Inv_Produc
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .movimientos import export_vale                               
 import decimal
 from django.contrib.auth.models import Group
 from utils.models import Notification
@@ -21,6 +19,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Q
+from .movimientos import export_vales, export_vale
 import json
 from .models import (
     Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_Prod,
@@ -1503,6 +1502,9 @@ def solicitudes_pendientes_list(request):
 #Este debe llamarse desde los tipos de movimientos: recepciones, salidas a produccion, ventas, ajustes de inventario  
 def generar_vale(request, cons):
     return export_vale(request, cons)
+
+def generar_vales(request):
+    return export_vales(request)
 
 def vale_detalle(request, pk):
     vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
