@@ -17,6 +17,7 @@ urlpatterns = [
      path('salida_envasado/<uuid:vale_id>/', salida_envasado , name='salida_env'),
      path('lista/', movimiento_list, name='movimiento_list'),
      path('vale/<int:cons>/', generar_vale, name='generar_vale'),
+     path('export_vales/', generar_vales, name='generar_vales'),
      path('actualizar/<uuid:pk>/', vale_detalle, name='movimiento_update'),
      path('cancelar/<uuid:pk>/', cancelar_vale, name='movimiento_cancel'),
      # path('detalle/<int:cons>/', vale_detalle, name='movimiento_detalle'),

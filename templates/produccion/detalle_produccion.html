@@ -469,6 +469,16 @@
                         {% endif %}
                     </div>
                     {% endif %}
+                    {% if vales_ids %}
+                        <a href="{% url 'generar_vales' %}?ids={{ vales_ids|join:',' }}" 
+                            class="btn btn-success" 
+                            target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i> Exportar Vales ({{ vales_ids|length }})
+                        </a>
+                    {% else %}
+                      no hay vales ids {{vales_ids}}
+                    {% endif %}
+
                 </div>
             </div>
 

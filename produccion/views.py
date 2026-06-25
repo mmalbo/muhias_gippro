@@ -725,6 +725,11 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             lote_No=produccion.lote  # Si tienes este campo
         ).order_by('-fecha_creacion')
 
+        vales_ids = list(vales_asociados.values_list('consecutivo', flat=True))
+        ids = []
+        for id in vales_ids:
+            ids.append(str(id))
+
          # Obtener todos los movimientos de cada tipo
         movimientos_mp = Movimiento_MP.objects.filter(
             vale__in=vales_asociados
@@ -783,7 +788,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
         else:
             costo_litro = produccion.costo / float(produccion.cantidad_real)
              
-        
+        print(f'ids: {ids}')
         # 5. Datos para gráficos o estadísticas
         datos_produccion = {
             'lote_base': produccion.produccion_base.lote if produccion.produccion_base else '',
@@ -802,7 +807,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             'total_movimientos_ins': movimientos_ins.count(),
             'total_movimientos_ee': movimientos_ee.count(),
         }
-        
+
         # 6. Productos relacionados (si aplica)
         producto_relacionado = produccion.catalogo_producto
         
@@ -823,6 +828,7 @@ class ProduccionDetailView(LoginRequiredMixin, DetailView):
             'movimientos_ins': movimientos_ins,
             'movimientos_ee': movimientos_ee,
             'vales_asociados': vales_asociados,
+            'vales_ids': ids, 
         })
         
         return context
@@ -1271,12 +1277,12 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 estado='confirmado'
                             )
                         # Asumiendo que tienes Movimiento_Producto (crea el modelo si no existe)
-                        if hasattr(models, 'Movimiento_Producto'):
+                        """ if hasattr(models, 'Movimiento_Producto'):
                             Movimiento_Producto.objects.create(
                                 producto=pp_actual.producto,
                                 cantidad=pp_actual.cantidad_producto,
                                 vale=vale_dev_pp
-                            )
+                            ) """
                         pp_actual.delete()
                 
                 # 7. Actualizar o crear materias primas

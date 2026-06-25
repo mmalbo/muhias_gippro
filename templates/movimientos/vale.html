@@ -4,14 +4,6 @@
 
 <head>
     <style>
-        @page {
-            /* Configuracion general de la hoja */
-            /* size: a4 landscape; */
-            size: a4 landscape;
-            margin: 1cm, 1cm, 1cm, 1cm;
-        }
-
-        th,
         th {
             font-size: 10px;
             font-weight: bold;
@@ -19,8 +11,8 @@
         }
 
         td {
-            font-size: 10px;
-            padding: 2px;
+            font-size: 12px;
+            padding: 1px;
             word-wrap: break-word,
         }
 
@@ -31,8 +23,8 @@
         }
 
         .table-info-td {
-            font-size: 10px;
-            padding: 0.8px;
+            font-size: 12px;
+            padding: 0.5px;
             word-wrap: break-word,
         }
 
@@ -44,7 +36,7 @@
         }
 
         #footer_content label{
-            font-size: 9px;
+            font-size: 8px;
         }
     </style>
 </head>
@@ -74,7 +66,7 @@
         <tbody>
             <tr>
                 <td colspan="4" style="text-align: left;" class="first-td">Observaciones <br>
-                        - {{data.descripcion}}
+                        - {% if data.descripcion %} {{data.descripcion}} {% endif %}
                 </td>
             </tr>
             <tr>
@@ -87,11 +79,13 @@
                 <td >Producto: {% if data.lote %} {{ data.lote }}  {% endif %} </td>
                 <td >Otros </td>
             </tr>
+            {% if data.nombre_transportista %}
             <tr>
                 <td colspan="2">A- Nombre y apellidos del Transportista <br></td>
                 <td >B- No. CI <br></td>
                 <td >C- Chapa del vehículo <br></td>
             </tr>
+            {% endif %}
         </tbody>
     </table>
     <table border="1" style="border-collapse: collapse; text-align: center;">
