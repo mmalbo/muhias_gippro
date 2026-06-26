@@ -54,6 +54,7 @@ class CrearSalidaView(CreateView):
             ('Venta', 'Venta'),
             ('Consumo interno', 'Consumo interno'),
             ('I+D', 'I+D'),
+            ('Control de calidad','Control de calidad'),
             ('No conforme','No conforme'),
             ('Conduce', 'Conduce'),
         ]
@@ -416,7 +417,8 @@ def salida_produccion(request, vale_id):
                 entrada = False,
                 tipo = 'Entrega',
                 lote_No = produccion.lote,
-                estado='confirmado'
+                estado='confirmado',
+                despachado_por = request.user.first_name
         )
         # Procesar cada mp
         vale_s = None
@@ -493,7 +495,8 @@ def salida_envasado(request, vale_id):
                 entrada = False,
                 tipo = 'Salida a envasado',
                 lote_No = producto.lote,
-                estado='confirmado'
+                estado='confirmado',
+                despachado_por = request.user.first_name
         )
         field_name = str(producto.id)
         cantidad = decimal.Decimal('0.000')
@@ -576,7 +579,8 @@ def recepcion_materia_prima(request, adq_id):
                 destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Adquisición',
-                estado = 'recibido'
+                estado = 'recibido',
+                recibido_por = request.user.first_name
             )
         
         for inv in inv_mat:
@@ -673,7 +677,8 @@ def recepcion_producto(request, adq_id):
             destino=almacen.nombre,
             entrada=True,
             tipo='Adquisición',
-            estado='confirmado'
+            estado='confirmado',
+            recibido_por=request.user.first_name
         )
 
         for detalle in detalles:
@@ -769,7 +774,8 @@ def recepcion_envase(request, adq_id):
                 destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Adquisición',
-                estado = 'recibido'
+                estado = 'recibido',
+                recibido_por = request.user.first_name
         )
 
         for inv in inv_env:
@@ -845,7 +851,8 @@ def recepcion_insumo(request, adq_id):
                 destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Adquisición',
-                estado = 'recibido'
+                estado = 'recibido',
+                recibido_por = request.user.first_name
             )
         
         for inv in inv_ins:
@@ -913,7 +920,8 @@ def entrada_materia_prima(request, pk):
                 destino = almacen.nombre,
                 entrada = True,
                 tipo = 'Entrada',
-                estado = 'confirmado'
+                estado = 'confirmado',
+                recibido_por = request.user.first_name
             )
         # Procesar cada producto que viene del vale de salida
         for inv in inv_mat:
@@ -955,6 +963,7 @@ def entrada_materia_prima(request, pk):
             else:
                 print("No encontro cantidad")
         vale_v.estado = 'recibido'
+        vale_v.recibido_por = request.user.first_name
         vale_v.save()
         return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
     
@@ -977,7 +986,8 @@ def entrada_envase(request, pk):
                 destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Entrada',
-                estado = 'confirmado'
+                estado = 'confirmado',
+                recibido_por = request.user.first_name
             )
         # Procesar cada producto
         for inv in inv_env:
@@ -1017,6 +1027,7 @@ def entrada_envase(request, pk):
             else:
                 print("No se encontro cantidad")
         vale_v.estado = 'recibido'
+        vale_v.recibido_por = request.user.first_name
         vale_v.save()
         return redirect('envase_embalaje_lista')  # Redirigir a página de éxito
 
@@ -1039,7 +1050,8 @@ def entrada_insumo(request, pk):
                 destino = almacen.nombre,
                 entrada=True,
                 tipo = 'Entrada', 
-                estado = 'confirmado'
+                estado = 'confirmado',
+                recibido_por = request.user.first_name
             )
         # Procesar cada producto
         for inv in inv_ins:
@@ -1079,6 +1091,7 @@ def entrada_insumo(request, pk):
             else:
                 print("No encontró cantidad")
         vale_v.estado = 'recibido'
+        vale_v.recibido_por = request.user.first_name
         vale_v.save()
         return redirect('insumos_list')  # Redirigir a página de éxito
     
@@ -1106,7 +1119,8 @@ def entrada_producto(request, pk):
                 estado = 'confirmado',
                 entrada=True,
                 tipo = 'Entrada',
-                lote_No = vale_v.lote_No
+                lote_No = vale_v.lote_No,
+                recibido_por = request.user.first_name
             )
         # Procesar cada producto
         for inv in inv_prod:
@@ -1149,6 +1163,7 @@ def entrada_producto(request, pk):
             else:
                 print("No encontró cantidad")
         vale_v.estado = 'recibido'
+        vale_v.recibido_por = request.user.first_name
         vale_v.save()
         return redirect('producto_list')  # Redirigir a página de éxito
     
@@ -1163,12 +1178,12 @@ def movimiento_list(request):
     if request.user.groups.filter(name__in=['Almaceneros']):
         almacen = Almacen.objects.filter(responsable=request.user).first()
         if almacen:
-            movimientos = Vale_Movimiento_Almacen.objects.filter(almacen=almacen).order_by('consecutivo')
+            movimientos = Vale_Movimiento_Almacen.objects.filter(almacen=almacen).order_by('-consecutivo')
         else:
             messages.info(request, 'No se encontró almacén asociado')
             movimientos = Vale_Movimiento_Almacen.objects.none()
     elif request.user.groups.filter(name__in=['Tecnologa']):
-        movimientos = Vale_Movimiento_Almacen.objects.filter(tipo__in=['Solicitud', 'Devolución', 'Producción terminada', 'Producción rechazada', 'Solicitud envasado', 'Envasado']).order_by('consecutivo')
+        movimientos = Vale_Movimiento_Almacen.objects.filter(tipo__in=['Solicitud', 'Devolución', 'Producción terminada', 'Producción rechazada', 'Solicitud envasado', 'Envasado']).order_by('-consecutivo')
 
     # ===== FILTROS AVANZADOS =====
     
@@ -1758,7 +1773,7 @@ def confirmar_salida(request, pk):
     
     if vale.entrada:
         messages.error(request, 'Solo se pueden confirmar salidas (no entradas)')
-        return redirect('detalle_vale', pk=pk)
+        return redirect('movimiento_update', pk=pk)
     
     try:
         # Lógica de confirmación (puedes mover esto a un método del modelo)

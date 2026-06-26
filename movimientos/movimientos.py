@@ -69,6 +69,7 @@ def export_vale(request, id_movimiento):
          data['ci_transportista'] = ''
          data['cargo_transportista'] = ''
       data['chapa'] = vale.chapa
+      data['despachado'] = vale.despachado_por
       template_src = 'movimientos/vale.html'
       template = get_template(template_src)
       context = {'data': data, 'inventarios_mp': inventarios_mp, 'inventarios_prod': inventarios_prod,

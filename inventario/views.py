@@ -11,6 +11,7 @@ import decimal
 # Create your views here.
 def ajuste_inv_prod(request, inv_prod):
     inv_prod_o = get_object_or_404(Inv_Producto, id=inv_prod)
+    viejo_cant = inv_prod_o.cantidad
     
     almacen = Almacen.objects.first()
     if request.user.groups.first() and (request.user.groups.first().name == 'Almaceneros'):
@@ -23,20 +24,23 @@ def ajuste_inv_prod(request, inv_prod):
         form = AjusteInvProdForm(request.POST, instance=inv_prod_o, user=request.user)
         if form.is_valid():
             causa = form.cleaned_data.get('causa')
-            viejo_cant = inv_prod_o.cantidad
             nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
+            
             vale = Vale_Movimiento_Almacen.objects.create(
                 tipo = 'Ajuste de inventario',
                 descripcion=causa,
                 origen=inv_prod_o.almacen.nombre,
                 destino=inv_prod_o.almacen.nombre,
                 almacen = inv_prod_o.almacen,
-                estado='confirmado'
+                estado='confirmado',
+                despachado_por = request.user.first_name
             )
+           
             #form.save()
             # Guardar el inventario actualizado
             form.save()
-            
+
+            cantidad_movimiento = 0
             # Determinar tipo de movimiento
             if nuevo_cant < viejo_cant:
                 vale.entrada = False
@@ -44,6 +48,7 @@ def ajuste_inv_prod(request, inv_prod):
             else:
                 vale.entrada = True
                 cantidad_movimiento = nuevo_cant - viejo_cant
+            
             
             vale.save()
             mov_prod = Movimiento_Prod.objects.create(
@@ -55,12 +60,11 @@ def ajuste_inv_prod(request, inv_prod):
             try:
                 mov_prod.save()
             except Exception as e:
-                print(e)
+                print(f'Error')
             messages.success(request, f'Inventario de {inv_prod_o.producto} actualizado correctamente')
             return redirect('producto_list')
         else:
-            messages.info(request, f'Error en la form {form.errors}')
-            return redirect('producto_list')
+            messages.info(request, f'Error en la form')
     else:
         form = AjusteInvProdForm(instance=inv_prod_o, user=request.user)
 
@@ -70,7 +74,6 @@ def ajuste_inv_prod(request, inv_prod):
         'es_admin': request.user.groups.filter(name='Presidencia-Admin').exists(),
         'es_almacenero': request.user.groups.filter(name='Almaceneros').exists(),
     }
-    print(context)
 
     return render(request, 'inventario/actualizar_inv_prod.html', context)
 
@@ -85,11 +88,8 @@ def ajuste_inv_mp(request, inv_mp):
             return redirect('materia_prima:materia_prima_list')
 
     if request.method == 'POST':
-        print('En POST')
         nuevo_cant = decimal.Decimal(request.POST.get('cantidad'))
         viejo_cant = inv_mat_prima.cantidad
-        print(nuevo_cant)
-        print(viejo_cant)
         form = AjusteInvMPForm(request.POST, instance=inv_mat_prima, user=request.user)
         if form.is_valid():
             causa = form.cleaned_data.get('causa')
@@ -98,7 +98,9 @@ def ajuste_inv_mp(request, inv_mp):
                 descripcion=causa,
                 origen=inv_mat_prima.almacen.nombre,
                 destino=inv_mat_prima.almacen.nombre,
-                almacen = inv_mat_prima.almacen
+                almacen = inv_mat_prima.almacen,
+                despachado_por = request.user.first_name,
+                estado='confirmado'
             )
             form.save()
             if nuevo_cant < viejo_cant:
@@ -124,8 +126,7 @@ def ajuste_inv_mp(request, inv_mp):
             messages.success(request, f'Inventario de {inv_mat_prima.materia_prima.nombre} actualizado correctamente')
             return redirect('materia_prima:materia_prima_list')
         else:
-            messages.info(request, f'Error en la form {form.errors}')
-            return redirect('materia_prima:materia_prima_list')
+            messages.info(request, f'Error en la form')
     else:
         form = AjusteInvMPForm(instance=inv_mat_prima, user=request.user)
 
@@ -159,7 +160,9 @@ def ajuste_inv_env(request, inv_ee):
                 descripcion=causa,
                 origen=inv_env.almacen.nombre,
                 destino=inv_env.almacen.nombre,
-                almacen = inv_env.almacen
+                almacen = inv_env.almacen,
+                despachado_por = request.user.first_name,
+                estado='confirmado'
             )
             form.save()
             if nuevo_cant < viejo_cant:
@@ -185,8 +188,7 @@ def ajuste_inv_env(request, inv_ee):
             messages.success(request, f'Inventario de {inv_env.envase.codigo_envase} actualizado correctamente')
             return redirect('envase_embalaje_lista')
         else:
-            messages.info(request, f'Error en la form {form.errors}')
-            return redirect('envase_embalaje_lista')
+            messages.info(request, f'Error en la form')
     else:
         form = AjusteInvMPForm(instance=inv_env, user=request.user)
 
@@ -220,7 +222,9 @@ def ajuste_inv_ins(request, inv_ins):
                 descripcion=causa,
                 origen=inv_insT.almacen.nombre,
                 destino=inv_insT.almacen.nombre,
-                almacen = inv_insT.almacen
+                almacen = inv_insT.almacen,
+                despachado_por = request.user.first_name,
+                estado = 'confirmado'
             )
             form.save()
             if nuevo_cant < viejo_cant:
@@ -245,8 +249,7 @@ def ajuste_inv_ins(request, inv_ins):
             messages.success(request, f'Inventario de {inv_insT.insumos} actualizado correctamente')
             return redirect('insumos_list')
         else:
-            messages.info(request, f'Error en la form {form.errors}')
-            return redirect('insumos_list')
+            messages.info(request, f'Error en la form')
     else:
         form = AjusteInvMPForm(instance=inv_insT.insumos, user=request.user)
 

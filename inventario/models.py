@@ -84,6 +84,12 @@ class Inv_Producto(ItemInventarioBase):
 
     def __str__(self):
         return f'{self.lote}: {self.producto.nombre_comercial} en {self.almacen.nombre}'
+    
+    def get_volumen(self):
+        if self.formato:
+            return self.formato.volumen * self.cantidad
+        else:
+            return self.cantidad
  
 class Inv_Envase(ItemInventarioBase):
     envase = models.ForeignKey(

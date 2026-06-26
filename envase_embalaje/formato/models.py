@@ -28,6 +28,15 @@ class Formato(ModeloBase):
     
     def __unicode__(self):
         return f"{self.capacidad}{self.unidad_medida}" if self.capacidad > 0 else "AG"
+    
+    @property
+    def volumen(self):
+        if self.unidad_medida.lower() in ['ml', 'g']:
+            return self.capacidad / 1000        
+        if self.unidad_medida.lower() in ['l', 'kg']:
+            return self.capacidad if self.capacidad > 0 else 1
+        return 0
+    
 
     """def clean(self):
         if self.capacidad and not str(self.capacidad).isdigit():

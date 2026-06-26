@@ -42,6 +42,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
                       ('Conduce','Conduce'),
                       ('Venta','Venta'),
                       ('I+D','I+D'),
+                      ('Control de calidad','Control de calidad'),
                       ('No conforme','No conforme'),
                       ('Consumo interno','Consumo interno'),
                       ('Adquisición','Adquisición'),

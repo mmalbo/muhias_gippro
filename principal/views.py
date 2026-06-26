@@ -27,14 +27,15 @@ class LoginTemplateView(GestionView, ModeloBaseTemplateView):
 def cargar_datos_principal(request):
 #    notif = importar_productos_desde_api()
 #    print(notif)
-    usuario_logeado = request.user
+    """ usuario_logeado = request.user
     cant_materia_prima = MateriaPrima.objects.all().count()
     cant_produccion = Produccion.objects.all().count()
     context = {
         'cant_materia_prima': cant_materia_prima,
         'cant_produccion': cant_produccion,
-    }
-    return render(request, 'base/base.html', context)
+    } """
+    return render(request, 'base/index.html')    
+    #return redirect('dashboard')
 
 def authenticate_user(request, username=None, password=None):
     user = authenticate(request, username=username, password=password)
