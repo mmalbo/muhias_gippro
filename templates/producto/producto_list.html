@@ -62,6 +62,7 @@
                             <th>Lote</th>
                             <th>Almacén</th>
                             <th>Cantidad</th>
+                            <th>Volumen (L/Kg)</th>
                             <th>Costo</th>
                             <th>Acciones</th>
                         </tr>
@@ -75,6 +76,7 @@
                                 <td>{{ producto.lote }}</td>
                                 <td>{{ producto.almacen }}</td>
                                 <td>{{ producto.cantidad }}</td>
+                                <td>{{ producto.get_volumen|default:"0" }}</td>
                                 <td>{{ producto.producto.costo }}</td>
                                 <td>
                                     <div class="button-container" style="display: flex; gap: 10px;">

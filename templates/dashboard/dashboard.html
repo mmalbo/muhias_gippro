@@ -1,0 +1,398 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+    
+    <!-- Filtro de fechas -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-auto">
+            <label for="fecha_inicio" class="form-label">Fecha inicio</label>
+            <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio|date:'Y-m-d' }}">
+        </div>
+        <div class="col-auto">
+            <label for="fecha_fin" class="form-label">Fecha fin</label>
+            <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin|date:'Y-m-d' }}">
+        </div>
+        <div class="col-auto align-self-end">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+
+    <div class="row">
+        <!-- COLUMNA IZQUIERDA: INVENTARIO -->
+        <div class="col-md-6">
+            <!-- Tarjeta 1: Solicitudes Pendientes -->
+            <div class="card mb-4">
+                <div class="card-header">Solicitudes Pendientes (Salidas) <span class="badge bg-primary">{{ total_solicitudes }}</span></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="solicitudesChart" width="400" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <table class="table table-sm" id="solicitudesTabla">
+                                <thead><tr><th>Tipo</th><th>Cant.</th></tr></thead>
+                                <tbody>
+                                    {% for tipo, datos in solicitudes_pendientes.items %}
+                                    <tr data-tipo="{{ tipo }}" 
+                                        data-items-json='{{ datos.items_json|safe }}' 
+                                        data-total="{{ datos.total }}">
+                                        <td>{{ tipo|capfirst }}</td>
+                                        <td>{{ datos.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <small class="text-muted">Haz clic en un tipo para ver detalles.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 2: Recepciones Pendientes -->
+            <div class="card mb-4">
+                <div class="card-header">Recepciones Pendientes (Entradas) <span class="badge bg-success">{{ total_recepciones }}</span></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="recepcionesChart" width="400" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <table class="table table-sm" id="recepcionesTabla">
+                                <thead><tr><th>Tipo</th><th>Cant.</th></tr></thead>
+                                <tbody>
+                                    {% for tipo, datos in recepciones_pendientes.items %}
+                                    <tr data-tipo="{{ tipo }}" 
+                                        data-items-json='{{ datos.items_json|safe }}' 
+                                        data-total="{{ datos.total }}">
+                                        <td>{{ tipo|capfirst }}</td>
+                                        <td>{{ datos.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <small class="text-muted">Haz clic en un tipo para ver detalles.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 3: Lento Movimiento -->
+            <div class="card mb-4">
+                <div class="card-header">Lento Movimiento (sin movimientos desde {{ fecha_inicio|date:'d/m/Y' }}) <span class="badge bg-warning">{{ total_lento }}</span></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="lentoChart" width="400" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <table class="table table-sm" id="lentoTabla">
+                                <thead><tr><th>Tipo</th><th>Cant.</th></tr></thead>
+                                <tbody>
+                                    {% for tipo, datos in lento_movimiento.items %}
+                                    <tr data-tipo="{{ tipo }}" 
+                                        data-items-json='{{ datos.items_json|safe }}' 
+                                        data-total="{{ datos.total }}">
+                                        <td>{{ tipo|capfirst }}</td>
+                                        <td>{{ datos.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <small class="text-muted">Haz clic en un tipo para ver los elementos.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 4: Bajo Inventario -->
+            <div class="card mb-4">
+                <div class="card-header">Bajo Inventario (stock < salidas desde {{ fecha_inicio|date:'d/m/Y' }}) <span class="badge bg-danger">{{ total_bajo }}</span></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="bajoChart" width="400" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <table class="table table-sm" id="bajoTabla">
+                                <thead><tr><th>Tipo</th><th>Cant.</th></tr></thead>
+                                <tbody>
+                                    {% for tipo, datos in bajo_inventario.items %}
+                                    <tr data-tipo="{{ tipo }}" 
+                                        data-items-json='{{ datos.items_json|safe }}' 
+                                        data-total="{{ datos.total }}">
+                                        <td>{{ tipo|capfirst }}</td>
+                                        <td>{{ datos.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <small class="text-muted">Haz clic en un tipo para ver los elementos.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: PRODUCCIÓN -->
+        <div class="col-md-6">
+            <!-- Tarjeta 1: Producciones Completadas -->
+            <div class="card mb-4">
+                <div class="card-header">Producciones Completadas Conformes</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nº Producciones:</strong> {{ datos_produccion.completadas.total_producciones }}</p>
+                            <p><strong>Litros totales:</strong> {{ datos_produccion.completadas.total_litros|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="prodCompletadasChart" width="200" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 2: Producciones Rechazadas -->
+            <div class="card mb-4">
+                <div class="card-header">Producciones Rechazadas</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nº Producciones:</strong> {{ datos_produccion.rechazadas.total_producciones }}</p>
+                            <p><strong>Litros totales:</strong> {{ datos_produccion.rechazadas.total_litros|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="prodRechazadasChart" width="200" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 3: Producciones en Proceso -->
+            <div class="card mb-4">
+                <div class="card-header">Producciones en Proceso</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nº Producciones:</strong> {{ datos_produccion.en_proceso.total_producciones }}</p>
+                            <p><strong>Litros totales:</strong> {{ datos_produccion.en_proceso.total_litros|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="prodProcesoChart" width="200" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Colores predefinidos
+    const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'];
+
+    // Objeto para almacenar las referencias de los gráficos por ID del canvas
+    const chartInstances = {};
+
+    // Función para crear gráfico de pastel
+    function createPieChart(canvasId, labels, data, title) {
+        // Destruir gráfico existente en este canvas
+        if (chartInstances[canvasId]) {
+            chartInstances[canvasId].destroy();
+            delete chartInstances[canvasId];
+        }
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: title }
+                }
+            }
+        });
+        chartInstances[canvasId] = chart;
+        return chart;
+    }
+
+    // Función para crear gráfico de barras
+    function createBarChart(canvasId, labels, data, label, title) {
+        // Destruir gráfico existente en este canvas
+        if (chartInstances[canvasId]) {
+            chartInstances[canvasId].destroy();
+            delete chartInstances[canvasId];
+        }
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: title }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+        chartInstances[canvasId] = chart;
+        return chart;
+    }
+
+    // Función para obtener datos de la tabla (para los pasteles)
+    function getChartData(tablaId) {
+        const rows = document.querySelectorAll(`#${tablaId} tbody tr`);
+        const labels = [];
+        const data = [];
+        const itemsMap = {};
+        rows.forEach(row => {
+            const tipo = row.dataset.tipo;
+            const total = parseFloat(row.dataset.total) || 0;
+            labels.push(tipo.charAt(0).toUpperCase() + tipo.slice(1));
+            data.push(total);
+            try {
+                const itemsJson = row.dataset.itemsJson;
+                itemsMap[tipo] = itemsJson ? JSON.parse(itemsJson) : [];
+            } catch(e) {
+                console.error('Error parsing itemsJson for', tipo, e);
+                itemsMap[tipo] = [];
+            }
+        });
+        return { labels, data, itemsMap };
+    }
+
+    // Inicializar gráficos de inventario (pasteles)
+    const solicitudesData = getChartData('solicitudesTabla');
+    let solicitudesChart = createPieChart('solicitudesChart', solicitudesData.labels, solicitudesData.data, 'Solicitudes Pendientes');
+
+    const recepcionesData = getChartData('recepcionesTabla');
+    let recepcionesChart = createPieChart('recepcionesChart', recepcionesData.labels, recepcionesData.data, 'Recepciones Pendientes');
+
+    const lentoData = getChartData('lentoTabla');
+    let lentoChart = createPieChart('lentoChart', lentoData.labels, lentoData.data, 'Lento Movimiento');
+
+    const bajoData = getChartData('bajoTabla');
+    let bajoChart = createPieChart('bajoChart', bajoData.labels, bajoData.data, 'Bajo Inventario');
+
+    // Función para configurar el evento de clic en filas de tabla
+    function setupClickHandler(tablaId, canvasId, labelText, originalData) {
+        const rows = document.querySelectorAll(`#${tablaId} tbody tr`);
+        rows.forEach(row => {
+            row.style.cursor = 'pointer';
+            row.addEventListener('click', function() {
+                const tipo = this.dataset.tipo;
+                const items = JSON.parse(this.dataset.itemsJson || '[]');
+                if (!items || items.length === 0) {
+                    alert('No hay elementos para mostrar en este tipo.');
+                    return;
+                }
+                // Destruir gráfico actual del canvas
+                if (chartInstances[canvasId]) {
+                    chartInstances[canvasId].destroy();
+                    delete chartInstances[canvasId];
+                }
+                // Preparar datos para barras
+                const itemLabels = items.map(item => item.nombre || 'Sin nombre');
+                // Usar cantidad si existe, sino stock, sino 0
+                const itemData = items.map(item => item.cantidad || item.stock || 0);
+                const title = `${tipo.charAt(0).toUpperCase() + tipo.slice(1)} - Detalle`;
+                // Crear gráfico de barras
+                const newChart = createBarChart(canvasId, itemLabels, itemData, labelText, title);
+                // Guardar referencia
+                chartInstances[canvasId] = newChart;
+                // Mostrar botón "Volver" si no existe
+                let backBtn = document.getElementById(`backBtn_${canvasId}`);
+                if (!backBtn) {
+                    backBtn = document.createElement('button');
+                    backBtn.id = `backBtn_${canvasId}`;
+                    backBtn.className = 'btn btn-sm btn-secondary mt-2';
+                    backBtn.textContent = 'Volver al resumen';
+                    backBtn.style.display = 'block';
+                    // Insertar después del canvas
+                    const canvas = document.getElementById(canvasId);
+                    canvas.parentNode.insertBefore(backBtn, canvas.nextSibling);
+                }
+                backBtn.style.display = 'inline-block';
+                // Remover eventos anteriores para evitar duplicados
+                backBtn.onclick = null;
+                backBtn.onclick = function() {
+                    // Destruir gráfico actual
+                    if (chartInstances[canvasId]) {
+                        chartInstances[canvasId].destroy();
+                        delete chartInstances[canvasId];
+                    }
+                    // Volver al pastel con datos originales
+                    const orig = originalData || getChartData(tablaId);
+                    const newPie = createPieChart(canvasId, orig.labels, orig.data, '');
+                    chartInstances[canvasId] = newPie;
+                    // Ocultar botón
+                    backBtn.style.display = 'none';
+                };
+            });
+        });
+    }
+
+    // Configurar handlers para cada tabla, pasando los datos originales
+    setupClickHandler('solicitudesTabla', 'solicitudesChart', 'Cantidad', solicitudesData);
+    setupClickHandler('recepcionesTabla', 'recepcionesChart', 'Cantidad', recepcionesData);
+    setupClickHandler('lentoTabla', 'lentoChart', 'Cantidad', lentoData);
+    setupClickHandler('bajoTabla', 'bajoChart', 'Cantidad', bajoData);
+
+    // Función para gráficos de producción (barras)
+    function createProdChart(canvasId, data, label, title) {
+        if (!data || data.length === 0) {
+            // Mostrar mensaje "Sin datos" en el canvas (opcional)
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#999';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sin datos', canvas.width/2, canvas.height/2);
+            return;
+        }
+        const labels = data.map(item => item.nombre || 'Sin nombre');
+        const values = data.map(item => item.litros || 0);
+        createBarChart(canvasId, labels, values, label, title);
+    }
+
+    // Datos de producción desde el contexto (convertir a JSON)
+    // Nota: en la plantilla debes usar {{ datos_produccion.completadas.top_json|safe }}
+    // Asumimos que pasas los datos como arrays de objetos.
+
+    // Completadas
+    const prodCompletadas = {{ produccion.completadas.top_json|safe }};
+    createProdChart('prodCompletadasChart', prodCompletadas, 'Litros', 'Top 10 Productos');
+
+    // Rechazadas
+    const prodRechazadas = {{ produccion.rechazadas.top_json|safe }};
+    createProdChart('prodRechazadasChart', prodRechazadas, 'Litros', 'Top 10 Rechazados');
+
+    // En proceso
+    const prodProceso = {{ produccion.en_proceso.top_json|safe }};
+    createProdChart('prodProcesoChart', prodProceso, 'Litros', 'Top 10 en Proceso');
+
+</script>
+{% endblock %}

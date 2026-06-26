@@ -419,7 +419,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             origen='Producción en ' + planta_instance.nombre,
                             destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
-                            estado='confirmado'
+                            estado='confirmado',
+                            despachado_por=request.user.first_name
                         )
     
                     for mp_data in materias_primas:
@@ -470,7 +471,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             origen='Producción en ' + planta_instance.nombre,
                             destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
-                            estado='confirmado'
+                            estado='confirmado',    
+                            despachado_por=request.user.first_name
                         )
 
                     try:
@@ -1011,7 +1013,9 @@ def cancelar_produccion(request, pk):
                                     entrada=False,
                                     almacen=vale.almacen,
                                     lote_No = produccion.lote,
-                                    estado='confirmado'
+                                    estado='confirmado',
+                                    observaciones=f'Devolución de vale {vale.consecutivo} por cancelación de producción {produccion.lote}',
+                                    despachado_por=request.user.first_name
                                 )
                     materias_primas = Prod_Inv_MP.objects.filter(vale=vale)
                     for mp in materias_primas:
@@ -1254,7 +1258,9 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 entrada=False,
                                 almacen=mp_actual.vale.almacen,
                                 lote_No=produccion.lote,
-                                estado='confirmado'
+                                estado='confirmado',
+                                observaciones=f'Devolución por edición de producción {produccion.lote}',
+                                despachado_por=request.user.first_name
                             )
                         Movimiento_MP.objects.create(
                             materia_prima=mp_actual.inv_materia_prima,
@@ -1274,7 +1280,9 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 entrada=False,
                                 almacen=pp_actual.vale.almacen,
                                 lote_No=produccion.lote,
-                                estado='confirmado'
+                                estado='confirmado',
+                                observaciones=f'Devolución por edición de producción {produccion.lote}',
+                                despachado_por=request.user.first_name
                             )
                         # Asumiendo que tienes Movimiento_Producto (crea el modelo si no existe)
                         """ if hasattr(models, 'Movimiento_Producto'):
@@ -1321,7 +1329,8 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         almacen=almacen_obj,
                                         origen=produccion.planta.nombre,
                                         lote_No=produccion.lote,
-                                        estado='confirmado'
+                                        estado='confirmado',
+                                        despachado_por=request.user.first_name
                                     )
                                 Prod_Inv_MP.objects.create(
                                     lote_prod=produccion,
@@ -1339,7 +1348,9 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         entrada=False,
                                         almacen=almacen_obj,
                                         lote_No=produccion.lote,
-                                        estado='confirmado'
+                                        estado='confirmado',
+                                        observaciones=f'Devolución por edición de producción {produccion.lote}',
+                                        despachado_por=request.user.first_name
                                     )
                                 Movimiento_MP.objects.create(
                                     materia_prima=inventario_mp,
@@ -1360,7 +1371,8 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 almacen=almacen_obj,
                                 origen=produccion.planta.nombre,
                                 lote_No=produccion.lote,
-                                estado='confirmado'
+                                estado='confirmado',
+                                despachado_por=request.user.first_name
                             )
                         
                         Prod_Inv_MP.objects.create(
@@ -1407,7 +1419,8 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         almacen=almacen_obj,
                                         origen=produccion.planta.nombre,
                                         lote_No=produccion.lote,
-                                        estado='confirmado'
+                                        estado='confirmado',
+                                        despachado_por=request.user.first_name
                                     )
                                 Prod_Inv_Producto.objects.create(
                                     lote_prod=produccion,
@@ -1425,13 +1438,8 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         entrada=False,
                                         almacen=almacen_obj,
                                         lote_No=produccion.lote,
-                                        estado='confirmado'
-                                    )
-                                if hasattr(models, 'Movimiento_Producto'):
-                                    Movimiento_Producto.objects.create(
-                                        producto=inventario_pp,
-                                        cantidad=abs(diferencia),
-                                        vale=vale_dev_pp
+                                        estado='confirmado',
+                                        despachado_por=request.user.first_name
                                     )
                             
                             pp_existente.cantidad_producto = nueva_cantidad
@@ -1447,7 +1455,8 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 almacen=almacen_obj,
                                 origen=produccion.planta.nombre,
                                 lote_No=produccion.lote,
-                                estado='confirmado'
+                                estado='confirmado',
+                                despachado_por=request.user.first_name
                             )
                         
                         Prod_Inv_Producto.objects.create(
@@ -2332,7 +2341,9 @@ def concluir_prueba(request, pk):
                     entrada = False,
                     tipo = tipo,
                     estado=estado,
-                    lote_No = prueba.produccion.lote
+                    lote_No = prueba.produccion.lote,
+                    descripcion = 'Producción terminada de ' + prueba.produccion.catalogo_producto.nombre_comercial + ' lote ' + prueba.produccion.lote,
+                    despachado_por = request.user.first_name,
             )
                 
             #Este es el movimiento especifico del producto

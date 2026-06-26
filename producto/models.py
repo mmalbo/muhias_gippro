@@ -44,13 +44,14 @@ class Producto(ModeloBase):
 
     @property
     def cantidad_total(self):
-        """
-        Calcula la cantidad total de este producto en todos los almacenes
-        """
-        total = self.inventarios_prod.aggregate(
-            total=Sum('cantidad')
-        )['total']
-        return total if total is not None else 0
+        """Calcula el volumen total en litros o kilogramos de este producto en todos los inventarios"""
+        from inventario.models import Inv_Producto
+
+        inv_prod = Inv_Producto.objects.filter(producto=self)
+        total = 0
+        for inv in inv_prod:
+            total += inv.get_volumen()  # Usamos el método get_volumen para obtener el volumen o cantidad
+        return total        
 
     def get_ficha_tecnica_folio_name(self):
         """Retorna el nombre del archivo de ficha técnica"""
