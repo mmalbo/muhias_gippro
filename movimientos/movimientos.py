@@ -148,6 +148,7 @@ def export_vales(request):
         data['descripcion'] = vale.descripcion or ''
         data['nombre_transportista'] = vale.transportista or ''
         data['ci_transportista'] = vale.transportista_cI or ''
+        data['despachado'] = vale.despachado_por
         data['chapa'] = vale.chapa or ''
 
         # Renderizar la plantilla del vale

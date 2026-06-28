@@ -363,7 +363,7 @@ $(document).ready(function() {
         const $fila = crearFilaProducto(contadorProductos);
         
         const $select = $fila.find('.producto-select');
-        $select.val(prod.producto_id);
+        $select.val(prod.inventario_id);
         $fila.find('.producto-id-hidden').val(prod.id || '');
         $fila.find('.cantidad-input').val(prod.cantidad);
         $fila.find('.almacen-select').val(prod.almacen_id);
@@ -387,7 +387,7 @@ $(document).ready(function() {
         const $select = $fila.find('.producto-select');
         $select.append('<option value="">Seleccionar...</option>');
         productosDisponibles.forEach(prod => {
-            $select.append(`<option value="${prod.producto_id}" data-unidad="${prod.unidad_medida}" data-costo="${prod.costo}" data-almacen-id="${prod.almacen_id}">${prod.nombre} - ${prod.almacen_nombre} (${prod.cantidad_disponible})</option>`);
+            $select.append(`<option value="${prod.id}" data-unidad="${prod.unidad_medida}" data-costo="${prod.costo}" data-almacen-id="${prod.almacen_id}">${prod.nombre} - ${prod.almacen_nombre} (${prod.cantidad_disponible})</option>`);
         });
         
         const $almacen = $fila.find('.almacen-select');
