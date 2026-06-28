@@ -84,6 +84,12 @@
                             <th>Descripción:</th>
                             <td>{{ vale.descripcion|default:"-" }}</td>
                         </tr>
+                        {% if vale.lote_No %}
+                        <tr>
+                            <th>Producción asociada:</th>
+                            <td>{{ vale.lote_No }}</td>
+                        </tr>
+                        {% endif %}
                     </table>
                 </div>
             </div>

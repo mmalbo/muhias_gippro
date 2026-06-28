@@ -130,7 +130,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {% if item.cantidad_inventario %} {{item.cantidad_inventario}} {% endif %} </td>
             </tr>
             {% endfor %}
             {% for item in inventarios_env_env %}
@@ -144,7 +144,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {% if item.cantidad_inventario %} {{item.cantidad_inventario}} {% endif %}</td>
             </tr>
             {% endfor %}
             {% endif %}
@@ -215,7 +215,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {% if item.cantidad_inventario %} {{item.cantidad_inventario}} {% endif %} </td>
             </tr>
             {% endfor %}
            {% for item in inventarios_prod_prod %}
@@ -229,7 +229,7 @@
                 <td> </td>
                 <td> </td>
                 <td> </td>
-                <td> </td>
+                <td> {% if item.cantidad_inventario %} {{item.cantidad_inventario}} {% endif %} </td>
             </tr>
             {% endfor %}
         </tbody>
