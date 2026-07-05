@@ -54,6 +54,7 @@ class CrearSalidaView(CreateView):
             ('Venta', 'Venta'),
             ('Consumo interno', 'Consumo interno'),
             ('I+D', 'I+D'),
+            ('Administración','Administración'),
             ('Control de calidad','Control de calidad'),
             ('No conforme','No conforme'),
             ('Conduce', 'Conduce'),
@@ -418,7 +419,7 @@ def salida_produccion(request, vale_id):
                 tipo = 'Entrega',
                 lote_No = produccion.lote,
                 estado='confirmado',
-                despachado_por = request.user.first_name
+                despachado_por = request.user.first_name + ' ' + request.user.last_name
         )
         # Procesar cada mp
         vale_s = None
@@ -496,7 +497,7 @@ def salida_envasado(request, vale_id):
                 tipo = 'Salida a envasado',
                 lote_No = producto.lote,
                 estado='confirmado',
-                despachado_por = request.user.first_name
+                despachado_por = request.user.first_name + ' ' + request.user.last_name
         )
         field_name = str(producto.id)
         cantidad = decimal.Decimal('0.000')
@@ -1173,7 +1174,7 @@ def entrada_producto(request, pk):
     })
 
 def movimiento_list(request):
-    movimientos = Vale_Movimiento_Almacen.objects.all()
+    movimientos = Vale_Movimiento_Almacen.objects.all().order_by('consecutivo')
     
     if request.user.groups.filter(name__in=['Almaceneros']):
         almacen = Almacen.objects.filter(responsable=request.user).first()
@@ -1264,21 +1265,21 @@ def movimiento_list(request):
         #from app.models import Movimiento_MP, Movimiento_Prod, Movimiento_Ins, Movimiento_EE
         
         # Obtener IDs de vales que tienen movimientos con ese lote
-        vales_mp = Movimiento_MP.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
-        vales_prod = Movimiento_Prod.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
-        vales_ins = Movimiento_Ins.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
-        vales_ee = Movimiento_EE.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True)
+        vales_mp = Movimiento_MP.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True).order_by('id')
+        vales_prod = Movimiento_Prod.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True).order_by('id')
+        vales_ins = Movimiento_Ins.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True).order_by('id')
+        vales_ee = Movimiento_EE.objects.filter(lote__icontains=lote_asociado).values_list('vale_id', flat=True).order_by('id')
         
         # También buscar en el campo lote_No del vale directamente
         vales_directos = Vale_Movimiento_Almacen.objects.filter(
             lote_No__icontains=lote_asociado
-        ).values_list('id', flat=True)
+        ).values_list('id', flat=True).order_by('id')
         
         # Combinar todos los IDs
         todos_vales_ids = set(list(vales_mp) + list(vales_prod) + list(vales_ins) + list(vales_ee) + list(vales_directos))
         
         if todos_vales_ids:
-            movimientos = movimientos.filter(id__in=todos_vales_ids)
+            movimientos = movimientos.filter(id__in=todos_vales_ids).order_by('-consecutivo')
         else:
             # Si no hay resultados, mostrar lista vacía
             movimientos = movimientos.none()
@@ -1295,10 +1296,10 @@ def movimiento_list(request):
             Q(origen__icontains=busqueda) |
             Q(destino__icontains=busqueda) |
             Q(lote_No__icontains=busqueda)  # Búsqueda por lote también aquí
-        )
+        ).order_by('-consecutivo')
     
     # Ordenar por consecutivo descendente (más reciente primero)
-    movimientos = movimientos.order_by('-consecutivo')
+    movimientos = movimientos.order_by('consecutivo')
     
     # Obtener listas para los filtros
     tipos_movimiento = Vale_Movimiento_Almacen.VALE_TYPES
@@ -1798,7 +1799,7 @@ def confirmar_salida(request, pk):
                 vale.estado = 'confirmado'
             else:
                 vale.estado = 'despachado'
-            vale.despachado_por = request.user.first_name
+            vale.despachado_por = request.user.first_name + ' ' + request.user.last_name
             try:
                 vale.save()
             except Exception as e:
@@ -1846,10 +1847,12 @@ def validar_disponibilidad_producto(movimiento, almacen):
             f'Solicitado: {movimiento.cantidad}'
         )
     else:
+        print('movimiento.producto.cantidad: ', movimiento.producto.cantidad)
         movimiento.producto.cantidad -= movimiento.cantidad
         movimiento.producto.save()
         movimiento.cantidad_inventario = movimiento.producto.cantidad
         movimiento.save()
+        print('Cantidad actualizada en inventario para producto:', movimiento.producto.producto.nombre_comercial, 'Cantidad restante:', movimiento.cantidad_inventario)
 
 def validar_disponibilidad_envase(movimiento, almacen):
     """Validar disponibilidad de envases"""

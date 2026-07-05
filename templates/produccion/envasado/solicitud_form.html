@@ -92,8 +92,9 @@
                                                 <th>Envase</th>
                                                 <th>Código</th>
                                                 <th>Tipo</th>
-                                                <th>Cantidad disponible</th>
-                                                <th>Unidades requeridas</th>
+                                                <th>Volumen que cubre</th>
+                                                <th>Unidades solicitadas</th>
+                                                <th style="color: red;">Volumen completado</th>
                                                 <th>Acciones</th>
                                             </tr>
                                         </thead>
@@ -260,18 +261,27 @@ $(document).ready(function() {
         if (envases.length === 0) {
             tbody.append('<tr><td colspan="6" class="text-center">No hay envases agregados</td></tr>');
         } else {
+            let volumen_total = 0
             envases.forEach(function(envase, index) {
+                let capacidad = 0;
+                if (envase.capacidad) {
+                    console.log(`Cantidad entro a capacidad ${envase.capacidad}`)
+                    capacidad = parseFloat(String(envase.capacidad).replace(',','.'));
+                }
+                let volumen = Number(envase.cantidad) * capacidad;
+                volumen_total = volumen_total + volumen 
+                console.log(`Cantidad ${envase.cantidad} capacidad: ${capacidad}`)
                 var row = '<tr>' +
                     '<td>' + envase.nombre + '</td>' +
                     '<td>' + envase.codigo + '</td>' +
                     '<td>' + envase.tipo + '</td>' +
-                    '<td>' + envase.disponible + '</td>' +
+                    '<td>' + volumen + '</td>' +
                     '<td>' + envase.cantidad + '</td>' +
-                    '<td>' +
+                    '<td>' + volumen_total + '</td>' +
                     '<button type="button" class="btn btn-danger btn-sm" onclick="eliminarEnvase(' + index + ')">' +
                     'Eliminar</button>' +
                     '</td>' +
-                    '</tr>';
+                    '</tr>'
                 tbody.append(row);
             });
 

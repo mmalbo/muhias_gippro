@@ -93,4 +93,17 @@
         </tbody>
     </table>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#datatable').DataTable({
+            "pageLength": 50,           // <--- Aquí pones 50 en vez de 10
+            "order": [[0, 'desc']],
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" // Opcional: traducción al español
+            }
+            // Aquí puedes añadir otras opciones que ya tengas (ordering, searching, etc.)
+        });
+    });
+</script>
+
 {% endblock %}

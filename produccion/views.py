@@ -420,7 +420,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
                             estado='confirmado',
-                            despachado_por=request.user.first_name
+                            despachado_por=request.user.first_name + ' ' + request.user.last_name
                         )
     
                     for mp_data in materias_primas:
@@ -472,7 +472,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
                             destino=almacen_obj.nombre,
                             lote_No=produccion.lote,
                             estado='confirmado',    
-                            despachado_por=request.user.first_name
+                            despachado_por=request.user.first_name + ' ' + request.user.last_name
                         )
 
                     try:
@@ -1015,7 +1015,7 @@ def cancelar_produccion(request, pk):
                                     lote_No = produccion.lote,
                                     estado='confirmado',
                                     descripcion=f'Devolución de vale {vale.consecutivo} por cancelación de producción {produccion.lote}',
-                                    despachado_por=request.user.first_name
+                                    despachado_por=request.user.first_name + ' ' + request.user.last_name
                                 )
                     materias_primas = Prod_Inv_MP.objects.filter(vale=vale)
                     for mp in materias_primas:
@@ -1266,7 +1266,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 lote_No=produccion.lote,
                                 estado='confirmado',
                                 descripcion=f'Devolución por edición de producción {produccion.lote}',
-                                despachado_por=request.user.first_name
+                                despachado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         Movimiento_MP.objects.create(
                             materia_prima=mp_actual.inv_materia_prima,
@@ -1290,7 +1290,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 lote_No=produccion.lote,
                                 estado='confirmado',
                                 descripcion=f'Devolución por edición de producción {produccion.lote}',
-                                despachado_por=request.user.first_name
+                                despachado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         # Asumiendo que tienes Movimiento_Producto (crea el modelo si no existe)
                         Movimiento_Prod.objects.create(
@@ -1338,7 +1338,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         origen=produccion.planta.nombre,
                                         lote_No=produccion.lote,
                                         estado='confirmado',
-                                        despachado_por=request.user.first_name
+                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
                                 Prod_Inv_MP.objects.create(
                                     lote_prod=produccion,
@@ -1358,7 +1358,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         lote_No=produccion.lote,
                                         estado='confirmado',
                                         descripcion=f'Devolución por edición de producción {produccion.lote}',
-                                        despachado_por=request.user.first_name
+                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
                                 Movimiento_MP.objects.create(
                                     materia_prima=inventario_mp,
@@ -1380,7 +1380,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 origen=produccion.planta.nombre,
                                 lote_No=produccion.lote,
                                 estado='confirmado',
-                                despachado_por=request.user.first_name
+                                despachado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         
                         Prod_Inv_MP.objects.create(
@@ -1433,7 +1433,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         origen=produccion.planta.nombre,
                                         lote_No=produccion.lote,
                                         estado='confirmado',
-                                        despachado_por=request.user.first_name
+                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
                                 Prod_Inv_Producto.objects.create(
                                     lote_prod=produccion,
@@ -1452,7 +1452,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         almacen=almacen_obj,
                                         lote_No=produccion.lote,
                                         estado='confirmado',
-                                        despachado_por=request.user.first_name
+                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
                             
                             pp_existente.cantidad_producto = nueva_cantidad
@@ -1469,7 +1469,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 origen=produccion.planta.nombre,
                                 lote_No=produccion.lote,
                                 estado='confirmado',
-                                despachado_por=request.user.first_name
+                                despachado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         
                         Prod_Inv_Producto.objects.create(
@@ -2362,7 +2362,7 @@ def concluir_prueba(request, pk):
                     estado=estado,
                     lote_No = prueba.produccion.lote,
                     descripcion = 'Producción terminada de ' + prueba.produccion.catalogo_producto.nombre_comercial + ' lote ' + prueba.produccion.lote,
-                    despachado_por = request.user.first_name,
+                    despachado_por = request.user.first_name + ' ' + request.user.last_name,
             )
                 
             #Este es el movimiento especifico del producto

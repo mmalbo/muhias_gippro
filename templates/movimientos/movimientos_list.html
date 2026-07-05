@@ -299,42 +299,36 @@
         const icono = document.getElementById('iconoFiltros');
         
         if (filtrosVisible) {
-            // Ocultar
             panel.style.display = 'none';
             icono.className = 'fas fa-chevron-down';
             filtrosVisible = false;
         } else {
-            // Mostrar
             panel.style.display = 'block';
             icono.className = 'fas fa-chevron-up';
             filtrosVisible = true;
         }
     }
 
-    // Función para aplicar filtros
     function aplicarFiltros() {
         document.getElementById('filtroForm').submit();
     }
 
-    // Función para limpiar filtros
     function limpiarFiltros() {
-        // Limpiar inputs de texto
         document.getElementById('lote_asociado').value = '';
         document.getElementById('fecha_desde').value = '';
         document.getElementById('fecha_hasta').value = '';
         
-        // Resetear selects a la primera opción
         const selects = document.querySelectorAll('#filtroForm select');
         selects.forEach(select => {
             select.selectedIndex = 0;
         });
         
-        // Enviar el formulario
         document.getElementById('filtroForm').submit();
     }
 
-    // Auto-submit al cambiar selects (opcional)
+    // ---- TODA LA CONFIGURACIÓN AL CARGAR LA PÁGINA ----
     document.addEventListener('DOMContentLoaded', function() {
+        // 1. AUTO-SUBMIT PARA FILTROS (lo que ya tenías)
         const selects = document.querySelectorAll('#filtroForm select');
         selects.forEach(select => {
             select.addEventListener('change', function() {
@@ -342,12 +336,22 @@
             });
         });
         
-        // Auto-submit al cambiar fechas
         const fechas = document.querySelectorAll('#filtroForm input[type="date"]');
         fechas.forEach(input => {
             input.addEventListener('change', function() {
                 document.getElementById('filtroForm').submit();
             });
+        });
+
+        // 2. ⭐ INICIALIZACIÓN DE TU DATATABLE CON 50 REGISTROS (AGREGA ESTO)
+        // Reemplaza 'miTabla' por el ID real de tu <table>
+        $('#datatable').DataTable({
+            "pageLength": 50,           // <--- Aquí pones 50 en vez de 10
+            "order": [[0, 'desc']],
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" // Opcional: traducción al español
+            }
+            // Aquí puedes añadir otras opciones que ya tengas (ordering, searching, etc.)
         });
     });
 </script>

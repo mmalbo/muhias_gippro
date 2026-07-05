@@ -33,7 +33,7 @@ def ajuste_inv_prod(request, inv_prod):
                 destino=inv_prod_o.almacen.nombre,
                 almacen = inv_prod_o.almacen,
                 estado='confirmado',
-                despachado_por = request.user.first_name
+                despachado_por = request.user.first_name + ' ' + request.user.last_name
             )
            
             #form.save()
@@ -99,7 +99,7 @@ def ajuste_inv_mp(request, inv_mp):
                 origen=inv_mat_prima.almacen.nombre,
                 destino=inv_mat_prima.almacen.nombre,
                 almacen = inv_mat_prima.almacen,
-                despachado_por = request.user.first_name,
+                despachado_por = request.user.first_name + ' ' + request.user.last_name,
                 estado='confirmado'
             )
             form.save()
@@ -161,7 +161,7 @@ def ajuste_inv_env(request, inv_ee):
                 origen=inv_env.almacen.nombre,
                 destino=inv_env.almacen.nombre,
                 almacen = inv_env.almacen,
-                despachado_por = request.user.first_name,
+                despachado_por = request.user.first_name + ' ' + request.user.last_name,
                 estado='confirmado'
             )
             form.save()
@@ -223,7 +223,7 @@ def ajuste_inv_ins(request, inv_ins):
                 origen=inv_insT.almacen.nombre,
                 destino=inv_insT.almacen.nombre,
                 almacen = inv_insT.almacen,
-                despachado_por = request.user.first_name,
+                despachado_por = request.user.first_name + ' ' + request.user.last_name,
                 estado = 'confirmado'
             )
             form.save()

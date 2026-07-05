@@ -129,8 +129,10 @@
                 let totalVolumen = 0;
                 $('#tablaEnvases tbody tr').each(function() {
                     let cantidad = parseFloat($(this).find('.cantidad-real').val()) || 0;
-                    let capacidad = parseFloat($(this).find('.cantidad-real').data('capacidad')) || 1;
+                    let capacidad = parseFloat(String($(this).find('.cantidad-real').data('capacidad')).replace(',','.'));
+                    console.log("Capacidad:", capacidad, "Cantidad:", cantidad);
                     totalVolumen += cantidad * capacidad;
+                    console.log("volmen:", totalVolumen);
                 });
                 let perdida = granelSolicitado - totalVolumen;
                 if (perdida < 0) perdida = 0;
