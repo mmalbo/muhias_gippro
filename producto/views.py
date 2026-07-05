@@ -76,6 +76,8 @@ def exportar_productos_excel(request):
 def listProductos(request):
     almacen_id = request.GET.get('almacen')
     producto_id = request.GET.get('producto')
+
+    print('En listProductos - almacen_id:', almacen_id, 'producto_id:', producto_id)
     
     almacen = None
     if request.user.groups.filter(name='Almaceneros').exists():
@@ -87,6 +89,8 @@ def listProductos(request):
     
     if request.user.groups.filter(name='Presidencia-Admin').exists() or request.user.groups.filter(name='Comerciales').exists() or request.user.groups.filter(name='Tecnologa').exists() or request.user.groups.filter(name='Consultor').exists() or request.user.is_staff:
         if almacen_id and almacen_id != 'todos':
+            almacen = Almacen.objects.filter(id=almacen_id).first()
+            print('Filtrando por almacen_id:', almacen.nombre if almacen else 'No encontrado')
             inv_productos = inv_productos.filter(almacen=almacen)
     else:
         if almacen:
@@ -97,6 +101,7 @@ def listProductos(request):
     if producto_id:
         inv_productos = inv_productos.filter(producto=producto_id)
 
+    print(almacen)
     inv_productos = inv_productos.order_by('producto__nombre_comercial', 'almacen__nombre')
     almacenes = Almacen.objects.all()
     productos = Producto.objects.all()

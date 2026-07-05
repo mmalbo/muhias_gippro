@@ -46,6 +46,8 @@ class EnvaseEmbalaje(ModeloBase):
     
     @property
     def capacidad_litro(self):
+        if not self.formato:
+            return 0
         if self.formato and self.formato.unidad_medida.lower() == 'l':
             return self.formato.capacidad
         if self.formato and self.formato.unidad_medida.lower() == 'ml':

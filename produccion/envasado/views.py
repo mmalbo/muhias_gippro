@@ -22,12 +22,12 @@ import decimal
 @login_required
 def lista_solicitudes_envasado(request):
     """Listado de todas las solicitudes"""
-    solicitudes = SolicitudEnvasado.objects.all()
+    solicitudes = SolicitudEnvasado.objects.all().order_by('folio')
     
     # Filtros
     estado = request.GET.get('estado')
     if estado:
-        solicitudes = solicitudes.filter(estado=estado)
+        solicitudes = solicitudes.filter(estado=estado).order_by('folio')
     
     return render(request, 'produccion/envasado/lista_solicitudes.html', {
         'solicitudes': solicitudes,
@@ -96,15 +96,24 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                         messages.error(self.request,'Cantidad solicitada no válida')
                         return self.form_invalid(form)
 
-                    capacidad_total = decimal.Decimal('0.00') 
+                    capacidad_total = decimal.Decimal('0.00')
+                    cap_o = False
+                    cap_t = '0'
                     for env in envases_list:
                         cant = decimal.Decimal(env['cantidad'])
                         cap = str(env['capacidad'])
                         cap = decimal.Decimal(cap.replace(',', '.'))
+                        if not cap_o:
+                            cap_o = True
+                            cap_t = cap
+                        else:
+                            print(cap)
+                            if cap != cap_t and cap != 0:
+                                messages.error(self.request,f'Solo se permite un formato de envase en cada proceso de envasado')
+                                return self.form_invalid(form)
                         capacidad_total += cap*cant
                     if capacidad_total < total_necesario:
-                        messages.error(self.request,'Debe seleccionar una cantidad de envases que cubra toda la solicitud de producto a envasar')
-                        return self.form_invalid(form)
+                        messages.info(self.request,'La cantidad de envases no cubre toda la solicitud de producto a envasar')
                    
                     self.object = form.save()
                     solicitud = self.object
@@ -159,7 +168,8 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
             descripcion=f'Solicitud de materiales para envasado - Folio: {solicitud.folio}',
             entrada=False,  # Es una salida/solicitud
             estado='confirmado',  
-            lote_No=solicitud.lote_produccion_origen.lote
+            lote_No=solicitud.lote_produccion_origen.lote,
+            despachado_por=self.request.user.first_name + ' ' + self.request.user.last_name
         )
         return vale
 
@@ -283,11 +293,12 @@ def iniciar_envasado(request, pk):
     
     # Tomar el primer envase para determinar el formato (ajustable según necesidad)
     detalles_envase = DetalleEnvasado.objects.filter(solicitud=solicitud)    
-    primer_envase = detalles_envase.first().presentacion.envase
-    formato = primer_envase.formato  # Campo 'formato' en el modelo Envase (ej: "500ml")
-
+    for env in detalles_envase:
+        primer_envase = env.presentacion.envase
+        if primer_envase.formato:
+            formato = primer_envase.formato 
+            break
     vale = detalles_envase.first().vale
-    print(vale.estado)
 
     # Validación salida de materiales
     if vale.estado == 'confirmado':
@@ -314,6 +325,7 @@ def iniciar_envasado(request, pk):
     # Patrón para eliminar el sufijo (case insensitive, permite espacios opcionales)
     lote_base = re.sub(r'(-A\s*granel|-granel|-AG)$', '', lote_or, flags=re.IGNORECASE)
     lote_destino_str = f"{lote_base}-{formato}"
+    print(lote_destino_str)
 
     # GET: mostrar formulario con el lote destino generado
     if request.method == 'GET':
@@ -434,7 +446,7 @@ def concluir_envasado(request, pk):
         detalles_envase = DetalleEnvasado.objects.filter(solicitud=solicitud)
         envases_planificados = []
         for det in detalles_envase:
-            capacidad = det.presentacion.envase.formato.capacidad if hasattr(det.presentacion.envase.formato, 'capacidad') else 1
+            capacidad = det.presentacion.envase.capacidad_litro
             envases_planificados.append({
                 'id': det.id,
                 'nombre': det.presentacion.envase.nombre,
@@ -491,26 +503,27 @@ def concluir_envasado(request, pk):
             detalle_original = detalles_originales.get(detalle_id) 
             if not detalle_original:
                 continue
-            capacidad = float(detalle_original.presentacion.envase.formato.capacidad or 1)
+            capacidad = float(detalle_original.presentacion.envase.capacidad_litro)
             cantidad_real = float(env.get('cantidad_real', 0))
             total_unidades += cantidad_real
             total_producido_volumen += cantidad_real * capacidad
 
-            cantidad_perdida = float(solicitud.cantidad_solicitada) - total_producido_volumen
-            if cantidad_perdida < 0:
-                cantidad_perdida = 0
+        cantidad_perdida = float(solicitud.cantidad_solicitada) - total_producido_volumen
+        if cantidad_perdida < 0:
+            cantidad_perdida = 0
 
-            print(cantidad_perdida)
-            print(observaciones_finales)
-            if cantidad_perdida > 0 and observaciones_finales == '':
-                print('Debe especificar una causa de la diferencia entre la solicitud soliciada y la envasada')
-                return JsonResponse({'success': False, 'error': 'Debe especificar una causa de la doferencia entre la solicitud soliciada y la envasada'})
+        if cantidad_perdida > 0 and observaciones_finales == '':
+            print(f'Debe especificar una causa de la diferencia entre la solicitud soliciada: {solicitud.cantidad_solicitada} y la envasada {total_producido_volumen}')
+            return JsonResponse({'success': False, 'error': 'Debe especificar una causa de la diferencia entre la cantidad soliciada y la envasada'})
+        if cantidad_perdida > 0:
+            #Crear vale de devolucion
+            pass
 
-            detalles_envase_actualizados.append({
+        detalles_envase_actualizados.append({
                 'detalle_id': detalle_id,
                 'cantidad_producida': cantidad_real,
                 'observaciones': env.get('observaciones', '')
-            })
+        })
 
 
 
@@ -529,7 +542,7 @@ def concluir_envasado(request, pk):
 
             #Crear vale de envasado terminado
             almacen_destino = solicitud.lote_produccion_origen.almacen
-            print(solicitud.lote_destino.lote)
+
             vale = Vale_Movimiento_Almacen.objects.create(
                     origen = 'Envasado',
                     almacen = almacen_destino,
@@ -537,7 +550,8 @@ def concluir_envasado(request, pk):
                     entrada = False,
                     tipo = 'Envasado',
                     estado= 'confirmado',
-                    lote_No = solicitud.lote_destino.lote 
+                    lote_No = solicitud.lote_destino.lote,
+                    despachado_por = request.user.first_name + ' ' + request.user.last_name
             )
             #Este es el movimiento especifico del producto
             formato = solicitud.envases.first().presentacion.envase.formato

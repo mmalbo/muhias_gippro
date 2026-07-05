@@ -49,6 +49,18 @@ class SolicitudEnvasado(ModeloBase):
             ('ejecutar_envasado', 'Puede ejecutar el proceso de envasado'),
         ]
     
+    @property
+    def volumen_envase(self):
+        vol = 0
+        envases = self.envases.all()
+        for env in envases:
+            try:
+                vol += env.presentacion.envase.formato.volumen * env.cantidad_unidades
+            except:
+                pass
+        return vol
+
+
     def save(self, *args, **kwargs):
         if not self.folio:
             # Generar folio automáticotimezone.now()

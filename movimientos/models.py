@@ -40,6 +40,7 @@ class Vale_Movimiento_Almacen(ModeloBase):
                       ('Producción terminada','Producción terminada'),
                       ('Producción rechazada','Producción rechazada'),
                       ('Conduce','Conduce'),
+                      ('Administración','Administración'),
                       ('Venta','Venta'),
                       ('I+D','I+D'),
                       ('Control de calidad','Control de calidad'),

@@ -292,7 +292,7 @@ class MateriaPrimaDetalleView(LoginRequiredMixin, View):
 def list_mp_adquisiciones(request, template_name="adquisicion/mp_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles')
-    ).filter(num_ad__gt=0)
+    ).filter(num_ad__gt=0).order_by('-id')
     return render(request, template_name, locals())
 
 @login_required
@@ -561,7 +561,7 @@ class EnvaseDetalleView(LoginRequiredMixin, View):
 def list_env_adquisiciones(request, template_name="adquisicion/env_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles_envases')
-    ).filter(num_ad__gt=0)
+    ).filter(num_ad__gt=0).order_by('-id')
     return render(request, template_name, locals())
 
 @login_required
@@ -835,7 +835,7 @@ class InsumoDetalleView(LoginRequiredMixin, View):
 def list_ins_adquisiciones(request, template_name="adquisicion/ins_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles_insumos')
-    ).filter(num_ad__gt=0)
+    ).filter(num_ad__gt=0).order_by('-id')
     return render(request, template_name, locals())
 
 @login_required
@@ -1100,7 +1100,7 @@ class ProductoDetalleView(LoginRequiredMixin, View):
 def list_prod_adquisiciones(request, template_name="adquisicion/prod_list.html"):
     adquisiciones = Adquisicion.objects.annotate(
         num_ad=Count('detalles_productos')
-    ).filter(num_ad__gt=0)
+    ).filter(num_ad__gt=0).order_by('-fecha_compra')
     return render(request, template_name, locals())
 
 @login_required

@@ -70,17 +70,20 @@
                             <label for="id_destino" class="form-label">
                                 <i class="bi bi-geo-alt"></i> Destino
                             </label>
-                            <select name="destino" class="form-select" id="id_destino">
-                                <option value="">--------- Seleccione destino (opcional) ---------</option>
-                                {% for almacen in almacenes %}
-                                <option value="{{ almacen.nombre }}" 
-                                        {% if form.destino.value == almacen.id %}selected{% endif %}>
-                                    {{ almacen.nombre }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            <input type="text" name="destino" class="form-control" id="id_destino"
+                                list="destino-list"
+                                placeholder="Escriba o seleccione un destino..."
+                                value="{{ form.destino.value|default:'' }}">
+                                <datalist id="destino-list">
+                                    {% for almacen in almacenes %}
+                                        <option value="{{ almacen.nombre }}">
+                                    {% endfor %}
+                                </datalist>
+                                <small class="form-text text-muted">
+                                    Puede seleccionar un almacén de la lista o escribir otro destino.
+                                </small>
                         </div>
-                        
+
                         <!-- Campo Descripción -->
                         <div class="mb-3">
                             <label for="id_descripcion" class="form-label">
