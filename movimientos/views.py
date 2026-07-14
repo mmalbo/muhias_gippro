@@ -1132,7 +1132,7 @@ def entrada_producto(request, pk):
             if cantidad:
                 try:
                     inventario_prod, created = Inv_Producto.objects.get_or_create(
-                        lote=inv.producto.lote, producto=inv.producto.producto, almacen=almacen)
+                        lote=inv.producto.lote, producto=inv.producto.producto, almacen=almacen, formato=inv.producto.formato)
                     if created:
                         inventario_prod.cantidad = cantidad
                         inventario_prod.formato = inv.producto.formato
