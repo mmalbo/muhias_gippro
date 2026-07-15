@@ -565,15 +565,25 @@ def recepcion_materia_prima(request, adq_id):
         return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito        
     almacen = adquisicion.almacen
     if request.method == 'POST':
+        # Verificar si es una solicitud AJAX (para el modal)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
         for inv in inv_mat:
             field_name = str(inv.materia_prima.id)
             cantidad = decimal.Decimal('0.00')
             cantidad = round(float(request.POST.get(field_name)), 2)
             cantidad = decimal.Decimal(cantidad)
             if cantidad < 0:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'La cantidad para {inv.materia_prima.nombre} no puede ser negativa'
+                    })
+                
                 messages.info(request, 'Debe especificar para todas las materias primas una cantidad superior a 0')
                 return redirect('recepcion_env', adq_id=adq_id)
         
+<<<<<<< Updated upstream
         vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
                 origen = 'Adquisición',
@@ -583,31 +593,43 @@ def recepcion_materia_prima(request, adq_id):
                 estado = 'recibido',
                 recibido_por = request.user.first_name
             )
+=======
+        try:
+            with transaction.atomic():
+                vale = Vale_Movimiento_Almacen.objects.create(
+                    almacen = almacen,
+                    origen = 'Adquisición',
+                    destino = almacen.nombre,
+                    entrada = True,
+                    tipo = 'Adquisición',
+                    estado = 'recibido'
+                )
+>>>>>>> Stashed changes
         
-        for inv in inv_mat:
-            field_name = str(inv.materia_prima.id)
-            cantidad = decimal.Decimal('0.00')
-            cantidad = round(float(request.POST.get(field_name)), 2)
-            cantidad = decimal.Decimal(cantidad)
-            try:
-                inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
-                    materia_prima=inv.materia_prima, almacen=almacen)
-                if created:
-                    inventario_mp.cantidad = cantidad
-                    inventario_mp.save()
-                else:
-                    inventario_mp.cantidad = inventario_mp.cantidad + cantidad
-                    inventario_mp.save()
-                if cantidad > 0:
-                    Movimiento_MP.objects.create(
-                        materia_prima=inventario_mp,
-                        vale=vale,  
-                        cantidad=cantidad,
-                        cantidad_inventario = inventario_mp.cantidad                        
-                    )
+                for inv in inv_mat:
+                    field_name = str(inv.materia_prima.id)
+                    cantidad = decimal.Decimal('0.00')
+                    cantidad = round(float(request.POST.get(field_name)), 2)
+                    cantidad = decimal.Decimal(cantidad)
 
-                inv.cantidad_recibida = inv.cantidad_recibida + cantidad
-                inv.save()  
+                    if cantidad > 0:
+                        inventario_mp, created = Inv_Mat_Prima.objects.get_or_create(
+                            materia_prima=inv.materia_prima, almacen=almacen)
+                        if created:
+                            inventario_mp.cantidad = cantidad
+                            inventario_mp.save()
+                        else:
+                            inventario_mp.cantidad = inventario_mp.cantidad + cantidad
+                            inventario_mp.save()
+                        Movimiento_MP.objects.create(
+                            materia_prima=inventario_mp,
+                            vale=vale,  
+                            cantidad=cantidad,
+                            cantidad_inventario = inventario_mp.cantidad                        
+                        )
+
+                        inv.cantidad_recibida = inv.cantidad_recibida + cantidad
+                        inv.save()  
 
                 if inv.cantidad_recibida == inv.cantidad:
                     adquisicion.registrada = True
@@ -625,12 +647,27 @@ def recepcion_materia_prima(request, adq_id):
                                     message=f"No coincide la recepción con la adquisición de: {inv.materia_prima.nombre}. Cantidad adquirida: {inv.cantidad}, Cantidad recibida: {cantidad}",
                                     link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
                             )                    
-            except Exception as e: #(ValueError, TypeError):
-                    messages.error(request, 'Error al actualizar los inventarios')
-        adquisicion.save()
-        messages.success(request, "Recepción completada exitosamente")
-        return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
-    
+
+                adquisicion.save()
+
+                if is_ajax:
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Recepción completada exitosamente',
+                        'redirect_url': reverse('materia_prima:materia_prima_list')
+                    })
+
+                messages.success(request, "Recepción completada exitosamente")
+                return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
+        except Exception as e:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al procesar: {str(e)}'
+                })
+            messages.error(request, f'Error al actualizar los inventarios: {str(e)}')
+            return redirect('recepcion_mp', adq_id=adq_id)
+
     # Si es GET, mostrar el formulario con los valores actuales
     return render(request, 'movimientos/recepcion_mp.html', {
         'productos': inv_mat, 'adquisicion': adquisicion

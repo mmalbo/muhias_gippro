@@ -1,0 +1,76 @@
+{% extends 'base/base.html' %}
+{% block contenido %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ titulo }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.costo_x_itro.id_for_label }}" class="form-label">
+                                {{ form.costo_x_itro.label }}
+                            </label>
+                            {{ form.costo_x_itro }}
+                            {% if form.costo_x_itro.errors %}
+                                <div class="text-danger">{{ form.costo_x_itro.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Ingrese el costo por litro en la moneda seleccionada</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.utilidad.id_for_label }}" class="form-label">
+                                {{ form.utilidad.label }}
+                            </label>
+                            {{ form.utilidad }}
+                            {% if form.utilidad.errors %}
+                                <div class="text-danger">{{ form.utilidad.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">{{ form.utilidad.help_text }}</small>
+                        </div>
+                        
+                    </div>
+                    
+                    <div class="row">                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.monto_cambio.id_for_label }}" class="form-label">
+                                {{ form.monto_cambio.label }}
+                            </label>
+                            {{ form.monto_cambio }}
+                            {% if form.monto_cambio.errors %}
+                                <div class="text-danger">{{ form.monto_cambio.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">{{ form.monto_cambio.help_text }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.activo }}
+                        <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                            {{ form.activo.label }}
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'fichas_costo:lista' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {{ accion }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
