@@ -1,0 +1,43 @@
+{% extends 'base/base.html' %}
+{% block contenido %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3>Confirmar Eliminación</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">¿Está seguro que desea eliminar la siguiente ficha de costo?</p>
+                
+                <div class="alert alert-warning">
+                    <p><strong>ID:</strong> {{ ficha.id }}</p>
+                    <p><strong>Costo por litro:</strong> ${{ ficha.costo_x_itro|floatformat:2 }}</p>
+                    <p><strong>Utilidad:</strong> {{ ficha.utilidad|floatformat:2 }}%</p>
+                    <p><strong>Moneda:</strong> {{ ficha.moneda }}</p>
+                    <p><strong>Estado:</strong> 
+                        {% if ficha.activo %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'fichas_costo:lista' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Confirmar Eliminación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
