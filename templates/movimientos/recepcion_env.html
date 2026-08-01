@@ -6,7 +6,7 @@
     <div class="content-page">
         <div class="container-fluid">
             <div class="container mt-4">
-                <form method="post">
+                <form method="post" id="confirmForm">
                     {% csrf_token %}                    
                     <table class="table">
                         <thead>
@@ -33,14 +33,34 @@
                     </table>
                     
                     <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="confirmarSalida()">
                             Confirmar recepción
                         </button>
+                        <button type="button" class="btn btn-success" onclick="confirmarCancelar()">
+                            <i class="bi bi-check-circle"></i> Cancelar
+                        </button>
                     </div>
+                        
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block javascript %}
+<script>
+// Funcionalidades adicionales para el detalle
+
+function confirmarSalida() {
+    if (confirm('¿Está seguro de confirmar esta recepción?')) {
+        document.getElementById('confirmForm').submit();
+    }
+}
+function confirmarCancelar(valeId) {
+    if (confirm('¿Está seguro de cancelar el proceso de recepción por ahora?')) {
+        document.getElementById('confirmForm').submit();
+    }
+}
+</script>
 {% endblock %}

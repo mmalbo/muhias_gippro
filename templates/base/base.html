@@ -517,6 +517,8 @@
     /* Asegurar que DataTables se vea bien */
     .dataTables_wrapper {
         margin-top: 20px;
+        width: 100%;
+        overflow-x: auto;
     }
     
     .dataTables_length,
@@ -1006,6 +1008,7 @@ function initDataTables() {
                 const searching = table.data('searching') !== false;
                 const responsive = table.data('responsive') !== false;
                 const dom = table.data('dom') || 'lBfrtip';
+                var order = table.data('order') || null;
                 
                 // Configuración básica de DataTables
                 const dataTableConfig = {
@@ -1015,6 +1018,14 @@ function initDataTables() {
                     ordering: ordering,
                     searching: searching,
                     responsive: responsive,
+                    // Si existe data-order, parsearlo y aplicarlo
+                    if (order) {
+                        try {
+                            dataTableConfig.order = JSON.parse(order);
+                        } catch (e) {
+                            console.warn('data-order inválido:', order);
+                        }
+                    },
                     
                     // Idioma español
                     language: {

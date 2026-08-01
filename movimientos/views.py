@@ -1,11 +1,12 @@
 from datetime import datetime
+from django import forms
 from django.forms import formset_factory
 from urllib3 import request
 from .forms import RecepcionMateriaPrimaForm, MovimientoFormUpdate
 from adquisiciones.models import Adquisicion, DetallesAdquisicion, DetallesAdquisicionEnvase, DetallesAdquisicionInsumo, DetallesAdquisicionProducto
 from inventario.models import Inv_Mat_Prima, Inv_Insumos, Inv_Envase, Inv_Producto 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 import decimal
 from django.contrib.auth.models import Group
@@ -21,6 +22,8 @@ from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Q
 from .movimientos import export_vales, export_vale
 import json
+from utils.utils import normalizar_UUID
+
 from .models import (
     Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_Prod,
     Movimiento_EE, Movimiento_Ins, Almacen,
@@ -246,7 +249,7 @@ def buscar_items_almacen(request):
             'nombre': item.producto.nombre_comercial,
             'codigo': item.producto.codigo_producto,
             'cantidad_disponible': float(item.cantidad),
-            'unidad': getattr(str(item.formato), 'formato', ''),
+            'unidad': getattr(str(item.producto.formato), 'formato', ''),
             'lote': item.lote
         } for item in query[:50]])  # Limitar resultados
 
@@ -559,6 +562,7 @@ def salida_envasado(request, vale_id):
     
 def recepcion_materia_prima(request, adq_id):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
+    print("En recepcion mp")
     inv_mat = DetallesAdquisicion.objects.filter(adquisicion__id=adq_id)
     adquisicion = get_object_or_404(Adquisicion, id=adq_id)
     if adquisicion.registrada:
@@ -567,6 +571,8 @@ def recepcion_materia_prima(request, adq_id):
     if request.method == 'POST':
         # Verificar si es una solicitud AJAX (para el modal)
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        print(is_ajax)
 
         for inv in inv_mat:
             field_name = str(inv.materia_prima.id)
@@ -582,18 +588,6 @@ def recepcion_materia_prima(request, adq_id):
                 
                 messages.info(request, 'Debe especificar para todas las materias primas una cantidad superior a 0')
                 return redirect('recepcion_env', adq_id=adq_id)
-        
-<<<<<<< Updated upstream
-        vale = Vale_Movimiento_Almacen.objects.create(
-                almacen = almacen,
-                origen = 'Adquisición',
-                destino = almacen.nombre,
-                entrada = True,
-                tipo = 'Adquisición',
-                estado = 'recibido',
-                recibido_por = request.user.first_name
-            )
-=======
         try:
             with transaction.atomic():
                 vale = Vale_Movimiento_Almacen.objects.create(
@@ -602,9 +596,9 @@ def recepcion_materia_prima(request, adq_id):
                     destino = almacen.nombre,
                     entrada = True,
                     tipo = 'Adquisición',
-                    estado = 'recibido'
+                    estado = 'recibido',
+                    recibido_por = request.user.first_name
                 )
->>>>>>> Stashed changes
         
                 for inv in inv_mat:
                     field_name = str(inv.materia_prima.id)
@@ -651,12 +645,14 @@ def recepcion_materia_prima(request, adq_id):
                 adquisicion.save()
 
                 if is_ajax:
+                    print("Is ajax")
                     return JsonResponse({
                         'success': True,
                         'message': 'Recepción completada exitosamente',
                         'redirect_url': reverse('materia_prima:materia_prima_list')
                     })
-
+                
+                print("Recepción completada exitosamente")
                 messages.success(request, "Recepción completada exitosamente")
                 return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
         except Exception as e:
@@ -1169,7 +1165,7 @@ def entrada_producto(request, pk):
             if cantidad:
                 try:
                     inventario_prod, created = Inv_Producto.objects.get_or_create(
-                        lote=inv.producto.lote, producto=inv.producto.producto, almacen=almacen)
+                        lote=inv.producto.lote, producto=inv.producto.producto, almacen=almacen, formato=inv.producto.formato)
                     if created:
                         inventario_prod.cantidad = cantidad
                         inventario_prod.formato = inv.producto.formato
@@ -2012,3 +2008,296 @@ def eliminar_item_carrito(request):
         request.session['carrito_salida'] = carrito
     
     return JsonResponse({'success': True, 'count': len(carrito)})    
+
+# views.py (añadir al final)
+
+# views.py
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.db import transaction
+from django.shortcuts import redirect, get_object_or_404
+from django.http import JsonResponse
+from django.forms import forms
+import json
+import decimal
+from .forms import RecepcionForm
+from .models import (
+    Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_Prod,
+    Movimiento_EE, Movimiento_Ins, Almacen,
+    MateriaPrima, Producto, EnvaseEmbalaje, Insu
+)
+from inventario.models import Inv_Mat_Prima, Inv_Producto, Inv_Envase, Inv_Insumos
+
+class CrearRecepcionView(CreateView):
+    model = Vale_Movimiento_Almacen
+    form_class = RecepcionForm
+    template_name = 'movimientos/crear_recepcion.html'
+    success_url = reverse_lazy('movimiento_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tipos_inventario'] = [
+            ('materia_prima', 'Materia prima'),
+            ('producto', 'Producto'),
+            ('envase', 'Envase / Embalaje'),
+            ('insumo', 'Insumo'),
+        ]
+        context['almacenes'] = Almacen.objects.all()
+        # Recuperar carrito de sesión
+        context['carrito'] = self.request.session.get('carrito_recepcion', [])
+        return context
+
+    def form_valid(self, form):
+        carrito = self.request.session.get('carrito_recepcion', [])
+        if not carrito:
+            messages.error(self.request, 'Debe agregar al menos un ítem.')
+            return self.form_invalid(form)
+
+        try:
+            with transaction.atomic():
+                # Crear el vale sin guardar aún (para asignar campos extra)
+                vale = form.save(commit=False)
+                vale.entrada = True
+                vale.estado = 'recibido'  # o 'confirmado'
+                # El tipo ya viene del formulario (oculto)
+                vale.save()
+
+                # Procesar cada ítem del carrito
+                for item in carrito:
+                    self.procesar_item_recepcion(vale, item)
+
+                # Limpiar carrito después del éxito
+                del self.request.session['carrito_recepcion']
+
+                messages.success(
+                    self.request,
+                    f'Recepción creada exitosamente. Vale #{vale.consecutivo}'
+                )
+                return redirect(self.success_url)
+
+        except Exception as e:
+            messages.error(self.request, f'Error al procesar la recepción: {str(e)}')
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        # Mostrar errores del formulario
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return super().form_invalid(form)
+
+    def procesar_item_recepcion(self, vale, item):
+        """Crea o actualiza inventario y registra movimiento para un ítem del carrito."""
+        tipo = item['tipo']
+        item_id = item['item_id']
+        cantidad = decimal.Decimal(str(item['cantidad']))
+        lote = item.get('lote', '')
+        almacen = vale.almacen
+
+        if tipo == 'materia_prima':
+            mp = get_object_or_404(MateriaPrima, id=item_id)
+            inv, created = Inv_Mat_Prima.objects.get_or_create(
+                materia_prima=mp,
+                almacen=almacen
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_MP.objects.create(
+                vale=vale,
+                materia_prima=inv,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )
+
+        elif tipo == 'producto':
+            prod = get_object_or_404(Producto, id=item_id)
+            formato_id = item.get('formato_id')
+            if not formato_id:
+                raise ValueError('El producto requiere un formato.')
+            from envase_embalaje.formato.models import Formato
+            formato = get_object_or_404(Formato, id=formato_id)
+            inv, created = Inv_Producto.objects.get_or_create(
+                producto=prod,
+                almacen=almacen,
+                formato=formato,
+                lote=lote
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_Prod.objects.create(
+                vale=vale,
+                producto=inv,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )
+
+        elif tipo == 'envase':
+            envase = get_object_or_404(EnvaseEmbalaje, id=item_id)
+            inv, created = Inv_Envase.objects.get_or_create(
+                envase=envase,
+                almacen=almacen
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_EE.objects.create(
+                vale=vale,
+                envase_embalaje=envase,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )
+
+        elif tipo == 'insumo':
+            insumo = get_object_or_404(Insu, id=item_id)
+            inv, created = Inv_Insumos.objects.get_or_create(
+                insumos=insumo,
+                almacen=almacen
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_Ins.objects.create(
+                vale=vale,
+                insumo=insumo,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )
+        else:
+            raise ValueError(f'Tipo de ítem no soportado: {tipo}')
+
+        # views.py
+
+# views.py (añadir)
+
+@require_GET
+def buscar_items_recepcion(request):
+    tipo = request.GET.get('tipo')
+    term = request.GET.get('q', '')
+
+    items = []
+
+    if tipo == 'materia_prima':
+        qs = MateriaPrima.objects.all()
+        if term:
+            qs = qs.filter(Q(nombre__icontains=term) | Q(codigo__icontains=term))
+        for obj in qs:
+            items.append({
+                'id': obj.id,
+                'nombre': obj.nombre,
+                'codigo': obj.codigo,
+                'unidad': obj.unidad_medida,
+                'tipo': 'materia_prima'
+            })
+
+    elif tipo == 'producto':
+        qs = Producto.objects.all()
+        if term:
+            qs = qs.filter(Q(nombre_comercial__icontains=term) | Q(codigo_producto__icontains=term))
+        for obj in qs:
+            # Obtener formatos (si tienes relación many-to-many o FK)
+            formatos = [{'id': f.id, 'nombre': str(f)} for f in Formato.objects.all()]
+            items.append({
+                'id': obj.id,
+                'nombre': obj.nombre_comercial,
+                'codigo': obj.codigo_producto,
+                'unidad': '',
+                'tipo': 'producto',
+                'formatos': formatos
+            })
+
+    elif tipo == 'envase':
+        qs = EnvaseEmbalaje.objects.all()
+        if term:
+            qs = qs.filter(Q(nombre__icontains=term) | Q(codigo_envase__icontains=term))
+        for obj in qs:
+            items.append({
+                'id': obj.id,
+                'nombre': obj.nombre,
+                'codigo': obj.codigo_envase,
+                'unidad': 'unidad',
+                'tipo': 'envase'
+            })
+
+    elif tipo == 'insumo':
+        qs = Insu.objects.all()
+        if term:
+            qs = qs.filter(Q(nombre__icontains=term) | Q(codigo__icontains=term))
+        for obj in qs:
+            items.append({
+                'id': obj.id,
+                'nombre': obj.nombre,
+                'codigo': obj.codigo,
+                'unidad': '',
+                'tipo': 'insumo'
+            })
+
+    return JsonResponse({'items': items})
+
+@require_POST
+def agregar_item_recepcion(request):
+    data = json.loads(request.body)
+    tipo = data['tipo']
+    item_id = data['item_id']
+    cantidad = data['cantidad']
+    lote = data.get('lote', '')
+    formato_id = data.get('formato_id')
+    formato = data.get('formato')
+
+    if float(cantidad) <= 0:
+        return JsonResponse({'error': 'La cantidad debe ser mayor a cero'}, status=400)
+
+    carrito = request.session.get('carrito_recepcion', [])
+
+    # Evitar duplicados exactos
+    for item in carrito:
+        if (item['tipo'] == tipo and item['item_id'] == item_id and
+            item.get('lote') == lote and item.get('formato_id') == formato_id):
+            return JsonResponse({'error': 'El ítem ya está en el carrito'}, status=400)
+
+    # Obtener nombre y otros datos para mostrar
+    nombre = ''
+    if tipo == 'materia_prima':
+        obj = get_object_or_404(MateriaPrima, id=item_id)
+        nombre = obj.nombre
+    elif tipo == 'producto':
+        obj = get_object_or_404(Producto, id=item_id)
+        nombre = obj.nombre_comercial
+    elif tipo == 'envase':
+        obj = get_object_or_404(EnvaseEmbalaje, id=item_id)
+        nombre = obj.nombre
+    elif tipo == 'insumo':
+        obj = get_object_or_404(Insu, id=item_id)
+        nombre = obj.nombre
+    else:
+        return JsonResponse({'error': 'Tipo no válido'}, status=400)
+
+    carrito.append({
+        'tipo': tipo,
+        'item_id': item_id,
+        'nombre': nombre,
+        'cantidad': float(cantidad),
+        'lote': lote,
+        'formato_id': formato_id,
+        'formato': formato,
+    })
+
+    request.session['carrito_recepcion'] = carrito
+    return JsonResponse({'success': True, 'count': len(carrito)})
+
+@require_POST
+def eliminar_item_recepcion(request):
+    data = json.loads(request.body)
+    index = data.get('index')
+    carrito = request.session.get('carrito_recepcion', [])
+    if index is not None and 0 <= index < len(carrito):
+        carrito.pop(index)
+        request.session['carrito_recepcion'] = carrito
+    return JsonResponse({'success': True, 'count': len(carrito)})
+
+@require_POST
+def obtener_carrito_recepcion(request):
+    carrito = request.session.get('carrito_recepcion', [])
+    return JsonResponse({'items': carrito})

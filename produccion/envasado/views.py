@@ -559,7 +559,8 @@ def concluir_envasado(request, pk):
             nuevo_prod, created = Inv_Producto.objects.get_or_create(
                 almacen = almacen_destino,
                 lote = solicitud.lote_destino.lote,
-                producto = solicitud.lote_produccion_origen.producto
+                producto = solicitud.lote_produccion_origen.producto,
+                formato = formato,
             )
 
             mov = Movimiento_Prod.objects.create(

@@ -10,7 +10,13 @@
                     <h4 class="card-title">Listado de producciones</h4>
                 </div>
                 <div class="col-sm-12 col-lg-12">
-                    <table id="datatable" class="table datatable table-striped">
+                    <table id="datatable" class="table datatable table-striped" 
+                        data-page-length="50"
+                        data-responsive="true"
+                        data-ordering="true"
+                        data-searching="true"
+                        data-order='[[0, "desc"]]'
+                    >
                         <thead>
                         <tr>
                             <th>Lote</th>
@@ -184,10 +190,17 @@
         $('#datatable').DataTable({
             "pageLength": 50,           // <--- Aquí pones 50 en vez de 10
             "order": [[0, 'desc']],
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" // Opcional: traducción al español
-            }
-            // Aquí puedes añadir otras opciones que ya tengas (ordering, searching, etc.)
+            "responsive": true,  // <--- Activamos el modo responsive
+            "columnDefs": [
+                { responsivePriority: 1, targets: 0 },  // Lote (siempre visible)
+                { responsivePriority: 4, targets: 1 }, // Nombre del Producto (casi siempre)
+                { responsivePriority: 4, targets: 2 }, // Cantidad Estimada
+                { responsivePriority: 4, targets: 3 }, // Costo
+                { responsivePriority: 2, targets: 4 }, // Planta
+                { responsivePriority: 4, targets: 5 }, // Estado (se oculta antes)
+                { responsivePriority: 3, targets: 6 },  // Acciones (casi siempre visible)
+                // Las demás (sin priority) se ocultarán antes
+            ]
         });
     });
 </script>
