@@ -13,7 +13,7 @@
                 
                 <br>
 
-                <form method="post">
+                <form method="post" id="confirmForm">
                     {% csrf_token %}                    
                     <table class="table">
                         <thead>
@@ -40,8 +40,11 @@
                     </table>
                     
                     <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="confirmarSalida()">
                             Confirmar recepción
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="confirmarCancelar()">
+                            <i class="bi bi-check-circle"></i> Cancelar
                         </button>
                     </div>
                 </form>
@@ -49,252 +52,21 @@
         </div>
     </div>
 </div>
-
-
-
-<!-- ==================== MODAL DE CONFIRMACIÓN ==================== -->
-<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle me-2"></i> Confirmar Recepción
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Resumen -->
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle me-2"></i>Resumen de Recepción</h6>
-                    <div class="mt-2">
-                        <p><strong>Adquisición:</strong> #{{ adquisicion.id }}</p>
-                        <p><strong>Almacén:</strong> {{ adquisicion.almacen.nombre }}</p>
-                        <p><strong>Fecha:</strong> {{ adquisicion.fecha_compra }}</p>
-                    </div>
-                </div>
-
-                <!-- Detalle de materias primas -->
-                <h6><i class="fas fa-list me-2"></i>Materias Primas a Recibir:</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Materia Prima</th>
-                                <th class="text-end">Cantidad a Recibir</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-resumen">
-                            <tr>
-                                <td colspan="2" class="text-center text-muted">No hay datos</td>
-                            </tr>
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <td><strong>Total</strong></td>
-                                <td class="text-end"><strong id="total-recibido">0.00</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <strong>¿Está seguro que desea confirmar la recepción?</strong>
-                    <p class="mb-0 small text-muted">
-                        Esta acción actualizará el inventario y registrará los movimientos correspondientes.
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Cancelar
-                </button>
-                <button type="button" class="btn btn-success" id="btnConfirmarRecepcion">
-                    <i class="fas fa-check-circle me-1"></i> Confirmar Recepción
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
-
 {% block javascript %}
-{{ block.super }}
 <script>
-$(document).ready(function() {
-    
-    // ==================== ACTUALIZAR TOTALES ====================
-    function actualizarTotales() {
-        let totalRecibido = 0;
-        
-        $('.cantidad-input').each(function() {
-            const value = parseFloat($(this).val()) || 0;
-            totalRecibido += value;
-        });
-        
-        $('#total-a-recibir').text(totalRecibido.toFixed(2));
-        $('#total-recibido').text(totalRecibido.toFixed(2));
-    }
-    
-    // ==================== MOSTRAR MODAL ====================
-    $('#btnMostrarConfirmacion').click(function() {
-        // Validar que haya al menos una cantidad > 0
-        let hayCantidad = false;
-        let errores = [];
-        
-        $('.cantidad-input').each(function() {
-            const value = parseFloat($(this).val()) || 0;
-            const nombre = $(this).data('nombre');
-                        
-            if (value > 0) {
-                hayCantidad = true;
-            }
-        });
-        
-        if (errores.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Errores de validación',
-                html: errores.join('<br>')
-            });
-            return;
-        }
-        
-        if (!hayCantidad) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin cantidades',
-                text: 'Debe especificar al menos una cantidad mayor a 0 para recibir'
-            });
-            return;
-        }
-        
-        // Llenar resumen en el modal
-        llenarResumen();
-        
-        // Mostrar modal
-        const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-        modal.show();
-    });
-    
-    // ==================== LLENAR RESUMEN ====================
-    function llenarResumen() {
-        const tbody = document.getElementById('tbody-resumen');
-        let html = '';
-        let totalRecibido = 0;
-        
-        $('.cantidad-input').each(function() {
-            const nombre = $(this).data('nombre');
-            const value = parseFloat($(this).val()) || 0;
-            totalRecibido += value;
-            
-            html += `
-                <tr>
-                    <td>${nombre}</td>
-                    <td class="text-end">
-                        ${value > 0 ? `<span class="badge bg-success">${value.toFixed(2)}</span>` : `<span class="badge bg-secondary">${value.toFixed(2)}</span>`}
-                    </td>
-                </tr>
-            `;
-        });
-        
-        if (html === '') {
-            html = `<tr><td colspan="3" class="text-center text-muted">No hay datos</td></tr>`;
-        }
-        
-        tbody.innerHTML = html;
-        document.getElementById('total-recibido').textContent = totalRecibido.toFixed(2);
-    }
-    
-    // ==================== CONFIRMAR RECEPCIÓN ====================
-    $('#btnConfirmarRecepcion').click(function() {
-        // Cerrar modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacion'));
-        modal.hide();
-        
-        // Mostrar loading
-        $('#loadingOverlay').css('display', 'flex');
-        
-        // Recolectar datos
-        const formData = new FormData(document.getElementById('formRecepcion'));
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        
-        $.ajax({
-            url: window.location.href,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            success: function(response) {
-                $('#loadingOverlay').hide();
-                
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Recepción completada!',
-                        text: response.message || 'La recepción se ha procesado exitosamente',
-                        confirmButtonText: 'Ver materias primas'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = response.redirect_url || '{% url "materia_prima:materia_prima_list" %}';
-                        }
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.error || 'Error al procesar la recepción'
-                    });
-                }
-            },
-            error: function(xhr, status, error) {
-                $('#loadingOverlay').hide();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de conexión',
-                    text: 'No se pudo procesar la solicitud: ' + error
-                });
-            }
-        });
-    });
-    
-    // ==================== ENTER PARA CONFIRMAR ====================
-    $(document).on('keypress', function(e) {
-        if (e.which === 13) {
-            const focused = $(':focus');
-            if (focused.hasClass('cantidad-input')) {
-                e.preventDefault();
-                $('#btnMostrarConfirmacion').click();
-            }
-        }
-    });
-    
-    // Inicializar totales
-    actualizarTotales();
-});
-</script>
+// Funcionalidades adicionales para el detalle
 
-<style>
-.cantidad-input {
-    font-size: 1.1rem;
+function confirmarSalida() {
+    if (confirm('¿Está seguro de confirmar esta recepción?')) {
+        document.getElementById('confirmForm').submit();
+    }
 }
-.cantidad-input:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+function confirmarCancelar(valeId) {
+    if (confirm('¿Está seguro de cancelar el proceso de recepción por ahora?')) {
+        document.getElementById('confirmForm').submit();
+    }
 }
-.cantidad-input.is-invalid {
-    border-color: #dc3545;
-}
-.cantidad-input.is-invalid:focus {
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
-#loadingOverlay {
-    display: none;
-}
-</style>
+</script>
 {% endblock %}

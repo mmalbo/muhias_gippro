@@ -71,7 +71,7 @@ class CompraWizard(LoginRequiredMixin, SessionWizardView):
         try:
             cantidad_data = self.storage.get_step_data('cantidad')
             if cantidad_data and 'cantidad-cantidad' in cantidad_data:
-                num_materias = int(cantidad_data['cantidad-cantidad'][0])
+                num_materias = int(cantidad_data['cantidad-cantidad'])
                 for i in range(num_materias):
                     form_list[f'materia_{i}'] = MateriaPrimaForm
         except (KeyError, ValueError, TypeError):
@@ -346,7 +346,7 @@ class CompraEnvaseWizard(LoginRequiredMixin, SessionWizardView):
         try:
             cantidad_data = self.storage.get_step_data('cantidad')
             if cantidad_data and 'cantidad-cantidad' in cantidad_data:
-                num_envases = int(cantidad_data['cantidad-cantidad'][0])
+                num_envases = int(cantidad_data['cantidad-cantidad'])
                 for i in range(num_envases):
                     form_list[f'envase_{i}'] = EnvasesForm
         except (KeyError, ValueError, TypeError):
@@ -612,7 +612,7 @@ class CompraInsumoWizard(LoginRequiredMixin, SessionWizardView):
         try:
             cantidad_data = self.storage.get_step_data('cantidad')
             if cantidad_data and 'cantidad-cantidad' in cantidad_data:
-                num_insumos = int(cantidad_data['cantidad-cantidad'][0])
+                num_insumos = int(cantidad_data['cantidad-cantidad'])
                 for i in range(num_insumos):
                     form_list[f'insumo_{i}'] = InsumosForm
         except (KeyError, ValueError, TypeError):
@@ -886,7 +886,7 @@ class CompraProductoWizard(LoginRequiredMixin, SessionWizardView):
         try:
             cantidad_data = self.storage.get_step_data('cantidad')
             if cantidad_data and 'cantidad-cantidad' in cantidad_data:
-                num_productos = int(cantidad_data['cantidad-cantidad'][0])
+                num_productos = int(cantidad_data['cantidad-cantidad'])
                 for i in range(num_productos):
                     form_list[f'producto_{i}'] = ProductosForm
         except (KeyError, ValueError, TypeError):

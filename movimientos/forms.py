@@ -2,6 +2,7 @@ from django import forms
 from materia_prima.models import MateriaPrima
 from adquisiciones.models import Adquisicion
 from .models import Vale_Movimiento_Almacen
+from nomencladores.almacen.models import Almacen
 
 class RecepcionMateriaPrimaForm(forms.Form):
     producto = forms.ModelChoiceField(
@@ -56,4 +57,23 @@ class MovimientoFormUpdate(forms.ModelForm):
             self.fields['transportista'].disabled = True
             self.fields['transportista_cI'].disabled = True
             self.fields['chapa'].disabled = True
-   
+
+
+class RecepcionForm(forms.ModelForm):
+    class Meta:
+        model = Vale_Movimiento_Almacen
+        fields = [
+            'almacen', 'origen', 'destino', 'transportista',
+            'transportista_cI', 'chapa', 'recibido_por',
+            'autorizado_por', 'descripcion'
+        ]
+        widgets = {
+            'tipo': forms.HiddenInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['almacen'].queryset = Almacen.objects.all()
+        self.fields['almacen'].empty_label = "--------- Seleccione un almacén ---------"
+        # Fijar el tipo por defecto
+        self.initial['tipo'] = 'Recepción'

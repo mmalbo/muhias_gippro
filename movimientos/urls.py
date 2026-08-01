@@ -27,5 +27,11 @@ urlpatterns = [
      path('buscar-items/', buscar_items_almacen, name='buscar_items'),
      path('agregar-carrito/', agregar_item_carrito, name='agregar_carrito'),
      path('eliminar-carrito/', eliminar_item_carrito, name='eliminar_carrito'),
+     
+     path('recepcion/crear/', CrearRecepcionView.as_view(), name='crear_recepcion'),
+     path('buscar-items-recepcion/', buscar_items_recepcion, name='buscar_items_recepcion'),
+     path('agregar-item-recepcion/', agregar_item_recepcion, name='agregar_item_recepcion'),
+     path('eliminar-item-recepcion/', eliminar_item_recepcion, name='eliminar_item_recepcion'),
+     path('obtener-carrito-recepcion/', obtener_carrito_recepcion, name='obtener_carrito_recepcion'),
 ]
 #UpdateMovimientoView.as_view()

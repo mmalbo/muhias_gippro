@@ -1,5 +1,9 @@
-from django.db import models
+from django import forms
+from django.contrib import messages, redirects
+from django.db import models, transaction
+from django.urls import reverse_lazy
 from django.utils import timezone
+from django.views.generic import CreateView
 from bases.bases.models import ModeloBase
 from nomencladores.almacen.models import Almacen
 #from produccion.envasado.models import Envasado
@@ -109,12 +113,12 @@ class Vale_Movimiento_Almacen(ModeloBase):
         tipos = []
         if self.movimientos.exists():
             return 'Materias primas'
+        if self.movimientos_productos.exists():
+            return 'Productos'
         if self.movimientos_envases.exists():
             return 'Envases y embalajes'
         if self.movimientos_insumos.exists():
             return 'Insumos'
-        if self.movimientos_productos.exists():
-            return 'Productos'
         if self.salidas_produccion.exists():
             return 'Salida a producción'
         if self.env_envasado.exists():
@@ -390,3 +394,140 @@ class ItemDisponible(models.Model):
     cantidad_disponible = models.DecimalField(max_digits=10, decimal_places=3)
     unidad = models.CharField(max_length=50, null=True)
     lote = models.CharField(max_length=50, null=True)
+
+# views.py (añadir al final)
+
+class CrearRecepcionView(CreateView):
+    model = Vale_Movimiento_Almacen
+    template_name = 'movimientos/crear_recepcion.html'
+    fields = [
+        'almacen', 'tipo', 'descripcion', 'transportista',
+        'transportista_cI', 'chapa', 'recibido_por', 'autorizado_por',
+        'origen', 'destino'
+    ]
+    success_url = reverse_lazy('movimiento_list')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['almacen'].queryset = Almacen.objects.all()
+        form.fields['almacen'].empty_label = "--------- Seleccione un almacén ---------"
+        # Forzar tipo a 'Recepción'
+        form.fields['tipo'].initial = 'Recepción'
+        form.fields['tipo'].widget = forms.HiddenInput()
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tipos_inventario'] = [
+            ('materia_prima', 'Materia prima'),
+            ('producto', 'Producto'),
+            ('envase', 'Envase / Embalaje'),
+            ('insumo', 'Insumo'),
+        ]
+        context['almacenes'] = Almacen.objects.all()
+        # Recuperar carrito de sesión
+        context['carrito'] = self.request.session.get('carrito_recepcion', [])
+        return context
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                vale = form.save(commit=False)
+                vale.entrada = True
+                vale.estado = 'recibido'  # o 'confirmado'
+                vale.save()
+
+                carrito = self.request.session.get('carrito_recepcion', [])
+                if not carrito:
+                    messages.error(self.request, 'Debe agregar al menos un ítem.')
+                    return self.form_invalid(form)
+
+                for item in carrito:
+                    self.procesar_item_recepcion(vale, item)
+
+                # Limpiar carrito
+                del self.request.session['carrito_recepcion']
+                messages.success(self.request, f'Recepción creada. Vale #{vale.consecutivo}')
+                return redirects('movimiento_list')
+
+        except Exception as e:
+            messages.error(self.request, f'Error al procesar la recepción: {str(e)}')
+            return self.form_invalid(form)
+
+    def procesar_item_recepcion(self, vale, item):
+        """Crea o actualiza inventario y registra movimiento para un ítem del carrito."""
+        tipo = item['tipo']
+        item_id = item['item_id']
+        cantidad = decimal.Decimal(item['cantidad'])
+        lote = item.get('lote', '')
+
+        almacen = vale.almacen
+
+        if tipo == 'materia_prima':
+            mp = get_object_or_404(MateriaPrima, id=item_id)
+            inv, created = Inv_Mat_Prima.objects.get_or_create(
+                materia_prima=mp, almacen=almacen
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_MP.objects.create(
+                vale=vale,
+                materia_prima=inv,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )
+
+        elif tipo == 'producto':
+            prod = get_object_or_404(Producto, id=item_id)
+            # Para producto necesitamos formato y lote; si no se proveen, se puede usar un default o pedir en el carrito.
+            # En esta implementación, asumimos que el carrito envía 'formato_id' y 'lote'.
+            formato_id = item.get('formato_id')
+            if not formato_id:
+                raise ValueError('El producto requiere un formato.')
+            formato = get_object_or_404(Formato, id=formato_id)
+            inv, created = Inv_Producto.objects.get_or_create(
+                producto=prod,
+                almacen=almacen,
+                formato=formato,
+                lote=lote
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_Prod.objects.create(
+                vale=vale,
+                producto=inv,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )
+
+        elif tipo == 'envase':
+            envase = get_object_or_404(EnvaseEmbalaje, id=item_id)
+            inv, created = Inv_Envase.objects.get_or_create(
+                envase=envase, almacen=almacen
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_EE.objects.create(
+                vale=vale,
+                envase_embalaje=envase,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )
+
+        elif tipo == 'insumo':
+            insumo = get_object_or_404(Insu, id=item_id)
+            inv, created = Inv_Insumos.objects.get_or_create(
+                insumos=insumo, almacen=almacen
+            )
+            inv.cantidad += cantidad
+            inv.save()
+            Movimiento_Ins.objects.create(
+                vale=vale,
+                insumo=insumo,
+                cantidad=cantidad,
+                cantidad_inventario=inv.cantidad,
+                lote=lote
+            )

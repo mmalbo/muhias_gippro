@@ -362,6 +362,11 @@
                             <span>Salida de almacén</span>
                         </a>
                         {% endif %}
+                        {% if request.user.groups.all.0.name == 'Presidencia-Admin' or request.user.groups.all.0.name == 'Almaceneros'  or request.user.groups.all.0.name == 'Comerciales' or user.is_superuser %}
+                        <a href="{% url 'crear_recepcion' %}" class="nav-link">
+                            <span>Informe de recepción</span>
+                        </a>
+                        {% endif %}
                     </div>
                 </li>
             
