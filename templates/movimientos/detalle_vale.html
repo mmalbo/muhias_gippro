@@ -324,14 +324,12 @@
             </button>
             {% endif %} -->
             
-            {% if vale.estado == 'borrador' or vale.estado == 'confirmado' %}
             <form method="post" action="{% url 'movimiento_cancel' vale.id %}" id="confirmForm{{ vale.id }}" class="d-inline">
                     {% csrf_token %}
                     <button type="button" class="btn btn-success" onclick="confirmarCancelar('{{ vale.id }}')">
                         <i class="bi bi-check-circle"></i> Cancelar
                     </button>
                 </form>
-            {% endif %}
         </div>
     </div>
 </div>

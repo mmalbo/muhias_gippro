@@ -23,7 +23,8 @@ from django.db.models import Q
 from .movimientos import export_vales, export_vale
 import json
 from utils.utils import normalizar_UUID
-
+from django.forms import forms
+from .forms import RecepcionForm
 from .models import (
     Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_Prod,
     Movimiento_EE, Movimiento_Ins, Almacen,
@@ -226,7 +227,7 @@ def buscar_items_almacen(request):
             'cantidad_disponible': float(item.cantidad),
             'unidad': getattr(item.materia_prima, 'unidad_medida', ''),
             'lote': ''
-        } for item in query[:50]])  # Limitar resultados
+        } for item in query])  # Limitar resultados
 
     if tipo == 'producto' or not tipo:
         from inventario.models import Inv_Producto  # Ajusta según tu app
@@ -251,7 +252,7 @@ def buscar_items_almacen(request):
             'cantidad_disponible': float(item.cantidad),
             'unidad': getattr(str(item.producto.formato), 'formato', ''),
             'lote': item.lote
-        } for item in query[:50]])  # Limitar resultados
+        } for item in query])  # Limitar resultados
 
         
 
@@ -276,7 +277,7 @@ def buscar_items_almacen(request):
             'cantidad_disponible': float(item.cantidad),
             'unidad': getattr(str(item.envase), 'formato', ''),
             'lote': ''
-        } for item in query[:50]])  # Limitar resultados
+        } for item in query])  # Limitar resultados
 
     if tipo == 'insumo' or not tipo:
         from inventario.models import Inv_Insumos  # Ajusta según tu app
@@ -300,7 +301,7 @@ def buscar_items_almacen(request):
             'cantidad_disponible': float(item.cantidad),
             'unidad': getattr(item.insumos, 'formato', ''),
             'lote': ''
-        } for item in query[:50]])  # Limitar resultados
+        } for item in query])  # Limitar resultados
 
     return JsonResponse({'items': items})
 
@@ -1779,14 +1780,84 @@ def vale_detalle(request, pk):
     return render(request, 'movimientos/detalle_vale.html', context)
 
 def cancelar_vale(request,pk):
+    print("En cancelar vale")
     vale = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
-    if vale.estado not in ['borrador', 'confirmado']:
-        messages.error(request, 'Este vale no se puede cancelar porque ya está cancelado o finalizado.')
-        return redirect('detalle_vale', pk)  # Cambia a la URL que quieras
+    if vale.estado not in ['borrador'] and vale.tipo not in ['Devolución'] and not vale.entrada:
+        if crear_vale_devolucion(request, pk, vale.almacen.id):
+            vale.estado = 'cancelado'
+            vale.save()
+            messages.success(request, f'El vale {vale.id} ha sido cancelado correctamente y se generó un vale de devolución.')
+            return redirect('movimiento_update', pk)
+        else:
+            messages.error(request, f'El vale {vale.id} no se ha podido cancelar.')
+            return redirect('movimiento_list')
     vale.estado = 'cancelado'
     vale.save()
     messages.success(request, f'El vale {vale.id} ha sido cancelado correctamente.')
     return redirect('movimiento_list')
+
+def crear_vale_devolucion(request, pk, almacen_id):
+    # Obtener los productos que quieres mostrar (ejemplo: todos)
+    vale_v = get_object_or_404(Vale_Movimiento_Almacen, id=pk)
+
+    #origen = vale_v.almacen.nombre if vale_v.almacen else ''
+    """ if vale_v.tipo == 'Producción terminada' or vale_v.tipo == 'Producción rechazada':
+        origen = vale_v.origen """
+    almacen = get_object_or_404(Almacen, id=almacen_id) 
+    inv_prod = vale_v.movimientos_productos.all()
+    inv_mp = vale_v.movimientos.all()
+    inv_ins = vale_v.movimientos_insumos.all()
+    inv_env = vale_v.movimientos_envases.all()
+
+    vale = Vale_Movimiento_Almacen.objects.create(
+                almacen = almacen,
+                origen = vale_v.almacen.nombre,
+                destino = almacen.nombre,
+                estado = 'confirmado',
+                entrada=True,
+                tipo = 'Devolución',
+                lote_No = vale_v.lote_No,
+                autorizado_por = request.user.first_name
+            )
+    
+    for inv in inv_mp:
+        Movimiento_MP.objects.create(
+                        materia_prima=inv.materia_prima,
+                        vale=vale,  
+                        cantidad=inv.cantidad
+                    )
+    for inv in inv_prod:
+        Movimiento_Prod.objects.create(
+                            producto=inv.producto,
+                            vale=vale,  
+                            cantidad=inv.cantidad
+                        )
+    for inv in inv_env:
+        Movimiento_EE.objects.create(
+                            envase_embalaje=inv.envase_embalaje,
+                            vale=vale,  
+                            cantidad=inv.cantidad
+                        )
+    for inv in inv_ins:
+        Movimiento_Ins.objects.create(
+                            insumo=inv.insumo,
+                            vale=vale,  
+                            cantidad=inv.cantidad
+                        )
+            
+    target_groups = Group.objects.filter(name__in=["Presidencia-Admin"])
+    # Crear notificaciones para cada usuario en ese grupo
+    for group in target_groups:
+        for user in group.customuser_set.all():
+            # Notificación en base de datos
+            Notification.objects.create(
+                                    user=user,
+                                    message=f"Se ha generado una devolución del vale: {vale_v.consecutivo}.",
+                                    link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
+                                )
+                
+    return True
+
 
 # Vista para confirmar una salida
 def confirmar_salida(request, pk):
@@ -2012,23 +2083,6 @@ def eliminar_item_carrito(request):
 # views.py (añadir al final)
 
 # views.py
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
-from django.contrib import messages
-from django.db import transaction
-from django.shortcuts import redirect, get_object_or_404
-from django.http import JsonResponse
-from django.forms import forms
-import json
-import decimal
-from .forms import RecepcionForm
-from .models import (
-    Vale_Movimiento_Almacen, Movimiento_MP, Movimiento_Prod,
-    Movimiento_EE, Movimiento_Ins, Almacen,
-    MateriaPrima, Producto, EnvaseEmbalaje, Insu
-)
-from inventario.models import Inv_Mat_Prima, Inv_Producto, Inv_Envase, Inv_Insumos
-
 class CrearRecepcionView(CreateView):
     model = Vale_Movimiento_Almacen
     form_class = RecepcionForm
