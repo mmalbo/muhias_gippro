@@ -48,8 +48,7 @@ def ajuste_inv_prod(request, inv_prod):
             else:
                 vale.entrada = True
                 cantidad_movimiento = nuevo_cant - viejo_cant
-            
-            
+                        
             vale.save()
             mov_prod = Movimiento_Prod.objects.create(
                 producto = inv_prod_o,

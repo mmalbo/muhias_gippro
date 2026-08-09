@@ -80,6 +80,7 @@ class Inv_Producto(ItemInventarioBase):
     def save(self, *args, **kwargs):
         self.tipo = 'producto'
         self.item_id = self.producto.id
+
         super().save(*args, **kwargs)
 
     def __str__(self):

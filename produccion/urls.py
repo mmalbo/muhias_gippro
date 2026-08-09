@@ -9,7 +9,7 @@ from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionVi
                     detalle_prueba_quimica, agregar_parametros_prueba, editar_parametro_prueba, eliminar_parametro_prueba,
                     calcular_resultados_prueba, concluir_prueba, ProduccionDetailView, reutilizar_produccion,
                     EditarProduccionView)
-
+0
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
     #path('<uuid:pk>/editar/', ProduccionUpdateView.as_view(), name='produccion_update'),

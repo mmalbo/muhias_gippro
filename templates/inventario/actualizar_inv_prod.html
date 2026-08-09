@@ -17,7 +17,9 @@
                         <thead>
                             <tr>
                                 <th>Producto</th>
-                                <th>Almacen</th>
+                                <th>Almacén</th>
+                                <th>Formato actual</th>
+                                <th>Nuevo formato</th>
                                 <th>Lote</th>
                                 <th>Nuevo lote</th>
                                 <th>Cantidad</th>
@@ -28,10 +30,17 @@
                         <tbody>
                             <tr>
                                 <td>{{ inv_prod.producto.nombre_comercial }}
-                                    <input type="hidden" name="producto" value="{{inv_prod.producto}}">
+                                    <input type="hidden" name="producto" value="{{ inv_prod.producto.id }}">
                                 </td>
                                 <td>{{ inv_prod.almacen.nombre }}
-                                    <input type="hidden" name="almacen" value="{{inv_prod.almacen.id}}">
+                                    <input type="hidden" name="almacen" value="{{ inv_prod.almacen.id }}">
+                                </td>
+                                <td>{{ inv_prod.formato.nombre|default:"Sin formato" }}</td>
+                                <td>
+                                    {{ form.formato }}
+                                    {% if form.formato.errors %}
+                                        <div class="text-danger">{{ form.formato.errors }}</div>
+                                    {% endif %}
                                 </td>
                                 <td><span class="badge bg-info">{{ inv_prod.lote|default:"Sin lote" }}</span></td>
                                 <td>
@@ -56,29 +65,30 @@
                                     </button>
                                 </td>
                             </tr>
-							</tr>
                         </tbody>
                         <tfoot>
                             <tr>
                                 <th>Producto</th>
-                                <th>Almacen</th>
+                                <th>Almacén</th>
+                                <th>Formato actual</th>
+                                <th>Nuevo formato</th>
                                 <th>Lote</th>
-                                <th>Ajustar lote</th>
+                                <th>Nuevo lote</th>
                                 <th>Cantidad</th>
                                 <th>Nueva Cantidad</th>
                                 <th>Actualizar</th>
                             </tr>
                             <tr>
-                                <td colspan="7" class="bg-light">
-                                {{form.causa.label}}
-                                {{form.causa}}
+                                <td colspan="9" class="bg-light">
+                                    {{ form.causa.label }}
+                                    {{ form.causa }}
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
                     
                     <div class="text-end mt-4">
-                        
+                        <!-- Puedes agregar botones adicionales aquí si lo deseas -->
                     </div>
                 </form>
             </div>
