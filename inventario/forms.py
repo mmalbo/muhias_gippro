@@ -145,7 +145,7 @@ class AjusteInvProdForm(forms.ModelForm):
     
     class Meta:
         model = Inv_Producto
-        fields = ['cantidad', 'almacen', 'producto', 'lote']
+        fields = ['cantidad', 'almacen', 'producto', 'lote', 'formato']
         widgets = {
             'cantidad': forms.NumberInput(attrs={'class': 'form-control',
                 'step': '0.01',

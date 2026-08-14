@@ -237,7 +237,6 @@ def buscar_items_almacen(request):
             cantidad__gt=0
         )
         
-        
         if term:
             query = query.filter(
                 Q(producto__nombre_comercial__icontains=term) |
@@ -250,12 +249,11 @@ def buscar_items_almacen(request):
             'nombre': item.producto.nombre_comercial,
             'codigo': item.producto.codigo_producto,
             'cantidad_disponible': float(item.cantidad),
-            'unidad': getattr(str(item.producto.formato), 'formato', ''),
+            'unidad': getattr(str(item.formato), 'formato', ''),
             'lote': item.lote
         } for item in query])  # Limitar resultados
 
         
-
     if tipo == 'envase' or not tipo:
         from inventario.models import Inv_Envase  # Ajusta según tu app
         
@@ -1026,9 +1024,10 @@ def entrada_envase(request, pk):
             )
         # Procesar cada producto
         for inv in inv_env:
-            field_name = str(inv.envase_embalaje.codigo_envase)
+            field_name = str(inv.envase_embalaje.id)
             cantidad = decimal.Decimal('0.00')
             cantidad = decimal.Decimal(float(request.POST.get(field_name)))
+            print(request.POST.get(field_name))
             if cantidad:
                 try:
                     inventario_ev, created = Inv_Envase.objects.get_or_create(
@@ -1786,7 +1785,7 @@ def cancelar_vale(request,pk):
         if crear_vale_devolucion(request, pk, vale.almacen.id):
             vale.estado = 'cancelado'
             vale.save()
-            messages.success(request, f'El vale {vale.id} ha sido cancelado correctamente y se generó un vale de devolución.')
+            messages.success(request, f'El vale {vale.consecutivo} ha sido cancelado correctamente y se generó un vale de devolución.')
             return redirect('movimiento_update', pk)
         else:
             messages.error(request, f'El vale {vale.id} no se ha podido cancelar.')
@@ -1811,7 +1810,7 @@ def crear_vale_devolucion(request, pk, almacen_id):
 
     vale = Vale_Movimiento_Almacen.objects.create(
                 almacen = almacen,
-                origen = vale_v.almacen.nombre,
+                origen = vale_v.destino,
                 destino = almacen.nombre,
                 estado = 'confirmado',
                 entrada=True,
@@ -1852,7 +1851,7 @@ def crear_vale_devolucion(request, pk, almacen_id):
             # Notificación en base de datos
             Notification.objects.create(
                                     user=user,
-                                    message=f"Se ha generado una devolución del vale: {vale_v.consecutivo}.",
+                                    message=f"Se ha generado una devolución del vale: {vale_v}.",
                                     link=f'/movimientos/lista/'  # Ir a verificar la cantidad de materia prima en inventario 
                                 )
                 
@@ -1887,16 +1886,16 @@ def confirmar_salida(request, pk):
         with transaction.atomic():
             # 1. Validar disponibilidad de inventario
             for movimiento in vale.movimientos.all():
-                validar_disponibilidad_mp(movimiento, vale.almacen)
+                validar_disponibilidad_mp(request, movimiento, vale.almacen)
             
             for movimiento in vale.movimientos_productos.all():
-                validar_disponibilidad_producto(movimiento, vale.almacen)
+                validar_disponibilidad_producto(request, movimiento, vale.almacen)
 
             for movimiento in vale.movimientos_envases.all():
-                validar_disponibilidad_envase(movimiento, vale.almacen)
+                validar_disponibilidad_envase(request, movimiento, vale.almacen)
 
             for movimiento in vale.movimientos_insumos.all():
-                validar_disponibilidad_insumos(movimiento, vale.almacen)
+                validar_disponibilidad_insumos(request, movimiento, vale.almacen)
 
             # 2. Actualizar estado
             if vale.destino:
@@ -1921,13 +1920,13 @@ def confirmar_salida(request, pk):
     return redirect('movimiento_list')
 
 # Funciones auxiliares para validación
-def validar_disponibilidad_mp(movimiento, almacen):
+def validar_disponibilidad_mp(request, movimiento, almacen):
     """Validar disponibilidad de materia prima"""
     # Ajusta esto según tus modelos de inventario reales
     from inventario.models import Inv_Mat_Prima
 
     if not movimiento.materia_prima or movimiento.materia_prima.cantidad < movimiento.cantidad:
-        raise ValueError(
+        messages.error(request,
             f'Cantidad insuficiente de {movimiento.materia_prima.materia_prima.nombre}. '
             f'Disponible: {movimiento.materia_prima.cantidad if movimiento.materia_prima else 0}, '
             f'Solicitado: {movimiento.cantidad}'
@@ -1938,27 +1937,24 @@ def validar_disponibilidad_mp(movimiento, almacen):
         movimiento.cantidad_inventario = movimiento.materia_prima.cantidad
         movimiento.save()
 
-def validar_disponibilidad_producto(movimiento, almacen):
+def validar_disponibilidad_producto(request, movimiento, almacen):
     """Validar disponibilidad de producto"""
     # Ajusta esto según tus modelos de inventario reales
     from inventario.models import Inv_Producto
-    
     if not movimiento.producto or movimiento.producto.cantidad < movimiento.cantidad:
         lote_info = f" (Lote: {movimiento.lote})" if movimiento.lote else ""
-        raise ValueError(
+        messages.error(request, 
             f'Cantidad insuficiente de {movimiento.producto.producto.nombre_comercial}{lote_info}. '
             f'Disponible: {movimiento.producto.cantidad if movimiento.producto else 0}, '
             f'Solicitado: {movimiento.cantidad}'
         )
     else:
-        print('movimiento.producto.cantidad: ', movimiento.producto.cantidad)
         movimiento.producto.cantidad -= movimiento.cantidad
         movimiento.producto.save()
         movimiento.cantidad_inventario = movimiento.producto.cantidad
         movimiento.save()
-        print('Cantidad actualizada en inventario para producto:', movimiento.producto.producto.nombre_comercial, 'Cantidad restante:', movimiento.cantidad_inventario)
 
-def validar_disponibilidad_envase(movimiento, almacen):
+def validar_disponibilidad_envase(request, movimiento, almacen):
     """Validar disponibilidad de envases"""
     from inventario.models import Inv_Envase
     
@@ -1968,7 +1964,7 @@ def validar_disponibilidad_envase(movimiento, almacen):
     ).first()
 
     if not inventario or inventario.cantidad < movimiento.cantidad:
-        raise ValueError(
+        messages.error(request, 
             f'Cantidad insuficiente de {movimiento.envase_embalaje.tipo_envase_embalaje}. '
             f'Disponible: {inventario.cantidad if inventario else 0}, '
             f'Solicitado: {movimiento.cantidad}'
@@ -1979,7 +1975,7 @@ def validar_disponibilidad_envase(movimiento, almacen):
         movimiento.cantidad_inventario = inventario.cantidad
         movimiento.save()
 
-def validar_disponibilidad_insumos(movimiento, almacen):
+def validar_disponibilidad_insumos(request, movimiento, almacen):
     """Validar disponibilidad de insumos"""
     from inventario.models import Inv_Insumos
     
@@ -1989,7 +1985,7 @@ def validar_disponibilidad_insumos(movimiento, almacen):
     ).first()
     
     if not inventario or inventario.cantidad < movimiento.cantidad:
-        raise ValueError(
+        messages.error(request, 
             f'Cantidad insuficiente de {movimiento.insumos.nombre}. '
             f'Disponible: {inventario.cantidad if inventario else 0}, '
             f'Solicitado: {movimiento.cantidad}'

@@ -278,11 +278,11 @@
                 <div class="card-body">
                     <div class="list-group">
                         {% for prueba in pruebas_quimicas %}
-                        <a href="{% url 'editar_parametro_prueba' prueba.id %}" 
+                        <a href="{% url 'resumen_prueba_quimica' prueba.id %}" 
                            class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">Prueba #{{ prueba.id }}</h6>
+                                    <h6 class="mb-1">Prueba #{{ prueba.nomenclador_prueba }}</h6>
                                     <small class="text-muted">
                                         Realizada: {{ prueba.fecha_creacion|date:"d/m/Y H:i" }}
                                     </small>
