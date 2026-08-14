@@ -94,7 +94,12 @@
                                 <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
                             </button>
                         {% endif %}
-                        
+                        <!-- Botón para resumen de prueba -->
+                        {% if prueba.estado == 'APROBADA' or prueba.estado == 'RECHAZADA' %}
+                            <a href="{% url 'resumen_prueba_quimica' prueba.id %}" class="btn btn-info">
+                                <i class="fas fa-file-alt me-2"></i> Ver Resumen
+                            </a>
+                        {% endif %}
                         <!--<a href="{% url 'calcular_resultados_prueba' prueba.id %}" class="btn btn-success">
                             <i class="fas fa-flag-checkered me-2"></i> Concluir Prueba
                         </a>

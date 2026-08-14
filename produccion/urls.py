@@ -7,9 +7,8 @@ from .views import ( ProduccionListView, ProduccionDeleteView, CrearProduccionVi
                     eliminar_pruebas_quimicas, cancelar_produccion, detalle_cancelacion, agita_produccion, 
                     lista_parametros, crear_parametro, editar_parametro, detalle_parametro, crear_prueba_quimica,
                     detalle_prueba_quimica, agregar_parametros_prueba, editar_parametro_prueba, eliminar_parametro_prueba,
-                    calcular_resultados_prueba, concluir_prueba, ProduccionDetailView, reutilizar_produccion,
+                    calcular_resultados_prueba, concluir_prueba, ProduccionDetailView, reutilizar_produccion, resumen_prueba_quimica,
                     EditarProduccionView)
-0
 urlpatterns = [
     path('', ProduccionListView.as_view(), name='produccion_list'),
     #path('<uuid:pk>/editar/', ProduccionUpdateView.as_view(), name='produccion_update'),
@@ -51,7 +50,7 @@ urlpatterns = [
          name='eliminar_parametro_prueba'),
     
     path('prueba-quimica/<uuid:pk>/calcular-resultados/', calcular_resultados_prueba, name='calcular_resultados_prueba'),
-    
+    path('prueba-quimica/<uuid:pk>/resumen/', resumen_prueba_quimica, name='resumen_prueba_quimica'),
     path('prueba-quimica/<uuid:pk>/concluir/', concluir_prueba, name='concluir_prueba_quimica'),
     
     #path('prueba-quimica/<uuid:pk>/estado/<str:estado>/', cambiar_estado_prueba, name='cambiar_estado_prueba'),

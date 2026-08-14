@@ -2305,7 +2305,9 @@ def eliminar_parametro_prueba(request, parametro_id):
 @require_POST
 def concluir_prueba(request, pk):
     prueba = get_object_or_404(PruebaQuimica, id=pk)
-                
+
+    print("En concluir prueba")
+
     if prueba.estado in ['APROBADA', 'RECHAZADA', 'CANCELADA']:
         messages.error(request, 'Esta prueba ya ha sido concluida anteriormente.')
         return render(request, 'produccion/prueba_quimica/detalle_prueba_quimica.html', {
@@ -2384,6 +2386,8 @@ def concluir_prueba(request, pk):
                     lote=prueba.produccion.lote
             )
 
+            print("Prueba concluida con éxito")
+
             prueba.observaciones = observaciones_generales
             #prueba.evaluado_por = request.user
             prueba.fecha_aprobacion = timezone.now()
@@ -2400,11 +2404,15 @@ def concluir_prueba(request, pk):
                         except DetallePruebaQuimica.DoesNotExist:
                             continue
 
-            prueba.save() 
+            prueba.save()
+            print("Prueba guardada con éxito") 
+        print(prueba.estado.lower())
+        print(prueba.id)
+        print(prueba.produccion.id)
         return JsonResponse({
             'success': True,
             'message': f'Prueba {prueba.estado.lower()} correctamente.',
-            'redirect_url': reverse('detalle_prueba_quimica', args=[prueba.produccion.id])
+            'redirect_url': reverse('resumen_prueba_quimica', args=[prueba.produccion.id])
         })    
 
     except Exception as e:
@@ -2412,6 +2420,48 @@ def concluir_prueba(request, pk):
             'success': False,
             'message': f'Error al concluir la prueba: {str(e)}'
         }, status=500)    
+
+from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
+from django.http import Http404
+from .models import PruebaQuimica
+
+@login_required
+def resumen_prueba_quimica(request, pk):
+    prueba = get_object_or_404(PruebaQuimica, id=pk)
+    
+    # Opcional: solo permitir ver si está concluida
+    if prueba.estado.lower() not in ['aprobada', 'rechazada']:
+        # Podrías redirigir al detalle o mostrar un mensaje
+        return redirect('detalle_prueba_quimica', prueba.produccion.id)
+    
+    parametros = prueba.detalles.all().select_related('parametro')
+    total = parametros.count()
+    aprobados = parametros.filter(cumplimiento=True).count()
+    porcentaje = (aprobados / total * 100) if total > 0 else 0
+    
+    # Obtener almacén destino (si existe) – asumiendo que se guardó en el movimiento o en la prueba
+    almacen_destino = None
+    if prueba.estado == 'APROBADA':
+        # Buscar el movimiento de inventario asociado a esta prueba para obtener el almacén
+        # Esto dependerá de tu modelo; ejemplo:
+        movimiento = Movimiento_Prod.objects.filter(
+            vale__lote_No=prueba.produccion.lote,
+            producto__producto=prueba.produccion.catalogo_producto
+        ).first()
+        if movimiento:
+            almacen_destino = movimiento.producto.almacen  # o movimiento.vale.almacen, según tu estructura
+    
+    context = {
+        'prueba': prueba,
+        'parametros': parametros,
+        'total_parametros': total,
+        'parametros_aprobados': aprobados,
+        'porcentaje_aprobacion': round(porcentaje, 1),
+        'almacen_destino': almacen_destino,
+    }
+    return render(request, 'produccion/prueba_quimica/resumen_prueba_quimica.html', context)
+
 
 @login_required
 def calcular_resultados_prueba(request, prueba_id):
