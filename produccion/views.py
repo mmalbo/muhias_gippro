@@ -2442,7 +2442,7 @@ def resumen_prueba_quimica(request, pk):
     
     # Obtener almacén destino (si existe) – asumiendo que se guardó en el movimiento o en la prueba
     almacen_destino = None
-    if prueba.estado == 'APROBADA':
+    if prueba.estado == 'Aprobada':
         # Buscar el movimiento de inventario asociado a esta prueba para obtener el almacén
         # Esto dependerá de tu modelo; ejemplo:
         movimiento = Movimiento_Prod.objects.filter(
@@ -2450,7 +2450,7 @@ def resumen_prueba_quimica(request, pk):
             producto__producto=prueba.produccion.catalogo_producto
         ).first()
         if movimiento:
-            almacen_destino = movimiento.producto.almacen  # o movimiento.vale.almacen, según tu estructura
+            almacen_destino = movimiento.vale.almacen  # o movimiento.vale.almacen, según tu estructura
     
     context = {
         'prueba': prueba,
@@ -2460,6 +2460,7 @@ def resumen_prueba_quimica(request, pk):
         'porcentaje_aprobacion': round(porcentaje, 1),
         'almacen_destino': almacen_destino,
     }
+    print(context)
     return render(request, 'produccion/prueba_quimica/resumen_prueba_quimica.html', context)
 
 
