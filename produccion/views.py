@@ -76,7 +76,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
             # Mensaje informativo
             messages.info(
                 request, 
-                f'Reutilizando produccion {datos_precargados.get("produccion_base_lote", "")}. '
+                f'Reutilizando producción {datos_precargados.get("produccion_base_lote", "")}. '
                 'Los datos han sido pre-cargados.'
             )
     
@@ -101,6 +101,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 'unidad_medida': unidad,
                 'formato': prod.get('formato__unidad_medida', 'A Granel')
             })
+        print(productos_data)
     
         context = {
             'produccion_form': produccion_form,
@@ -1184,7 +1185,6 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 'inventario_disponible': float(inventario.cantidad) if inventario else 0,
             }
             productos.append(producto_data)
-        print(f'productos de la produccion: {productos}')
         return productos
     
     def post(self, request, pk):
@@ -1223,6 +1223,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
         try:
             materias_primas_nuevas = self.procesar_materias_primas(request.POST)
             productos_nuevos = self.procesar_productos(request.POST)  # ✅ Descomentar
+            print(f'productos_nuevos: {productos_nuevos}')
         except ValueError as e:
             return JsonResponse({'success': False, 'errors': str(e)})
 
@@ -1241,12 +1242,10 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 # 3. Obtener registros actuales
                 materias_actuales = Prod_Inv_MP.objects.filter(lote_prod=produccion)
                 productos_actuales = Prod_Inv_Producto.objects.filter(lote_prod=produccion)
-                
+                print(f'Productos atuales: {productos_actuales}')                
                 # 4. Identificar IDs que se mantienen
                 ids_nuevos_mp = [mp.get('id') for mp in materias_primas_nuevas if mp.get('id')]
                 ids_nuevos_pp = [pp.get('producto') for pp in productos_nuevos if pp.get('producto')]
-
-                print(f'ids_nuevos_pp:{ids_nuevos_pp}')
 
                 vale_dev_mp = None
                 vale_sol_mp = None
@@ -1266,7 +1265,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 lote_No=produccion.lote,
                                 estado='confirmado',
                                 descripcion=f'Devolución por edición de producción {produccion.lote}',
-                                despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                autorizado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         Movimiento_MP.objects.create(
                             materia_prima=mp_actual.inv_materia_prima,
@@ -1277,9 +1276,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
 
                 # 6. Eliminar productos que ya no están
                 for pp_actual in productos_actuales:
-                    print('En ciclo de productos actuales')
                     if self._normalizar_uuid(pp_actual.producto.id) not in ids_nuevos_pp:
-                        print("Un actual que no está en los nuevos. Encontré uno nuevo")
                         if not vale_dev_pp:
                             vale_dev_pp = Vale_Movimiento_Almacen.objects.create(
                                 tipo='Devolución',
@@ -1290,7 +1287,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 lote_No=produccion.lote,
                                 estado='confirmado',
                                 descripcion=f'Devolución por edición de producción {produccion.lote}',
-                                despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                autorizado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         # Asumiendo que tienes Movimiento_Producto (crea el modelo si no existe)
                         Movimiento_Prod.objects.create(
@@ -1298,7 +1295,6 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 cantidad=pp_actual.cantidad_producto,
                                 vale=vale_dev_pp
                         )
-                        print("Voy a borrar pp_actual")
                         pp_actual.delete()
                 
                 # 7. Actualizar o crear materias primas
@@ -1338,14 +1334,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         origen=produccion.planta.nombre,
                                         lote_No=produccion.lote,
                                         estado='confirmado',
-                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                        autorizado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
-                                Prod_Inv_MP.objects.create(
-                                    lote_prod=produccion,
-                                    inv_materia_prima=inventario_mp,
-                                    cantidad_materia_prima=diferencia,
-                                    almacen=almacen_obj,
-                                    vale=vale_sol_mp
+                                Movimiento_MP.objects.create(
+                                    materia_prima=inventario_mp,
+                                    cantidad=diferencia,
+                                    vale=vale_sol_mp,
+                                    lote=produccion.lote
                                 )
                             elif diferencia < 0:  # Disminuye cantidad
                                 if not vale_dev_mp:
@@ -1358,7 +1353,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         lote_No=produccion.lote,
                                         estado='confirmado',
                                         descripcion=f'Devolución por edición de producción {produccion.lote}',
-                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                        autorizado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
                                 Movimiento_MP.objects.create(
                                     materia_prima=inventario_mp,
@@ -1380,7 +1375,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 origen=produccion.planta.nombre,
                                 lote_No=produccion.lote,
                                 estado='confirmado',
-                                despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                autorizado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         
                         Prod_Inv_MP.objects.create(
@@ -1393,11 +1388,9 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 
                 # 8. Actualizar o crear productos (insumos)
                 for pp_data in productos_nuevos:
-                    print('En ciclo de productos nuevos')
                     # Normalizar UUID
                     producto_id = self._normalizar_uuid(pp_data['producto'])
                     almacen_id = self._normalizar_uuid(pp_data['almacen'])
-                    print(f'producto_id: {producto_id}')
                     #producto_catalogo = get_object_or_404(Producto, id=producto_id)
                     almacen_obj = get_object_or_404(Almacen, id=almacen_id)
                     
@@ -1415,12 +1408,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     nueva_cantidad = Decimal(str(pp_data['cantidad']))
                     
                     if pp_data.get('id'):  # Actualizar existente
-                        print(pp_data['id'])
+                        print('Actualizar existente')
                         pp_id = self._normalizar_uuid(pp_data['id'])
                         pp_existente = Prod_Inv_Producto.objects.get(id=pp_id)
+                        print(f'Producto: {pp_existente.producto.producto.nombre_comercial}')
                         cantidad_anterior = pp_existente.cantidad_producto
                         diferencia = nueva_cantidad - cantidad_anterior
-                        
+                        print(f'diferencia: {diferencia}')
                         if diferencia != 0:
                             if diferencia > 0:  # Aumenta cantidad
                                 if inventario_pp.cantidad < diferencia:
@@ -1433,14 +1427,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         origen=produccion.planta.nombre,
                                         lote_No=produccion.lote,
                                         estado='confirmado',
-                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                        autorizado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
-                                Prod_Inv_Producto.objects.create(
-                                    lote_prod=produccion,
+                                Movimiento_Prod.objects.create(
                                     producto=inventario_pp,
-                                    cantidad_producto=diferencia,
-                                    almacen=almacen_obj,
-                                    vale=vale_sol_pp
+                                    cantidad=diferencia,
+                                    vale=vale_sol_pp,
+                                    lote=produccion.lote
                                 )
                             elif diferencia < 0:  # Disminuye cantidad
                                 if not vale_dev_pp:
@@ -1452,8 +1445,14 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                         almacen=almacen_obj,
                                         lote_No=produccion.lote,
                                         estado='confirmado',
-                                        despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                        autorizado_por=request.user.first_name + ' ' + request.user.last_name
                                     )
+                                    Movimiento_Prod.objects.create(
+                                        producto=inventario_pp,
+                                        cantidad=diferencia,
+                                        vale=vale_dev_pp,
+                                        lote=produccion.lote
+                                    )   
                             
                             pp_existente.cantidad_producto = nueva_cantidad
                             pp_existente.save()
@@ -1469,7 +1468,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                                 origen=produccion.planta.nombre,
                                 lote_No=produccion.lote,
                                 estado='confirmado',
-                                despachado_por=request.user.first_name + ' ' + request.user.last_name
+                                autorizado_por=request.user.first_name + ' ' + request.user.last_name
                             )
                         
                         Prod_Inv_Producto.objects.create(
@@ -1568,8 +1567,6 @@ class EditarProduccionView(LoginRequiredMixin, View):
     def procesar_productos(self, post_data):
         """Procesa los productos del formulario"""
         productos = []
-        print('En procesar pruductos')
-        print(post_data)
         def get_value(data, key):
             if isinstance(data, dict):
                 return data.get(key)
@@ -1585,13 +1582,10 @@ class EditarProduccionView(LoginRequiredMixin, View):
             almacen_key = f'productos[{i}][almacen]'
             
             producto_id = get_value(post_data, producto_key)
-            
+
             if not producto_id:
-                print('No encontre el id')
                 break
-            else:
-                print(f'producto id: {producto_id}')
-                            
+                       
             pp_id = get_value(post_data, id_key)
             cantidad_str = get_value(post_data, cantidad_key)
             almacen_id = get_value(post_data, almacen_key)
@@ -1619,14 +1613,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     'costo': costo_pp,
                 }
                 productos.append(pp_data)
-                print(pp_data)
                 
             except Exception as e:
                 raise ValueError(f'Error en producto {i}: {str(e)}')
-            
+
             i += 1
-        print(f'Productos al final {productos}')
-        return productos #
+
+        return productos
     
 #funcionalidades para insertar pruebas químicas externas, emitidas por archivo.
 @login_required
@@ -2306,9 +2299,7 @@ def eliminar_parametro_prueba(request, parametro_id):
 def concluir_prueba(request, pk):
     prueba = get_object_or_404(PruebaQuimica, id=pk)
 
-    print("En concluir prueba")
-
-    if prueba.estado in ['APROBADA', 'RECHAZADA', 'CANCELADA']:
+    if prueba.estado in ['Aprobada', 'Rechazada', 'Cancelada']:
         messages.error(request, 'Esta prueba ya ha sido concluida anteriormente.')
         return render(request, 'produccion/prueba_quimica/detalle_prueba_quimica.html', {
             'prueba': prueba,
@@ -2386,8 +2377,6 @@ def concluir_prueba(request, pk):
                     lote=prueba.produccion.lote
             )
 
-            print("Prueba concluida con éxito")
-
             prueba.observaciones = observaciones_generales
             #prueba.evaluado_por = request.user
             prueba.fecha_aprobacion = timezone.now()
@@ -2404,15 +2393,11 @@ def concluir_prueba(request, pk):
                         except DetallePruebaQuimica.DoesNotExist:
                             continue
 
-            prueba.save()
-            print("Prueba guardada con éxito") 
-        print(prueba.estado.lower())
-        print(prueba.id)
-        print(prueba.produccion.id)
+            prueba.save() 
         return JsonResponse({
             'success': True,
             'message': f'Prueba {prueba.estado.lower()} correctamente.',
-            'redirect_url': reverse('resumen_prueba_quimica', args=[prueba.produccion.id])
+            'redirect_url': reverse('resumen_prueba_quimica', args=[prueba.id])
         })    
 
     except Exception as e:
@@ -2420,11 +2405,6 @@ def concluir_prueba(request, pk):
             'success': False,
             'message': f'Error al concluir la prueba: {str(e)}'
         }, status=500)    
-
-from django.shortcuts import get_object_or_404, render
-from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from .models import PruebaQuimica
 
 @login_required
 def resumen_prueba_quimica(request, pk):
@@ -2460,7 +2440,6 @@ def resumen_prueba_quimica(request, pk):
         'porcentaje_aprobacion': round(porcentaje, 1),
         'almacen_destino': almacen_destino,
     }
-    print(context)
     return render(request, 'produccion/prueba_quimica/resumen_prueba_quimica.html', context)
 
 
