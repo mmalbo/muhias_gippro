@@ -54,7 +54,7 @@
             </tr>
             <tr>
                 <td class="first-td" style="text-align: center;">
-                    <h1>Almacén: {{data.almacen}}</h1> 
+                    <h1>Almacén: {% if data.almacen %} {{data.almacen}} {% endif %}</h1> 
                 </td>                
                 <td>
                     <h1 style="text-align: left; font-size: 12px;">{{data.tipoi}} {% if data.estado == 'CANCELADO' %} <i style="color: red;"> - CANCELADO </i>{% endif %}</h1> 
@@ -70,12 +70,12 @@
                 </td>
             </tr>
             <tr>
-                <td colspan="2"><strong>Origen:</strong>  {{ data.origen }}</td>
+                <td colspan="2"><strong>Origen:</strong> {% if data.origen %} {{ data.origen }} {% endif %} </td>
                 <td >Centro de Costo</td>
                 <td >Código</td>
             </tr>
             <tr>
-                <td colspan="2"><strong>Destino:</strong>  {{ data.destino }}</td>
+                <td colspan="2"><strong>Destino:</strong>  {% if data.destino %} {{ data.destino }} {% endif %}</td>
                 <td >Producto: {% if data.lote %} {{ data.lote }}  {% endif %} </td>
                 <td >Otros </td>
             </tr>
@@ -243,7 +243,7 @@
             </tr>
             <tr>
                 <td colspan="3"> nombre y apellidos <br>
-                {{ data.despachado }}
+                {% if data.despachado %} {{ data.despachado }} {% endif %}
                 </td>
                 <td> Firma <br></td>
                 <td colspan="3" > nombre y apellidos <br></td>

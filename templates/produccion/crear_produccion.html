@@ -451,7 +451,7 @@ function enviarPaso2(materiasItems, productosItems) {
             alert(data.message);
             if (data.redirect_url) window.location.href = data.redirect_url;
         } else {
-            alert('Error: ' + (data.errors || 'Error desconocido'));
+            alert('Error en el java script: ' + (data.errors || 'Error desconocido'));
         }
     })
     .catch(error => {
