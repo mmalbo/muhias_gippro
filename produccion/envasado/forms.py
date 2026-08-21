@@ -50,7 +50,7 @@ class SolicitudEnvasadoForm(forms.ModelForm):
         
         # Filtrar lotes con cantidad disponible
         self.fields['lote_produccion_origen'].queryset = Inv_Producto.objects.filter(
-            cantidad__gt=0 ).select_related('producto', 'almacen').order_by('lote')
+            cantidad__gt=0, formato__capacidad=0).select_related('producto', 'almacen').order_by('lote')
 
     def clean_cantidad_solicitada(self):
         cantidad =  self.cleaned_data.get('cantidad_solicitada')
