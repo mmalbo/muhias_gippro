@@ -109,7 +109,7 @@
                                             <td>{{ detalle.presentacion.envase.codigo_envase }}</td>
                                             <td>{{ detalle.cantidad_unidades }}</td>       
                                             <td>
-                                                {% if detalle.vale.despachado %} 
+                                                {% if detalle.vale.estado == 'despachado' %} 
                                                     <span class="badge badge-success">Despachado en almacen</span> 
                                                 {% else %} 
                                                     <span class="badge badge-danger">Solicitado</span> 
@@ -148,7 +148,7 @@
                                             <td>{{ consumo.insumo.insumos.nombre }}</td>
                                             <td>{{ consumo.cantidad_unidades }}</td>
                                             <td>
-                                                {% if consumo.vale.despachado %}
+                                                {% if consumo.vale.estado == 'despachado' %}
                                                     <span class="badge badge-success">Despachado en almacen</span>
                                                 {% else %}
                                                     <span class="badge badge-danger">Solicitado</span>

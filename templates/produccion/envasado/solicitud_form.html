@@ -118,7 +118,7 @@
                                                     data-tipo="{{ envase.tipo }}"
                                                     data-cantidad="{{ envase.cantidad }}"
                                                     data-capacidad="{{ envase.capacidad }}">
-                                                {{ envase.nombre }} ({{ envase.codigo }}) - Disponible: {{ envase.cantidad }}
+                                                {{ envase.tipo }} {{ envase.nombre }} ({{ envase.codigo }}) - Disponible: {{ envase.cantidad }}
                                                 </option>
                                                 {% empty %}
                                                 <option value="" disabled>No hay envases disponibles</option>

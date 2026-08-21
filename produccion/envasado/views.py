@@ -151,7 +151,8 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                 return redirect(self.get_success_url())
 
         except Exception as e:
-            messages.error(self.request, f'Error al crear la solicitud: {str(e)}')
+            messages.error(self.request, f'Error al crear la solicitud. Revise bien el formulario')
+            print(str(e))
             return self.form_invalid(form)
 
     def crear_vale_solicitud(self, solicitud):
@@ -169,13 +170,13 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
             entrada=False,  # Es una salida/solicitud
             estado='confirmado',  
             lote_No=solicitud.lote_produccion_origen.lote,
-            despachado_por=self.request.user.first_name + ' ' + self.request.user.last_name
+            autorizado_por=self.request.user.first_name + ' ' + self.request.user.last_name
         )
         return vale
 
     def form_invalid(self, form):
         # Imprimir errores en consola
-        print("=== ERRORES DEL FORMULARIO ===")
+        """ print("=== ERRORES DEL FORMULARIO ===")
         for field, errors in form.errors.items():
             print(f"Campo {field}: {errors}")
         print(form.errors)
@@ -183,7 +184,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
     
         # Para ver también los errores específicos de cada campo
         for field, errors in form.errors.items():
-            print(f"Campo {field}: {errors}")
+            print(f"Campo {field}: {errors}") """
     
         messages.error(self.request, f'Por favor corrige los errores en el formulario: {form.errors}')
         return super().form_invalid(form)
@@ -293,11 +294,16 @@ def iniciar_envasado(request, pk):
     
     # Tomar el primer envase para determinar el formato (ajustable según necesidad)
     detalles_envase = DetalleEnvasado.objects.filter(solicitud=solicitud)    
+    formato = None
     for env in detalles_envase:
         primer_envase = env.presentacion.envase
         if primer_envase.formato:
             formato = primer_envase.formato 
             break
+    if not formato:
+        messages.error(request, "No ha definido un envase con formato adecuado para envasar el producto")
+        return redirect('envasado:detalle_solicitud_envasado', pk=pk)
+    
     vale = detalles_envase.first().vale
 
     # Validación salida de materiales
