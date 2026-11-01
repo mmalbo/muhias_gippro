@@ -70,7 +70,12 @@ def export_vale(request, id_movimiento):
          data['ci_transportista'] = ''
          data['cargo_transportista'] = ''
       data['chapa'] = vale.chapa
-      data['despachado'] = vale.despachado_por
+      data['despachado'] = vale.despachado_por if vale.despachado else ' ' 
+      data['recibido'] = vale.recibido_por if vale.recibido_por else ' '
+      data['autorizado'] = vale.autorizado_por if vale.autorizado_por else ' '
+      print(data['despachado'])
+      print(data['recibido'])
+      print(data['autorizado'])
       template_src = 'movimientos/vale.html'
       template = get_template(template_src)
       context = {'data': data, 'inventarios_mp': inventarios_mp, 'inventarios_prod': inventarios_prod,

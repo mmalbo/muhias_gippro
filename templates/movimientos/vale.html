@@ -243,12 +243,16 @@
             </tr>
             <tr>
                 <td colspan="3"> nombre y apellidos <br>
-                {% if data.despachado %} {{ data.despachado }} {% endif %}
+               {{ data.despachado }}
                 </td>
                 <td> Firma <br></td>
-                <td colspan="3" > nombre y apellidos <br></td>
+                <td colspan="3" > nombre y apellidos <br>
+                {{ data.recibido }}
+                </td>
                 <td > Firma <br></td>
-                <td colspan="3"> nombre y apellidos <br></td>
+                <td colspan="3"> nombre y apellidos <br>
+                {{ data.autorizado }}
+                </td>
                 <td > Firma <br></td>
             </tr>
             <tr>
