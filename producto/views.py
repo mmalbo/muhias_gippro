@@ -15,7 +15,8 @@ from .models import Producto
 from .forms import ProductoForm
 from inventario.models import Inv_Producto
 from envase_embalaje.formato.models import Formato
-from datetime import date, datetime, timezone
+from datetime import date, datetime
+from django.utils import timezone
 import decimal
 import openpyxl
 from openpyxl.styles import Font
@@ -74,10 +75,10 @@ def exportar_productos_excel(request):
 
 @login_required
 def listProductos(request):
+    from dateutil.relativedelta import relativedelta
+
     almacen_id = request.GET.get('almacen')
     producto_id = request.GET.get('producto')
-
-    print('En listProductos - almacen_id:', almacen_id, 'producto_id:', producto_id)
     
     almacen = None
     if request.user.groups.filter(name='Almaceneros').exists():
@@ -101,8 +102,10 @@ def listProductos(request):
     if producto_id:
         inv_productos = inv_productos.filter(producto=producto_id)
 
-    print(almacen)
-    inv_productos = inv_productos.order_by('producto__nombre_comercial', 'almacen__nombre')
+    tres_meses = timezone.now() - relativedelta(months=3)
+    print(inv_productos)
+    inv_productos = inv_productos.filter(fecha_creacion__gt=tres_meses, cantidad__gt=0).order_by('producto__nombre_comercial', 'almacen__nombre')
+    print(inv_productos)
     almacenes = Almacen.objects.all()
     productos = Producto.objects.all()
     total_productos = productos.count()

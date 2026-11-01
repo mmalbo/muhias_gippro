@@ -157,7 +157,7 @@ class CrearSalidaView(CreateView):
             elif tipo == 'envase':
                 ee = EnvaseEmbalaje.objects.get_or_create(
                         id=item_data['item_id'])[0]
-                inv = get_object_or_404(Inv_Envase, envase=item_data['item_id'])
+                inv = get_object_or_404(Inv_Envase, envase=item_data['item_id'], almacen=vale.almacen)
                 id = item_data['item_id']                
                 if not inv:
                     messages('Error', 'No existe ese envase en inventario')
@@ -625,7 +625,6 @@ def salida_envasado(request, vale_id):
     
 def recepcion_materia_prima(request, adq_id):
     # Obtener los productos que quieres mostrar (ejemplo: todos)
-    print("En recepcion mp")
     inv_mat = DetallesAdquisicion.objects.filter(adquisicion__id=adq_id)
     adquisicion = get_object_or_404(Adquisicion, id=adq_id)
     if adquisicion.registrada:
@@ -634,8 +633,6 @@ def recepcion_materia_prima(request, adq_id):
     if request.method == 'POST':
         # Verificar si es una solicitud AJAX (para el modal)
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
-        print(is_ajax)
 
         for inv in inv_mat:
             field_name = str(inv.materia_prima.id)
@@ -708,14 +705,12 @@ def recepcion_materia_prima(request, adq_id):
                 adquisicion.save()
 
                 if is_ajax:
-                    print("Is ajax")
                     return JsonResponse({
                         'success': True,
                         'message': 'Recepción completada exitosamente',
                         'redirect_url': reverse('materia_prima:materia_prima_list')
                     })
                 
-                print("Recepción completada exitosamente")
                 messages.success(request, "Recepción completada exitosamente")
                 return redirect('materia_prima:materia_prima_list')  # Redirigir a página de éxito
         except Exception as e:
@@ -1099,7 +1094,6 @@ def entrada_envase(request, pk):
             field_name = str(inv.envase_embalaje.id)
             cantidad = decimal.Decimal('0.00')
             cantidad = decimal.Decimal(float(request.POST.get(field_name)))
-            print(request.POST.get(field_name))
             if cantidad:
                 try:
                     inventario_ev, created = Inv_Envase.objects.get_or_create(
@@ -1230,7 +1224,7 @@ def entrada_producto(request, pk):
                 entrada=True,
                 tipo = 'Entrada',
                 lote_No = vale_v.lote_No,
-                recibido_por = request.user.first_name
+                recibido_por = request.user.first_name + ' ' + request.user.last_name
             )
         # Procesar cada producto
         for inv in inv_prod:
