@@ -91,7 +91,16 @@ class Inv_Producto(ItemInventarioBase):
             return self.formato.volumen * self.cantidad
         else:
             return self.cantidad
- 
+
+    def fecha_producido(self):
+        from datetime import date, datetime
+        if not self.lote:
+            return None
+        try:
+            return datetime.strptime(self.lote[:6], "%y%m%d").date()
+        except ValueError:
+            return None
+        
 class Inv_Envase(ItemInventarioBase):
     envase = models.ForeignKey(
         EnvaseEmbalaje, on_delete=models.DO_NOTHING,

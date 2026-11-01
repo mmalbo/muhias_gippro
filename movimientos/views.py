@@ -157,7 +157,7 @@ class CrearSalidaView(CreateView):
             elif tipo == 'envase':
                 ee = EnvaseEmbalaje.objects.get_or_create(
                         id=item_data['item_id'])[0]
-                inv = get_object_or_404(Inv_Envase, envase=item_data['item_id'])
+                inv = get_object_or_404(Inv_Envase, envase=item_data['item_id'], almacen=vale.almacen)
                 id = item_data['item_id']                
                 if not inv:
                     messages('Error', 'No existe ese envase en inventario')

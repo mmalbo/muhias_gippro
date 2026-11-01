@@ -107,7 +107,6 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
                             cap_o = True
                             cap_t = cap
                         else:
-                            print(cap)
                             if cap != cap_t and cap != 0:
                                 messages.error(self.request,f'Solo se permite un formato de envase en cada proceso de envasado')
                                 return self.form_invalid(form)
@@ -152,7 +151,7 @@ class SolicitudEnvasadoCreateView(LoginRequiredMixin, CreateView):
 
         except Exception as e:
             messages.error(self.request, f'Error al crear la solicitud. Revise bien el formulario')
-            print(str(e))
+            #print(f"Error detallado: {e}")
             return self.form_invalid(form)
 
     def crear_vale_solicitud(self, solicitud):
@@ -331,7 +330,6 @@ def iniciar_envasado(request, pk):
     # Patrón para eliminar el sufijo (case insensitive, permite espacios opcionales)
     lote_base = re.sub(r'(-A\s*granel|-granel|-AG)$', '', lote_or, flags=re.IGNORECASE)
     lote_destino_str = f"{lote_base}-{formato}"
-    print(lote_destino_str)
 
     # GET: mostrar formulario con el lote destino generado
     if request.method == 'GET':
@@ -519,7 +517,6 @@ def concluir_envasado(request, pk):
             cantidad_perdida = 0
 
         if cantidad_perdida > 0 and observaciones_finales == '':
-            print(f'Debe especificar una causa de la diferencia entre la solicitud soliciada: {solicitud.cantidad_solicitada} y la envasada {total_producido_volumen}')
             return JsonResponse({'success': False, 'error': 'Debe especificar una causa de la diferencia entre la cantidad soliciada y la envasada'})
         if cantidad_perdida > 0:
             #Crear vale de devolucion

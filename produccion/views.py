@@ -101,7 +101,6 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 'unidad_medida': unidad,
                 'formato': prod.get('formato__unidad_medida', 'A Granel')
             })
-        print(productos_data)
     
         context = {
             'produccion_form': produccion_form,
@@ -286,7 +285,6 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 return catalogo_producto.id
                 
             except Exception as e:
-                print(f"Error al crear producto: {e}")
                 return None
         elif catalogo_producto_id:
             # Usar producto existente - verificar que existe
@@ -296,15 +294,15 @@ class CrearProduccionView(LoginRequiredMixin, View):
                     catalogo_producto = MateriaPrima.objects.filter(id=catalogo_producto_id).first()
                 return catalogo_producto_id
             except Exception as e:
-                print(f"Producto con ID {catalogo_producto_id} no existe: {e}")
+                #print(f"Producto con ID {catalogo_producto_id} no existe: {e}")
                 return None
         else:
-            print("No esta el producto ni producto existente")
+            #print("No esta el producto ni producto existente")
             return None
 
     def procesar_paso_2(self, request):
         try:
-            print("=== INICIO PROCESAR PASO 2 ===")
+            #print("=== INICIO PROCESAR PASO 2 ===")
             produccion_data = request.session.get('produccion_data', {})
                 
             # VERIFICAR SI ES PRODUCTO NUEVO Y CREARLO AHORA
@@ -391,7 +389,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                 if produccion_data.get('produccion_base_id'):
                     produccion_base = Produccion.objects.get(id=produccion_data['produccion_base_id'])
                 else:
-                    print("No hay produccion base")
+                    #print("No hay produccion base")
+                    pass
 
                 # Guardar producción
                 produccion = Produccion.objects.create(
@@ -491,7 +490,8 @@ class CrearProduccionView(LoginRequiredMixin, View):
                                 lote_prod=produccion
                             )
                     except(ValueError) as e:
-                        print(f"Error detallado {e}")
+                        #print(f"Error detallado {e}")
+                        pass
 
                 # Limpiar sesión
                 if 'produccion_data' in request.session:
@@ -520,7 +520,7 @@ class CrearProduccionView(LoginRequiredMixin, View):
             # Capturar el error y enviarlo como JSON válido
             import traceback
             error_detallado = traceback.format_exc()
-            print(f"ERROR DETALLADO:\n{error_detallado}")
+            #print(f"ERROR DETALLADO:\n{error_detallado}")
         
             # Devolver JSON válido
             return JsonResponse({
@@ -608,10 +608,10 @@ class CrearProduccionView(LoginRequiredMixin, View):
             except Inv_Mat_Prima.DoesNotExist as e:
                 raise ValueError(f"Materia prima con ID '{materia_prima_id}' no existe en inventario")
             except ValueError as e:
-                print(f"Error de validación MP {i}: {e}")
+                #print(f"Error de validación MP {i}: {e}")
                 raise
             except Exception as e:
-                print(f"Error inesperado MP {i}: {e}")
+                #print(f"Error inesperado MP {i}: {e}")
                 raise
         
             i += 1
@@ -690,10 +690,10 @@ class CrearProduccionView(LoginRequiredMixin, View):
             except Inv_Producto.DoesNotExist as e:
                 raise ValueError(f"Producto con ID '{producto_id}' no existe en inventario")
             except ValueError as e:
-                print(f"Error de validacin producto {i}: {e}")
+                #print(f"Error de validacin producto {i}: {e}")
                 raise
             except Exception as e:
-                print(f"Error inesperado producto {i}: {e}")
+                #print(f"Error inesperado producto {i}: {e}")
                 raise
             
             i += 1
@@ -1223,7 +1223,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
         try:
             materias_primas_nuevas = self.procesar_materias_primas(request.POST)
             productos_nuevos = self.procesar_productos(request.POST)  # ✅ Descomentar
-            print(f'productos_nuevos: {productos_nuevos}')
+            #print(f'productos_nuevos: {productos_nuevos}')
         except ValueError as e:
             return JsonResponse({'success': False, 'errors': str(e)})
 
@@ -1242,7 +1242,7 @@ class EditarProduccionView(LoginRequiredMixin, View):
                 # 3. Obtener registros actuales
                 materias_actuales = Prod_Inv_MP.objects.filter(lote_prod=produccion)
                 productos_actuales = Prod_Inv_Producto.objects.filter(lote_prod=produccion)
-                print(f'Productos atuales: {productos_actuales}')                
+                #print(f'Productos atuales: {productos_actuales}')                
                 # 4. Identificar IDs que se mantienen
                 ids_nuevos_mp = [mp.get('id') for mp in materias_primas_nuevas if mp.get('id')]
                 ids_nuevos_pp = [pp.get('producto') for pp in productos_nuevos if pp.get('producto')]
@@ -1408,13 +1408,13 @@ class EditarProduccionView(LoginRequiredMixin, View):
                     nueva_cantidad = Decimal(str(pp_data['cantidad']))
                     
                     if pp_data.get('id'):  # Actualizar existente
-                        print('Actualizar existente')
+                        #print('Actualizar existente')
                         pp_id = self._normalizar_uuid(pp_data['id'])
                         pp_existente = Prod_Inv_Producto.objects.get(id=pp_id)
-                        print(f'Producto: {pp_existente.producto.producto.nombre_comercial}')
+                        #print(f'Producto: {pp_existente.producto.producto.nombre_comercial}')
                         cantidad_anterior = pp_existente.cantidad_producto
                         diferencia = nueva_cantidad - cantidad_anterior
-                        print(f'diferencia: {diferencia}')
+                        #print(f'diferencia: {diferencia}')
                         if diferencia != 0:
                             if diferencia > 0:  # Aumenta cantidad
                                 if inventario_pp.cantidad < diferencia:

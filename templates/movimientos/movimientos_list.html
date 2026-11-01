@@ -216,9 +216,10 @@
                         <thead>
                         <tr class="ligth">
                             <th>No.</th>
-                            <th>Almacén</th>
+                            <th>Origen</th>
                             <th>Fecha</th>
                             <th>Tipo de movimiento</th>
+                            <th>Destino</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -227,14 +228,24 @@
                         {% for mov in movimientos %}
                             <tr>
                                 <td>{{ mov.consecutivo }}</td>
-                                <td> {% if mov.almacen %} 
-                                    {{ mov.almacen }}
+                                <td> {% if mov.origen  %} 
+                                    {{ mov.origen }}
                                     {% else %}
-                                    {{ mov.origen|default:"N/A" }}
+                                    {{ mov.almacen|default:"N/A" }}
                                     {% endif %}
                                 </td>
                                 <td>{{ mov.fecha_movimiento|date:"d/m/Y" }}</td>
                                 <td>{{ mov.tipo }}</td>
+                                <td>{% if mov.destino %}
+                                        {{ mov.destino }}
+                                    {% elif mov.descripcion %}
+                                        {{ mov.descripcion }}
+                                    {% elif mov.lote_No %}
+                                        Del lote: {{ mov.lote_No }}
+                                    {% else %}  
+                                        N/A
+                                    {% endif %}
+                                </td>
                                 <td>
                                 {% if mov.estado == 'borrador' %}
                                     <span class="badge" style="background-color: #ffc107; color: #212529; padding: 5px 10px;">Borrador</span>
